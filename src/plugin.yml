@@ -1,0 +1,8 @@
+name: AMusic
+main: me.bomb.amusic.AMusic
+version: 0.5
+author: Bomb
+commands:
+  loadmusic:
+  playmusic:
+  repeat:

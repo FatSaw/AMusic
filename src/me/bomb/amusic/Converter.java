@@ -33,7 +33,7 @@ class Converter extends Encoder implements Runnable {
 	@Override
 	public void run() {
 		try {
-			super.encode(new MultimediaObject(input), output, attrs, null);
+			super.encode(new MultimediaObject(input), output, attrs);
 		} catch (IllegalArgumentException | EncoderException e) {
 		}
 		if(status!=null) {

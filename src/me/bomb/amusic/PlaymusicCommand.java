@@ -51,7 +51,7 @@ class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			List<String> playlist = ResourcePacked.getActivePlaylist(target);
+			List<String> playlist = ResourcePacked.getActivePlaylist(target.getUniqueId());
 			if(playlist==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;

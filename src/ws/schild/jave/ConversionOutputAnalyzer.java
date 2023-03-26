@@ -26,8 +26,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ws.schild.jave.progress.EncoderProgressListener;
-
 /** @author a.schild */
 public class ConversionOutputAnalyzer {
   private static final Logger LOG = LoggerFactory.getLogger(ConversionOutputAnalyzer.class);
@@ -36,9 +34,6 @@ public class ConversionOutputAnalyzer {
   private static final Pattern PROGRESS_INFO_PATTERN =
       Pattern.compile("\\s*(\\w+)\\s*=\\s*(\\S+)\\s*", Pattern.CASE_INSENSITIVE);
 
-  private final EncoderProgressListener listener;
-
-  private final long duration;
   // Step 0 = Before input stuff
   // Step 1 = Input stuff
   // Step 2 = Stream Mapping
@@ -49,19 +44,12 @@ public class ConversionOutputAnalyzer {
   private String lastWarning = null;
   private final List<String> unhandledMessages = new LinkedList<>();
 
-  public ConversionOutputAnalyzer(long duration, EncoderProgressListener listener) {
-    this.duration = duration;
-    this.listener = listener;
+  public ConversionOutputAnalyzer() {
   }
 
   public void analyzeNewLine(String line) throws EncoderException {
     lineNR++;
     LOG.debug("Input Line ({}): <{}>", lineNR, line);
-    if (line.startsWith("WARNING: ")) {
-      if (listener != null) {
-        listener.message(line);
-      }
-    }
     if (line.startsWith("Press [q]")) {
       // Abort messages
     } else {
@@ -122,9 +110,6 @@ public class ConversionOutputAnalyzer {
                     "Application provided invalid, non monotonically increasing dts to muxer in stream")) {
               // Ignore these non-fatal errors, if they are fatal, the next line(s)
               // will throw the full error
-              if (listener != null) {
-                listener.message(line);
-              }
             } else {
               LOG.info("Unhandled message in step: {} Line: {} message: <{}>", step, lineNR, line);
               unhandledMessages.add(line);
@@ -137,32 +122,8 @@ public class ConversionOutputAnalyzer {
           if (line.length() > 0) {
             HashMap<String, String> table = parseProgressInfoLine(line);
             if (table == null) {
-              if (listener != null) {
-                listener.message(line);
-              }
               lastWarning = line;
             } else {
-              if (listener != null) {
-                String time = table.get("time");
-                if (time != null) {
-                  String dParts[] = time.split(":");
-                  // HH:MM:SS.xx
-
-                  Double seconds = Double.parseDouble(dParts[dParts.length - 1]);
-                  if (dParts.length > 1) {
-                    seconds += Double.parseDouble(dParts[dParts.length - 2]) * 60;
-                    if (dParts.length > 2) {
-                      seconds += Double.parseDouble(dParts[dParts.length - 3]) * 60 * 60;
-                    }
-                  }
-
-                  int perm = (int) Math.round((seconds * 1000L * 1000L) / (double) duration);
-                  if (perm > 1000) {
-                    perm = 1000;
-                  }
-                  listener.progress(perm);
-                }
-              }
               lastWarning = null;
             }
           }

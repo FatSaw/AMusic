@@ -52,8 +52,11 @@ class Data {
 		}
 		for(String playlistname : playlists.getKeys(false)) {
 			if(data.isInt("playlists.".concat(playlistname).concat(".size")) && data.isString("playlists.".concat(playlistname).concat(".name")) && data.isList("playlists.".concat(playlistname).concat(".sounds"))) {
-				Options option = new Options(data.getInt("playlists.".concat(playlistname).concat(".size")), data.getString("playlists.".concat(playlistname).concat(".name")),data.getStringList("playlists.".concat(playlistname).concat(".sounds")),data.getIntegerList("playlists.".concat(playlistname).concat(".length")),data.getString("playlists.".concat(playlistname).concat(".sha1")));
-				options.put(playlistname, option);
+				try {
+					Options option = new Options(data.getInt("playlists.".concat(playlistname).concat(".size")), data.getString("playlists.".concat(playlistname).concat(".name")),data.getStringList("playlists.".concat(playlistname).concat(".sounds")),data.getIntegerList("playlists.".concat(playlistname).concat(".length")),data.getString("playlists.".concat(playlistname).concat(".sha1")));
+					options.put(playlistname, option);
+				} catch (IllegalArgumentException e) {
+				}
 			}
 		}
 	}
@@ -78,7 +81,10 @@ class Data {
 		protected final List<String> sounds;
 		protected final List<Integer> length; 
 		protected final String sha1;
-		private Options(int size,String name,List<String> sounds,List<Integer> length,String sha1) {
+		private Options(int size,String name,List<String> sounds,List<Integer> length,String sha1) throws IllegalArgumentException {
+			if(size<0||name==null||sounds==null||length==null||sha1==null||sounds.size()!=length.size()||sha1.length()!=40||!sha1.matches("[0-9a-fA-F]+")) {
+				throw new IllegalArgumentException();
+			}
 			this.size = size;
 			this.name = name;
 			this.sounds = sounds;

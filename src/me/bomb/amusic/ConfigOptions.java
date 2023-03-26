@@ -23,7 +23,6 @@ public class ConfigOptions {
     public static final Path ffmpegbinary;
     protected static final EncodingAttributes encodingattributes;
     protected static final boolean encodetracksasynchronly;
-    public static final Path packpath;
     public static final Path musicpath;
     public static final Path packedpath;
     public static final Path temppath;
@@ -64,7 +63,6 @@ public class ConfigOptions {
 	 	attrs.setAudioAttributes(audio); 
 		encodingattributes = useconverter?attrs:null;
 		encodetracksasynchronly = useconverter?aconfig.getBoolean("encoder.async", true):false;
-		packpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Pack"));
 		musicpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Music"));
 	    packedpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Packed"));
 	    temppath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Temp"));

@@ -42,6 +42,9 @@ class RepeatTabComplete implements TabCompleter {
 			if("playall".startsWith(arg1)) {
 				tabcomplete.add("playall");
 			}
+			if("random".startsWith(arg1)) {
+				tabcomplete.add("random");
+			}
 		}
 		return tabcomplete;
 	};

@@ -43,11 +43,6 @@ public class MultimediaInfo {
   private AudioInfo audio = null;
 
   /**
-   * A set of video-specific informations. If null, there's no video stream in the multimedia file.
-   */
-  private VideoInfo video = null;
-
-  /**
    * Returns the multimedia file format name.
    *
    * @return The multimedia file format name.
@@ -128,27 +123,6 @@ public class MultimediaInfo {
     return this;
   }
 
-  /**
-   * Returns a set of video-specific informations. If null, there's no video stream in the
-   * multimedia file.
-   *
-   * @return A set of audio-specific informations.
-   */
-  public VideoInfo getVideo() {
-    return video;
-  }
-
-  /**
-   * Sets a set of video-specific informations.
-   *
-   * @param video A set of video-specific informations.
-   * @return this instance
-   */
-  public MultimediaInfo setVideo(VideoInfo video) {
-    this.video = video;
-    return this;
-  }
-
   @Override
   public String toString() {
     return getClass().getName()
@@ -158,8 +132,6 @@ public class MultimediaInfo {
         + metadata
         + ", duration="
         + duration
-        + ", video="
-        + video
         + ", audio="
         + audio
         + ")";

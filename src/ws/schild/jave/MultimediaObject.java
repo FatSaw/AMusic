@@ -12,8 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import ws.schild.jave.info.AudioInfo;
 import ws.schild.jave.info.MultimediaInfo;
-import ws.schild.jave.info.VideoInfo;
-import ws.schild.jave.info.VideoSize;
 import ws.schild.jave.process.ProcessLocator;
 import ws.schild.jave.process.ProcessWrapper;
 import ws.schild.jave.process.ffmpeg.DefaultFFMPEGLocator;
@@ -34,14 +32,6 @@ public class MultimediaObject {
   }
 
   private static final Logger LOG = LoggerFactory.getLogger(MultimediaObject.class);
-  /** This regexp is used to parse the ffmpeg output about the size of a video stream. */
-  private static final Pattern SIZE_PATTERN =
-      Pattern.compile("(\\d+)x(\\d+)", Pattern.CASE_INSENSITIVE);
-  /**
-   * This regexp is used to parse the ffmpeg output about the frame rate value of a video stream.
-   */
-  private static final Pattern FRAME_RATE_PATTERN =
-      Pattern.compile("([\\d.]+)\\s+(?:fps|tbr)", Pattern.CASE_INSENSITIVE);
   /** This regexp is used to parse the ffmpeg output about the bit rate value of a stream. */
   private static final Pattern BIT_RATE_PATTERN =
       Pattern.compile("(\\d+)\\s+kb/s", Pattern.CASE_INSENSITIVE);
@@ -270,62 +260,7 @@ public class MultimediaObject {
               if (m.matches()) {
                 String type = m.group(1);
                 String specs = m.group(2);
-                if ("Video".equalsIgnoreCase(type)) {
-                  VideoInfo video = new VideoInfo();
-                  StringTokenizer st = new StringTokenizer(specs, ",");
-                  for (int i = 0; st.hasMoreTokens(); i++) {
-                    String token = st.nextToken().trim();
-                    if (i == 0) {
-                      video.setDecoder(token);
-                    } else {
-                      boolean parsed = false;
-                      // Video size.
-                      Matcher m2 = SIZE_PATTERN.matcher(token);
-                      if (!parsed && m2.find()) {
-                        int width = Integer.parseInt(m2.group(1));
-                        int height = Integer.parseInt(m2.group(2));
-                        video.setSize(new VideoSize(width, height));
-                        parsed = true;
-                      }
-                      // Frame rate.
-                      m2 = FRAME_RATE_PATTERN.matcher(token);
-                      if (!parsed && m2.find()) {
-                        try {
-                          float frameRate = Float.parseFloat(m2.group(1));
-                          video.setFrameRate(frameRate);
-                        } catch (NumberFormatException e) {
-                          LOG.info("Invalid frame rate value: " + m2.group(1), e);
-                        }
-                        parsed = true;
-                      }
-                      // Bit rate.
-                      m2 = BIT_RATE_PATTERN.matcher(token);
-                      if (!parsed && m2.find()) {
-                        int bitRate = Integer.parseInt(m2.group(1));
-                        video.setBitRate(bitRate * 1000);
-                        parsed = true;
-                      }
-                    }
-                  }
-                  //reading vedio metadata
-                  line = reader.readLine();
-                  Matcher m4 = p4.matcher(line);
-                  if(m4.matches()){
-                    line = reader.readLine();
-                    while (line != null && p5.matcher(line).matches()) {
-                      LOG.debug("Output line: {}", line);
-                      Matcher m5 = p5.matcher(line);
-                      if (m5.matches()) {
-                        video.getMetadata().put(m5.group(1), m5.group(2));
-                      }
-                      line = reader.readLine();
-                    }
-                    reader.reinsertLine(line);
-                  } else {
-                    reader.reinsertLine(line);
-                  }
-                  info.setVideo(video);
-                } else if ("Audio".equalsIgnoreCase(type)) {
+                if ("Audio".equalsIgnoreCase(type)) {
                   AudioInfo audio = new AudioInfo();
                   StringTokenizer st = new StringTokenizer(specs, ",");
                   for (int i = 0; st.hasMoreTokens(); i++) {

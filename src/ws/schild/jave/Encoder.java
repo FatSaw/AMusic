@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
@@ -39,17 +38,9 @@ import ws.schild.jave.encode.EncodingArgument;
 import ws.schild.jave.encode.EncodingAttributes;
 import ws.schild.jave.encode.PredicateArgument;
 import ws.schild.jave.encode.ValueArgument;
-import ws.schild.jave.encode.VideoAttributes;
-import ws.schild.jave.encode.VideoFilterArgument;
-import ws.schild.jave.encode.enums.VsyncMethod;
-import ws.schild.jave.encode.enums.X264_PROFILE;
-import ws.schild.jave.filters.FilterGraph;
-import ws.schild.jave.info.MultimediaInfo;
-import ws.schild.jave.info.VideoSize;
 import ws.schild.jave.process.ProcessLocator;
 import ws.schild.jave.process.ProcessWrapper;
 import ws.schild.jave.process.ffmpeg.DefaultFFMPEGLocator;
-import ws.schild.jave.progress.EncoderProgressListener;
 import ws.schild.jave.utils.RBufferedReader;
 
 /**
@@ -294,35 +285,6 @@ public class Encoder {
   }
 
   /**
-   * Re-encode a multimedia file(s).
-   *
-   * <p>This method is not reentrant, instead create multiple object instances
-   *
-   * @param multimediaObject The source multimedia file. It cannot be null. Be sure this file can be
-   *     decoded (see null null null null {@link Encoder#getSupportedDecodingFormats()}, {@link
-   *     Encoder#getAudioDecoders()} and {@link Encoder#getVideoDecoders()}). When passing multiple
-   *     sources, make sure that they are compatible in the way that ffmpeg can concat them. We
-   *     don't use the complex filter at the moment Perhaps you will need to first transcode/resize
-   *     them https://trac.ffmpeg.org/wiki/Concatenate @see "Concat protocol"
-   * @param target The target multimedia re-encoded file. It cannot be null. If this file already
-   *     exists, it will be overwrited.
-   * @param attributes A set of attributes for the encoding process.
-   * @throws IllegalArgumentException If both audio and video parameters are null.
-   * @throws InputFormatException If the source multimedia file cannot be decoded.
-   * @throws EncoderException If a problems occurs during the encoding process.
-   */
-  public void encode(MultimediaObject multimediaObject, File target, EncodingAttributes attributes)
-      throws IllegalArgumentException, InputFormatException, EncoderException {
-    encode(multimediaObject, target, attributes, null);
-  }
-
-  public void encode(
-      List<MultimediaObject> multimediaObjects, File target, EncodingAttributes attributes)
-      throws IllegalArgumentException, InputFormatException, EncoderException {
-    encode(multimediaObjects, target, attributes, null);
-  }
-
-  /**
    * Re-encode a multimedia file.
    *
    * <p>This method is not reentrant, instead create multiple object instances
@@ -341,12 +303,11 @@ public class Encoder {
   public void encode(
       MultimediaObject multimediaObject,
       File target,
-      EncodingAttributes attributes,
-      EncoderProgressListener listener)
+      EncodingAttributes attributes)
       throws IllegalArgumentException, InputFormatException, EncoderException {
     List<MultimediaObject> src = new ArrayList<>();
     src.add(multimediaObject);
-    encode(src, target, attributes, listener);
+    encode(src, target, attributes);
   }
 
   private static List<EncodingArgument> globalOptions =
@@ -361,44 +322,6 @@ public class Encoder {
           new ValueArgument(ArgType.INFILE, "-f", ea -> ea.getInputFormat()),
           new ValueArgument(ArgType.INFILE, "-safe", ea -> ea.getSafe().map(Object::toString)),
           new ValueArgument(ArgType.OUTFILE, "-t", ea -> ea.getDuration().map(Object::toString)),
-          // Video Options
-          new PredicateArgument(ArgType.OUTFILE, "-vn", ea -> !ea.getVideoAttributes().isPresent()),
-          new ValueArgument(ArgType.OUTFILE, "-vcodec",
-              ea -> ea.getVideoAttributes().flatMap(VideoAttributes::getCodec)),
-          new ValueArgument(ArgType.OUTFILE, "-vtag",
-              ea -> ea.getVideoAttributes().flatMap(VideoAttributes::getTag)),
-          new ValueArgument(ArgType.OUTFILE, "-vb",
-              ea -> ea.getVideoAttributes()
-                      .flatMap(VideoAttributes::getBitRate)
-                      .map(Object::toString)),
-          new ValueArgument(ArgType.OUTFILE, "-r",
-              ea -> ea.getVideoAttributes()
-                      .flatMap(VideoAttributes::getFrameRate)
-                      .map(Object::toString)),
-          new ValueArgument(ArgType.OUTFILE, "-s",
-              ea -> ea.getVideoAttributes()
-                      .flatMap(VideoAttributes::getSize)
-                      .map(VideoSize::asEncoderArgument)),
-          new PredicateArgument(ArgType.OUTFILE, "-movflags", "faststart",
-              ea -> ea.getVideoAttributes().isPresent()),
-          new ValueArgument(ArgType.OUTFILE, "-profile:v",
-              ea -> ea.getVideoAttributes()
-                      .flatMap(VideoAttributes::getX264Profile)
-                      .map(X264_PROFILE::getModeName)),
-          new VideoFilterArgument(ArgType.OUTFILE,
-              ea -> ea.getVideoAttributes()
-                      .map(VideoAttributes::getVideoFilters)
-                      .map(Collection::stream)
-                      .map(s -> s.flatMap(vf -> Stream.of(vf.getExpression())))
-                      .orElseGet(Stream::empty)),
-          new ValueArgument(ArgType.OUTFILE, "-filter_complex",
-              ea -> ea.getVideoAttributes()
-                      .flatMap(VideoAttributes::getComplexFiltergraph)
-                      .map(FilterGraph::getExpression)),
-          new ValueArgument(ArgType.OUTFILE, "-qscale:v",
-              ea -> ea.getVideoAttributes()
-                      .flatMap(VideoAttributes::getQuality)
-                      .map(Object::toString)),
           // Audio Options
           new PredicateArgument(ArgType.OUTFILE, "-an", ea -> !ea.getAudioAttributes().isPresent()),
           new ValueArgument(ArgType.OUTFILE, "-acodec",
@@ -427,11 +350,7 @@ public class Encoder {
           new ValueArgument(ArgType.OUTFILE, "-threads", 
               ea -> ea.getEncodingThreads().map(Object::toString)),
           new PredicateArgument(ArgType.OUTFILE, "-map_metadata", "0", 
-              ea -> ea.isMapMetaData()),
-          new ValueArgument(ArgType.OUTFILE, "-pix_fmt", 
-              ea -> ea.getVideoAttributes().flatMap(VideoAttributes::getPixelFormat)),
-          new ValueArgument(ArgType.OUTFILE, "-vsync",
-              ea -> ea.getVideoAttributes().flatMap(VideoAttributes::getVsync).map(VsyncMethod::getMethodName))
+              ea -> ea.isMapMetaData())
         )
       );
 
@@ -473,10 +392,9 @@ public class Encoder {
   public void encode(
       List<MultimediaObject> multimediaObjects,
       File target,
-      EncodingAttributes attributes,
-      EncoderProgressListener listener)
+      EncodingAttributes attributes)
       throws IllegalArgumentException, InputFormatException, EncoderException {
-    encode(multimediaObjects,target,attributes,listener,null);
+    encode(multimediaObjects,target,attributes,null);
   }
 
   /**
@@ -505,7 +423,6 @@ public class Encoder {
           List<MultimediaObject> multimediaObjects,
           File target,
           EncodingAttributes attributes,
-          EncoderProgressListener listener,
           List<EncodingArgument> currOptions)
           throws IllegalArgumentException, InputFormatException, EncoderException {
     attributes.validate();
@@ -574,8 +491,6 @@ public class Encoder {
 
     try {
       String lastWarning = null;
-      long duration = 0;
-      MultimediaInfo info = null;
       /*
        * TODO: This is an awkward way of determining duration of input videos. This calls a separate
        * FFMPEG process to getInfo when the output of running FFMPEG just above will list the info
@@ -593,29 +508,9 @@ public class Encoder {
        * this FFMPEG invocation, the EncodingAttributes, and would output a duration. Then we could
        * have named methods that would calculate durations as in #1 and #2. 
        */
-      if (multimediaObjects.size() == 1
-          && (!multimediaObjects.get(0).isURL() || !multimediaObjects.get(0).isReadURLOnce())) {
-        info = multimediaObjects.get(0).getInfo();
-      }
 
-      Float offsetAttribute = attributes.getOffset().orElse(null);
-      Float durationAttribute = attributes.getDuration().orElse(null);
-      if (durationAttribute != null) {
-        duration = (long) Math.round((durationAttribute * 1000L));
-      } else {
-        if (info != null) {
-          duration = info.getDuration();
-          if (offsetAttribute != null) {
-            duration -= (long) Math.round((offsetAttribute * 1000L));
-          }
-        }
-      }
-
-      if (listener != null) {
-        listener.sourceInfo(info);
-      }
       String line;
-      ConversionOutputAnalyzer outputAnalyzer = new ConversionOutputAnalyzer(duration, listener);
+      ConversionOutputAnalyzer outputAnalyzer = new ConversionOutputAnalyzer();
       RBufferedReader reader = new RBufferedReader(new InputStreamReader(ffmpeg.getErrorStream()));
       while ((line = reader.readLine()) != null) {
         outputAnalyzer.analyzeNewLine(line);

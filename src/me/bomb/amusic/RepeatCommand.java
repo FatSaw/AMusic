@@ -30,24 +30,28 @@ class RepeatCommand implements CommandExecutor {
 				return true;
 			}
 			switch(args[1].toLowerCase()) {
+			case "playone":
+				Repeater.setRepeater(target.getUniqueId(),null);
+				LangOptions.repeat_playone.sendMsg(sender);
+			return true;
 			case "repeatone":
-				Repeater.setRepeater(target.getUniqueId(), true, true);
-				LangOptions.repeat_repeatone.sendMsg(target);
+				Repeater.setRepeater(target.getUniqueId(), RepeatType.REPEATONE);
+				LangOptions.repeat_repeatone.sendMsg(sender);
 			return true;
 			case "repeatall":
-				Repeater.setRepeater(target.getUniqueId(), true, false);
-				LangOptions.repeat_repeatall.sendMsg(target);
-			return true;
-			case "playone":
-				Repeater.setRepeater(target.getUniqueId(), false, true);
-				LangOptions.repeat_playone.sendMsg(target);
+				Repeater.setRepeater(target.getUniqueId(), RepeatType.REPEATALL);
+				LangOptions.repeat_repeatall.sendMsg(sender);
 			return true;
 			case "playall":
-				Repeater.setRepeater(target.getUniqueId(), false, false);
-				LangOptions.repeat_playall.sendMsg(target);
+				Repeater.setRepeater(target.getUniqueId(), RepeatType.PLAYALL);
+				LangOptions.repeat_playall.sendMsg(sender);
+			return true;
+			case "random":
+				Repeater.setRepeater(target.getUniqueId(), RepeatType.RANDOM);
+				LangOptions.repeat_random.sendMsg(sender);
 			return true;
 			default:
-				LangOptions.repeat_unknownrepeattype.sendMsg(target);
+				LangOptions.repeat_unknownrepeattype.sendMsg(sender);
 			}
 		} else {
 			LangOptions.repeat_usage.sendMsg(sender);

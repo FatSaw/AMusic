@@ -20,14 +20,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 
-enum LangOptions {loadmusic_usage,loadmusic_nopermission,loadmusic_nopermissionother,loadmusic_noconsoleselector,loadmusic_targetoffline,loadmusic_noplaylist,loadmusic_loaderunavilable,loadmusic_success,playmusic_usage,playmusic_nopermission,playmusic_nopermissionother,playmusic_noconsoleselector,playmusic_targetoffline,playmusic_noplaylist,playmusic_missingtrack,playmusic_playing,playmusic_success,playmusic_stopping,playmusic_stop,repeat_usage,repeat_nopermission,repeat_nopermissionother,repeat_noconsoleselector,repeat_targetoffline,repeat_unknownrepeattype,repeat_repeatall,repeat_repeatone,repeat_playall,repeat_playone;
+enum LangOptions {loadmusic_usage,loadmusic_nopermission,loadmusic_nopermissionother,loadmusic_noconsoleselector,loadmusic_targetoffline,loadmusic_noplaylist,loadmusic_loaderunavilable,loadmusic_success,playmusic_usage,playmusic_nopermission,playmusic_nopermissionother,playmusic_noconsoleselector,playmusic_targetoffline,playmusic_noplaylist,playmusic_missingtrack,playmusic_playing,playmusic_success,playmusic_stopping,playmusic_stop,repeat_usage,repeat_nopermission,repeat_nopermissionother,repeat_noconsoleselector,repeat_targetoffline,repeat_unknownrepeattype,repeat_repeatall,repeat_repeatone,repeat_playall,repeat_playone,repeat_random;
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusic.class);
 		YamlConfiguration alang = null; 
 		File langfile = new File(plugin.getDataFolder() + File.separator + "lang.yml");
 		if(!langfile.exists()) {
 			try {
-				byte[] buf = new byte[2048];
+				byte[] buf = new byte[8096];
 				InputStream in = plugin.getResource(Bukkit.getServer().getClass().getPackage().getName().substring(23).equals("v1_16_R3") ? "lang_rgb.yml" : "lang_old.yml");
 				if (in!=null) {
 					buf = Arrays.copyOf(buf, in.read(buf));

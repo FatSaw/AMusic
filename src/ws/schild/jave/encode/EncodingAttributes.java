@@ -59,13 +59,6 @@ public class EncodingAttributes implements Serializable {
    */
   private AudioAttributes audioAttributes = null;
 
-  /**
-   * The attributes for the encoding of the video stream in the target multimedia file. If null of
-   * not specified no video stream will be encoded. It cannot be null if also the audio field is
-   * null.
-   */
-  private VideoAttributes videoAttributes = null;
-
   /** Should we try to copy over the meta data? */
   private boolean mapMetaData = false;
 
@@ -270,29 +263,6 @@ public class EncodingAttributes implements Serializable {
     return this;
   }
 
-  /**
-   * Returns the attributes for the encoding of the video stream in the target multimedia file.
-   *
-   * @return The attributes for the encoding of the video stream in the target multimedia file.
-   */
-  public Optional<VideoAttributes> getVideoAttributes() {
-    return Optional.ofNullable(videoAttributes);
-  }
-
-  /**
-   * Sets the attributes for the encoding of the video stream in the target multimedia file. If null
-   * of not specified no video stream will be encoded. It cannot be null if also the audio field is
-   * null.
-   *
-   * @param videoAttributes The attributes for the encoding of the video stream in the target
-   *     multimedia file.
-   * @return this instance
-   */
-  public EncodingAttributes setVideoAttributes(VideoAttributes videoAttributes) {
-    this.videoAttributes = videoAttributes;
-    return this;
-  }
-
   @Override
   public String toString() {
     return getClass().getName()
@@ -306,8 +276,6 @@ public class EncodingAttributes implements Serializable {
         + loop
         + ", audioAttributes="
         + audioAttributes
-        + ", videoAttributes="
-        + videoAttributes
         + ")";
   }
 
@@ -385,7 +353,7 @@ public class EncodingAttributes implements Serializable {
   }
 
   public void validate() {
-    if (audioAttributes == null && videoAttributes == null) {
+    if (audioAttributes == null) {
       throw new IllegalArgumentException("Both audio and video attributes are null");
     }
   }

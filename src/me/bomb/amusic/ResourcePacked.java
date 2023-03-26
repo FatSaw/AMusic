@@ -87,15 +87,15 @@ final class ResourcePacked extends Thread {
         songnames = asongnames;
         songlengths = asonglengths;
     }
-    protected static List<String> getActivePlaylist(Player player) {
-    	if(downloadedplaylistinfo.containsKey(player.getUniqueId())) {
-        	return downloadedplaylistinfo.get(player.getUniqueId()).songs;
+    protected static List<String> getActivePlaylist(UUID playeruuid) {
+    	if(downloadedplaylistinfo.containsKey(playeruuid)) {
+        	return downloadedplaylistinfo.get(playeruuid).songs;
     	}
     	return null;
     }
-    protected static List<Integer> getActiveLengths(Player player) {
-    	if(downloadedplaylistinfo.containsKey(player.getUniqueId())) {
-        	return downloadedplaylistinfo.get(player.getUniqueId()).lengths;
+    protected static List<Integer> getActiveLengths(UUID playeruuid) {
+    	if(downloadedplaylistinfo.containsKey(playeruuid)) {
+        	return downloadedplaylistinfo.get(playeruuid).lengths;
     	}
     	return null;
     }

@@ -34,7 +34,7 @@ class PlaymusicTabComplete implements TabCompleter {
 			}
 			Player target = Bukkit.getPlayerExact(args[0]);
 			if(target!=null) {
-				List<String> playlist = ResourcePacked.getActivePlaylist(target);
+				List<String> playlist = ResourcePacked.getActivePlaylist(target.getUniqueId());
 				if(playlist!=null) {
 					for(String songname:playlist) {
 						if(songname.startsWith(args[1])) {

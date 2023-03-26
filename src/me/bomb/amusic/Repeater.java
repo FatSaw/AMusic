@@ -1,43 +1,45 @@
 package me.bomb.amusic;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 final class Repeater {
-	private final static Map<UUID,Repeater> repeaters = new HashMap<UUID,Repeater>();
-	private final boolean repeat;
-	private final boolean one;
-	private Repeater(boolean repeat,boolean one) {
-		this.repeat = repeat;
-		this.one = one;
+	private final static HashMap<UUID,Repeater> repeaters = new HashMap<UUID,Repeater>();
+	private final RepeatType repeattype;
+	private Repeater(RepeatType repeattype) {
+		this.repeattype = repeattype;
 	}
-	protected void next(UUID uuid ,byte curid) {
+	protected static void next(UUID uuid ,byte curid) {
 		if(!repeaters.containsKey(uuid)) {
 			return;
 		}
 		Repeater repeater = repeaters.get(uuid);
-		if(repeater.repeat&&repeater.one) {
-			PositionTracker.playMusic(uuid, curid, false);
+		switch(repeater.repeattype) {
+		case PLAYALL: 
+			++curid;
+		break;
+		case REPEATALL:
+			if(curid<ResourcePacked.getActivePlaylist(uuid).size()) {
+				++curid;
+			} else {
+				curid = 0;
+			}
+		break;
+		case RANDOM:
+			curid = (byte) ThreadLocalRandom.current().nextInt(0,ResourcePacked.getActivePlaylist(uuid).size()-1);
+		break;
+		case REPEATONE:
+		break;
+		}
+		PositionTracker.playMusic(uuid, curid);
+	}
+	protected static void setRepeater(UUID uuid,RepeatType repeattype) {
+		if(repeattype==null) {
+			repeaters.remove(uuid);
 			return;
 		}
-		if(repeater.repeat&&!repeater.one) {
-			PositionTracker.playMusic(uuid, ++curid, true);
-			return;
-		}
-		if(!repeater.repeat&&!repeater.one) {
-			PositionTracker.playMusic(uuid, ++curid, false);
-			return;
-		}
-	}
-	protected static Repeater getRepeater(UUID uuid) {
-		return repeaters.containsKey(uuid)?repeaters.get(uuid):null;
-	}
-	protected static void setRepeater(UUID uuid,boolean repeat,boolean one) {
-		repeaters.put(uuid, new Repeater(repeat, one));
-	}
-	protected static void removeRepeater(UUID uuid) {
-		repeaters.remove(uuid);
+		repeaters.put(uuid, new Repeater(repeattype));
 	}
 	protected static void clear() {
 		repeaters.clear();

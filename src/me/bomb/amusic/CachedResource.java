@@ -15,7 +15,7 @@ class CachedResource {
 	private static final Map<Path,CachedResource> resources = new HashMap<Path,CachedResource>();
 	private final byte[] resource;
 	private CachedResource(File fileresource) {
-		byte[] resource = new byte[50400000];
+		byte[] resource = new byte[ConfigOptions.maxpacksize];
 		try {
 			FileInputStream streamresource = new FileInputStream(fileresource);
 			int size = streamresource.read(resource);
@@ -24,15 +24,20 @@ class CachedResource {
 		} catch (IOException e) {
 		}
 		this.resource = resource;
-		resources.put(fileresource.toPath(), this);
 	}
 	protected static UUID add(UUID targetplayer,File fileresource) {
 		UUID token = UUID.randomUUID();
-		if(!resources.containsKey(fileresource.toPath())) {
-			new CachedResource(fileresource);
+		CachedResource resource = null;
+		Path path = fileresource.toPath();
+		if(resources.containsKey(path)) {
+			resource = resources.get(path);
+		} else if(ConfigOptions.cache) {
+			resource = new CachedResource(fileresource);
+			resources.put(fileresource.toPath(), resource);
+		} else {
+			resource = new CachedResource(fileresource);
 		}
-		CachedResource res = resources.get(fileresource.toPath());
-		tokenres.put(token, res);
+		tokenres.put(token, resource);
 		targets.put(targetplayer, token);
 		return token;
 	}

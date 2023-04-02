@@ -272,7 +272,7 @@ final class ResourcePacked extends Thread {
             			}
             		} else {
             			try {
-            				byte[] resource = new byte[50400000];
+            				byte[] resource = new byte[ConfigOptions.maxmusicfilesize];
             				FileInputStream in = new FileInputStream(musicfile);
             				resource = Arrays.copyOf(resource, in.read(resource));
             				in.close();

@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -19,6 +20,9 @@ import ws.schild.jave.encode.EncodingAttributes;
 public class ConfigOptions {
 	public static final String host;
 	public static final int port;
+	public static final int maxpacksize;
+	public static final int maxmusicfilesize;
+	public static final boolean cache = false;
 	public static final boolean useconverter;
     public static final Path ffmpegbinary;
     protected static final EncodingAttributes encodingattributes;
@@ -50,12 +54,16 @@ public class ConfigOptions {
 		aconfig = YamlConfiguration.loadConfiguration(configfile);
 		host = aconfig.getString("host","127.0.0.1");
 		port = aconfig.getInt("port",25530);
+		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
+		
+		maxpacksize = nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1")?52428800:nmsversion.equals("v1_15_R1") || nmsversion.equals("v1_16_R3") || nmsversion.equals("v1_17_R1")?104857600:262144000;
+		maxmusicfilesize = maxpacksize;
 		useconverter = aconfig.getConfigurationSection("encoder")!=null; 
 	    String os = System.getProperty("os.name").toLowerCase();
 		ffmpegbinary = useconverter?Paths.get(aconfig.getString("encoder.ffmpegbinarypath",plugin.getDataFolder().getPath().concat(File.separator).concat("ffmpeg").concat(os.contains("windows")?".exe":os.contains("mac")?"-osx":""))):null;
 		AudioAttributes audio = new AudioAttributes();          
 		audio.setCodec("libvorbis");                                     
-	 	audio.setBitRate(aconfig.getInt("encoder.bitrate",128000));                                            
+	 	audio.setBitRate(aconfig.getInt("encoder.bitrate",64000));                                            
 	 	audio.setChannels(aconfig.getInt("encoder.channels",2));                                                
 	 	audio.setSamplingRate(aconfig.getInt("encoder.samplingrate",44100));
 		EncodingAttributes attrs = new EncodingAttributes();

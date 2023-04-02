@@ -1,6 +1,6 @@
 name: AMusic
 main: me.bomb.amusic.AMusic
-version: 0.6
+version: 0.7
 author: Bomb
 commands:
   loadmusic:

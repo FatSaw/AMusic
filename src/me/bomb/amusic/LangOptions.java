@@ -112,8 +112,6 @@ enum LangOptions {loadmusic_usage,loadmusic_nopermission,loadmusic_nopermissiono
 			return ((org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer) player).getHandle().locale.toLowerCase();
 		case "v1_9_R2":
 			return ((org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer) player).getHandle().locale.toLowerCase();
-		case "v1_8_R3":
-			return ((org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer) player).getHandle().locale.toLowerCase();
 		default:
 			return player.getLocale().toLowerCase();
 		}

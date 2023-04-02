@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.UUID;
@@ -27,11 +28,12 @@ class ResourceServer extends Thread {
 		plugin.addTask(new BukkitRunnable() {
 			@Override
 			public void run() {
-				int aopch = Bukkit.getOnlinePlayers().hashCode();
+				Collection<? extends Player> onlineplayers = Bukkit.getOnlinePlayers();
+				int aopch = onlineplayers.hashCode();
 				if (ophc != aopch) {
 					ophc = aopch;
 					HashSet<InetAddress> adownloaders = new HashSet<InetAddress>();
-					for (Player player : Bukkit.getOnlinePlayers()) {
+					for (Player player : onlineplayers) {
 						adownloaders.add(player.getAddress().getAddress());
 					}
 					downloaders = adownloaders;
@@ -56,13 +58,16 @@ class ResourceServer extends Thread {
 						connected = server.accept();
 						if (downloaders.contains(connected.getInetAddress())) {
 							new ResourceSender(connected);
+						} else {
+							connected.close();
 						}
 					}
 				} catch (IOException e) {
 				}
 			}
-			if (end)
+			if (end){
 				break;
+			}
 		}
 	}
 

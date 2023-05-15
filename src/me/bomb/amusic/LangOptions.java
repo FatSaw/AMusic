@@ -28,7 +28,8 @@ enum LangOptions {loadmusic_usage,loadmusic_nopermission,loadmusic_nopermissiono
 		if(!langfile.exists()) {
 			try {
 				byte[] buf = new byte[8096];
-				InputStream in = plugin.getResource(Bukkit.getServer().getClass().getPackage().getName().substring(23).equals("v1_16_R3") ? "lang_rgb.yml" : "lang_old.yml");
+				String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
+				InputStream in = plugin.getResource(nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") || nmsversion.equals("v1_15_R1") ? "lang_old.yml" : "lang_rgb.yml");
 				if (in!=null) {
 					buf = Arrays.copyOf(buf, in.read(buf));
 					in.close();

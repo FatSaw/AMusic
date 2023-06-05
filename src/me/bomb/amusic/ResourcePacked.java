@@ -121,6 +121,14 @@ final class ResourcePacked extends Thread {
     	}
     	return null;
     }
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len>>1];
+        for (int i = 0; i < len; ++i,++i) {
+            data[i>>1] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
     private void delete(File file) {
         try {
             if(file.isDirectory()) {
@@ -233,7 +241,7 @@ final class ResourcePacked extends Thread {
         	sb.append("/");
         	sb.append(CachedResource.add(player.getUniqueId(),this.resourcefile));
         	sb.append(".zip");
-        	player.setResourcePack(sb.toString(),this.sha1);
+        	player.setResourcePack(sb.toString(),hexStringToByteArray(this.sha1));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

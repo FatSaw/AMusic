@@ -103,33 +103,25 @@ class ResourceServer extends Thread {
 					return;
 				}
 				token = UUID.fromString(httpQueryString.substring(1, uuidend));
-			} catch (IndexOutOfBoundsException | IllegalArgumentException | IOException e) {}
-			
-			byte[] ares;
-			if ((ares = CachedResource.get(token)).length == 0) {
-				try {
-					client.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+				byte i=0;
+				while(CachedResource.waitAcception(token)&&0!=++i) {
+					try {
+						sleep(100);
+					} catch (InterruptedException e) {
+					}
 				}
-				return;
-			}
-			
-			try {
+				byte[] ares;
+				if (CachedResource.waitAcception(token) || (ares = CachedResource.get(token)).length == 0) {
+					client.close();
+					return;
+				}
 				OutputStream out = this.client.getOutputStream();
 				out.write(responsepart0);
 				out.write(Integer.toString(ares.length).getBytes());
 				out.write(responsepart1);
 				out.write(ares);
 				client.close();
-			} catch (IOException e) {
-				try {
-					client.close();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
-				e.printStackTrace();
-				return;
+			} catch (IndexOutOfBoundsException | IllegalArgumentException | IOException e) {
 			}
 
 		}

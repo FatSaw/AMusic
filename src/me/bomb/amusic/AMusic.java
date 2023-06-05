@@ -55,6 +55,7 @@ public class AMusic extends JavaPlugin implements Listener {
         repeatcommand.setExecutor(new RepeatCommand());
         repeatcommand.setTabCompleter(new RepeatTabComplete());
         Bukkit.getPluginManager().registerEvents(this, this);
+        Bukkit.getPluginManager().registerEvents(new PackStatusListener(), this);
     }
 	
 	public void onDisable() {

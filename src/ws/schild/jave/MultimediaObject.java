@@ -7,8 +7,6 @@ import java.net.URL;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import ws.schild.jave.info.AudioInfo;
 import ws.schild.jave.info.MultimediaInfo;
@@ -31,7 +29,6 @@ public class MultimediaObject {
     this.readURLOnce = readURLOnce;
   }
 
-  private static final Logger LOG = LoggerFactory.getLogger(MultimediaObject.class);
   /** This regexp is used to parse the ffmpeg output about the bit rate value of a stream. */
   private static final Pattern BIT_RATE_PATTERN =
       Pattern.compile("(\\d+)\\s+kb/s", Pattern.CASE_INSENSITIVE);
@@ -194,7 +191,6 @@ public class MultimediaObject {
       int step = 0;
       while (true) {
         String line = reader.readLine();
-        LOG.debug("Output line: {}", line);
         if (line == null) {
           break;
         }
@@ -233,7 +229,6 @@ public class MultimediaObject {
                   info.setDuration(duration);
                   step++;
                 } else {
-                  LOG.warn("Invalid duration found {}", line);
                   step++;
                   // step = 3;
                 }
@@ -242,7 +237,6 @@ public class MultimediaObject {
 					if (m4.matches()) {
 						line = reader.readLine();
 						while (line != null && !p21.matcher(line).matches()) {
-							LOG.debug("Output line: {}", line);
 							Matcher m5 = p5.matcher(line);
 							if (m5.matches()) {
 								info.getMetadata().put(m5.group(1), m5.group(2));
@@ -304,7 +298,6 @@ public class MultimediaObject {
                   if(m4.matches()){
                     line = reader.readLine();
                     while (line != null && p5.matcher(line).matches()) {
-                      LOG.debug("Output line: {}", line);
                       Matcher m5 = p5.matcher(line);
                       if (m5.matches()) {
                         audio.getMetadata().put(m5.group(1), m5.group(2));

@@ -26,9 +26,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * A ffmpeg process wrapper.
  *
@@ -36,7 +33,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ProcessWrapper implements AutoCloseable {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ProcessWrapper.class);
 
   /** The path of the ffmpeg executable. */
   private final String ffmpegExecutablePath;
@@ -94,10 +90,6 @@ public class ProcessWrapper implements AutoCloseable {
     execArgs = enhanceArguments(execArgs);
 
     List<String> execList = execArgs.collect(Collectors.toList());
-
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("About to execute {}", execList.stream().collect(Collectors.joining(" ")));
-    }
 
     Runtime runtime = Runtime.getRuntime();
     ffmpeg = runtime.exec(execList.toArray(new String[0]));
@@ -168,7 +160,6 @@ public class ProcessWrapper implements AutoCloseable {
       try {
         inputStream.close();
       } catch (Throwable t) {
-        LOG.warn("Error closing input stream", t);
       }
       inputStream = null;
     }
@@ -177,7 +168,6 @@ public class ProcessWrapper implements AutoCloseable {
       try {
         outputStream.close();
       } catch (Throwable t) {
-        LOG.warn("Error closing output stream", t);
       }
       outputStream = null;
     }
@@ -186,7 +176,6 @@ public class ProcessWrapper implements AutoCloseable {
       try {
         errorStream.close();
       } catch (Throwable t) {
-        LOG.warn("Error closing error stream", t);
       }
       errorStream = null;
     }
@@ -214,7 +203,6 @@ public class ProcessWrapper implements AutoCloseable {
     try {
       ffmpeg.waitFor();
     } catch (InterruptedException ex) {
-      LOG.warn("Interrupted during waiting on process, forced shutdown?", ex);
     }
     return ffmpeg.exitValue();
   }

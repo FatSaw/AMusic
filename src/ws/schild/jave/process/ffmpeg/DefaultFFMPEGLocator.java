@@ -19,8 +19,6 @@
 package ws.schild.jave.process.ffmpeg;
 
 import java.io.File;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import me.bomb.amusic.ConfigOptions;
 import ws.schild.jave.process.ProcessLocator;
@@ -36,30 +34,15 @@ import ws.schild.jave.process.ProcessWrapper;
  */
 public class DefaultFFMPEGLocator implements ProcessLocator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultFFMPEGLocator.class);
-
   /** The ffmpeg executable file path. */
   private final String path;
 
   /** It builds the default FFMPEGLocator, exporting the ffmpeg executable on a temp file. */
   public DefaultFFMPEGLocator() {
-    String os = System.getProperty("os.name").toLowerCase();
-    boolean isWindows = os.contains("windows");
-    boolean isMac = os.contains("mac");
-    LOG.debug("Os name is <{}> isWindows: {} isMac: {}", os, isWindows, isMac);
 
     File ffmpegFile =  new File(ConfigOptions.ffmpegbinary.toString());
-    LOG.debug("Executable path: {}", ffmpegFile.getAbsolutePath());
 
     path = ffmpegFile.getAbsolutePath();
-    if (ffmpegFile.exists())
-    {
-        LOG.debug("ffmpeg executable found: {}", path);
-    }
-    else
-    {
-        LOG.error("ffmpeg executable NOT found: {}", path);
-    }
   }
 
   @Override

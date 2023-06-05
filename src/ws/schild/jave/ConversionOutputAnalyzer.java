@@ -23,12 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** @author a.schild */
 public class ConversionOutputAnalyzer {
-  private static final Logger LOG = LoggerFactory.getLogger(ConversionOutputAnalyzer.class);
 
   /** This regexp is used to parse the ffmpeg output about the ongoing encoding process. */
   private static final Pattern PROGRESS_INFO_PATTERN =
@@ -40,7 +37,6 @@ public class ConversionOutputAnalyzer {
   // Step 3 = Output
   // Step 4 = frame=...
   private int step = 0;
-  private int lineNR = 0;
   private String lastWarning = null;
   private final List<String> unhandledMessages = new LinkedList<>();
 
@@ -48,8 +44,6 @@ public class ConversionOutputAnalyzer {
   }
 
   public void analyzeNewLine(String line) throws EncoderException {
-    lineNR++;
-    LOG.debug("Input Line ({}): <{}>", lineNR, line);
     if (line.startsWith("Press [q]")) {
       // Abort messages
     } else {
@@ -72,7 +66,6 @@ public class ConversionOutputAnalyzer {
               // outputFound
               step = 2;
             } else if (!line.startsWith("  ")) {
-              LOG.info("Unhandled message in step: {} Line: {} message: <{}>", step, lineNR, line);
               unhandledMessages.add(line);
             } else {
               // wait for Stream mapping:
@@ -88,7 +81,6 @@ public class ConversionOutputAnalyzer {
               // streamMappingFound
               step = 3;
             } else if (!line.startsWith("  ")) {
-              LOG.info("Unhandled message in step: {} Line: {} message: <{}>", step, lineNR, line);
               unhandledMessages.add(line);
             } else {
               // wait for Stream mapping:
@@ -111,7 +103,6 @@ public class ConversionOutputAnalyzer {
               // Ignore these non-fatal errors, if they are fatal, the next line(s)
               // will throw the full error
             } else {
-              LOG.info("Unhandled message in step: {} Line: {} message: <{}>", step, lineNR, line);
               unhandledMessages.add(line);
             }
           }
@@ -128,7 +119,6 @@ public class ConversionOutputAnalyzer {
             }
           }
         } catch (Exception ex) {
-          LOG.warn("Error in progress parsing for line: {}", line);
         }
       }
     }

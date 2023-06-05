@@ -29,9 +29,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ws.schild.jave.encode.ArgType;
 import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingArgument;
@@ -49,8 +46,6 @@ import ws.schild.jave.utils.RBufferedReader;
  * @author Carlo Pelliccia
  */
 public class Encoder {
-
-  private static final Logger LOG = LoggerFactory.getLogger(Encoder.class);
 
   /** This regexp is used to parse the ffmpeg output about the supported formats. */
   private static final Pattern FORMAT_PATTERN =
@@ -527,7 +522,6 @@ public class Encoder {
       unhandledMessages = outputAnalyzer.getUnhandledMessages();
       int exitCode = ffmpeg.getProcessExitCode();
       if (exitCode != 0) {
-        LOG.error("Process exit code: {}  to {}", exitCode, target.getName());
         throw new EncoderException("Exit code of ffmpeg encoding run is " + exitCode);
       }
     } catch (IOException e) {

@@ -44,7 +44,6 @@ final class PositionTracker {
 		}
 		res-=59;
 		sec-=res;
-		//Bukkit.getLogger().warning("SEC: "+sec+" MIN:"+min+" HOUR:"+hour+" RES:"+res);
 		sec|=((short)min<<6);
 		sec|=((short)hour<<6);
 		return sec;

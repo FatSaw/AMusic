@@ -21,7 +21,7 @@ final class Data {
 	private Map<String, Options> options = new HashMap<String, Options>();
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusic.class);
-		File adatafile = new File(plugin.getDataFolder().getPath().concat(File.separator).concat("data.yml"));
+		File adatafile = new File(plugin.getDataFolder(), "data.yml");
 		datafile = adatafile;
 		if (!datafile.exists()) {
 			try {

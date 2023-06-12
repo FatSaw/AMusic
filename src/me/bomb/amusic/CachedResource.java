@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-class CachedResource {
+final class CachedResource {
 	private static final Set<UUID> accepted = new HashSet<UUID>();
 	private static final Map<UUID,UUID> targets = new HashMap<UUID,UUID>();
 	private static final Map<UUID,CachedResource> tokenres = new HashMap<UUID,CachedResource>();

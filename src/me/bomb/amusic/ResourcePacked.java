@@ -68,11 +68,11 @@ final class ResourcePacked extends Thread {
 
 	protected static boolean load(Player player, Data data, String name, boolean update) {
 		UUID uuid = player.getUniqueId();
-		remove(uuid);
-		PositionTracker.remove(uuid);
 		ResourcePacked resourcepacked = new ResourcePacked(uuid, data, name, update);
-		if (!resourcepacked.isAlive()) {
+		if (resourcepacked!=null && !resourcepacked.isAlive()) {
 			resourcepacked.start();
+			remove(uuid);
+			PositionTracker.remove(uuid);
 			return true;
 		}
 		return false;
@@ -151,22 +151,17 @@ final class ResourcePacked extends Thread {
 			// read base pack
 			boolean asyncconvertation = musicfiles.size() > 1 && ConfigOptions.encodetracksasynchronly;
 			byte musicfilessize = (byte) musicfiles.size();
-			List<Converter> convertators = ConfigOptions.useconverter ? new ArrayList<Converter>(musicfilessize) : null;
-			for (byte i = 0; musicfilessize > i; ++i) {
-				File musicfile = musicfiles.get(i);
-				if (ConfigOptions.useconverter) {
+			if (ConfigOptions.useconverter) {
+				List<Converter> convertators = new ArrayList<Converter>(musicfilessize);
+				for (byte i = 0; musicfilessize > i; ++i) {
+					File musicfile = musicfiles.get(i);
 					File outfile = new File(tempdir, "music".concat(Byte.toString(i)).concat(".ogg"));
 					convertators.add(new Converter(asyncconvertation, musicfile, outfile));
 				}
-			}
-			if (ConfigOptions.useconverter) {
 				if (asyncconvertation) {
 					boolean convertationrunning = true;
 					byte checkcount = 0;
 					while (convertationrunning) {
-						if (checkcount == -1) {
-							return; // drop task if not finished for 4 minutes
-						}
 						try {
 							sleep(1000);
 						} catch (InterruptedException e) {
@@ -176,11 +171,13 @@ final class ResourcePacked extends Thread {
 							finished &= convertators.get(i).status.get();
 						}
 						convertationrunning = !finished;
-						++checkcount;
+						if (++checkcount == 0) {
+							return; // drop task if not finished for 4 minutes
+						}
 					}
 				}
 				musicfiles.clear();
-				for (byte i = 0; i < convertators.size(); ++i) {
+				for (byte i = 0; i < musicfilessize; ++i) {
 					File outfile = convertators.get(i).output;
 					musicfiles.add(outfile);
 				}
@@ -189,7 +186,7 @@ final class ResourcePacked extends Thread {
 			HashMap<String, byte[]> topack = new HashMap<String, byte[]>();
 			topack.put("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 3,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
 			StringBuffer sounds = new StringBuffer("{");
-			for (byte i = 0; i < musicfiles.size(); ++i) {
+			for (byte i = 0; i < musicfilessize; ++i) {
 				sounds.append("\t\"amusic.music");
 				sounds.append(i);
 				sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
@@ -217,7 +214,7 @@ final class ResourcePacked extends Thread {
 			// packing to archive
 			CachedResource.resetCache(resourcefile.toPath());
 			try {
-				ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(resourcefile));
+				ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(resourcefile, false));
 				zipOutputStream.setMethod(8);
 				zipOutputStream.setLevel(5);
 				for (String entry : topack.keySet()) {

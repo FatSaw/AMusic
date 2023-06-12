@@ -2,6 +2,7 @@ name: AMusic
 main: me.bomb.amusic.AMusic
 version: 0.8
 author: Bomb
+softdepend: [PlaceholderAPI]
 commands:
   loadmusic:
   playmusic:

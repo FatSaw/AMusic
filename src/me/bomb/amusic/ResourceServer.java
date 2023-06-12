@@ -74,6 +74,10 @@ final class ResourceServer extends Thread {
 			if (end) {
 				break;
 			}
+			try {
+				sleep(1000L);
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 

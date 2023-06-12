@@ -20,14 +20,14 @@ final class Repeater {
 			++curid;
 		break;
 		case REPEATALL:
-			if(curid<ResourcePacked.getActivePlaylist(uuid).size()) {
+			if(curid<ResourcePacked.getPackInfo(uuid).songs.size()) {
 				++curid;
 			} else {
 				curid = 0;
 			}
 		break;
 		case RANDOM:
-			curid = (byte) ThreadLocalRandom.current().nextInt(0,ResourcePacked.getActivePlaylist(uuid).size()-1);
+			curid = (byte) ThreadLocalRandom.current().nextInt(0,ResourcePacked.getPackInfo(uuid).songs.size()-1);
 		break;
 		case REPEATONE:
 		break;

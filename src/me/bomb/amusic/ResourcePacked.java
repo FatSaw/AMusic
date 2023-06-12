@@ -56,12 +56,14 @@ final class ResourcePacked extends Thread {
 			}
 		}
 		if (!ok) {
+			if(!musicdir.exists()) {
+				throw new NoSuchElementException();
+			}
 			for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(ConfigOptions.packedpath.toString(), "music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {
 			}
 		}
 		this.resourcefile = aresourcefile;
-		packinfo = new PackInfo(asongnames == null ? new ArrayList<String>() : asongnames,
-				asonglengths == null ? new ArrayList<Short>() : asonglengths);
+		packinfo = new PackInfo(asongnames == null ? new ArrayList<String>() : asongnames, asonglengths == null ? new ArrayList<Short>() : asonglengths);
 	}
 
 	protected static boolean load(Player player, Data data, String name, boolean update) {

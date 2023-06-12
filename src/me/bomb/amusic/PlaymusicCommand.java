@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 import me.bomb.amusic.LangOptions.Placeholders;
 
-class PlaymusicCommand implements CommandExecutor {
+final class PlaymusicCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(!sender.hasPermission("amusic.playmusic")) {
@@ -51,8 +51,9 @@ class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			List<String> playlist = ResourcePacked.getActivePlaylist(target.getUniqueId());
-			if(playlist==null) {
+			PackInfo packinfo = ResourcePacked.getPackInfo(target.getUniqueId());
+			List<String> playlist;
+			if(packinfo==null||(playlist=packinfo.songs)==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;
 			}

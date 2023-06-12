@@ -48,7 +48,7 @@ public final class ConfigOptions {
 		host = aconfig.getString("host","127.0.0.1");
 		port = aconfig.getInt("port",25530);
 		cache = aconfig.getBoolean("cache",false);
-		hasplaceholderapi = Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null;
+		hasplaceholderapi = Bukkit.getPluginManager().getPlugin("PlaceholderAPI")!=null&&aconfig.getBoolean("useplaceholderapi",true);
 		strictdownloaderlist = aconfig.getBoolean("strictdownloaderlist",true);
 		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 		

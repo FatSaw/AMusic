@@ -70,7 +70,7 @@ public final class ConfigOptions {
 		strictdownloaderlist = aconfig.getBoolean("strictdownloaderlist", true);
 		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 
-		maxpacksize = nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") ? 52428800 : nmsversion.equals("v1_15_R1") || nmsversion.equals("v1_16_R3") || nmsversion.equals("v1_17_R1") ? 104857600 : 262144000;
+		maxpacksize = nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") ? 52428800 : nmsversion.equals("v1_15_R1") || nmsversion.equals("v1_16_R3") || nmsversion.equals("v1_17_R1") ? 104857600 : 262144000;
 		maxmusicfilesize = maxpacksize;
 		useconverter = aconfig.getConfigurationSection("encoder") != null;
 		String os = System.getProperty("os.name").toLowerCase();

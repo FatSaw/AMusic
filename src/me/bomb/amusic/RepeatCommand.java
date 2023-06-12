@@ -6,7 +6,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-class RepeatCommand implements CommandExecutor {
+final class RepeatCommand implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(!sender.hasPermission("amusic.repeat")) {
 			LangOptions.repeat_nopermission.sendMsg(sender);

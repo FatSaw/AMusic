@@ -31,7 +31,7 @@ enum LangOptions {
 			try {
 				byte[] buf = new byte[8096];
 				String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
-				InputStream in = plugin.getResource(nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") || nmsversion.equals("v1_15_R1") ? "lang_old.yml" : "lang_rgb.yml");
+				InputStream in = plugin.getResource(nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") || nmsversion.equals("v1_15_R1") ? "lang_old.yml" : "lang_rgb.yml");
 				if (in != null) {
 					buf = Arrays.copyOf(buf, in.read(buf));
 					in.close();

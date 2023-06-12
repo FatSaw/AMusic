@@ -18,7 +18,7 @@ public class AMusicPlaceholderExpansion extends PlaceholderExpansion {
 
 	@Override
 	public String getVersion() {
-		return "0.8";
+		return "0.9";
 	}
 
 	@Override
@@ -62,11 +62,7 @@ public class AMusicPlaceholderExpansion extends PlaceholderExpansion {
 			return placeholder;
 		}
 		if (params.equalsIgnoreCase("playingsoundremainsize.sec")) {
-			short formated = PositionTracker.getPlayingRemainF(player.getUniqueId());
-			if (formated == -1) {
-
-			}
-			byte sec = (byte) formated;
+			byte sec = (byte) PositionTracker.getPlayingRemainF(player.getUniqueId());
 			sec &= 0x3F;
 			placeholder = Byte.toString(sec);
 			if (placeholder.length() == 1) {

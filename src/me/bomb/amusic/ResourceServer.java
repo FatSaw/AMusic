@@ -16,7 +16,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-class ResourceServer extends Thread {
+final class ResourceServer extends Thread {
 	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nContent-Length: ".getBytes();
 	private static final byte[] responsepart1 = "\r\nConnection: close\r\n\r\n".getBytes();
 	private HashSet<InetAddress> downloaders = new HashSet<InetAddress>();
@@ -25,21 +25,23 @@ class ResourceServer extends Thread {
 	int ophc = 0;
 
 	public ResourceServer(AMusic plugin) {
-		plugin.addTask(new BukkitRunnable() {
-			@Override
-			public void run() {
-				Collection<? extends Player> onlineplayers = Bukkit.getOnlinePlayers();
-				int aopch = onlineplayers.hashCode();
-				if (ophc != aopch) {
-					ophc = aopch;
-					HashSet<InetAddress> adownloaders = new HashSet<InetAddress>();
-					for (Player player : onlineplayers) {
-						adownloaders.add(player.getAddress().getAddress());
+		if(ConfigOptions.strictdownloaderlist) {
+			plugin.addTask(new BukkitRunnable() {
+				@Override
+				public void run() {
+					Collection<? extends Player> onlineplayers = Bukkit.getOnlinePlayers();
+					int aopch = onlineplayers.hashCode();
+					if (ophc != aopch) {
+						ophc = aopch;
+						HashSet<InetAddress> adownloaders = new HashSet<InetAddress>();
+						for (Player player : onlineplayers) {
+							adownloaders.add(player.getAddress().getAddress());
+						}
+						downloaders = adownloaders;
 					}
-					downloaders = adownloaders;
 				}
-			}
-		}.runTaskTimer(plugin, 20L, 20L));
+			}.runTaskTimer(plugin, 20L, 20L));
+		}
 		start();
 	}
 
@@ -54,13 +56,17 @@ class ResourceServer extends Thread {
 			Socket connected = null;
 			while (!server.isClosed()) {
 				try {
-					synchronized (downloaders) {
-						connected = server.accept();
-						if (downloaders.contains(connected.getInetAddress())) {
-							new ResourceSender(connected);
-						} else {
-							connected.close();
+					if(ConfigOptions.strictdownloaderlist) {
+						synchronized (downloaders) {
+							connected = server.accept();
+							if (downloaders.contains(connected.getInetAddress())) {
+								new ResourceSender(connected);
+							} else {
+								connected.close();
+							}
 						}
+					} else {
+						new ResourceSender(server.accept());
 					}
 				} catch (IOException e) {
 				}

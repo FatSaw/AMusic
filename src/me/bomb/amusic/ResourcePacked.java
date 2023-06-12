@@ -56,7 +56,7 @@ final class ResourcePacked extends Thread {
         	}
         }
         if(!ok) {
-            for (short zip = 0;zip!=Short.MIN_VALUE&&(aresourcefile=new File(ConfigOptions.packedpath.toString(), "music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {}
+            for (short zip=0;zip!=Short.MIN_VALUE&&(aresourcefile=new File(ConfigOptions.packedpath.toString(), "music".concat(Short.toString(zip)).concat(".zip"))).exists();++zip) {}
         }
         this.resourcefile = aresourcefile;
         packinfo = new PackInfo(asongnames==null?new ArrayList<String>():asongnames,asonglengths==null?new ArrayList<Short>():asonglengths);
@@ -125,7 +125,6 @@ final class ResourcePacked extends Thread {
     @Override
     public void run() {
     	if(!this.ok) {
-    		delete(tempdir);
     		List<File> musicfiles = new ArrayList<File>();
     		for(File musicfile : musicdir.listFiles()) {
             	if(ConfigOptions.useconverter || musicfile.getName().endsWith(".ogg")) {
@@ -137,28 +136,19 @@ final class ResourcePacked extends Thread {
                 	packinfo.songs.add(songname);
         		}
             }
+    		delete(tempdir);
     		tempdir.mkdirs();
     		//read base pack
-    		HashMap<String,byte[]> topack = new HashMap<String,byte[]>();
-    		topack.put("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 3,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
-            StringBuffer sounds = new StringBuffer("{");
             boolean asyncconvertation = musicfiles.size()>1&&ConfigOptions.encodetracksasynchronly;
             byte musicfilessize = (byte) musicfiles.size();
             List<Converter> convertators = ConfigOptions.useconverter?new ArrayList<Converter>(musicfilessize):null;
             for(byte i=0;musicfilessize>i;++i) {
-            	sounds.append("\t\"amusic.music");
-            	sounds.append(i);
-            	sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
-            	sounds.append(i);
-            	sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
-                sounds.append(musicfilessize-1==i?"\t}\n":"\t},\n");
             	File musicfile = musicfiles.get(i);
         		if(ConfigOptions.useconverter) {
         			File outfile = new File(tempdir,"music".concat(Byte.toString(i)).concat(".ogg"));
         			convertators.add(new Converter(asyncconvertation,musicfile,outfile));
         		}
             }
-            sounds.append("}");
             if(ConfigOptions.useconverter) {
             	if(asyncconvertation) {
             		boolean convertationrunning = true;
@@ -186,7 +176,16 @@ final class ResourcePacked extends Thread {
             	}
             }
             //read files
-            for(byte i=0;i<musicfiles.size();++i) {
+            HashMap<String,byte[]> topack = new HashMap<String,byte[]>();
+    		topack.put("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 3,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
+    		StringBuffer sounds = new StringBuffer("{");
+    		for(byte i=0;i<musicfiles.size();++i) {
+    			sounds.append("\t\"amusic.music");
+            	sounds.append(i);
+            	sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
+            	sounds.append(i);
+            	sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
+                sounds.append(musicfilessize-1==i?"\t}\n":"\t},\n");
             	File outfile = musicfiles.get(i);
             	try{
     				long musicfilelength;
@@ -202,8 +201,9 @@ final class ResourcePacked extends Thread {
     			} catch(IOException e) {
     			}
             }
+            sounds.append("}");
             topack.put("assets/minecraft/sounds.json", sounds.toString().getBytes());
-            
+            delete(tempdir);
             //packing to archive
             CachedResource.resetCache(resourcefile.toPath());
     		try {
@@ -224,7 +224,6 @@ final class ResourcePacked extends Thread {
     		} catch (IOException e) {
     			e.printStackTrace();
     		}
-    		delete(tempdir);
             this.sha1 = data.setPlaylist(name,packinfo.songs,packinfo.lengths,resourcefile);
             
             data.save();

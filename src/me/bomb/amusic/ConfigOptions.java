@@ -25,8 +25,26 @@ public final class ConfigOptions {
 	protected static final EncodingAttributes encodingattributes;
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusic.class);
+		musicpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Music"));
+		packedpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Packed"));
+		temppath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Temp"));
+		try {
+			if (Files.notExists(musicpath))
+				Files.createDirectories(musicpath);
+		} catch (IOException e1) {
+		}
+		try {
+			if (Files.notExists(packedpath))
+				Files.createDirectories(packedpath);
+		} catch (IOException e1) {
+		}
+		try {
+			if (Files.notExists(temppath))
+				Files.createDirectories(temppath);
+		} catch (IOException e1) {
+		}
 		YamlConfiguration aconfig = null;
-		File configfile = new File(plugin.getDataFolder().getPath().concat(File.separator).concat("config.yml"));
+		File configfile = new File(plugin.getDataFolder(), "config.yml");
 		if (!configfile.exists()) {
 			try {
 				byte[] buf = new byte[256];
@@ -67,23 +85,5 @@ public final class ConfigOptions {
 		attrs.setAudioAttributes(audio);
 		encodingattributes = useconverter ? attrs : null;
 		encodetracksasynchronly = useconverter ? aconfig.getBoolean("encoder.async", true) : false;
-		musicpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Music"));
-		packedpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Packed"));
-		temppath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Temp"));
-		try {
-			if (Files.notExists(musicpath))
-				Files.createDirectories(musicpath);
-		} catch (IOException e1) {
-		}
-		try {
-			if (Files.notExists(packedpath))
-				Files.createDirectories(packedpath);
-		} catch (IOException e1) {
-		}
-		try {
-			if (Files.notExists(temppath))
-				Files.createDirectories(temppath);
-		} catch (IOException e1) {
-		}
 	}
 }

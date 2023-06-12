@@ -17,19 +17,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingAttributes;
 
-public class ConfigOptions {
+public final class ConfigOptions {
 	public static final String host;
-	public static final int port;
-	public static final int maxpacksize;
-	public static final int maxmusicfilesize;
-	public static final boolean cache = false;
-	public static final boolean useconverter;
-    public static final Path ffmpegbinary;
+	public static final int port,maxpacksize,maxmusicfilesize;
+	public static final boolean cache,strictdownloaderlist,useconverter,encodetracksasynchronly,hasplaceholderapi;
+	public static final Path ffmpegbinary,musicpath,packedpath,temppath;
     protected static final EncodingAttributes encodingattributes;
-    protected static final boolean encodetracksasynchronly;
-    public static final Path musicpath;
-    public static final Path packedpath;
-    public static final Path temppath;
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusic.class);
 		YamlConfiguration aconfig = null; 
@@ -54,6 +47,9 @@ public class ConfigOptions {
 		aconfig = YamlConfiguration.loadConfiguration(configfile);
 		host = aconfig.getString("host","127.0.0.1");
 		port = aconfig.getInt("port",25530);
+		cache = aconfig.getBoolean("cache",false);
+		hasplaceholderapi = Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null;
+		strictdownloaderlist = aconfig.getBoolean("strictdownloaderlist",true);
 		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 		
 		maxpacksize = nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1")?52428800:nmsversion.equals("v1_15_R1") || nmsversion.equals("v1_16_R3") || nmsversion.equals("v1_17_R1")?104857600:262144000;

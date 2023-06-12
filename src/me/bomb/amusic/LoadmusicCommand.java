@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 import me.bomb.amusic.LangOptions.Placeholders;
 
-class LoadmusicCommand implements CommandExecutor {
+final class LoadmusicCommand implements CommandExecutor {
 	private final Data data;
 	protected LoadmusicCommand(Data data) {
 		this.data = data;
@@ -40,7 +40,7 @@ class LoadmusicCommand implements CommandExecutor {
 			
 			try {
 				if(!ResourcePacked.load(target,data, args[1], sender.hasPermission("amusic.loadmusic.update")&&args.length>2&&args[2].toLowerCase().equals("update"))) {
-					LangOptions.loadmusic_loaderunavilable.sendMsg(target);
+					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return true;
 				}
 				Placeholders[] placeholders = new Placeholders[1];

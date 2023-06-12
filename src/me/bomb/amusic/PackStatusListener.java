@@ -6,7 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
-public class PackStatusListener implements Listener {
+public final class PackStatusListener implements Listener {
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
 		UUID uuid = event.getPlayer().getUniqueId();

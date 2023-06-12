@@ -26,7 +26,7 @@ enum LangOptions {
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusic.class);
 		YamlConfiguration alang = null;
-		File langfile = new File(plugin.getDataFolder() + File.separator + "lang.yml");
+		File langfile = new File(plugin.getDataFolder(), "lang.yml");
 		if (!langfile.exists()) {
 			try {
 				byte[] buf = new byte[8096];
@@ -100,7 +100,11 @@ enum LangOptions {
 	}
 
 	private static String getLocale(Player player) {
-		return player.spigot().getLocale().toLowerCase();
+		try {
+			return player.getLocale().toLowerCase();
+		} catch (NoSuchMethodError e) {
+			return player.spigot().getLocale().toLowerCase();
+		}
 	}
 
 	protected static class Placeholders {

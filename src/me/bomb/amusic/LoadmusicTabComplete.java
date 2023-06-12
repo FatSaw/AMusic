@@ -10,7 +10,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-class LoadmusicTabComplete implements TabCompleter {
+final class LoadmusicTabComplete implements TabCompleter {
 	private final Data data;
 	protected LoadmusicTabComplete(Data data) {
 		this.data=data;
@@ -32,6 +32,7 @@ class LoadmusicTabComplete implements TabCompleter {
 					}
 				}
 			}
+			return tabcomplete;
 		}
 		if (args.length == 2) {
 			Set<String> playlists = data.getPlaylists();

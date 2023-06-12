@@ -8,18 +8,23 @@ import ws.schild.jave.EncoderException;
 import ws.schild.jave.MultimediaObject;
 import ws.schild.jave.encode.EncodingAttributes;
 
-class Converter extends Encoder implements Runnable {
+final class Converter extends Encoder implements Runnable {
 	private static final EncodingAttributes attrs = ConfigOptions.encodingattributes;
-	private final AtomicBoolean status;
-	private final File input;
-	private final File output;
+	protected final AtomicBoolean status;
+	protected final File input,output;
 	
-	private Converter(AtomicBoolean status,File input,File output) {
-		this.status = status;
+	protected Converter(boolean async,File input,File output) {
 		this.input = input;
 		this.output = output;
+		if(async) {
+			status = new AtomicBoolean(false);
+			new Thread(this).start();
+		} else {
+			status = null;
+			run();
+		}
 	}
-	protected static AtomicBoolean convert(File input,File output,boolean async) {
+	/*protected static AtomicBoolean convert(File input,File output,boolean async) {
 		AtomicBoolean status = null;
 		if(async) {
 			status = new AtomicBoolean(false);
@@ -28,7 +33,7 @@ class Converter extends Encoder implements Runnable {
 			new Converter(status, input, output).run();
 		}
 		return status;
-	}
+	}*/
 	
 	@Override
 	public void run() {

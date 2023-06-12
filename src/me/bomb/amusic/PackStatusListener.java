@@ -10,16 +10,17 @@ public final class PackStatusListener implements Listener {
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
 		UUID uuid = event.getPlayer().getUniqueId();
-		switch(event.getStatus()) {
-		case DECLINED: case FAILED_DOWNLOAD:
+		switch (event.getStatus()) {
+		case DECLINED:
+		case FAILED_DOWNLOAD:
 			ResourcePacked.remove(uuid);
-	    	PositionTracker.remove(uuid);
+			PositionTracker.remove(uuid);
 		case SUCCESSFULLY_LOADED:
 			CachedResource.remove(uuid);
-		break;
+			break;
 		case ACCEPTED:
 			CachedResource.setAccepted(uuid);
-		break;
+			break;
 		}
 	}
 }

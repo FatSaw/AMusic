@@ -12,17 +12,17 @@ import org.bukkit.entity.Player;
 final class RepeatTabComplete implements TabCompleter {
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-		if(!sender.hasPermission("amusic.repeat")) {
+		if (!sender.hasPermission("amusic.repeat")) {
 			return null;
 		}
 		ArrayList<String> tabcomplete = new ArrayList<String>();
 		if (args.length == 1) {
-			if(sender instanceof Player) {
+			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if(sender.hasPermission("amusic.repeat.other")) {
-				for(Player player : Bukkit.getOnlinePlayers()) {
-					if(player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+			if (sender.hasPermission("amusic.repeat.other")) {
+				for (Player player : Bukkit.getOnlinePlayers()) {
+					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
 					}
 				}
@@ -30,19 +30,19 @@ final class RepeatTabComplete implements TabCompleter {
 		}
 		if (args.length == 2) {
 			String arg1 = args[1].toLowerCase();
-			if("repeatall".startsWith(arg1)) {
+			if ("repeatall".startsWith(arg1)) {
 				tabcomplete.add("repeatall");
 			}
-			if("repeatone".startsWith(arg1)) {
+			if ("repeatone".startsWith(arg1)) {
 				tabcomplete.add("repeatone");
 			}
-			if("playone".startsWith(arg1)) {
+			if ("playone".startsWith(arg1)) {
 				tabcomplete.add("playone");
 			}
-			if("playall".startsWith(arg1)) {
+			if ("playall".startsWith(arg1)) {
 				tabcomplete.add("playall");
 			}
-			if("random".startsWith(arg1)) {
+			if ("random".startsWith(arg1)) {
 				tabcomplete.add("random");
 			}
 		}

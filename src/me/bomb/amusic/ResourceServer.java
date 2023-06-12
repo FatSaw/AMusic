@@ -25,7 +25,7 @@ final class ResourceServer extends Thread {
 	int ophc = 0;
 
 	public ResourceServer(AMusic plugin) {
-		if(ConfigOptions.strictdownloaderlist) {
+		if (ConfigOptions.strictdownloaderlist) {
 			plugin.addTask(new BukkitRunnable() {
 				@Override
 				public void run() {
@@ -56,7 +56,7 @@ final class ResourceServer extends Thread {
 			Socket connected = null;
 			while (!server.isClosed()) {
 				try {
-					if(ConfigOptions.strictdownloaderlist) {
+					if (ConfigOptions.strictdownloaderlist) {
 						synchronized (downloaders) {
 							connected = server.accept();
 							if (downloaders.contains(connected.getInetAddress())) {
@@ -71,7 +71,7 @@ final class ResourceServer extends Thread {
 				} catch (IOException e) {
 				}
 			}
-			if (end){
+			if (end) {
 				break;
 			}
 		}
@@ -109,8 +109,8 @@ final class ResourceServer extends Thread {
 					return;
 				}
 				token = UUID.fromString(httpQueryString.substring(1, uuidend));
-				byte i=0;
-				while(CachedResource.waitAcception(token)&&0!=++i) {
+				byte i = 0;
+				while (CachedResource.waitAcception(token) && 0 != ++i) {
 					try {
 						sleep(100);
 					} catch (InterruptedException e) {

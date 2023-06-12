@@ -1,5 +1,5 @@
 package me.bomb.amusic;
 
 public enum RepeatType {
-	REPEATONE,REPEATALL,PLAYALL,RANDOM;
+	REPEATONE, REPEATALL, PLAYALL, RANDOM;
 }

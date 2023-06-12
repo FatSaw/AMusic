@@ -13,16 +13,16 @@ final class PlaymusicTabComplete implements TabCompleter {
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
 		ArrayList<String> tabcomplete = new ArrayList<String>();
-		if(!sender.hasPermission("amusic.playmusic")) {
+		if (!sender.hasPermission("amusic.playmusic")) {
 			return null;
 		}
 		if (args.length == 1) {
-			if(sender instanceof Player) {
+			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if(sender.hasPermission("amusic.playmusic.other")) {
-				for(Player player : Bukkit.getOnlinePlayers()) {
-					if(player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+			if (sender.hasPermission("amusic.playmusic.other")) {
+				for (Player player : Bukkit.getOnlinePlayers()) {
+					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
 					}
 				}
@@ -31,18 +31,18 @@ final class PlaymusicTabComplete implements TabCompleter {
 		}
 		if (args.length == 2) {
 			boolean selfsender = false;
-			if(args[0].equals("@s")&&sender instanceof Player) {
-				args[0]=sender.getName();
+			if (args[0].equals("@s") && sender instanceof Player) {
+				args[0] = sender.getName();
 				selfsender = true;
 			}
-			if(selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
+			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
 				Player target = Bukkit.getPlayerExact(args[0]);
-				if(target!=null) {
+				if (target != null) {
 					PackInfo packinfo = ResourcePacked.getPackInfo(target.getUniqueId());
 					List<String> playlist;
-					if(packinfo!=null&&(playlist=packinfo.songs)!=null) {
-						for(String songname:playlist) {
-							if(songname.startsWith(args[1])) {
+					if (packinfo != null && (playlist = packinfo.songs) != null) {
+						for (String songname : playlist) {
+							if (songname.startsWith(args[1])) {
 								tabcomplete.add(songname);
 							}
 						}

@@ -12,22 +12,24 @@ import org.bukkit.entity.Player;
 
 final class LoadmusicTabComplete implements TabCompleter {
 	private final Data data;
+
 	protected LoadmusicTabComplete(Data data) {
-		this.data=data;
+		this.data = data;
 	}
+
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-		if(!sender.hasPermission("amusic.loadmusic")) {
+		if (!sender.hasPermission("amusic.loadmusic")) {
 			return null;
 		}
 		ArrayList<String> tabcomplete = new ArrayList<String>();
 		if (args.length == 1) {
-			if(sender instanceof Player) {
+			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if(sender.hasPermission("amusic.loadmusic.other")) {
-				for(Player player : Bukkit.getOnlinePlayers()) {
-					if(player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+			if (sender.hasPermission("amusic.loadmusic.other")) {
+				for (Player player : Bukkit.getOnlinePlayers()) {
+					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
 					}
 				}
@@ -36,15 +38,15 @@ final class LoadmusicTabComplete implements TabCompleter {
 		}
 		if (args.length == 2) {
 			Set<String> playlists = data.getPlaylists();
-			if(playlists!=null) {
-				for(String playlist:playlists) {
-					if(playlist.startsWith(args[1])) {
+			if (playlists != null) {
+				for (String playlist : playlists) {
+					if (playlist.startsWith(args[1])) {
 						tabcomplete.add(playlist);
 					}
 				}
 			}
 		}
 		return tabcomplete;
-	};
+	}
 
 }

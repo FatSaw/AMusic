@@ -15,7 +15,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
-public class AMusic extends JavaPlugin implements Listener {
+public final class AMusic extends JavaPlugin implements Listener {
     
     private ResourceServer server;
     private static Data data;
@@ -56,6 +56,9 @@ public class AMusic extends JavaPlugin implements Listener {
         repeatcommand.setTabCompleter(new RepeatTabComplete());
         Bukkit.getPluginManager().registerEvents(this, this);
         Bukkit.getPluginManager().registerEvents(new PackStatusListener(), this);
+        if(ConfigOptions.hasplaceholderapi) {
+            new AMusicPlaceholderExpansion().register();
+        }
     }
 	
 	public void onDisable() {
@@ -90,7 +93,7 @@ public class AMusic extends JavaPlugin implements Listener {
 	   * @return the names of sounds in playlist that loaded to player.
 	*/
 	public static List<String> getPlaylistSoundnames(Player player) {
-		return ResourcePacked.getActivePlaylist(player.getUniqueId());
+		return ResourcePacked.getPackInfo(player.getUniqueId()).songs;
 	}
 	
 	/**
@@ -98,7 +101,7 @@ public class AMusic extends JavaPlugin implements Listener {
 	   *
 	   * @return the lenghs of sounds in playlist.
 	*/
-	public static List<Integer> getPlaylistSoundlengths(String playlistname) {
+	public static List<Short> getPlaylistSoundlengths(String playlistname) {
 		return data.getPlaylist(playlistname).length;
 	}
 	
@@ -107,8 +110,8 @@ public class AMusic extends JavaPlugin implements Listener {
 	   *
 	   * @return the lenghs of sounds in playlist that loaded to player.
 	*/
-	public static List<Integer> getPlaylistSoundlengths(Player player) {
-		return ResourcePacked.getActiveLengths(player.getUniqueId());
+	public static List<Short> getPlaylistSoundlengths(Player player) {
+		return ResourcePacked.getPackInfo(player.getUniqueId()).lengths;
 	}
 	
 	/**
@@ -132,7 +135,7 @@ public class AMusic extends JavaPlugin implements Listener {
 	   *
 	   * @return playing sound size in seconds.
 	*/
-	public static int getPlayingSoundSize(Player player) {
+	public static short getPlayingSoundSize(Player player) {
 		return PositionTracker.getPlayingSize(player.getUniqueId());
 	}
 	

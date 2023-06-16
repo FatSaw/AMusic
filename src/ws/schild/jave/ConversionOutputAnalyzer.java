@@ -43,7 +43,7 @@ public class ConversionOutputAnalyzer {
   public ConversionOutputAnalyzer() {
   }
 
-  public void analyzeNewLine(String line) throws EncoderException {
+  public void analyzeNewLine(String line) {
     if (line.startsWith("Press [q]")) {
       // Abort messages
     } else {

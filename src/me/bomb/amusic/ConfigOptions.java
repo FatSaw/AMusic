@@ -14,15 +14,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import ws.schild.jave.encode.AudioAttributes;
-import ws.schild.jave.encode.EncodingAttributes;
-
 public final class ConfigOptions {
 	public static final String host;
 	public static final int port, maxpacksize, maxmusicfilesize;
 	public static final boolean cache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi;
-	public static final Path ffmpegbinary, musicpath, packedpath, temppath;
-	protected static final EncodingAttributes encodingattributes;
+	public static final Path musicpath, packedpath, temppath;
+	public static final String fmpegbinarypath,binarywithargs;
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusic.class);
 		musicpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Music"));
@@ -74,16 +71,8 @@ public final class ConfigOptions {
 		maxmusicfilesize = maxpacksize;
 		useconverter = aconfig.getConfigurationSection("encoder") != null;
 		String os = System.getProperty("os.name").toLowerCase();
-		ffmpegbinary = useconverter ? Paths.get(aconfig.getString("encoder.ffmpegbinarypath", plugin.getDataFolder().getPath().concat(File.separator).concat("ffmpeg").concat(os.contains("windows") ? ".exe" : os.contains("mac") ? "-osx" : ""))) : null;
-		AudioAttributes audio = new AudioAttributes();
-		audio.setCodec("libvorbis");
-		audio.setBitRate(aconfig.getInt("encoder.bitrate", 64000));
-		audio.setChannels(aconfig.getInt("encoder.channels", 2));
-		audio.setSamplingRate(aconfig.getInt("encoder.samplingrate", 44100));
-		EncodingAttributes attrs = new EncodingAttributes();
-		attrs.setOutputFormat("ogg");
-		attrs.setAudioAttributes(audio);
-		encodingattributes = useconverter ? attrs : null;
+		fmpegbinarypath = new File(plugin.getDataFolder(), "ffmpeg".concat(os.contains("windows") ? ".exe" : os.contains("mac") ? "-osx" : "")).getAbsolutePath();
+		binarywithargs = " -acodec libvorbis -ab " + aconfig.getInt("encoder.bitrate", 64000) + " -ac " + aconfig.getInt("encoder.channels", 2) + " -ar " + aconfig.getInt("encoder.samplingrate", 44100) + " -f ogg";
 		encodetracksasynchronly = useconverter ? aconfig.getBoolean("encoder.async", true) : false;
 	}
 }

@@ -19,7 +19,7 @@ public final class ConfigOptions {
 	public static final int port, maxpacksize, maxmusicfilesize;
 	public static final boolean cache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi;
 	public static final Path musicpath, packedpath, temppath;
-	public static final String fmpegbinarypath,binarywithargs;
+	public static final String fmpegbinarypath, binarywithargs;
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusic.class);
 		musicpath = Paths.get(plugin.getDataFolder().getPath().concat(File.separator).concat("Music"));
@@ -72,7 +72,7 @@ public final class ConfigOptions {
 		useconverter = aconfig.getConfigurationSection("encoder") != null;
 		String os = System.getProperty("os.name").toLowerCase();
 		fmpegbinarypath = new File(plugin.getDataFolder(), "ffmpeg".concat(os.contains("windows") ? ".exe" : os.contains("mac") ? "-osx" : "")).getAbsolutePath();
-		binarywithargs = " -acodec libvorbis -ab " + aconfig.getInt("encoder.bitrate", 64000) + " -ac " + aconfig.getInt("encoder.channels", 2) + " -ar " + aconfig.getInt("encoder.samplingrate", 44100) + " -f ogg";
+		binarywithargs = " -acodec libvorbis -ab ".concat(Integer.toString(aconfig.getInt("encoder.bitrate", 64000))).concat(" -ac ").concat(Integer.toString(aconfig.getInt("encoder.channels", 2))).concat(" -ar ").concat(Integer.toString(aconfig.getInt("encoder.samplingrate", 44100))).concat(" -f ogg");
 		encodetracksasynchronly = useconverter ? aconfig.getBoolean("encoder.async", true) : false;
 	}
 }

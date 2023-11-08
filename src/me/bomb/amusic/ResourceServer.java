@@ -9,24 +9,28 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 final class ResourceServer extends Thread {
 	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nContent-Length: ".getBytes();
 	private static final byte[] responsepart1 = "\r\nConnection: close\r\n\r\n".getBytes();
 	private HashSet<InetAddress> downloaders = new HashSet<InetAddress>();
-	private boolean end = false;
+	private boolean run = false;
 	private ServerSocket server;
-	int ophc = 0;
+	private int ophc = 0;
+	private final BukkitTask accesscontroler;
+	
 
 	public ResourceServer(AMusic plugin) {
 		if (ConfigOptions.strictdownloaderlist) {
-			plugin.addTask(new BukkitRunnable() {
+			accesscontroler = new BukkitRunnable() {
 				@Override
 				public void run() {
 					Collection<? extends Player> onlineplayers = Bukkit.getOnlinePlayers();
@@ -40,13 +44,21 @@ final class ResourceServer extends Thread {
 						downloaders = adownloaders;
 					}
 				}
-			}.runTaskTimer(plugin, 20L, 20L));
+			}.runTaskTimer(plugin, 20L, 20L);
+		} else {
+			accesscontroler = null;
 		}
 		start();
 	}
+	
+	@Override
+	public void start() {
+		run = true;
+		super.start();
+	}
 
 	public void run() {
-		while (true) {
+		while (run) {
 			try {
 				server = new ServerSocket(ConfigOptions.port);
 			} catch (Exception e) {
@@ -71,25 +83,20 @@ final class ResourceServer extends Thread {
 				} catch (IOException e) {
 				}
 			}
-			if (end) {
-				break;
-			}
 			try {
 				sleep(1000L);
 			} catch (InterruptedException e) {
 			}
 		}
 	}
-
-	@SuppressWarnings("deprecation")
-	public void close() {
-		end = true;
+	
+	public void end() {
+		run = false;
 		try {
 			server.close();
 		} catch (IOException e) {
-			e.printStackTrace();
 		}
-		stop();
+		accesscontroler.cancel();
 	}
 
 	private class ResourceSender extends Thread {
@@ -131,9 +138,13 @@ final class ResourceServer extends Thread {
 				out.write(responsepart1);
 				out.write(ares);
 				client.close();
-			} catch (IndexOutOfBoundsException | IllegalArgumentException | IOException e) {
+			} catch (NoSuchElementException | IndexOutOfBoundsException | IllegalArgumentException | IOException e) {
+				if(client.isClosed()) return;
+				try {
+					client.close();
+				} catch (IOException e1) {
+				}
 			}
-
 		}
 	}
 

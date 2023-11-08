@@ -1,6 +1,6 @@
 package me.bomb.amusic;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -13,31 +13,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitTask;
 
-public final class AMusic extends JavaPlugin implements Listener {
+public final class AMusic extends JavaPlugin {
 
-	private ResourceServer server;
+	private static ResourceServer server;
 	private static Data data;
-	private final HashSet<BukkitTask> tasks = new HashSet<BukkitTask>(2);
-
-	protected void addTask(BukkitTask task) {
-		tasks.add(task);
-	}
-
-	@EventHandler
-	public void playerQuit(PlayerQuitEvent event) {
-		UUID playeruuid = event.getPlayer().getUniqueId();
-		ResourcePacked.remove(playeruuid);
-		CachedResource.remove(playeruuid);
-		Repeater.setRepeater(playeruuid, null);
-		PositionTracker.remove(playeruuid);
-	}
-
-	@EventHandler
-	public void playerRespawn(PlayerRespawnEvent event) {
-		PositionTracker.stopMusic(event.getPlayer());
-	}
+	private static PositionTracker positiontracker;
 
 	public void onEnable() {
 		new ConfigOptions();
@@ -45,29 +26,40 @@ public final class AMusic extends JavaPlugin implements Listener {
 		server = new ResourceServer(this);
 		data = new Data();
 		data.load();
-		new PositionTracker(this);
+		positiontracker = new PositionTracker();
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
 		loadmusiccommand.setExecutor(new LoadmusicCommand(data));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
 		PluginCommand playmusiccommand = getCommand("playmusic");
-		playmusiccommand.setExecutor(new PlaymusicCommand());
+		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker));
 		playmusiccommand.setTabCompleter(new PlaymusicTabComplete());
 		PluginCommand repeatcommand = getCommand("repeat");
-		repeatcommand.setExecutor(new RepeatCommand());
+		repeatcommand.setExecutor(new RepeatCommand(positiontracker));
 		repeatcommand.setTabCompleter(new RepeatTabComplete());
-		Bukkit.getPluginManager().registerEvents(this, this);
+		ResourcePacked.positiontracker = positiontracker;
+		Bukkit.getPluginManager().registerEvents(new Listener() {
+			@EventHandler
+			public void playerQuit(PlayerQuitEvent event) {
+				UUID playeruuid = event.getPlayer().getUniqueId();
+				ResourcePacked.remove(playeruuid);
+				CachedResource.remove(playeruuid);
+				positiontracker.setRepeater(playeruuid, null);
+			}
+			@EventHandler
+			public void playerRespawn(PlayerRespawnEvent event) {
+				positiontracker.stopMusic(event.getPlayer());
+			}
+		}, this);
 		Bukkit.getPluginManager().registerEvents(new PackStatusListener(), this);
 		if (ConfigOptions.hasplaceholderapi) {
-			new AMusicPlaceholderExpansion().register();
+			new AMusicPlaceholderExpansion(positiontracker).register();
 		}
 	}
 
 	public void onDisable() {
-		server.close();
-		for (BukkitTask task : tasks) {
-			task.cancel();
-		}
-		while (server.isAlive()) {
+		positiontracker.end();
+		server.end();
+		while (positiontracker.isAlive() || server.isAlive()) {
 		}
 	}
 
@@ -95,7 +87,13 @@ public final class AMusic extends JavaPlugin implements Listener {
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
 	public static List<String> getPlaylistSoundnames(Player player) {
-		return ResourcePacked.getPackInfo(player.getUniqueId()).songs;
+		ArrayList<SoundInfo> soundinfos = ResourcePacked.getSoundInfo(player.getUniqueId());
+		int infossize = soundinfos.size();
+		List<String> soundnames = new ArrayList<String>(infossize);
+		for(int i = 0;i<infossize;++i) {
+			soundnames.add(soundinfos.get(i).name);
+		}
+		return soundnames;
 	}
 
 	/**
@@ -113,14 +111,20 @@ public final class AMusic extends JavaPlugin implements Listener {
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
 	public static List<Short> getPlaylistSoundlengths(Player player) {
-		return ResourcePacked.getPackInfo(player.getUniqueId()).lengths;
+		ArrayList<SoundInfo> soundinfos = ResourcePacked.getSoundInfo(player.getUniqueId());
+		int infossize = soundinfos.size();
+		List<Short> soundlengths = new ArrayList<Short>(infossize);
+		for(int i = 0;i<infossize;++i) {
+			soundlengths.add(soundinfos.get(i).length);
+		}
+		return soundlengths;
 	}
 
 	/**
 	 * Set sound repeat mode, null to not repeat.
 	 */
 	public static void setRepeatMode(Player player, RepeatType repeattype) {
-		Repeater.setRepeater(player.getUniqueId(), repeattype);
+		positiontracker.setRepeater(player.getUniqueId(), repeattype);
 	}
 
 	/**
@@ -129,7 +133,7 @@ public final class AMusic extends JavaPlugin implements Listener {
 	 * @return playing sound name.
 	 */
 	public static String getPlayingSoundName(Player player) {
-		return PositionTracker.getPlaying(player.getUniqueId());
+		return positiontracker.getPlaying(player.getUniqueId());
 	}
 
 	/**
@@ -138,7 +142,7 @@ public final class AMusic extends JavaPlugin implements Listener {
 	 * @return playing sound size in seconds.
 	 */
 	public static short getPlayingSoundSize(Player player) {
-		return PositionTracker.getPlayingSize(player.getUniqueId());
+		return positiontracker.getPlayingSize(player.getUniqueId());
 	}
 
 	/**
@@ -147,7 +151,7 @@ public final class AMusic extends JavaPlugin implements Listener {
 	 * @return playing sound remaining seconds.
 	 */
 	public static int getPlayingSoundRemain(Player player) {
-		return PositionTracker.getPlayingRemain(player.getUniqueId());
+		return positiontracker.getPlayingRemain(player.getUniqueId());
 	}
 
 	/**
@@ -161,14 +165,14 @@ public final class AMusic extends JavaPlugin implements Listener {
 	 * Stop sound from loaded pack.
 	 */
 	public static void stopSound(Player player) {
-		PositionTracker.stopMusic(player);
+		positiontracker.stopMusic(player);
 	}
 
 	/**
 	 * Play sound from loaded pack.
 	 */
 	public static void playSound(Player player, String name) {
-		PositionTracker.playMusic(player, name);
+		positiontracker.playMusic(player, name);
 	}
 
 }

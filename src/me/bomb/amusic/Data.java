@@ -37,10 +37,11 @@ final class Data {
 		for (String playlistname : options.keySet()) {
 			Options option = options.get(playlistname);
 			if (option.size > 0 && option.name != null && option.sounds != null) {
-				data.set("playlists.".concat(playlistname).concat(".size"), option.size);
-				data.set("playlists.".concat(playlistname).concat(".name"), option.name);
-				data.set("playlists.".concat(playlistname).concat(".sounds"), option.sounds);
-				data.set("playlists.".concat(playlistname).concat(".length"), option.length);
+				playlistname = "playlists.".concat(playlistname);
+				data.set(playlistname.concat(".size"), option.size);
+				data.set(playlistname.concat(".name"), option.name);
+				data.set(playlistname.concat(".sounds"), option.sounds);
+				data.set(playlistname.concat(".length"), option.length);
 				StringBuilder sb = new StringBuilder();
 				for (byte b : option.sha1) {
 					int value = b & 0xFF;
@@ -49,7 +50,7 @@ final class Data {
 					}
 					sb.append(Integer.toHexString(value).toUpperCase());
 				}
-				data.set("playlists.".concat(playlistname).concat(".sha1"), sb.toString());
+				data.set(playlistname.concat(".sha1"), sb.toString());
 			}
 		}
 		try {
@@ -66,15 +67,16 @@ final class Data {
 			return;
 		}
 		for (String playlistname : playlists.getKeys(false)) {
-			if (data.isInt("playlists.".concat(playlistname).concat(".size"))
-					&& data.isString("playlists.".concat(playlistname).concat(".name"))
-					&& data.isList("playlists.".concat(playlistname).concat(".sounds"))) {
+			String aplaylistname = "playlists.".concat(playlistname);
+			if (data.isInt(aplaylistname.concat(".size"))
+					&& data.isString(aplaylistname.concat(".name"))
+					&& data.isList(aplaylistname.concat(".sounds"))) {
 				try {
 					List<Short> lengths = new ArrayList<Short>();
-					for (int length : data.getIntegerList("playlists.".concat(playlistname).concat(".length"))) {
+					for (int length : data.getIntegerList(aplaylistname.concat(".length"))) {
 						lengths.add((short) length);
 					}
-					String sha1s = data.getString("playlists.".concat(playlistname).concat(".sha1"));
+					String sha1s = data.getString(aplaylistname.concat(".sha1"));
 					if (!sha1s.matches("[0-9a-fA-F]+")) {
 						continue;
 					}
@@ -83,9 +85,9 @@ final class Data {
 						sha1[i] = (byte) ((Character.digit(sha1s.charAt(j), 16) << 4)
 								| Character.digit(sha1s.charAt(j + 1), 16));
 					}
-					Options option = new Options(data.getInt("playlists.".concat(playlistname).concat(".size")),
-							data.getString("playlists.".concat(playlistname).concat(".name")),
-							data.getStringList("playlists.".concat(playlistname).concat(".sounds")), lengths, sha1);
+					Options option = new Options(data.getInt(aplaylistname.concat(".size")),
+							data.getString(aplaylistname.concat(".name")),
+							data.getStringList(aplaylistname.concat(".sounds")), lengths, sha1);
 					options.put(playlistname, option);
 				} catch (IllegalArgumentException e) {
 				}

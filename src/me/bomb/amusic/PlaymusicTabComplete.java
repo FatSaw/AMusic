@@ -38,12 +38,12 @@ final class PlaymusicTabComplete implements TabCompleter {
 			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
 				Player target = Bukkit.getPlayerExact(args[0]);
 				if (target != null) {
-					PackInfo packinfo = ResourcePacked.getPackInfo(target.getUniqueId());
-					List<String> playlist;
-					if (packinfo != null && (playlist = packinfo.songs) != null) {
-						for (String songname : playlist) {
-							if (songname.startsWith(args[1])) {
-								tabcomplete.add(songname);
+					List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(target.getUniqueId());
+					if (soundsinfo != null) {
+						for (SoundInfo soundinfo : soundsinfo) {
+							String soundname = soundinfo.name;
+							if (soundname.startsWith(args[1])) {
+								tabcomplete.add(soundname);
 							}
 						}
 					}

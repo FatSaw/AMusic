@@ -11,6 +11,10 @@ import org.bukkit.entity.Player;
 import me.bomb.amusic.LangOptions.Placeholders;
 
 final class PlaymusicCommand implements CommandExecutor {
+	private final PositionTracker positiontracker;
+	protected PlaymusicCommand(PositionTracker positiontracker) {
+		this.positiontracker = positiontracker;
+	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(!sender.hasPermission("amusic.playmusic")) {
@@ -34,7 +38,7 @@ final class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			PositionTracker.stopMusic(target);
+			positiontracker.stopMusic(target);
 			LangOptions.playmusic_stop.sendMsg(sender);
 			LangOptions.playmusic_stopping.sendMsgActionbar(target);
 		} else if(args.length>1) {
@@ -51,21 +55,23 @@ final class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			PackInfo packinfo = ResourcePacked.getPackInfo(target.getUniqueId());
-			List<String> playlist;
-			if(packinfo==null||(playlist=packinfo.songs)==null) {
+			List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(target.getUniqueId());
+			if(soundsinfo==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;
 			}
 
 			Placeholders[] placeholders = new Placeholders[1];
 			placeholders[0] = new Placeholders("%soundname%",args[1]);
-			if(!playlist.contains(args[1])) {
-				LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
-				return true;
+			for(SoundInfo soundinfo : soundsinfo) {
+				if(soundinfo.name.equals(args[1])) {
+					positiontracker.playMusic(target,args[1]);
+					LangOptions.playmusic_success.sendMsg(sender,placeholders);
+					return true;
+				}
 			}
-			PositionTracker.playMusic(target,args[1]);
-			LangOptions.playmusic_success.sendMsg(sender,placeholders);
+			LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
+			return true;
 		} else {
 			LangOptions.playmusic_usage.sendMsg(sender);
 		}

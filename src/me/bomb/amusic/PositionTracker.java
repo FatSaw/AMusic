@@ -7,27 +7,63 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import me.bomb.amusic.LangOptions.Placeholders;
 
-final class PositionTracker {
-	private static final Map<UUID, Playing> trackers = new HashMap<UUID, Playing>();
-
-	protected PositionTracker(AMusic plugin) {
-		plugin.addTask(new BukkitRunnable() {
-			@Override
-			public void run() {
+final class PositionTracker extends Thread {
+	
+	private final Map<UUID, Playing> trackers = new HashMap<UUID, Playing>();
+	private final HashMap<UUID, RepeatType> repeaters = new HashMap<UUID, RepeatType>();
+	
+	private boolean run = false;
+	protected PositionTracker() {
+		start();
+	}
+	
+	@Override
+	public void start() {
+		run = true;
+		super.start();
+	}
+	
+	public void end() {
+		run = false;
+	}
+	
+	@Override
+	public void run() {
+		while (run) {
+			long time = System.currentTimeMillis();
+			synchronized(trackers) {
 				for (UUID uuid : trackers.keySet()) {
 					Playing playing = trackers.get(uuid);
 					playing.remainingf = sectotime(--playing.remaining);
 					if (playing.remaining < 0) {
 						trackers.remove(uuid);
-						Repeater.next(uuid, playing.currenttrack);
+						RepeatType repeattype;
+						synchronized (repeaters) {
+							repeattype = repeaters.get(uuid);
+						}
+						if(repeattype==null) {
+							continue;
+						}
+						playMusic(uuid, repeattype.next(playing.currenttrack, playing.maxid));
 					}
 				}
 			}
-		}.runTaskTimerAsynchronously(plugin, 20L, 20L));
+			long timedif = System.currentTimeMillis();
+			timedif-=time;
+			if (timedif < 0) timedif = 0;
+			if (timedif > 1000) timedif = 1000;
+			short sleep = 1000;
+			sleep -= (short) timedif;
+			if(sleep>0) {
+				try {
+					Thread.sleep(sleep);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
 	}
 
 	private static short sectotime(short sec) {
@@ -52,76 +88,90 @@ final class PositionTracker {
 		return sec;
 	}
 
-	protected static String getPlaying(UUID uuid) {
-		if (!trackers.containsKey(uuid)) {
+	protected String getPlaying(UUID uuid) {
+		synchronized(trackers) {
+			if (!trackers.containsKey(uuid)) {
+				return null;
+			}
+			List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+			if (soundsinfo == null) {
+				return null;
+			}
+			Playing playing = trackers.get(uuid);
+
+			if (playing.currenttrack < soundsinfo.size()) {
+				return soundsinfo.get(playing.currenttrack).name;
+			}
 			return null;
 		}
-		List<String> activeplaying = ResourcePacked.getPackInfo(uuid).songs;
-		if (activeplaying == null) {
-			return null;
-		}
-		Playing playing = trackers.get(uuid);
-
-		if (playing.currenttrack < activeplaying.size()) {
-			return activeplaying.get(playing.currenttrack);
-		}
-		return null;
 	}
 
-	protected static short getPlayingSize(UUID uuid) {
-		List<Short> activelengths = ResourcePacked.getPackInfo(uuid).lengths;
-		if (!trackers.containsKey(uuid) || activelengths == null) {
-			return -1;
+	protected short getPlayingSize(UUID uuid) {
+		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		synchronized(trackers) {
+			if (!trackers.containsKey(uuid) || soundsinfo == null) {
+				return -1;
+			}
+			Playing playing = trackers.get(uuid);
+			return soundsinfo.get(playing.currenttrack).length;
 		}
-		Playing playing = trackers.get(uuid);
-		return activelengths.get(playing.currenttrack);
 	}
 
-	protected static short getPlayingSizeF(UUID uuid) {
-		List<Short> activelengths = ResourcePacked.getPackInfo(uuid).lengths;
-		if (!trackers.containsKey(uuid) || activelengths == null) {
-			return -1;
+	protected short getPlayingSizeF(UUID uuid) {
+		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		synchronized(trackers) {
+			if (!trackers.containsKey(uuid) || soundsinfo == null) {
+				return -1;
+			}
+			Playing playing = trackers.get(uuid);
+			return sectotime(soundsinfo.get(playing.currenttrack).length);
 		}
-		Playing playing = trackers.get(uuid);
-		return sectotime(activelengths.get(playing.currenttrack));
 	}
 
-	protected static short getPlayingRemain(UUID uuid) {
-		if (!trackers.containsKey(uuid)) {
-			return -1;
+	protected short getPlayingRemain(UUID uuid) {
+		synchronized(trackers) {
+			if (!trackers.containsKey(uuid)) {
+				return -1;
+			}
+			Playing playing = trackers.get(uuid);
+			return playing.remaining;
 		}
-		Playing playing = trackers.get(uuid);
-		return playing.remaining;
 	}
 
-	protected static short getPlayingRemainF(UUID uuid) {
-		if (!trackers.containsKey(uuid)) {
-			return -1;
+	protected short getPlayingRemainF(UUID uuid) {
+		synchronized(trackers) {
+			if (!trackers.containsKey(uuid)) {
+				return -1;
+			}
+			Playing playing = trackers.get(uuid);
+			return playing.remainingf;
 		}
-		Playing playing = trackers.get(uuid);
-		return playing.remainingf;
 	}
 
-	protected static void playMusic(Player player, String name) {
+	protected void playMusic(Player player, String name) {
 		UUID uuid = player.getUniqueId();
-		PackInfo packinfo = ResourcePacked.getPackInfo(uuid);
-		List<String> activeplaylist = packinfo.songs;
-		List<Short> activelengths = packinfo.lengths;
-		if (activeplaylist == null || activelengths == null) {
+		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		if (soundsinfo == null) {
 			return;
 		}
-		byte id = (byte) activeplaylist.indexOf(name);
+		byte soundssize = (byte) soundsinfo.size(),id = soundssize;
+		SoundInfo soundinfo = null;
+		while (--id>-1) {
+			if((soundinfo = soundsinfo.get(id)).name.equals(name)) break;
+		}
 		if (id == -1) {
 			return;
 		}
 		stopMusic(player);
 		LangOptions.playmusic_playing.sendMsgActionbar(player, new Placeholders("%soundname%", name));
-		Playing playing = new Playing(id, activelengths.get(id));
-		trackers.put(uuid, playing);
+		Playing playing = new Playing(id, soundssize, soundinfo.length);
+		synchronized(trackers) {
+			trackers.put(uuid, playing);
+		}
 		player.playSound(player.getLocation(), "amusic.music".concat(Byte.toString(id)), 1.0E9f, 1.0f);
 	}
 
-	protected static void playMusic(UUID uuid, byte id) {
+	private void playMusic(UUID uuid, byte id) {
 		if (uuid == null || id < 0) {
 			return;
 		}
@@ -129,41 +179,61 @@ final class PositionTracker {
 		if (player == null || !player.isOnline()) {
 			return;
 		}
-		PackInfo packinfo = ResourcePacked.getPackInfo(uuid);
-		List<String> activeplaylist = packinfo.songs;
-		List<Short> activelengths = packinfo.lengths;
-		if (activeplaylist == null || activelengths == null) {
+		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		if (soundsinfo == null) {
 			return;
 		}
+		byte soundssize = (byte) soundsinfo.size();
+		if(id>=soundssize) {
+			return;
+		}
+		SoundInfo soundinfo = soundsinfo.get(id);
 		stopMusic(player);
-		LangOptions.playmusic_playing.sendMsgActionbar(player, new Placeholders("%soundname%", activeplaylist.get(id)));
+		LangOptions.playmusic_playing.sendMsgActionbar(player, new Placeholders("%soundname%", soundinfo.name));
 
-		Playing playing = new Playing(id, activelengths.get(id));
+		Playing playing = new Playing(id, soundssize, soundinfo.length);
+		
 		trackers.put(player.getUniqueId(), playing);
+		
 		player.playSound(player.getLocation(), "amusic.music".concat(Byte.toString(id)), 1.0E9f, 1.0f);
 	}
 
-	protected static void stopMusic(Player player) {
-		Playing playing = trackers.remove(player.getUniqueId());
-		if (playing == null) {
-			for (byte i = 0; i != -128; ++i) {
-				player.stopSound("amusic.music".concat(Byte.toString(i)));
+	protected void stopMusic(Player player) {
+		synchronized(trackers) {
+			Playing playing = trackers.remove(player.getUniqueId());
+			if (playing == null) {
+				for (byte i = 0; i != -128; ++i) {
+					player.stopSound("amusic.music".concat(Byte.toString(i)));
+				}
+				return;
 			}
-			return;
+			player.stopSound("amusic.music".concat(Byte.toString(playing.currenttrack)));
 		}
-		player.stopSound("amusic.music".concat(Byte.toString(playing.currenttrack)));
 	}
 
-	protected static void remove(UUID uuid) {
-		trackers.remove(uuid);
+	protected void remove(UUID uuid) {
+		synchronized(trackers) {
+			trackers.remove(uuid);
+		}
+	}
+	
+	protected void setRepeater(UUID uuid, RepeatType repeattype) {
+		synchronized (repeaters) {
+			if (repeattype == null) {
+				repeaters.remove(uuid);
+				return;
+			}
+			repeaters.put(uuid, repeattype);
+		}
 	}
 
 	private static class Playing {
-		private final byte currenttrack;
+		private final byte currenttrack, maxid;
 		private short remaining, remainingf;
 
-		private Playing(byte currenttrack, short remaining) {
+		private Playing(byte currenttrack, byte maxid, short remaining) {
 			this.currenttrack = currenttrack;
+			this.maxid = maxid;
 			this.remaining = remaining;
 			this.remainingf = sectotime(remaining);
 		}

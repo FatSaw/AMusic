@@ -7,6 +7,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 final class RepeatCommand implements CommandExecutor {
+	private final PositionTracker positiontracker;
+	protected RepeatCommand(PositionTracker positiontracker) {
+		this.positiontracker = positiontracker;
+	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if (!sender.hasPermission("amusic.repeat")) {
 			LangOptions.repeat_nopermission.sendMsg(sender);
@@ -31,23 +35,23 @@ final class RepeatCommand implements CommandExecutor {
 			}
 			switch (args[1].toLowerCase()) {
 			case "playone":
-				Repeater.setRepeater(target.getUniqueId(), null);
+				positiontracker.setRepeater(target.getUniqueId(), null);
 				LangOptions.repeat_playone.sendMsg(sender);
 				return true;
 			case "repeatone":
-				Repeater.setRepeater(target.getUniqueId(), RepeatType.REPEATONE);
+				positiontracker.setRepeater(target.getUniqueId(), RepeatType.REPEATONE);
 				LangOptions.repeat_repeatone.sendMsg(sender);
 				return true;
 			case "repeatall":
-				Repeater.setRepeater(target.getUniqueId(), RepeatType.REPEATALL);
+				positiontracker.setRepeater(target.getUniqueId(), RepeatType.REPEATALL);
 				LangOptions.repeat_repeatall.sendMsg(sender);
 				return true;
 			case "playall":
-				Repeater.setRepeater(target.getUniqueId(), RepeatType.PLAYALL);
+				positiontracker.setRepeater(target.getUniqueId(), RepeatType.PLAYALL);
 				LangOptions.repeat_playall.sendMsg(sender);
 				return true;
 			case "random":
-				Repeater.setRepeater(target.getUniqueId(), RepeatType.RANDOM);
+				positiontracker.setRepeater(target.getUniqueId(), RepeatType.RANDOM);
 				LangOptions.repeat_random.sendMsg(sender);
 				return true;
 			default:

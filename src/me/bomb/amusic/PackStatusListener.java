@@ -7,6 +7,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 
 public final class PackStatusListener implements Listener {
+	protected PackStatusListener() {
+	}
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
 		UUID uuid = event.getPlayer().getUniqueId();
@@ -14,7 +16,6 @@ public final class PackStatusListener implements Listener {
 		case DECLINED:
 		case FAILED_DOWNLOAD:
 			ResourcePacked.remove(uuid);
-			PositionTracker.remove(uuid);
 		case SUCCESSFULLY_LOADED:
 			CachedResource.remove(uuid);
 			break;

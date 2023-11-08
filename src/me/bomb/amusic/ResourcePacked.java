@@ -25,8 +25,10 @@ final class ResourcePacked extends Thread {
 	private final UUID target;
 	private final Data data;
 	private final File musicdir, tempdir, resourcefile;
-	private final PackInfo packinfo;
-	private static final HashMap<UUID, PackInfo> downloadedplaylistinfo = new HashMap<UUID, PackInfo>();
+	private List<String> soundnames;
+	private List<Short> soundlengths;
+	private static final HashMap<UUID, ArrayList<SoundInfo>> downloadedplaylistinfo = new HashMap<UUID, ArrayList<SoundInfo>>();
+	protected static PositionTracker positiontracker;
 	private byte[] sha1 = null;
 	private boolean ok = false;
 
@@ -63,7 +65,9 @@ final class ResourcePacked extends Thread {
 			}
 		}
 		this.resourcefile = aresourcefile;
-		packinfo = new PackInfo(asongnames == null ? new ArrayList<String>() : asongnames, asonglengths == null ? new ArrayList<Short>() : asonglengths);
+		soundnames = asongnames == null ? new ArrayList<String>() : asongnames;
+		soundlengths = asonglengths == null ? new ArrayList<Short>() : asonglengths;
+		//packinfo = new PackInfo(asongnames == null ? new ArrayList<String>() : asongnames, asonglengths == null ? new ArrayList<Short>() : asonglengths);
 	}
 
 	protected static boolean load(Player player, Data data, String name, boolean update) {
@@ -72,18 +76,18 @@ final class ResourcePacked extends Thread {
 		if (resourcepacked!=null && !resourcepacked.isAlive()) {
 			resourcepacked.start();
 			remove(uuid);
-			PositionTracker.remove(uuid);
 			return true;
 		}
 		return false;
 	}
 
-	protected static PackInfo getPackInfo(UUID playeruuid) {
+	protected static ArrayList<SoundInfo> getSoundInfo(UUID playeruuid) {
 		return playeruuid == null ? null : downloadedplaylistinfo.get(playeruuid);
 	}
 
 	protected static void remove(UUID playeruuid) {
 		ResourcePacked.downloadedplaylistinfo.remove(playeruuid);
+		positiontracker.remove(playeruuid);
 	}
 
 	private static void delete(File file) {
@@ -143,7 +147,7 @@ final class ResourcePacked extends Thread {
 					if (songname.contains(".")) {
 						songname = songname.substring(0, songname.lastIndexOf("."));
 					}
-					packinfo.songs.add(songname);
+					soundnames.add(songname);
 				}
 			}
 			delete(tempdir);
@@ -203,7 +207,7 @@ final class ResourcePacked extends Thread {
 					FileInputStream in = new FileInputStream(outfile);
 					resource = Arrays.copyOf(resource, in.read(resource));
 					in.close();
-					packinfo.lengths.add(calculateDuration(resource));
+					soundlengths.add(calculateDuration(resource));
 					topack.put("assets/minecraft/sounds/amusic/music".concat(Byte.toString(i)).concat(".ogg"), resource);
 				} catch (IOException e) {
 				}
@@ -231,7 +235,7 @@ final class ResourcePacked extends Thread {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			this.sha1 = data.setPlaylist(name, packinfo.songs, packinfo.lengths, resourcefile);
+			this.sha1 = data.setPlaylist(name, soundnames, soundlengths, resourcefile);
 
 			data.save();
 			data.load();
@@ -239,7 +243,8 @@ final class ResourcePacked extends Thread {
 		this.ok = true;
 
 		Player player = Bukkit.getPlayer(target);
-		if (player != null) {
+		int soundssize = soundnames.size();
+		if (player != null && soundssize == soundlengths.size()) {
 			StringBuilder sb = new StringBuilder("http://");
 			sb.append(ConfigOptions.host);
 			sb.append(":");
@@ -248,7 +253,11 @@ final class ResourcePacked extends Thread {
 			sb.append(CachedResource.add(player.getUniqueId(), this.resourcefile));
 			sb.append(".zip");
 			player.setResourcePack(sb.toString(), this.sha1);
-			downloadedplaylistinfo.put(target, packinfo);
+			ArrayList<SoundInfo> soundinfos = new ArrayList<SoundInfo>(soundssize);
+			for(int i=0;i<soundssize;++i) {
+				soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
+			}
+			downloadedplaylistinfo.put(target, soundinfos);
 		}
 	}
 }

@@ -3,15 +3,10 @@ package me.bomb.amusic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class AMusic extends JavaPlugin {
@@ -19,7 +14,7 @@ public final class AMusic extends JavaPlugin {
 	private static ResourceServer server;
 	private static Data data;
 	private static PositionTracker positiontracker;
-
+	//PLUGIN INIT START
 	public void onEnable() {
 		new ConfigOptions();
 		LangOptions.values();
@@ -32,25 +27,12 @@ public final class AMusic extends JavaPlugin {
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
 		PluginCommand playmusiccommand = getCommand("playmusic");
 		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker));
-		playmusiccommand.setTabCompleter(new PlaymusicTabComplete());
+		playmusiccommand.setTabCompleter(new PlaymusicTabComplete(positiontracker));
 		PluginCommand repeatcommand = getCommand("repeat");
 		repeatcommand.setExecutor(new RepeatCommand(positiontracker));
 		repeatcommand.setTabCompleter(new RepeatTabComplete());
 		ResourcePacked.positiontracker = positiontracker;
-		Bukkit.getPluginManager().registerEvents(new Listener() {
-			@EventHandler
-			public void playerQuit(PlayerQuitEvent event) {
-				UUID playeruuid = event.getPlayer().getUniqueId();
-				ResourcePacked.remove(playeruuid);
-				CachedResource.remove(playeruuid);
-				positiontracker.setRepeater(playeruuid, null);
-			}
-			@EventHandler
-			public void playerRespawn(PlayerRespawnEvent event) {
-				positiontracker.stopMusic(event.getPlayer());
-			}
-		}, this);
-		Bukkit.getPluginManager().registerEvents(new PackStatusListener(), this);
+		Bukkit.getPluginManager().registerEvents(new PackStatusListener(positiontracker), this);
 		if (ConfigOptions.hasplaceholderapi) {
 			new AMusicPlaceholderExpansion(positiontracker).register();
 		}
@@ -59,9 +41,11 @@ public final class AMusic extends JavaPlugin {
 	public void onDisable() {
 		positiontracker.end();
 		server.end();
-		while (positiontracker.isAlive() || server.isAlive()) {
+		while (positiontracker.isAlive() || server.isAlive()) { //DONT STOP)
 		}
 	}
+	//PLUGIN INIT END
+	//API START
 
 	/**
 	 * Get the names of playlists that were loaded at least once.
@@ -87,7 +71,7 @@ public final class AMusic extends JavaPlugin {
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
 	public static List<String> getPlaylistSoundnames(Player player) {
-		ArrayList<SoundInfo> soundinfos = ResourcePacked.getSoundInfo(player.getUniqueId());
+		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(player.getUniqueId());
 		int infossize = soundinfos.size();
 		List<String> soundnames = new ArrayList<String>(infossize);
 		for(int i = 0;i<infossize;++i) {
@@ -111,7 +95,7 @@ public final class AMusic extends JavaPlugin {
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
 	public static List<Short> getPlaylistSoundlengths(Player player) {
-		ArrayList<SoundInfo> soundinfos = ResourcePacked.getSoundInfo(player.getUniqueId());
+		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(player.getUniqueId());
 		int infossize = soundinfos.size();
 		List<Short> soundlengths = new ArrayList<Short>(infossize);
 		for(int i = 0;i<infossize;++i) {
@@ -162,6 +146,15 @@ public final class AMusic extends JavaPlugin {
 	}
 
 	/**
+	 * Get loaded pack name.
+	 *
+	 * @return loaded pack name.
+	 */
+	public static void getPackName(Player player) {
+		positiontracker.getPlaylistName(player.getUniqueId());
+	}
+
+	/**
 	 * Stop sound from loaded pack.
 	 */
 	public static void stopSound(Player player) {
@@ -174,5 +167,7 @@ public final class AMusic extends JavaPlugin {
 	public static void playSound(Player player, String name) {
 		positiontracker.playMusic(player, name);
 	}
+	
+	//API END
 
 }

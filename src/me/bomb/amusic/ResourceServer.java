@@ -1,17 +1,11 @@
 package me.bomb.amusic;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
-import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -19,16 +13,13 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 final class ResourceServer extends Thread {
-	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nContent-Length: ".getBytes();
-	private static final byte[] responsepart1 = "\r\nConnection: close\r\n\r\n".getBytes();
 	private HashSet<InetAddress> downloaders = new HashSet<InetAddress>();
 	private boolean run = false;
 	private ServerSocket server;
 	private int ophc = 0;
 	private final BukkitTask accesscontroler;
 	
-
-	public ResourceServer(AMusic plugin) {
+	protected ResourceServer(AMusic plugin) {
 		if (ConfigOptions.strictdownloaderlist) {
 			accesscontroler = new BukkitRunnable() {
 				@Override
@@ -69,13 +60,15 @@ final class ResourceServer extends Thread {
 			while (!server.isClosed()) {
 				try {
 					if (ConfigOptions.strictdownloaderlist) {
+						connected = server.accept();
+						boolean canaccess = false;
 						synchronized (downloaders) {
-							connected = server.accept();
-							if (downloaders.contains(connected.getInetAddress())) {
-								new ResourceSender(connected);
-							} else {
-								connected.close();
-							}
+							canaccess = downloaders.contains(connected.getInetAddress());
+						}
+						if (canaccess) {
+							new ResourceSender(connected);
+						} else {
+							connected.close();
 						}
 					} else {
 						new ResourceSender(server.accept());
@@ -97,55 +90,6 @@ final class ResourceServer extends Thread {
 		} catch (IOException e) {
 		}
 		accesscontroler.cancel();
-	}
-
-	private class ResourceSender extends Thread {
-		private final Socket client;
-
-		private ResourceSender(Socket client) {
-			this.client = client;
-			start();
-		}
-
-		public void run() {
-			UUID token = null;
-			try {
-				BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-				StringTokenizer tokenizer = new StringTokenizer(in.readLine());
-				String httpMethod = tokenizer.nextToken();
-				String httpQueryString = tokenizer.nextToken();
-				int uuidend;
-				if (!httpMethod.equals("GET") || (uuidend = httpQueryString.lastIndexOf(".zip")) < 36) {
-					client.close();
-					return;
-				}
-				token = UUID.fromString(httpQueryString.substring(1, uuidend));
-				byte i = 0;
-				while (CachedResource.waitAcception(token) && 0 != ++i) {
-					try {
-						sleep(100);
-					} catch (InterruptedException e) {
-					}
-				}
-				byte[] ares;
-				if (CachedResource.waitAcception(token) || (ares = CachedResource.get(token)).length == 0) {
-					client.close();
-					return;
-				}
-				OutputStream out = this.client.getOutputStream();
-				out.write(responsepart0);
-				out.write(Integer.toString(ares.length).getBytes());
-				out.write(responsepart1);
-				out.write(ares);
-				client.close();
-			} catch (NoSuchElementException | IndexOutOfBoundsException | IllegalArgumentException | IOException e) {
-				if(client.isClosed()) return;
-				try {
-					client.close();
-				} catch (IOException e1) {
-				}
-			}
-		}
 	}
 
 }

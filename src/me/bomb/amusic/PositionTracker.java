@@ -1,5 +1,6 @@
 package me.bomb.amusic;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,29 @@ final class PositionTracker extends Thread {
 	
 	private final Map<UUID, Playing> trackers = new HashMap<UUID, Playing>();
 	private final HashMap<UUID, RepeatType> repeaters = new HashMap<UUID, RepeatType>();
+	private final HashMap<UUID, ArrayList<SoundInfo>> playlistinfo = new HashMap<UUID, ArrayList<SoundInfo>>();
+	private final HashMap<UUID, String> loadedplaylistnames = new HashMap<UUID, String>();
+	
+	protected void setPlaylistInfo(UUID playeruuid, String playlistname, ArrayList<SoundInfo> soundinfo) {
+		synchronized(playlistinfo) {
+			playlistinfo.put(playeruuid, soundinfo);
+		}
+		synchronized (loadedplaylistnames) {
+			loadedplaylistnames.put(playeruuid, playlistname);
+		}
+	}
+	
+	protected String getPlaylistName(UUID playeruuid) {
+		synchronized (loadedplaylistnames) {
+			return playeruuid == null ? null : loadedplaylistnames.get(playeruuid);
+		}
+	}
+	
+	protected ArrayList<SoundInfo> getSoundInfo(UUID playeruuid) {
+		synchronized(playlistinfo) {
+			return playeruuid == null ? null : playlistinfo.get(playeruuid);
+		}
+	}
 	
 	private boolean run = false;
 	protected PositionTracker() {
@@ -93,7 +117,7 @@ final class PositionTracker extends Thread {
 			if (!trackers.containsKey(uuid)) {
 				return null;
 			}
-			List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+			List<SoundInfo> soundsinfo = getSoundInfo(uuid);
 			if (soundsinfo == null) {
 				return null;
 			}
@@ -107,7 +131,7 @@ final class PositionTracker extends Thread {
 	}
 
 	protected short getPlayingSize(UUID uuid) {
-		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
 		synchronized(trackers) {
 			if (!trackers.containsKey(uuid) || soundsinfo == null) {
 				return -1;
@@ -118,7 +142,7 @@ final class PositionTracker extends Thread {
 	}
 
 	protected short getPlayingSizeF(UUID uuid) {
-		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
 		synchronized(trackers) {
 			if (!trackers.containsKey(uuid) || soundsinfo == null) {
 				return -1;
@@ -150,7 +174,7 @@ final class PositionTracker extends Thread {
 
 	protected void playMusic(Player player, String name) {
 		UUID uuid = player.getUniqueId();
-		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return;
 		}
@@ -179,7 +203,7 @@ final class PositionTracker extends Thread {
 		if (player == null || !player.isOnline()) {
 			return;
 		}
-		List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(uuid);
+		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return;
 		}
@@ -214,6 +238,15 @@ final class PositionTracker extends Thread {
 	protected void remove(UUID uuid) {
 		synchronized(trackers) {
 			trackers.remove(uuid);
+		}
+		synchronized(playlistinfo) {
+			playlistinfo.remove(uuid);
+		}
+		synchronized(repeaters) {
+			repeaters.remove(uuid);
+		}
+		synchronized(loadedplaylistnames) {
+			loadedplaylistnames.remove(uuid);
 		}
 	}
 	

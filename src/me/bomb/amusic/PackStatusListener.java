@@ -4,10 +4,14 @@ import java.util.UUID;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public final class PackStatusListener implements Listener {
-	protected PackStatusListener() {
+	private final PositionTracker positiontracker;
+	protected PackStatusListener(PositionTracker positiontracker) {
+		this.positiontracker = positiontracker;
 	}
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
@@ -15,7 +19,7 @@ public final class PackStatusListener implements Listener {
 		switch (event.getStatus()) {
 		case DECLINED:
 		case FAILED_DOWNLOAD:
-			ResourcePacked.remove(uuid);
+			positiontracker.remove(uuid);
 		case SUCCESSFULLY_LOADED:
 			CachedResource.remove(uuid);
 			break;
@@ -23,5 +27,15 @@ public final class PackStatusListener implements Listener {
 			CachedResource.setAccepted(uuid);
 			break;
 		}
+	}
+	@EventHandler
+	public void playerQuit(PlayerQuitEvent event) {
+		UUID playeruuid = event.getPlayer().getUniqueId();
+		positiontracker.remove(playeruuid);
+		CachedResource.remove(playeruuid);
+	}
+	@EventHandler
+	public void playerRespawn(PlayerRespawnEvent event) {
+		positiontracker.stopMusic(event.getPlayer());
 	}
 }

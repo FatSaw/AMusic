@@ -55,7 +55,7 @@ final class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(target.getUniqueId());
+			List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 			if(soundsinfo==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;

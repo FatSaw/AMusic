@@ -10,6 +10,10 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 final class PlaymusicTabComplete implements TabCompleter {
+	private final PositionTracker positiontracker;
+	protected PlaymusicTabComplete(PositionTracker positiontracker) {
+		this.positiontracker = positiontracker;
+	}
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
 		ArrayList<String> tabcomplete = new ArrayList<String>();
@@ -38,7 +42,7 @@ final class PlaymusicTabComplete implements TabCompleter {
 			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
 				Player target = Bukkit.getPlayerExact(args[0]);
 				if (target != null) {
-					List<SoundInfo> soundsinfo = ResourcePacked.getSoundInfo(target.getUniqueId());
+					List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 					if (soundsinfo != null) {
 						for (SoundInfo soundinfo : soundsinfo) {
 							String soundname = soundinfo.name;

@@ -25,9 +25,8 @@ final class ResourcePacked extends Thread {
 	private final UUID target;
 	private final Data data;
 	private final File musicdir, tempdir, resourcefile;
-	private List<String> soundnames;
-	private List<Short> soundlengths;
-	private static final HashMap<UUID, ArrayList<SoundInfo>> downloadedplaylistinfo = new HashMap<UUID, ArrayList<SoundInfo>>();
+	private final List<String> soundnames;
+	private final List<Short> soundlengths;
 	protected static PositionTracker positiontracker;
 	private byte[] sha1 = null;
 	private boolean ok = false;
@@ -75,19 +74,10 @@ final class ResourcePacked extends Thread {
 		ResourcePacked resourcepacked = new ResourcePacked(uuid, data, name, update);
 		if (resourcepacked!=null && !resourcepacked.isAlive()) {
 			resourcepacked.start();
-			remove(uuid);
+			positiontracker.remove(uuid);
 			return true;
 		}
 		return false;
-	}
-
-	protected static ArrayList<SoundInfo> getSoundInfo(UUID playeruuid) {
-		return playeruuid == null ? null : downloadedplaylistinfo.get(playeruuid);
-	}
-
-	protected static void remove(UUID playeruuid) {
-		ResourcePacked.downloadedplaylistinfo.remove(playeruuid);
-		positiontracker.remove(playeruuid);
 	}
 
 	private static void delete(File file) {
@@ -250,14 +240,14 @@ final class ResourcePacked extends Thread {
 			sb.append(":");
 			sb.append(ConfigOptions.port);
 			sb.append("/");
-			sb.append(CachedResource.add(player.getUniqueId(), this.resourcefile));
+			sb.append(CachedResource.add(target, this.resourcefile));
 			sb.append(".zip");
 			player.setResourcePack(sb.toString(), this.sha1);
 			ArrayList<SoundInfo> soundinfos = new ArrayList<SoundInfo>(soundssize);
 			for(int i=0;i<soundssize;++i) {
 				soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
 			}
-			downloadedplaylistinfo.put(target, soundinfos);
+			positiontracker.setPlaylistInfo(target, name, soundinfos);
 		}
 	}
 }

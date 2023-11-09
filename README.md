@@ -9,6 +9,7 @@ AMusic.getPlaylistSoundnames(Player player); //получить список з�
 AMusic.getPlaylistSoundlengths(String playlistname); //получить список длин звуков (в секундах)
 AMusic.getPlaylistSoundlengths(Player player); //получить список длин звуков (в секундах) которые загружены игроку
 AMusic.loadPack(Player player, String playlistname, boolean update); //загрузить ресурспак игроку
+AMusic.getPackName(Player player); //получить название загруженного  ресурспака
 AMusic.setRepeatMode(Player player,RepeatType repeattype); //установить режим повтора
 AMusic.stopSound(Player player); //остановить звук
 AMusic.playSound(Player player,String name); //запустить звук

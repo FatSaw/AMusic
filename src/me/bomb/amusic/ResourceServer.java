@@ -52,7 +52,7 @@ final class ResourceServer extends Thread {
 		while (run) {
 			try {
 				server = new ServerSocket(ConfigOptions.port);
-			} catch (Exception e) {
+			} catch (IOException|SecurityException|IllegalArgumentException e) {
 				e.printStackTrace();
 				return;
 			}
@@ -89,7 +89,7 @@ final class ResourceServer extends Thread {
 			server.close();
 		} catch (IOException e) {
 		}
-		accesscontroler.cancel();
+		if(accesscontroler!=null) accesscontroler.cancel();
 	}
 
 }

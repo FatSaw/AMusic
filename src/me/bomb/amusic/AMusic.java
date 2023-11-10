@@ -45,7 +45,10 @@ public final class AMusic extends JavaPlugin {
 		}
 	}
 	//PLUGIN INIT END
+	
 	//API START
+	//API SHOULD NOT RETURN ANY AMUSIC PLUGIN CLASS
+	//API SHOULD NOT BE USED FROM ANY AMUSIC PLUGIN CLASS
 
 	/**
 	 * Get the names of playlists that were loaded at least once.

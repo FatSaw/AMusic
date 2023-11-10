@@ -7,15 +7,14 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class CachedResource {
-	private static final Set<UUID> accepted = new HashSet<UUID>();
-	private static final Map<UUID, UUID> targets = new HashMap<UUID, UUID>();
-	private static final Map<UUID, CachedResource> tokenres = new HashMap<UUID, CachedResource>();
-	private static final Map<Path, CachedResource> resources = new HashMap<Path, CachedResource>();
+	private static final HashSet<UUID> accepted = new HashSet<UUID>();
+	private static final ConcurrentHashMap<UUID, UUID> targets = new ConcurrentHashMap<UUID, UUID>();
+	private static final HashMap<UUID, CachedResource> tokenres = new HashMap<UUID, CachedResource>();
+	private static final HashMap<Path, CachedResource> resources = new HashMap<Path, CachedResource>();
 	private final byte[] resource;
 
 	private CachedResource(File fileresource) {
@@ -55,7 +54,10 @@ final class CachedResource {
 	}
 
 	protected static boolean waitAcception(UUID token) {
-		return token == null && targets.containsValue(token) ? false : !accepted.contains(token);
+		if(targets.containsValue(token)) {
+			return false;
+		}
+		return !accepted.contains(token);
 	}
 
 	protected static byte[] get(UUID token) {

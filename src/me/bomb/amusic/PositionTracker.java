@@ -1,10 +1,12 @@
 package me.bomb.amusic;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -12,80 +14,116 @@ import org.bukkit.entity.Player;
 import me.bomb.amusic.LangOptions.Placeholders;
 
 final class PositionTracker extends Thread {
-	
-	private final Map<UUID, Playing> trackers = new HashMap<UUID, Playing>();
-	private final HashMap<UUID, RepeatType> repeaters = new HashMap<UUID, RepeatType>();
-	private final HashMap<UUID, ArrayList<SoundInfo>> playlistinfo = new HashMap<UUID, ArrayList<SoundInfo>>();
-	private final HashMap<UUID, String> loadedplaylistnames = new HashMap<UUID, String>();
-	
+
+	private final ConcurrentHashMap<UUID, Playing> trackers = new ConcurrentHashMap<UUID, Playing>();
+	private final ConcurrentHashMap<UUID, RepeatType> repeaters = new ConcurrentHashMap<UUID, RepeatType>();
+	private final ConcurrentHashMap<UUID, ArrayList<SoundInfo>> playlistinfo = new ConcurrentHashMap<UUID, ArrayList<SoundInfo>>();
+	private final ConcurrentHashMap<UUID, String> loadedplaylistnames = new ConcurrentHashMap<UUID, String>();
+
 	protected void setPlaylistInfo(UUID playeruuid, String playlistname, ArrayList<SoundInfo> soundinfo) {
-		synchronized(playlistinfo) {
-			playlistinfo.put(playeruuid, soundinfo);
-		}
-		synchronized (loadedplaylistnames) {
-			loadedplaylistnames.put(playeruuid, playlistname);
-		}
+		playlistinfo.put(playeruuid, soundinfo);
+		loadedplaylistnames.put(playeruuid, playlistname);
 	}
-	
+
 	protected String getPlaylistName(UUID playeruuid) {
-		synchronized (loadedplaylistnames) {
-			return playeruuid == null ? null : loadedplaylistnames.get(playeruuid);
-		}
+		return playeruuid == null ? null : loadedplaylistnames.get(playeruuid);
 	}
-	
+
 	protected ArrayList<SoundInfo> getSoundInfo(UUID playeruuid) {
-		synchronized(playlistinfo) {
-			return playeruuid == null ? null : playlistinfo.get(playeruuid);
-		}
+		return playeruuid == null ? null : playlistinfo.get(playeruuid);
 	}
-	
+
 	private boolean run = false;
+
 	protected PositionTracker() {
 		start();
 	}
-	
+
 	@Override
 	public void start() {
 		run = true;
 		super.start();
 	}
-	
+
 	public void end() {
 		run = false;
 	}
-	
+
 	@Override
 	public void run() {
+		long overtime = 0;
+		long time = System.currentTimeMillis();
 		while (run) {
-			long time = System.currentTimeMillis();
-			synchronized(trackers) {
-				for (UUID uuid : trackers.keySet()) {
-					Playing playing = trackers.get(uuid);
-					playing.remainingf = sectotime(--playing.remaining);
-					if (playing.remaining < 0) {
-						trackers.remove(uuid);
-						RepeatType repeattype;
-						synchronized (repeaters) {
+			int trackerssize = 0;
+			trackerssize = trackers.size();
+			if (trackerssize > 0) {
+				int sleept = 500;
+				if (500 < overtime) {
+					sleept = 0;
+				} else if(overtime>0) {
+					sleept -= overtime / trackerssize;
+				}
+				sleept /= trackerssize;
+				if (sleept < 0) {
+					sleept = 0;
+				}
+				//Bukkit.broadcastMessage("SLEEPT: " + sleept);
+				Iterator<Entry<UUID, Playing>> entrysiterator = trackers.entrySet().iterator();
+				while(entrysiterator.hasNext()) {
+					try {
+						Entry<UUID, Playing> entry = entrysiterator.next();
+						UUID uuid = entry.getKey();
+						Playing playing = entry.getValue();
+						playing.remainingf = sectotime(--playing.remaining);
+						if (playing.remaining < 0) {
+							entrysiterator.remove();
+							RepeatType repeattype;
 							repeattype = repeaters.get(uuid);
+							if (repeattype != null) {
+								playMusic(uuid, repeattype.next(playing.currenttrack, playing.maxid));
+							}
 						}
-						if(repeattype==null) {
-							continue;
+						if (sleept > 0) {
+							try {
+								Thread.sleep(sleept);
+							} catch (InterruptedException e) {
+							}
 						}
-						playMusic(uuid, repeattype.next(playing.currenttrack, playing.maxid));
+					} catch (ConcurrentModificationException e) {
+						e.printStackTrace();
 					}
 				}
 			}
-			long timedif = System.currentTimeMillis();
-			timedif-=time;
-			if (timedif < 0) timedif = 0;
-			if (timedif > 1000) timedif = 1000;
-			short sleep = 1000;
-			sleep -= (short) timedif;
-			if(sleep>0) {
-				try {
-					Thread.sleep(sleep);
-				} catch (InterruptedException e) {
+			
+			long curtime = System.currentTimeMillis(),timedif = curtime;
+			timedif -= time;
+			time = curtime;
+			//Bukkit.broadcastMessage("LOADED: " + loadedplaylistnames.size() + " TIMEDIF: " + timedif + " OVERTIME: " + overtime);
+			if (timedif < 0)
+				timedif = 0;
+			if (timedif > 1000) {
+				overtime += timedif - 1000;
+			} else {
+				short sleep = 1000;
+				sleep -= (short) timedif;
+				if (overtime > 1000) {
+					overtime -= sleep;
+				} else {
+					overtime -= sleep;
+					if(overtime<0) {
+						overtime=0;
+					}
+					sleep -= overtime;
+					//Bukkit.broadcastMessage("SLEEP: " + sleep);
+					if (sleep > 0) {
+						try {
+							Thread.sleep(sleep);
+							time+=sleep;
+						} catch (InterruptedException e) {
+						}
+					}
 				}
+
 			}
 		}
 	}
@@ -113,63 +151,53 @@ final class PositionTracker extends Thread {
 	}
 
 	protected String getPlaying(UUID uuid) {
-		synchronized(trackers) {
-			if (!trackers.containsKey(uuid)) {
-				return null;
-			}
-			List<SoundInfo> soundsinfo = getSoundInfo(uuid);
-			if (soundsinfo == null) {
-				return null;
-			}
-			Playing playing = trackers.get(uuid);
-
-			if (playing.currenttrack < soundsinfo.size()) {
-				return soundsinfo.get(playing.currenttrack).name;
-			}
+		if (!trackers.containsKey(uuid)) {
 			return null;
 		}
+		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		if (soundsinfo == null) {
+			return null;
+		}
+		Playing playing = trackers.get(uuid);
+
+		if (playing.currenttrack < soundsinfo.size()) {
+			return soundsinfo.get(playing.currenttrack).name;
+		}
+		return null;
 	}
 
 	protected short getPlayingSize(UUID uuid) {
 		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
-		synchronized(trackers) {
-			if (!trackers.containsKey(uuid) || soundsinfo == null) {
-				return -1;
-			}
-			Playing playing = trackers.get(uuid);
-			return soundsinfo.get(playing.currenttrack).length;
+		if (!trackers.containsKey(uuid) || soundsinfo == null) {
+			return -1;
 		}
+		Playing playing = trackers.get(uuid);
+		return soundsinfo.get(playing.currenttrack).length;
 	}
 
 	protected short getPlayingSizeF(UUID uuid) {
 		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
-		synchronized(trackers) {
-			if (!trackers.containsKey(uuid) || soundsinfo == null) {
-				return -1;
-			}
-			Playing playing = trackers.get(uuid);
-			return sectotime(soundsinfo.get(playing.currenttrack).length);
+		if (!trackers.containsKey(uuid) || soundsinfo == null) {
+			return -1;
 		}
+		Playing playing = trackers.get(uuid);
+		return sectotime(soundsinfo.get(playing.currenttrack).length);
 	}
 
 	protected short getPlayingRemain(UUID uuid) {
-		synchronized(trackers) {
-			if (!trackers.containsKey(uuid)) {
-				return -1;
-			}
-			Playing playing = trackers.get(uuid);
-			return playing.remaining;
+		if (!trackers.containsKey(uuid)) {
+			return -1;
 		}
+		Playing playing = trackers.get(uuid);
+		return playing.remaining;
 	}
 
 	protected short getPlayingRemainF(UUID uuid) {
-		synchronized(trackers) {
-			if (!trackers.containsKey(uuid)) {
-				return -1;
-			}
-			Playing playing = trackers.get(uuid);
-			return playing.remainingf;
+		if (!trackers.containsKey(uuid)) {
+			return -1;
 		}
+		Playing playing = trackers.get(uuid);
+		return playing.remainingf;
 	}
 
 	protected void playMusic(Player player, String name) {
@@ -178,10 +206,11 @@ final class PositionTracker extends Thread {
 		if (soundsinfo == null) {
 			return;
 		}
-		byte soundssize = (byte) soundsinfo.size(),id = soundssize;
+		byte soundssize = (byte) soundsinfo.size(), id = soundssize;
 		SoundInfo soundinfo = null;
-		while (--id>-1) {
-			if((soundinfo = soundsinfo.get(id)).name.equals(name)) break;
+		while (--id > -1) {
+			if ((soundinfo = soundsinfo.get(id)).name.equals(name))
+				break;
 		}
 		if (id == -1) {
 			return;
@@ -189,9 +218,7 @@ final class PositionTracker extends Thread {
 		stopMusic(player);
 		LangOptions.playmusic_playing.sendMsgActionbar(player, new Placeholders("%soundname%", name));
 		Playing playing = new Playing(id, soundssize, soundinfo.length);
-		synchronized(trackers) {
-			trackers.put(uuid, playing);
-		}
+		trackers.put(uuid, playing);
 		player.playSound(player.getLocation(), "amusic.music".concat(Byte.toString(id)), 1.0E9f, 1.0f);
 	}
 
@@ -208,7 +235,7 @@ final class PositionTracker extends Thread {
 			return;
 		}
 		byte soundssize = (byte) soundsinfo.size();
-		if(id>=soundssize) {
+		if (id >= soundssize) {
 			return;
 		}
 		SoundInfo soundinfo = soundsinfo.get(id);
@@ -216,48 +243,36 @@ final class PositionTracker extends Thread {
 		LangOptions.playmusic_playing.sendMsgActionbar(player, new Placeholders("%soundname%", soundinfo.name));
 
 		Playing playing = new Playing(id, soundssize, soundinfo.length);
-		
+
 		trackers.put(player.getUniqueId(), playing);
-		
+
 		player.playSound(player.getLocation(), "amusic.music".concat(Byte.toString(id)), 1.0E9f, 1.0f);
 	}
 
 	protected void stopMusic(Player player) {
-		synchronized(trackers) {
-			Playing playing = trackers.remove(player.getUniqueId());
-			if (playing == null) {
-				for (byte i = 0; i != -128; ++i) {
-					player.stopSound("amusic.music".concat(Byte.toString(i)));
-				}
-				return;
+		Playing playing = trackers.remove(player.getUniqueId());
+		if (playing == null) {
+			for (byte i = 0; i != -128; ++i) {
+				player.stopSound("amusic.music".concat(Byte.toString(i)));
 			}
-			player.stopSound("amusic.music".concat(Byte.toString(playing.currenttrack)));
+			return;
 		}
+		player.stopSound("amusic.music".concat(Byte.toString(playing.currenttrack)));
 	}
 
 	protected void remove(UUID uuid) {
-		synchronized(trackers) {
-			trackers.remove(uuid);
-		}
-		synchronized(playlistinfo) {
-			playlistinfo.remove(uuid);
-		}
-		synchronized(repeaters) {
-			repeaters.remove(uuid);
-		}
-		synchronized(loadedplaylistnames) {
-			loadedplaylistnames.remove(uuid);
-		}
+		trackers.remove(uuid);
+		playlistinfo.remove(uuid);
+		repeaters.remove(uuid);
+		loadedplaylistnames.remove(uuid);
 	}
-	
+
 	protected void setRepeater(UUID uuid, RepeatType repeattype) {
-		synchronized (repeaters) {
-			if (repeattype == null) {
-				repeaters.remove(uuid);
-				return;
-			}
-			repeaters.put(uuid, repeattype);
+		if (repeattype == null) {
+			repeaters.remove(uuid);
+			return;
 		}
+		repeaters.put(uuid, repeattype);
 	}
 
 	private static class Playing {

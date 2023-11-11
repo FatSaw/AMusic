@@ -19,7 +19,7 @@ final class PositionTracker extends Thread {
 	private final ConcurrentHashMap<UUID, RepeatType> repeaters = new ConcurrentHashMap<UUID, RepeatType>();
 	private final ConcurrentHashMap<UUID, ArrayList<SoundInfo>> playlistinfo = new ConcurrentHashMap<UUID, ArrayList<SoundInfo>>();
 	private final ConcurrentHashMap<UUID, String> loadedplaylistnames = new ConcurrentHashMap<UUID, String>();
-
+	
 	protected void setPlaylistInfo(UUID playeruuid, String playlistname, ArrayList<SoundInfo> soundinfo) {
 		playlistinfo.put(playeruuid, soundinfo);
 		loadedplaylistnames.put(playeruuid, playlistname);
@@ -67,7 +67,6 @@ final class PositionTracker extends Thread {
 				if (sleept < 0) {
 					sleept = 0;
 				}
-				//Bukkit.broadcastMessage("SLEEPT: " + sleept);
 				Iterator<Entry<UUID, Playing>> entrysiterator = trackers.entrySet().iterator();
 				while(entrysiterator.hasNext()) {
 					try {
@@ -98,7 +97,6 @@ final class PositionTracker extends Thread {
 			long curtime = System.currentTimeMillis(),timedif = curtime;
 			timedif -= time;
 			time = curtime;
-			//Bukkit.broadcastMessage("LOADED: " + loadedplaylistnames.size() + " TIMEDIF: " + timedif + " OVERTIME: " + overtime);
 			if (timedif < 0)
 				timedif = 0;
 			if (timedif > 1000) {
@@ -114,7 +112,6 @@ final class PositionTracker extends Thread {
 						overtime=0;
 					}
 					sleep -= overtime;
-					//Bukkit.broadcastMessage("SLEEP: " + sleep);
 					if (sleep > 0) {
 						try {
 							Thread.sleep(sleep);
@@ -215,7 +212,9 @@ final class PositionTracker extends Thread {
 		if (id == -1) {
 			return;
 		}
-		stopMusic(player);
+		if(!ConfigOptions.legacystopper || trackers.containsKey(uuid)) {
+			stopMusic(player);
+		}
 		LangOptions.playmusic_playing.sendMsgActionbar(player, new Placeholders("%soundname%", name));
 		Playing playing = new Playing(id, soundssize, soundinfo.length);
 		trackers.put(uuid, playing);
@@ -239,7 +238,9 @@ final class PositionTracker extends Thread {
 			return;
 		}
 		SoundInfo soundinfo = soundsinfo.get(id);
-		stopMusic(player);
+		if(!ConfigOptions.legacystopper) {
+			stopMusic(player);
+		}
 		LangOptions.playmusic_playing.sendMsgActionbar(player, new Placeholders("%soundname%", soundinfo.name));
 
 		Playing playing = new Playing(id, soundssize, soundinfo.length);
@@ -251,13 +252,20 @@ final class PositionTracker extends Thread {
 
 	protected void stopMusic(Player player) {
 		Playing playing = trackers.remove(player.getUniqueId());
-		if (playing == null) {
-			for (byte i = 0; i != -128; ++i) {
-				player.stopSound("amusic.music".concat(Byte.toString(i)));
-			}
+		if(ConfigOptions.legacystopper) {
+			LegacySoundStopper.stopSounds(player);
 			return;
 		}
-		player.stopSound("amusic.music".concat(Byte.toString(playing.currenttrack)));
+		try {
+			if (playing == null) {
+				for (byte i = 0; i != -128; ++i) {
+					player.stopSound("amusic.music".concat(Byte.toString(i)));
+				}
+				return;
+			}
+			player.stopSound("amusic.music".concat(Byte.toString(playing.currenttrack)));
+		} catch (NoSuchMethodError e) {
+		}
 	}
 
 	protected void remove(UUID uuid) {

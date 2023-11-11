@@ -17,7 +17,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 
@@ -55,9 +54,8 @@ enum LangOptions {
 				for (String locale : aavilablelocales) {
 					String optionpath = locale.concat(".").concat(lang.name().replaceAll("_", "."));
 					String msg = alang.getString(optionpath);
-					if (msg.isEmpty()) {
-						msg = TextComponent.toLegacyText(ComponentSerializer.parse("[{\"text\":\"ERROR LANG OPTION \",\"bold\":true,\"color\":\"dark_red\"},{\"text\":\"".concat(lang.name()).concat("\",\"bold\":true,\"color\":\"red\"},{\"text\":\" FOR LOCALE \",\"bold\":true,\"color\":\"dark_red\"},{\"text\":\"").concat(locale).concat("\",\"bold\":true,\"color\":\"red\"},{\"text\":\" NOT EXSIST\",\"bold\":true,\"color\":\"dark_red\"}]")));
-					} else {
+					if (!msg.isEmpty()) {
+						//msg = TextComponent.toLegacyText(ComponentSerializer.parse("[{\"text\":\"ERROR LANG OPTION \",\"bold\":true,\"color\":\"dark_red\"},{\"text\":\"".concat(lang.name()).concat("\",\"bold\":true,\"color\":\"red\"},{\"text\":\" FOR LOCALE \",\"bold\":true,\"color\":\"dark_red\"},{\"text\":\"").concat(locale).concat("\",\"bold\":true,\"color\":\"red\"},{\"text\":\" NOT EXSIST\",\"bold\":true,\"color\":\"dark_red\"}]")));
 						char startchar = msg.charAt(0), endchar = msg.charAt(msg.length() - 1);
 						if (startchar == '[' && endchar == ']' || startchar == '{' && endchar == '}') {
 							msg = TextComponent.toLegacyText(ComponentSerializer.parse(msg));
@@ -95,7 +93,11 @@ enum LangOptions {
 			for (Placeholders placeholder : placeholders) {
 				msg = msg.replaceAll(placeholder.placeholder, placeholder.value);
 			}
-			target.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(msg));
+			try {
+				target.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(msg));
+			} catch (NoSuchMethodError | NoClassDefFoundError e) {
+				target.sendMessage(msg);
+			}
 		}
 	}
 

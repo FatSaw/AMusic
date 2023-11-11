@@ -66,10 +66,43 @@ final class ResourcePacked extends Thread {
 		this.resourcefile = aresourcefile;
 		soundnames = asongnames == null ? new ArrayList<String>() : asongnames;
 		soundlengths = asonglengths == null ? new ArrayList<Short>() : asonglengths;
-		//packinfo = new PackInfo(asongnames == null ? new ArrayList<String>() : asongnames, asonglengths == null ? new ArrayList<Short>() : asonglengths);
+	}
+	private ResourcePacked(Data data, String name) throws NoSuchElementException {
+		this.name = name;
+		this.target = null;
+		this.data = data;
+		musicdir = new File(ConfigOptions.musicpath.toString(), name);
+		tempdir = new File(ConfigOptions.temppath.toString(), name);
+		if (!data.containsPlaylist(name)) {
+			throw new NoSuchElementException();
+		}
+		Options options = data.getPlaylist(name);
+		File resourcefile = new File(ConfigOptions.packedpath.toString(), options.name);
+		if (resourcefile != null && resourcefile.exists()) {
+			delete(resourcefile);
+			data.removePlaylist(name);
+		}
+		File aresourcefile = null;
+
+		if(!musicdir.exists()) {
+			throw new NoSuchElementException();
+		}
+		for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(ConfigOptions.packedpath.toString(), "music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {
+		}
+		this.resourcefile = aresourcefile;
+		soundnames = new ArrayList<String>();
+		soundlengths = new ArrayList<Short>();
 	}
 
 	protected static boolean load(Player player, Data data, String name, boolean update) {
+		if(player==null) {
+			ResourcePacked resourcepacked = new ResourcePacked(data, name);
+			if (resourcepacked!=null && !resourcepacked.isAlive()) {
+				resourcepacked.start();
+				return true;
+			}
+			return false;
+		}
 		UUID uuid = player.getUniqueId();
 		ResourcePacked resourcepacked = new ResourcePacked(uuid, data, name, update);
 		if (resourcepacked!=null && !resourcepacked.isAlive()) {
@@ -178,22 +211,22 @@ final class ResourcePacked extends Thread {
 			}
 			// read files
 			HashMap<String, byte[]> topack = new HashMap<String, byte[]>();
-			topack.put("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 3,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
-			StringBuffer sounds = new StringBuffer("{");
-			for (byte i = 0; i < musicfilessize; ++i) {
+			topack.put("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
+			StringBuffer sounds = new StringBuffer("{\n");
+			for (byte i = musicfilessize; --i > -1;) {
 				sounds.append("\t\"amusic.music");
 				sounds.append(i);
 				sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
 				sounds.append(i);
 				sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
-				sounds.append(musicfilessize - 1 == i ? "\t}\n" : "\t},\n");
+				sounds.append(i==0 ? "\t}\n" : "\t},\n");
 				File outfile = musicfiles.get(i);
 				try {
-					long musicfilelength;
+					int musicfilelength;
 					if ((musicfilelength = (int) outfile.length()) > ConfigOptions.maxmusicfilesize) {
 						continue;
 					}
-					byte[] resource = new byte[(int) musicfilelength];
+					byte[] resource = new byte[musicfilelength];
 					FileInputStream in = new FileInputStream(outfile);
 					resource = Arrays.copyOf(resource, in.read(resource));
 					in.close();
@@ -242,7 +275,15 @@ final class ResourcePacked extends Thread {
 			sb.append("/");
 			sb.append(CachedResource.add(target, this.resourcefile));
 			sb.append(".zip");
-			player.setResourcePack(sb.toString(), this.sha1);
+			if(ConfigOptions.legacysender) {
+				LegacyPackSender.sendResourcePack(player, sb.toString(), this.sha1);
+			} else {
+				try {
+					player.setResourcePack(sb.toString(), this.sha1);
+				} catch (NoSuchMethodError e) {
+					player.setResourcePack(sb.toString());
+				}
+			}
 			ArrayList<SoundInfo> soundinfos = new ArrayList<SoundInfo>(soundssize);
 			for(int i=0;i<soundssize;++i) {
 				soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));

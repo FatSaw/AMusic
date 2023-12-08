@@ -4,40 +4,35 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 final class ResourceServer extends Thread {
-	private HashSet<InetAddress> downloaders = new HashSet<InetAddress>();
+	private final ConcurrentHashMap<Player,InetAddress> onlineips = new ConcurrentHashMap<Player,InetAddress>(16,0.75f,1);
 	private boolean run = false;
 	private ServerSocket server;
-	private int ophc = 0;
-	private final BukkitTask accesscontroler;
 	
 	protected ResourceServer(AMusic plugin) {
 		if (ConfigOptions.strictdownloaderlist) {
-			accesscontroler = new BukkitRunnable() {
-				@Override
-				public void run() {
-					Collection<? extends Player> onlineplayers = Bukkit.getOnlinePlayers();
-					int aopch = onlineplayers.hashCode();
-					if (ophc != aopch) {
-						ophc = aopch;
-						HashSet<InetAddress> adownloaders = new HashSet<InetAddress>();
-						for (Player player : onlineplayers) {
-							adownloaders.add(player.getAddress().getAddress());
-						}
-						downloaders = adownloaders;
-					}
+			
+			Bukkit.getPluginManager().registerEvents(new Listener() {
+				@EventHandler
+				public void playerJoin(PlayerJoinEvent event) {
+					Player player = event.getPlayer();
+					onlineips.put(player, player.getAddress().getAddress());
 				}
-			}.runTaskTimer(plugin, 20L, 20L);
-		} else {
-			accesscontroler = null;
+				@EventHandler
+				public void playerQuit(PlayerQuitEvent event) {
+					Player player = event.getPlayer();
+					onlineips.remove(player);
+				}
+			}, plugin);
 		}
 		start();
 	}
@@ -61,11 +56,7 @@ final class ResourceServer extends Thread {
 				try {
 					if (ConfigOptions.strictdownloaderlist) {
 						connected = server.accept();
-						boolean canaccess = false;
-						synchronized (downloaders) {
-							canaccess = downloaders.contains(connected.getInetAddress());
-						}
-						if (canaccess) {
+						if (onlineips.values().contains(connected.getInetAddress())) {
 							new ResourceSender(connected);
 						} else {
 							connected.close();
@@ -89,7 +80,6 @@ final class ResourceServer extends Thread {
 			server.close();
 		} catch (IOException e) {
 		}
-		if(accesscontroler!=null) accesscontroler.cancel();
 	}
 
 }

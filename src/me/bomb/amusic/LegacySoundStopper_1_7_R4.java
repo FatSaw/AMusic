@@ -32,7 +32,6 @@ final class LegacySoundStopper_1_7_R4 extends LegacySoundStopper {
 		connection.sendPacket(new PacketPlayOutRespawn(entityplayer.dimension, entityplayer.world.difficulty, entityplayer.world.getWorldData().getType(), entityplayer.playerInteractManager.getGameMode()));
 		world.getPlayerChunkMap().addPlayer(entityplayer);
 		world.addEntity(entityplayer);
-		//connection.sendPacket(new PacketPlayOutSpawnPosition(world.getSpawn()));
 		connection.sendPacket(new PacketPlayOutExperience(entityplayer.exp, entityplayer.expTotal, entityplayer.expLevel));
         connection.sendPacket(new PacketPlayOutUpdateHealth(entityplayer.getHealth(), entityplayer.getFoodData().getFoodLevel(), entityplayer.getFoodData().getSaturationLevel()));
 		connection.sendPacket(new PacketPlayOutAbilities(entityplayer.abilities));

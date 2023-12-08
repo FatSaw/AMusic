@@ -6,13 +6,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.bukkit.Bukkit;
@@ -24,7 +25,7 @@ final class ResourcePacked extends Thread {
 	private final String name;
 	private final UUID target;
 	private final Data data;
-	private final File musicdir, tempdir, resourcefile;
+	private final File musicdir, tempdir, resourcefile, sourcearchive;
 	private final List<String> soundnames;
 	private final List<Short> soundlengths;
 	protected static PositionTracker positiontracker;
@@ -37,6 +38,8 @@ final class ResourcePacked extends Thread {
 		this.data = data;
 		musicdir = new File(ConfigOptions.musicpath.toString(), name);
 		tempdir = new File(ConfigOptions.temppath.toString(), name);
+		File srcarchive = new File(ConfigOptions.musicpath.toString(), name.concat(".zip"));
+		sourcearchive = srcarchive.isFile() ? srcarchive : null;
 		List<String> asongnames = null;
 		List<Short> asonglengths = null;
 		File aresourcefile = null;
@@ -47,7 +50,7 @@ final class ResourcePacked extends Thread {
 				if (update) {
 					delete(resourcefile);
 					data.removePlaylist(name);
-				} else if (options.check(resourcefile)) {
+				} else if (CachedResource.isCached(resourcefile.toPath()) || options.check(resourcefile)) {
 					aresourcefile = resourcefile;
 					asongnames = options.sounds;
 					asonglengths = options.length;
@@ -73,6 +76,8 @@ final class ResourcePacked extends Thread {
 		this.data = data;
 		musicdir = new File(ConfigOptions.musicpath.toString(), name);
 		tempdir = new File(ConfigOptions.temppath.toString(), name);
+		File srcarchive = new File(ConfigOptions.musicpath.toString(), name.concat(".zip"));
+		sourcearchive = srcarchive.isFile() ? srcarchive : null;
 		if (!data.containsPlaylist(name)) {
 			throw new NoSuchElementException();
 		}
@@ -95,17 +100,20 @@ final class ResourcePacked extends Thread {
 	}
 
 	protected static boolean load(Player player, Data data, String name, boolean update) {
-		if(player==null) {
+		boolean processpack = ConfigOptions.processpack;
+		if(player==null&&processpack) {
 			ResourcePacked resourcepacked = new ResourcePacked(data, name);
+			
 			if (resourcepacked!=null && !resourcepacked.isAlive()) {
 				resourcepacked.start();
 				return true;
 			}
 			return false;
 		}
+		update&=processpack;
 		UUID uuid = player.getUniqueId();
 		ResourcePacked resourcepacked = new ResourcePacked(uuid, data, name, update);
-		if (resourcepacked!=null && !resourcepacked.isAlive()) {
+		if (resourcepacked!=null && !resourcepacked.isAlive() && (processpack || resourcepacked.ok)) {
 			resourcepacked.start();
 			positiontracker.remove(uuid);
 			return true;
@@ -209,10 +217,10 @@ final class ResourcePacked extends Thread {
 					musicfiles.add(outfile);
 				}
 			}
+			
 			// read files
-			HashMap<String, byte[]> topack = new HashMap<String, byte[]>();
-			topack.put("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
-			StringBuffer sounds = new StringBuffer("{\n");
+			byte[][] topack = new byte[musicfilessize][];
+			StringBuffer sounds = new StringBuffer("\n");
 			for (byte i = musicfilessize; --i > -1;) {
 				sounds.append("\t\"amusic.music");
 				sounds.append(i);
@@ -231,35 +239,106 @@ final class ResourcePacked extends Thread {
 					resource = Arrays.copyOf(resource, in.read(resource));
 					in.close();
 					soundlengths.add(calculateDuration(resource));
-					topack.put("assets/minecraft/sounds/amusic/music".concat(Byte.toString(i)).concat(".ogg"), resource);
+					topack[i] = resource;
 				} catch (IOException e) {
 				}
 			}
-			sounds.append("}");
-			topack.put("assets/minecraft/sounds.json", sounds.toString().getBytes());
+			String soundslist = sounds.toString();
 			delete(tempdir);
 			// packing to archive
 			CachedResource.resetCache(resourcefile.toPath());
+			
+			ZipOutputStream zos;
 			try {
-				ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(resourcefile, false));
-				zipOutputStream.setMethod(8);
-				zipOutputStream.setLevel(5);
-				for (String entry : topack.keySet()) {
-					ZipEntry zipEntry = new ZipEntry(entry);
-					byte[] resource = topack.get(entry);
-					try {
-						zipOutputStream.putNextEntry(zipEntry);
-						zipOutputStream.write(resource);
-						zipOutputStream.closeEntry();
-					} catch (IOException e) {
-					}
-				}
-				zipOutputStream.close();
+				zos = new ZipOutputStream(new FileOutputStream(resourcefile, false), Charset.defaultCharset());
 			} catch (IOException e) {
-				e.printStackTrace();
+				return;
 			}
+			zos.setMethod(8);
+			zos.setLevel(5);
+			boolean ioe = false;
+			try {
+				boolean packmcmetafound = false, soundsjsonappended = false;
+				if(sourcearchive!=null) {
+					ZipInputStream zis;
+					zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
+					ZipEntry entry;
+					int len;
+					byte[] buffer = new byte[1024];
+					while((entry = zis.getNextEntry()) != null) {
+						String entryname = entry.getName();
+						if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
+							packmcmetafound = true;
+						} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
+							
+							StringBuilder sb = new StringBuilder();
+							while ((len = zis.read(buffer)) != -1) {
+								if(len<1024) buffer = Arrays.copyOf(buffer, len);
+								sb.append(new String(buffer));
+							}
+							int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
+							if(open==-1||close==-1) {
+								continue;
+							}
+							
+							while(close>open&&sb.charAt(--close) == '}');
+							if(close==-1) {
+								continue;
+							}
+							sb.insert(close, ',');
+							sb.insert(++close, soundslist);
+							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+							zos.write(sb.toString().getBytes());
+							zos.closeEntry();
+							soundsjsonappended = true;
+							continue;
+						}
+						//String comment = entry.getComment();
+						//FileTime creationtime = entry.getCreationTime(), lastaccesstime = entry.getLastAccessTime(), lastmodifiedtime = entry.getLastModifiedTime();
+						entry = new ZipEntry(entryname);
+						//if(comment!=null) entry.setComment(comment);
+						//if(creationtime!=null) entry.setCreationTime(creationtime);
+						//if(lastaccesstime!=null) entry.setLastAccessTime(lastaccesstime);
+						//if(lastmodifiedtime!=null) entry.setLastModifiedTime(lastmodifiedtime);
+						zos.putNextEntry(entry);
+		                while ((len = zis.read(buffer)) != -1) {
+		                	zos.write(buffer, 0, len);
+		                }
+		                zos.closeEntry();
+					}
+					zis.close();
+				}
+				for(byte i = musicfilessize; --i>-1;) {
+					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
+		            zos.write(topack[i]);
+		            zos.closeEntry();
+					
+				}
+				if(!soundsjsonappended) {
+					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+					zos.write("{".getBytes());
+					zos.write(soundslist.getBytes());
+					zos.write("}".getBytes());
+					zos.closeEntry();
+				}
+				if(!packmcmetafound) {
+					zos.putNextEntry(new ZipEntry("pack.mcmeta"));
+					zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
+					zos.closeEntry();
+				}
+			} catch (IOException e) {
+				ioe = true;
+			}
+			
+			try {
+				zos.close();
+			} catch (IOException e1) {
+				return;
+			}
+			if(ioe) return;
+			
 			this.sha1 = data.setPlaylist(name, soundnames, soundlengths, resourcefile);
-
+			
 			data.save();
 			data.load();
 		}
@@ -275,6 +354,9 @@ final class ResourcePacked extends Thread {
 			sb.append("/");
 			sb.append(CachedResource.add(target, this.resourcefile));
 			sb.append(".zip");
+			if(!ConfigOptions.checkpackstatus) {
+				CachedResource.setAccepted(target);
+			}
 			if(ConfigOptions.legacysender) {
 				LegacyPackSender.sendResourcePack(player, sb.toString(), this.sha1);
 			} else {

@@ -1,6 +1,6 @@
 name: AMusic
 main: me.bomb.amusic.AMusic
-version: 0.11
+version: 0.12
 author: Bomb
 softdepend: [PlaceholderAPI]
 commands:

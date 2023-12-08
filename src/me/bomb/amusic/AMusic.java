@@ -32,7 +32,10 @@ public final class AMusic extends JavaPlugin {
 		repeatcommand.setExecutor(new RepeatCommand(positiontracker));
 		repeatcommand.setTabCompleter(new RepeatTabComplete());
 		ResourcePacked.positiontracker = positiontracker;
-		Bukkit.getPluginManager().registerEvents(new PackStatusListener(positiontracker), this);
+		Bukkit.getPluginManager().registerEvents(new EventListener(positiontracker), this);
+		if(ConfigOptions.checkpackstatus) {
+			Bukkit.getPluginManager().registerEvents(new PackStatusEventListener(positiontracker), this);
+		}
 		if (ConfigOptions.hasplaceholderapi) {
 			new AMusicPlaceholderExpansion(positiontracker).register();
 		}

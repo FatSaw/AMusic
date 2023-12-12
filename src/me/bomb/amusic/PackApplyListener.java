@@ -18,7 +18,12 @@ abstract class PackApplyListener {
 			String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 			switch (nmsversion) {
 			case "v1_7_R4":
-				packsender = new PackApplyListener_1_7_R4();
+				PackApplyListener apacksender = null;
+				try {
+					apacksender = new PackApplyListener_1_7_R4();
+				} catch (NoSuchFieldException | SecurityException e) {
+				}
+				packsender = apacksender;
 				break;
 			case "v1_8_R3":
 				packsender = new PackApplyListener_1_8_R3();
@@ -69,7 +74,6 @@ abstract class PackApplyListener {
 		if((ab = packsender.applylisteners.get(playeruuid)) == null) {
 			return;
 		}
-
 		ab.set(false);
 	}
 	

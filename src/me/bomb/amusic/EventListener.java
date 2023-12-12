@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
@@ -14,10 +15,15 @@ public final class EventListener implements Listener {
 		this.positiontracker = positiontracker;
 	}
 	@EventHandler
+	public void playerJoin(PlayerJoinEvent event) {
+		PackApplyListener.registerApplyListenTask(event.getPlayer());
+	}
+	@EventHandler
 	public void playerQuit(PlayerQuitEvent event) {
 		UUID playeruuid = event.getPlayer().getUniqueId();
 		positiontracker.remove(playeruuid);
 		CachedResource.remove(playeruuid);
+		PackApplyListener.unregisterApplyListenTask(event.getPlayer());
 	}
 	@EventHandler
 	public void playerRespawn(PlayerRespawnEvent event) {

@@ -346,31 +346,49 @@ final class ResourcePacked extends Thread {
 
 		Player player = Bukkit.getPlayer(target);
 		int soundssize = soundnames.size();
-		if (player != null && soundssize == soundlengths.size()) {
-			StringBuilder sb = new StringBuilder("http://");
-			sb.append(ConfigOptions.host);
-			sb.append(":");
-			sb.append(ConfigOptions.port);
-			sb.append("/");
-			sb.append(CachedResource.add(target, this.resourcefile));
-			sb.append(".zip");
-			if(!ConfigOptions.checkpackstatus) {
-				CachedResource.setAccepted(target);
+		if (player == null || soundssize != soundlengths.size()) {
+			return;
+		}
+		StringBuilder sb = new StringBuilder("http://");
+		sb.append(ConfigOptions.host);
+		sb.append(":");
+		sb.append(ConfigOptions.port);
+		sb.append("/");
+		sb.append(CachedResource.add(target, this.resourcefile));
+		sb.append(".zip");
+		if(!ConfigOptions.checkpackstatus) {
+			CachedResource.setAccepted(target);
+		}
+		if(ConfigOptions.legacysender) {
+			LegacyPackSender.sendResourcePack(player, sb.toString(), this.sha1);
+		} else {
+			try {
+				player.setResourcePack(sb.toString(), this.sha1);
+			} catch (NoSuchMethodError e) {
+				player.setResourcePack(sb.toString());
 			}
-			if(ConfigOptions.legacysender) {
-				LegacyPackSender.sendResourcePack(player, sb.toString(), this.sha1);
-			} else {
-				try {
-					player.setResourcePack(sb.toString(), this.sha1);
-				} catch (NoSuchMethodError e) {
-					player.setResourcePack(sb.toString());
-				}
-			}
-			ArrayList<SoundInfo> soundinfos = new ArrayList<SoundInfo>(soundssize);
-			for(int i=0;i<soundssize;++i) {
-				soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
-			}
+		}
+		ArrayList<SoundInfo> soundinfos = new ArrayList<SoundInfo>(soundssize);
+		for(int i=0;i<soundssize;++i) {
+			soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
+		}
+		if(!ConfigOptions.packapplystatus) {
 			positiontracker.setPlaylistInfo(target, name, soundinfos);
+			return;
+		}
+		byte i = 0;
+		while(++i!=0) {
+			try {
+				sleep(250);
+			} catch (InterruptedException e) {
+			}
+			if(!player.isOnline()) {
+				return;
+			}
+			if(PackApplyListener.applied(target)) {
+				positiontracker.setPlaylistInfo(target, name, soundinfos);
+				return;
+			}
 		}
 	}
 }

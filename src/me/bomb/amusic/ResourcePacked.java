@@ -227,7 +227,7 @@ final class ResourcePacked extends Thread {
 				sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
 				sounds.append(i);
 				sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
-				sounds.append(i==0 ? "\t}\n" : "\t},\n");
+				sounds.append(i==musicfilessize-1 ? "\t}\n" : "\t},\n");
 				File outfile = musicfiles.get(i);
 				try {
 					int musicfilelength;

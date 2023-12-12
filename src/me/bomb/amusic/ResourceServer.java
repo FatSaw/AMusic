@@ -20,7 +20,6 @@ final class ResourceServer extends Thread {
 	
 	protected ResourceServer(AMusic plugin) {
 		if (ConfigOptions.strictdownloaderlist) {
-			
 			Bukkit.getPluginManager().registerEvents(new Listener() {
 				@EventHandler
 				public void playerJoin(PlayerJoinEvent event) {

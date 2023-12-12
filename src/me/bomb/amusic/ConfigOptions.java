@@ -17,7 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class ConfigOptions {
 	public static final String host;
 	public static final int port, maxpacksize, maxmusicfilesize;
-	public static final boolean processpack, checkpackstatus, cache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi, legacystopper, legacysender;
+	public static final boolean processpack, checkpackstatus, packapplystatus, cache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi, legacystopper, legacysender;
 	public static final Path musicpath, packedpath, temppath;
 	public static final String fmpegbinarypath, binarywithargs;
 	static {
@@ -44,7 +44,7 @@ public final class ConfigOptions {
 		File configfile = new File(plugin.getDataFolder(), "config.yml");
 		if (!configfile.exists()) {
 			try {
-				byte[] buf = new byte[256];
+				byte[] buf = new byte[512];
 				InputStream in = plugin.getResource("config.yml");
 				if (in != null) {
 					buf = Arrays.copyOf(buf, in.read(buf));
@@ -68,6 +68,8 @@ public final class ConfigOptions {
 		strictdownloaderlist = aconfig.getBoolean("strictdownloaderlist", true);
 		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 		checkpackstatus = !nmsversion.equals("v1_7_R4") && aconfig.getBoolean("checkpackstatus", true);
+		//packapplystatus = checkpackstatus && aconfig.getBoolean("packapplystatus", false);
+		packapplystatus = aconfig.getBoolean("packapplystatus", false);
 		legacystopper = nmsversion.equals("v1_7_R4") || nmsversion.equals("v1_8_R3");
 		legacysender = nmsversion.equals("v1_8_R3") || nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1");
 		maxpacksize = nmsversion.equals("v1_7_R4") || nmsversion.equals("v1_8_R3") || nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") ? 52428800 : nmsversion.equals("v1_15_R1") || nmsversion.equals("v1_16_R3") || nmsversion.equals("v1_17_R1") ? 104857600 : 262144000;

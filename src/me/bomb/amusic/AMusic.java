@@ -22,6 +22,7 @@ public final class AMusic extends JavaPlugin {
 		data = new Data();
 		data.load();
 		positiontracker = new PositionTracker();
+		
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
 		loadmusiccommand.setExecutor(new LoadmusicCommand(data));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
@@ -156,8 +157,8 @@ public final class AMusic extends JavaPlugin {
 	 *
 	 * @return loaded pack name.
 	 */
-	public static void getPackName(Player player) {
-		positiontracker.getPlaylistName(player.getUniqueId());
+	public static String getPackName(Player player) {
+		return positiontracker.getPlaylistName(player.getUniqueId());
 	}
 
 	/**

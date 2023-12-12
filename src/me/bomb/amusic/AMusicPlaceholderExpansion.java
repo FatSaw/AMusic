@@ -22,7 +22,7 @@ public class AMusicPlaceholderExpansion extends PlaceholderExpansion {
 
 	@Override
 	public String getVersion() {
-		return "0.11";
+		return "0.12";
 	}
 
 	@Override

@@ -221,7 +221,7 @@ final class ResourcePacked extends Thread {
 			// read files
 			byte[][] topack = new byte[musicfilessize][];
 			StringBuffer sounds = new StringBuffer("\n");
-			for (byte i = musicfilessize; --i > -1;) {
+			for (byte i = 0; i < musicfilessize; ++i) {
 				sounds.append("\t\"amusic.music");
 				sounds.append(i);
 				sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");

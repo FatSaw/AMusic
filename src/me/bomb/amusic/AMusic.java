@@ -79,6 +79,9 @@ public final class AMusic extends JavaPlugin {
 	 */
 	public static List<String> getPlaylistSoundnames(Player player) {
 		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(player.getUniqueId());
+		if(soundinfos==null) {
+			return null;
+		}
 		int infossize = soundinfos.size();
 		List<String> soundnames = new ArrayList<String>(infossize);
 		for(int i = 0;i<infossize;++i) {
@@ -103,6 +106,9 @@ public final class AMusic extends JavaPlugin {
 	 */
 	public static List<Short> getPlaylistSoundlengths(Player player) {
 		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(player.getUniqueId());
+		if(soundinfos==null) {
+			return null;
+		}
 		int infossize = soundinfos.size();
 		List<Short> soundlengths = new ArrayList<Short>(infossize);
 		for(int i = 0;i<infossize;++i) {

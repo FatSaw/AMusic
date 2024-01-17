@@ -17,7 +17,7 @@ final class PackApplyListener_1_9_R2 extends PackApplyListener {
 		ChannelPipeline pipeline = entityplayer.playerConnection.networkManager.channel.pipeline();
 		AtomicBoolean ab = new AtomicBoolean(true);
 		pipeline.addBefore("packet_handler", "applylistener", new PacketMonitor_1_9_R2(ab));
-		applylisteners.put(player.getUniqueId(), ab);
+		applylisteners.put(player.getUniqueId(), new AtomicBoolean[] {new AtomicBoolean(true),ab});
 	}
 
 	@Override

@@ -34,7 +34,7 @@ final class PackApplyListener_1_7_R4 extends PackApplyListener {
 		}
 		AtomicBoolean ab = new AtomicBoolean(true);
 		pipeline.addBefore("packet_handler", "applylistener", new PacketMonitor_1_7_R4(ab));
-		applylisteners.put(player.getUniqueId(), ab);
+		applylisteners.put(player.getUniqueId(), new AtomicBoolean[] {new AtomicBoolean(true),ab});
 	}
 
 	@Override

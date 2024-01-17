@@ -11,7 +11,7 @@ abstract class PackApplyListener {
 	
 	private static final PackApplyListener packsender;
 	
-	protected final ConcurrentHashMap<UUID, AtomicBoolean> applylisteners = new ConcurrentHashMap<UUID, AtomicBoolean>(16,0.75f,1);
+	protected final ConcurrentHashMap<UUID, AtomicBoolean[]> applylisteners = new ConcurrentHashMap<UUID, AtomicBoolean[]>(16,0.75f,1);
 
 	static {
 		if(ConfigOptions.packapplystatus) {
@@ -59,9 +59,11 @@ abstract class PackApplyListener {
 	}
 	
 	protected static boolean applied(UUID playeruuid) {
-		AtomicBoolean ab;
+		AtomicBoolean[] ab;
 		if(playeruuid!=null && packsender!=null && (ab = packsender.applylisteners.get(playeruuid)) != null) {
-			return ab.get();
+			boolean ret = ab[1].get();
+			ret&=!ab[0].getAndSet(ret);
+			return ret;
 		}
 		return false;
 	}
@@ -70,11 +72,11 @@ abstract class PackApplyListener {
 		if(playeruuid==null||packsender==null) {
 			return;
 		}
-		AtomicBoolean ab;
+		AtomicBoolean[] ab;
 		if((ab = packsender.applylisteners.get(playeruuid)) == null) {
 			return;
 		}
-		ab.set(false);
+		ab[1].set(false);
 	}
 	
 	protected static void unregisterApplyListenTask(Player player) {

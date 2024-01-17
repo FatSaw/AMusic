@@ -50,7 +50,6 @@ final class CachedResource {
 			return;
 		}
 		accepted.add(targets.get(targetplayer));
-		PackApplyListener.reset(targetplayer);
 	}
 
 	protected static boolean waitAcception(UUID token) {
@@ -66,7 +65,7 @@ final class CachedResource {
 				for (UUID target : targets.keySet()) {
 					if (targets.get(target).equals(token)) {
 						targets.remove(target);
-						PackApplyListener.reset(target);
+						//PackApplyListener.reset(target);
 					}
 				}
 			}

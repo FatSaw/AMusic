@@ -356,9 +356,6 @@ final class ResourcePacked extends Thread {
 		sb.append("/");
 		sb.append(CachedResource.add(target, this.resourcefile));
 		sb.append(".zip");
-		if(!ConfigOptions.checkpackstatus) {
-			CachedResource.setAccepted(target);
-		}
 		if(ConfigOptions.legacysender) {
 			LegacyPackSender.sendResourcePack(player, sb.toString(), this.sha1);
 		} else {
@@ -372,6 +369,11 @@ final class ResourcePacked extends Thread {
 		for(int i=0;i<soundssize;++i) {
 			soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
 		}
+		if(!ConfigOptions.checkpackstatus) {
+			CachedResource.setAccepted(target);
+			PackApplyListener.reset(target);
+		}
+		
 		if(!ConfigOptions.packapplystatus) {
 			positiontracker.setPlaylistInfo(target, name, soundinfos);
 			return;

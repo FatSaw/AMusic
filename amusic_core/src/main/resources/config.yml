@@ -6,7 +6,6 @@ packapplystatus: false
 cache: true
 strictdownloaderlist: true
 #encoder:
-#  ffmpegbinarypath: plugins/AMusic/ffmpeg
 #  bitrate: 64000
 #  channels: 2
 #  samplingrate: 44100

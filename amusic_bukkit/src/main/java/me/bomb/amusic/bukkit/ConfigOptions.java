@@ -16,7 +16,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ConfigOptions {
 	public static final String host;
-	public static final int port, maxpacksize, maxmusicfilesize;
+	public static final int port, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
+	public static final byte channels;
 	public static final boolean processpack, checkpackstatus, packapplystatus, cache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi, legacystopper, legacysender;
 	public static final Path musicpath, packedpath, temppath;
 	//public static final String fmpegbinarypath, binarywithargs;
@@ -75,6 +76,9 @@ public final class ConfigOptions {
 		maxpacksize = nmsversion.equals("v1_7_R4") || nmsversion.equals("v1_8_R3") || nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") ? 52428800 : nmsversion.equals("v1_15_R1") || nmsversion.equals("v1_16_R3") || nmsversion.equals("v1_17_R1") ? 104857600 : 262144000;
 		maxmusicfilesize = maxpacksize;
 		useconverter = aconfig.getConfigurationSection("encoder") != null;
+		bitrate = aconfig.getInt("encoder.bitrate", 64000);
+		channels = (byte) aconfig.getInt("encoder.channels", 2);
+		samplingrate = aconfig.getInt("encoder.samplingrate", 44100);
 		//String os = System.getProperty("os.name").toLowerCase();
 		//fmpegbinarypath = new File(plugin.getDataFolder(), "ffmpeg".concat(os.contains("windows") ? ".exe" : os.contains("mac") ? "-osx" : "")).getAbsolutePath();
 		//binarywithargs = " -acodec libvorbis -ab ".concat(Integer.toString(aconfig.getInt("encoder.bitrate", 64000))).concat(" -ac ").concat(Integer.toString(aconfig.getInt("encoder.channels", 2))).concat(" -ar ").concat(Integer.toString(aconfig.getInt("encoder.samplingrate", 44100))).concat(" -f ogg");

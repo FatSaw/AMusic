@@ -70,7 +70,7 @@ public final class ResourcePacked implements Runnable {
 				}
 				resourcefile = aresourcefile;
 			}
-			this.resourcepacker = new ResourcePacker(ConfigOptions.useconverter, ConfigOptions.encodetracksasynchronly, ConfigOptions.maxpacksize, ConfigOptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+			this.resourcepacker = new ResourcePacker(ConfigOptions.useconverter, ConfigOptions.bitrate, ConfigOptions.channels, ConfigOptions.samplingrate, ConfigOptions.encodetracksasynchronly, ConfigOptions.maxpacksize, ConfigOptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 			this.soundnames = resourcepacker.soundnames;
 			this.soundlengths = resourcepacker.soundlengths;
 			this.sha1 = null;
@@ -113,7 +113,7 @@ public final class ResourcePacked implements Runnable {
 				"music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {
 		}
 		this.resourcefile = aresourcefile;
-		this.resourcepacker = new ResourcePacker(ConfigOptions.useconverter, ConfigOptions.encodetracksasynchronly, ConfigOptions.maxpacksize, ConfigOptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+		this.resourcepacker = new ResourcePacker(ConfigOptions.useconverter, ConfigOptions.bitrate, ConfigOptions.channels, ConfigOptions.samplingrate, ConfigOptions.encodetracksasynchronly, ConfigOptions.maxpacksize, ConfigOptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 		soundnames = resourcepacker.soundnames;
 		soundlengths = resourcepacker.soundlengths;
 		this.sha1 = resourcepacker.sha1;

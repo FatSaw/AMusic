@@ -1,6 +1,6 @@
 name: AMusic
 main: me.bomb.amusic.bukkit.AMusicBukkit
-version: 0.13
+version: ${version}
 author: Bomb
 softdepend: [PlaceholderAPI]
 commands:

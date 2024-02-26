@@ -46,9 +46,11 @@ public final class AMusicBukkit extends JavaPlugin {
 		data = new Data();
 		data.load();
 		SoundStopper soundstopper;
+		boolean legacystopper = false;
 		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 		switch (nmsversion) {
 		case "v1_8_R3":
+			legacystopper = true;
 			soundstopper = new LegacySoundStopper_1_8_R3();
 			packsender = new LegacyPackSender_1_8_R3();
 		break;
@@ -67,7 +69,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		
 		SoundStarter soundstarter = new BukkitSoundStarter();
 		resourcemanager = new ResourceManager(ConfigOptions.maxpacksize, ConfigOptions.cache);
-		positiontracker = new PositionTracker(soundstarter, soundstopper, false, ConfigOptions.hasplaceholderapi);
+		positiontracker = new PositionTracker(soundstarter, soundstopper, legacystopper, ConfigOptions.hasplaceholderapi);
 		
 		server = new ResourceServer(playerips, ConfigOptions.port, resourcemanager);
 		

@@ -26,7 +26,8 @@ public final class ResourcePacker extends Thread {
 	public byte[] sha1 = null;
 	
 	private final boolean useconverter, encodetracksasynchronly;
-	private final int maxzipsize, maxsoundsize;
+	private final int bitrate, samplingrate, maxzipsize, maxsoundsize;
+	private final byte channels;
 	private final File musicdir, tempdir, resourcefile, sourcearchive;
 	private final ResourceManager resourcemanager;
 	private static final MessageDigest sha1hash; 
@@ -41,8 +42,11 @@ public final class ResourcePacker extends Thread {
 		sha1hash = md;
 	}
 	
-	public ResourcePacker(boolean useconverter, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
+	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
 		this.useconverter = useconverter;
+		this.bitrate = bitrate;
+		this.channels = channels;
+		this.samplingrate = samplingrate;
 		this.encodetracksasynchronly = encodetracksasynchronly;
 		this.maxzipsize = maxzipsize;
 		this.maxsoundsize = maxsoundsize;
@@ -76,7 +80,7 @@ public final class ResourcePacker extends Thread {
 			for (byte i = 0; musicfilessize > i; ++i) {
 				File musicfile = musicfiles.get(i);
 				File outfile = new File(tempdir, "music".concat(Byte.toString(i)).concat(".ogg"));
-				convertators.add(new Converter(asyncconvertation, musicfile, outfile));
+				convertators.add(new Converter(asyncconvertation, bitrate, channels, samplingrate, musicfile, outfile));
 			}
 			if (asyncconvertation) {
 				boolean convertationrunning = true;
@@ -87,8 +91,9 @@ public final class ResourcePacker extends Thread {
 					} catch (InterruptedException e) {
 					}
 					boolean finished = true;
-					for (byte i = 0; i < convertators.size(); ++i) {
-						finished &= convertators.get(i).status.get();
+					byte i = (byte) convertators.size();
+					while(--i > -1) {
+						finished &= convertators.get(i).finished();
 					}
 					convertationrunning = !finished;
 					if (++checkcount == 0) {
@@ -175,13 +180,7 @@ public final class ResourcePacker extends Thread {
 						soundsjsonappended = true;
 						continue;
 					}
-					//String comment = entry.getComment();
-					//FileTime creationtime = entry.getCreationTime(), lastaccesstime = entry.getLastAccessTime(), lastmodifiedtime = entry.getLastModifiedTime();
 					entry = new ZipEntry(entryname);
-					//if(comment!=null) entry.setComment(comment);
-					//if(creationtime!=null) entry.setCreationTime(creationtime);
-					//if(lastaccesstime!=null) entry.setLastAccessTime(lastaccesstime);
-					//if(lastmodifiedtime!=null) entry.setLastModifiedTime(lastmodifiedtime);
 					zos.putNextEntry(entry);
 	                while ((len = zis.read(buffer)) != -1) {
 	                	zos.write(buffer, 0, len);

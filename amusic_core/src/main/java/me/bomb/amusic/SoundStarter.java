@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public interface SoundStarter {
 	
-	public void startSound(UUID uuid, String soundname);
+	public void startSound(UUID uuid, byte id);
 
 }

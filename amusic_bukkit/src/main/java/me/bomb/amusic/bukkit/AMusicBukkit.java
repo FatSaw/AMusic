@@ -4,13 +4,14 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.RepeatType;
@@ -30,7 +31,7 @@ import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 
-public final class AMusicBukkit extends JavaPlugin {
+public final class AMusicBukkit extends JavaPlugin implements AMusic {
 	
 	private static ResourceServer server;
 	private Data data;
@@ -68,7 +69,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		
 		SoundStarter soundstarter = new BukkitSoundStarter();
-		resourcemanager = new ResourceManager(ConfigOptions.maxpacksize, ConfigOptions.cache);
+		resourcemanager = new ResourceManager(ConfigOptions.maxpacksize, ConfigOptions.servercache, ConfigOptions.clientcache);
 		positiontracker = new PositionTracker(soundstarter, soundstopper, legacystopper, ConfigOptions.hasplaceholderapi);
 		
 		server = new ResourceServer(playerips, ConfigOptions.port, resourcemanager);
@@ -98,11 +99,9 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 	}
 	//PLUGIN INIT END
-	
-	//API START
-	//API SHOULD NOT RETURN ANY AMUSIC PLUGIN CLASS
-	//API SHOULD NOT BE USED FROM ANY AMUSIC PLUGIN CLASS
 
+	
+	
 	/**
 	 * Get the names of playlists that were loaded at least once.
 	 *
@@ -126,8 +125,8 @@ public final class AMusicBukkit extends JavaPlugin {
 	 *
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
-	public List<String> getPlaylistSoundnames(Player player) {
-		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(player.getUniqueId());
+	public List<String> getPlaylistSoundnames(UUID playeruuid) {
+		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(playeruuid);
 		if(soundinfos==null) {
 			return null;
 		}
@@ -153,8 +152,8 @@ public final class AMusicBukkit extends JavaPlugin {
 	 *
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
-	public List<Short> getPlaylistSoundlengths(Player player) {
-		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(player.getUniqueId());
+	public List<Short> getPlaylistSoundlengths(UUID playeruuid) {
+		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(playeruuid);
 		if(soundinfos==null) {
 			return null;
 		}
@@ -169,8 +168,8 @@ public final class AMusicBukkit extends JavaPlugin {
 	/**
 	 * Set sound repeat mode, null to not repeat.
 	 */
-	public void setRepeatMode(Player player, RepeatType repeattype) {
-		positiontracker.setRepeater(player.getUniqueId(), repeattype);
+	public void setRepeatMode(UUID playeruuid, RepeatType repeattype) {
+		positiontracker.setRepeater(playeruuid, repeattype);
 	}
 
 	/**
@@ -178,8 +177,8 @@ public final class AMusicBukkit extends JavaPlugin {
 	 *
 	 * @return playing sound name.
 	 */
-	public String getPlayingSoundName(Player player) {
-		return positiontracker.getPlaying(player.getUniqueId());
+	public String getPlayingSoundName(UUID playeruuid) {
+		return positiontracker.getPlaying(playeruuid);
 	}
 
 	/**
@@ -187,8 +186,8 @@ public final class AMusicBukkit extends JavaPlugin {
 	 *
 	 * @return playing sound size in seconds.
 	 */
-	public short getPlayingSoundSize(Player player) {
-		return positiontracker.getPlayingSize(player.getUniqueId());
+	public short getPlayingSoundSize(UUID playeruuid) {
+		return positiontracker.getPlayingSize(playeruuid);
 	}
 
 	/**
@@ -196,15 +195,15 @@ public final class AMusicBukkit extends JavaPlugin {
 	 *
 	 * @return playing sound remaining seconds.
 	 */
-	public int getPlayingSoundRemain(Player player) {
-		return positiontracker.getPlayingRemain(player.getUniqueId());
+	public int getPlayingSoundRemain(UUID playeruuid) {
+		return positiontracker.getPlayingRemain(playeruuid);
 	}
 
 	/**
 	 * Loads resource pack to player.
 	 */
-	public void loadPack(Player player, String name, boolean update) {
-		ResourcePacked.load(data, resourcemanager, positiontracker, packsender, player, name, update);
+	public void loadPack(UUID playeruuid, String name, boolean update) {
+		ResourcePacked.load(data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
 	}
 
 	/**
@@ -212,23 +211,29 @@ public final class AMusicBukkit extends JavaPlugin {
 	 *
 	 * @return loaded pack name.
 	 */
-	public String getPackName(Player player) {
-		return positiontracker.getPlaylistName(player.getUniqueId());
+	public String getPackName(UUID playeruuid) {
+		return positiontracker.getPlaylistName(playeruuid);
 	}
 
 	/**
 	 * Stop sound from loaded pack.
 	 */
-	public void stopSound(Player player) {
-		positiontracker.stopMusic(player.getUniqueId());
+	public void stopSound(UUID playeruuid) {
+		positiontracker.stopMusic(playeruuid);
 	}
 
 	/**
 	 * Play sound from loaded pack.
 	 */
-	public void playSound(Player player, String name) {
-		positiontracker.playMusic(player.getUniqueId(), name);
+	public void playSound(UUID playeruuid, String name) {
+		positiontracker.playMusic(playeruuid, name);
 	}
+	
+	//API START
+	//API SHOULD NOT RETURN ANY AMUSIC PLUGIN CLASS
+	//API SHOULD NOT BE USED FROM ANY AMUSIC PLUGIN CLASS
+	
+	
 	
 	//API END
 

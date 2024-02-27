@@ -54,7 +54,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 			}
 
 			try {
-				if (!ResourcePacked.load(data, resourcemanager, positiontracker, packsender, target, args[1], args.length > 2 && ConfigOptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
+				if (!ResourcePacked.load(data, resourcemanager, positiontracker, packsender, target.getUniqueId(), args[1], args.length > 2 && ConfigOptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return true;
 				}

@@ -14,12 +14,12 @@ public final class BukkitSoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, String soundname) {
+	public void startSound(UUID uuid, byte id) {
 		if(uuid == null) {
 			return;
 		}
 		Player player = Bukkit.getPlayer(uuid);
-		player.playSound(player.getLocation(), soundname, 1.0E9f, 1.0f);
+		player.playSound(player.getLocation(), "amusic.music".concat(Byte.toString(id)), 1.0E9f, 1.0f);
 	}
 
 }

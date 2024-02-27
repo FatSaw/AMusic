@@ -28,7 +28,7 @@ import net.minecraft.server.v1_8_R3.WorldServer;
 public final class LegacySoundStopper_1_8_R3 implements SoundStopper {
 
 	@Override
-	public void stopSound(UUID uuid, String soundname) {
+	public void stopSound(UUID uuid, byte id) {
 		if(uuid == null) {
 			return;
 		}

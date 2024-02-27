@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public interface SoundStopper {
 	
-	public void stopSound(UUID uuid, String soundname);
+	public void stopSound(UUID uuid, byte id);
 
 }

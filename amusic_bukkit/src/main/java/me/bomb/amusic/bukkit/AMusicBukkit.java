@@ -38,6 +38,12 @@ public final class AMusicBukkit extends JavaPlugin implements AMusic {
 	private ResourceManager resourcemanager;
 	private PositionTracker positiontracker;
 	private PackSender packsender;
+	private static AMusicBukkit apiimpl;
+	
+	public AMusicBukkit() {
+		AMusicBukkit.apiimpl = this;
+	}
+	
 	//PLUGIN INIT START
 	public void onEnable() {
 		new ConfigOptions();
@@ -99,8 +105,14 @@ public final class AMusicBukkit extends JavaPlugin implements AMusic {
 		}
 	}
 	//PLUGIN INIT END
-
 	
+	public static AMusic getApi() {
+		return apiimpl;
+	}
+
+	//API START
+	//API SHOULD NOT RETURN ANY AMUSIC PLUGIN CLASS
+	//API SHOULD NOT BE USED FROM ANY AMUSIC PLUGIN CLASS
 	
 	/**
 	 * Get the names of playlists that were loaded at least once.
@@ -228,12 +240,6 @@ public final class AMusicBukkit extends JavaPlugin implements AMusic {
 	public void playSound(UUID playeruuid, String name) {
 		positiontracker.playMusic(playeruuid, name);
 	}
-	
-	//API START
-	//API SHOULD NOT RETURN ANY AMUSIC PLUGIN CLASS
-	//API SHOULD NOT BE USED FROM ANY AMUSIC PLUGIN CLASS
-	
-	
 	
 	//API END
 

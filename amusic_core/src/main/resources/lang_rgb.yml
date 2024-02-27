@@ -8,6 +8,9 @@ default:
     noplaylist: '[{"color":"#ee2222","text":"Playlist "},{"color":"#eeee22","text":"%playlistname%"},{"color":"#ee2222","text":" not exsit"}]'
     loaderunavilable: '{"color":"#ee2222","text":"Loader temporarily unavilable"}'
     success: '[{"color":"#22ee22","text":"Loading playlist... "},{"color":"#eeee22","text":"%playlistname%"}]'
+    finished:
+      cache: '{"color":"#22ee22","text":"Playlist successfully loaded from cache"}'
+      upload: '{"color":"#22ee22","text":"Playlist successfully loaded from server"}'
   playmusic:
     usage: '[{"color":"#cccccc","text":"Usage: "},{"color":"#cccccc","italic":true,"text":"/playmusic <player> [soundname]"}]'
     nopermission: '{"color":"#ee2222","text":"No permission"}'
@@ -42,6 +45,9 @@ ru_ru:
     noplaylist: '[{"color":"#ee2222","text":"Плейлист "},{"color":"#eeee22","text":"%playlistname%"},{"color":"#ee2222","text":" не существует"}]'
     loaderunavilable: '{"color":"#ee2222","text":"Загрузчик временно недоступен"}'
     success: '[{"color":"#22ee22","text":"Загружаем плейлист... "},{"color":"#eeee22","text":"%playlistname%"}]'
+    finished:
+      cache: '{"color":"#22ee22","text":"Плейлист успешно загружен из кеша"}'
+      upload: '{"color":"#22ee22","text":"Плейлист успешно загружен с сервера"}'
   playmusic:
     usage: '[{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"/playmusic <player> [soundname]"}]'
     nopermission: '{"color":"#ee2222","text":"Нет прав"}'

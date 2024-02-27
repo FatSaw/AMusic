@@ -192,12 +192,12 @@ public final class PositionTracker extends Thread {
 			return;
 		}
 		if(!legacystopper && trackers.containsKey(uuid)) {
-			soundstopper.stopSound(uuid, "amusic.music".concat(Byte.toString(trackers.get(uuid).currenttrack)));
+			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
 		}
 		Playing playing = new Playing(id, soundssize, soundinfo.length, processformatedtime);
 		trackers.put(uuid, playing);
 
-		soundstarter.startSound(uuid, "amusic.music".concat(Byte.toString(id)));
+		soundstarter.startSound(uuid, id);
 	}
 
 	private void playMusic(UUID uuid, byte id) {
@@ -214,13 +214,13 @@ public final class PositionTracker extends Thread {
 		}
 		SoundInfo soundinfo = soundsinfo.get(id);
 		if(!legacystopper && trackers.containsKey(uuid)) {
-			soundstopper.stopSound(uuid, "amusic.music".concat(Byte.toString(trackers.get(uuid).currenttrack)));
+			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
 		}
 
 		Playing playing = new Playing(id, soundssize, soundinfo.length, processformatedtime);
 
 		trackers.put(uuid, playing);
-		soundstarter.startSound(uuid, "amusic.music".concat(Byte.toString(id)));
+		soundstarter.startSound(uuid, id);
 	}
 
 	public void stopMusic(UUID uuid) {
@@ -228,11 +228,11 @@ public final class PositionTracker extends Thread {
 		try {
 			if (playing == null) {
 				for (byte i = 0; i != -128; ++i) {
-					soundstopper.stopSound(uuid, "amusic.music".concat(Byte.toString(i)));
+					soundstopper.stopSound(uuid, i);
 				}
 				return;
 			}
-			soundstopper.stopSound(uuid, "amusic.music".concat(Byte.toString(playing.currenttrack)));
+			soundstopper.stopSound(uuid, playing.currenttrack);
 		} catch (NoSuchMethodError e) {
 		}
 	}

@@ -10,12 +10,12 @@ import me.bomb.amusic.SoundStopper;
 public final class BukkitSoundStopper implements SoundStopper {
 
 	@Override
-	public void stopSound(UUID uuid, String soundname) {
+	public void stopSound(UUID uuid, byte id) {
 		if(uuid == null) {
 			return;
 		}
 		Player player = Bukkit.getPlayer(uuid);
-		player.stopSound(soundname);
+		player.stopSound("amusic.music".concat(Byte.toString(id)));
 	}
 
 }

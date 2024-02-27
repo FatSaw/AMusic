@@ -2,6 +2,7 @@ package me.bomb.amusic.bukkit;
 
 import java.util.UUID;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
@@ -21,7 +22,8 @@ public final class PackStatusEventListener implements Listener {
 	}
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
-		UUID uuid = event.getPlayer().getUniqueId();
+		Player player = event.getPlayer();
+		UUID uuid = player.getUniqueId();
 		Status status = event.getStatus();
 		if(status==Status.ACCEPTED) {
 			resourcemanager.setAccepted(uuid);
@@ -29,9 +31,16 @@ public final class PackStatusEventListener implements Listener {
 		}
 		if(status==Status.DECLINED||status==Status.FAILED_DOWNLOAD) {
 			positiontracker.remove(uuid);
-		} else if(status==Status.SUCCESSFULLY_LOADED) {
-			PackApplyListener.reset(uuid);
+			resourcemanager.remove(uuid);
+			return;
 		}
-		resourcemanager.remove(uuid);
+		if(status==Status.SUCCESSFULLY_LOADED) {
+			PackApplyListener.reset(uuid);
+			if(resourcemanager.remove(uuid)) { //Removes resource send if pack applied from client cache
+				LangOptions.loadmusic_finished_cache.sendMsgPlayer(player);
+			} else {
+				LangOptions.loadmusic_finished_upload.sendMsgPlayer(player);
+			}
+		}
 	}
 }

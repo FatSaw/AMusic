@@ -3,13 +3,30 @@ package me.bomb.amusic.resourceserver;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.UUID;
 
 final class CachedResource {
+	
+	private final static MessageDigest md5hash;
+	
+	static {
+		MessageDigest md = null;
+		try {
+			md = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+		}
+		md5hash = md;
+	}
+	
+	protected final UUID hash;
 	protected final byte[] resource;
 	
 	protected CachedResource(byte[] resource) {
 		this.resource = resource;
+		this.hash = UUID.nameUUIDFromBytes(md5hash.digest(resource));
 	}
 
 	protected CachedResource(File fileresource, int buffersize) {
@@ -22,6 +39,7 @@ final class CachedResource {
 		} catch (IOException e) {
 		}
 		this.resource = resource;
+		this.hash = UUID.nameUUIDFromBytes(md5hash.digest(resource));
 	}
 
 }

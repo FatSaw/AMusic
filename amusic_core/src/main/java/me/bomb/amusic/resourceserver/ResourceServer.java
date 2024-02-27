@@ -2,13 +2,14 @@ package me.bomb.amusic.resourceserver;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ResourceServer extends Thread {
 	private final ConcurrentHashMap<Object,InetAddress> onlineips;
-	private final int port;
+	private final int port, backlog;
 	private boolean run = false;
 	private ServerSocket server;
 	private final ResourceManager resourcemanager;
@@ -16,6 +17,7 @@ public final class ResourceServer extends Thread {
 	public ResourceServer(ConcurrentHashMap<Object,InetAddress> onlineips, int port, ResourceManager resourcemanager) {
 		this.onlineips = onlineips;
 		this.port = port;
+		this.backlog = 50;
 		this.resourcemanager = resourcemanager;
 		start();
 	}
@@ -29,7 +31,9 @@ public final class ResourceServer extends Thread {
 	public void run() {
 		while (run) {
 			try {
-				server = new ServerSocket(port);
+				server = new ServerSocket();
+				server.setReceiveBufferSize(512);
+				server.bind(new InetSocketAddress((InetAddress)null, port), backlog);
 			} catch (IOException|SecurityException|IllegalArgumentException e) {
 				e.printStackTrace();
 				return;

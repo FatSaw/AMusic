@@ -119,9 +119,9 @@ public final class ResourcePacked implements Runnable {
 		this.sha1 = resourcepacker.sha1;
 	}
 
-	public static boolean load(Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, Player player, String name, boolean update) {
+	public static boolean load(Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) {
 		boolean processpack = ConfigOptions.processpack;
-		if (player == null && processpack) {
+		if (target == null && processpack) {
 			ResourcePacked resourcepacked = new ResourcePacked(data, resourcemanager, positiontracker, name);
 
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
@@ -131,14 +131,13 @@ public final class ResourcePacked implements Runnable {
 			return false;
 		}
 		update &= processpack;
-		UUID uuid = player.getUniqueId();
-		ResourcePacked resourcepacked = new ResourcePacked(data, resourcemanager, positiontracker, packsender, uuid, name, update);
+		ResourcePacked resourcepacked = new ResourcePacked(data, resourcemanager, positiontracker, packsender, target, name, update);
 		if (resourcepacked.resourcepacker == null) {
-			positiontracker.remove(uuid);
+			positiontracker.remove(target);
 			return true;
 		} else if(processpack) {
 			resourcepacked.resourcepacker.start();
-			positiontracker.remove(uuid);
+			positiontracker.remove(target);
 			return true;
 		}
 		return false;

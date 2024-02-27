@@ -1,3 +1,10 @@
+/**
+ * Utility to listen unfreeze moment after resourcepack apply.
+ * Solves problem that Resource Pack Status SUCCESSFULLY_LOADED packet sends a bit before fully applied.
+ * It listens movement packets which normally sends every second even if no movement,
+ * during resourcepack apply movement packets not sends, thats give ability to detect full apply.
+ * Versions after 1.13.2 cannot be checked by this utility because no freeze during resourcepack apply.
+ */
 package me.bomb.amusic.bukkit.moveapplylistener;
 
 import java.util.UUID;
@@ -71,6 +78,7 @@ public abstract class PackApplyListener {
 		if((ab = packsender.applylisteners.get(playeruuid)) == null) {
 			return;
 		}
+		ab[0].set(false);
 		ab[1].set(false);
 	}
 	

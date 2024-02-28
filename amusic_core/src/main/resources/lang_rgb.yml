@@ -19,9 +19,7 @@ default:
     targetoffline: '{"color":"#ee2222","text":"Target player offline"}'
     noplaylist: '{"color":"#ee2222","text":"Playlist not loaded fot that player"}'
     missingtrack: '[{"color":"#ee2222","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" not exsit"}]'
-    playing: '[{"color":"#22ee22","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#22ee22","text":" started"}]'
     success: '[{"color":"#22ee22","text":"Starting playing... "},{"color":"#eeee22","text":"%soundname%"}]'
-    stopping: '{"color":"#22ee22","text":"Sound stopped"}'
     stop: '{"color":"#22ee22","text":"Stopping playing..."}'
   repeat:
     usage: '[{"color":"#cccccc","text":"Usage: "},{"color":"#cccccc","italic":true,"text":"/repeat <player> <repeatmode>"}]'
@@ -56,9 +54,7 @@ ru_ru:
     targetoffline: '{"color":"#ee2222","text":"Целевой игрок не в сети"}'
     noplaylist: '{"color":"#ee2222","text":"Плейлист не загружен для этого игрока"}'
     missingtrack: '[{"color":"#ee2222","text":"Звук "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" не существует"}]'
-    playing: '[{"color":"#22ee22","text":"Звук "},{"color":"#eeee22","text":"%soundname%"},{"color":"#22ee22","text":" начался"}]'
     success: '[{"color":"#22ee22","text":"Начинаем воспроизведение... "},{"color":"#eeee22","text":"%soundname%"}]'
-    stopping: '{"color":"#22ee22","text":"Звук остановлен"}'
     stop: '{"color":"#22ee22","text":"Останавливаем воспроизведение..."}'
   repeat:
     usage: '[{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"/repeat <player> <repeatmode>"}]'

@@ -21,7 +21,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 
 public enum LangOptions {
-	loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_noconsoleselector, loadmusic_targetoffline, loadmusic_noplaylist, loadmusic_loaderunavilable, loadmusic_success, loadmusic_finished_cache, loadmusic_finished_upload, playmusic_usage, playmusic_nopermission, playmusic_nopermissionother, playmusic_noconsoleselector, playmusic_targetoffline, playmusic_noplaylist, playmusic_missingtrack, playmusic_playing, playmusic_success, playmusic_stopping, playmusic_stop, repeat_usage, repeat_nopermission, repeat_nopermissionother, repeat_noconsoleselector, repeat_targetoffline, repeat_unknownrepeattype, repeat_repeatall, repeat_repeatone, repeat_playall, repeat_playone, repeat_random;
+	loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_noconsoleselector, loadmusic_targetoffline, loadmusic_noplaylist, loadmusic_loaderunavilable, loadmusic_success, loadmusic_finished_cache, loadmusic_finished_upload, playmusic_usage, playmusic_nopermission, playmusic_nopermissionother, playmusic_noconsoleselector, playmusic_targetoffline, playmusic_noplaylist, playmusic_missingtrack, playmusic_success, playmusic_stop, repeat_usage, repeat_nopermission, repeat_nopermissionother, repeat_noconsoleselector, repeat_targetoffline, repeat_unknownrepeattype, repeat_repeatall, repeat_repeatone, repeat_playall, repeat_playone, repeat_random;
 	static {
 		JavaPlugin plugin = JavaPlugin.getPlugin(AMusicBukkit.class);
 		YamlConfiguration alang = null;
@@ -55,7 +55,6 @@ public enum LangOptions {
 					String optionpath = locale.concat(".").concat(lang.name().replaceAll("_", "."));
 					String msg = alang.getString(optionpath);
 					if (!msg.isEmpty()) {
-						//msg = TextComponent.toLegacyText(ComponentSerializer.parse("[{\"text\":\"ERROR LANG OPTION \",\"bold\":true,\"color\":\"dark_red\"},{\"text\":\"".concat(lang.name()).concat("\",\"bold\":true,\"color\":\"red\"},{\"text\":\" FOR LOCALE \",\"bold\":true,\"color\":\"dark_red\"},{\"text\":\"").concat(locale).concat("\",\"bold\":true,\"color\":\"red\"},{\"text\":\" NOT EXSIST\",\"bold\":true,\"color\":\"dark_red\"}]")));
 						char startchar = msg.charAt(0), endchar = msg.charAt(msg.length() - 1);
 						if (startchar == '[' && endchar == ']' || startchar == '{' && endchar == '}') {
 							msg = TextComponent.toLegacyText(ComponentSerializer.parse(msg));
@@ -71,11 +70,8 @@ public enum LangOptions {
 	private final Map<String, String> text = new HashMap<String, String>();
 	
 	public void sendMsgPlayer(Player target, Placeholders... placeholders) {
-		String msg = text.get("default");
-		String locale = getLocale((Player) target);
-		if (avilablelocales.contains(locale)) {
-			msg = text.get(locale);
-		}
+		String locale = getLocale(target);
+		String msg = text.get(avilablelocales.contains(locale) ? locale : "default");
 		if (!msg.isEmpty()) {
 			for (Placeholders placeholder : placeholders) {
 				msg = msg.replaceAll(placeholder.placeholder, placeholder.value);
@@ -85,33 +81,21 @@ public enum LangOptions {
 	}
 
 	public void sendMsg(CommandSender target, Placeholders... placeholders) {
-		String msg = text.get("default");
+		String msg = null;
 		if (target instanceof Player) {
 			String locale = getLocale((Player) target);
 			if (avilablelocales.contains(locale)) {
 				msg = text.get(locale);
 			}
 		}
+		if(msg==null) {
+			msg = text.get("default");
+		}
 		if (!msg.isEmpty()) {
 			for (Placeholders placeholder : placeholders) {
 				msg = msg.replaceAll(placeholder.placeholder, placeholder.value);
 			}
 			target.sendMessage(msg);
-		}
-	}
-
-	public void sendMsgActionbar(Player target, Placeholders... placeholders) {
-		String locale = getLocale(target);
-		String msg = avilablelocales.contains(locale) ? text.get(locale) : text.get("default");
-		if (!msg.isEmpty()) {
-			for (Placeholders placeholder : placeholders) {
-				msg = msg.replaceAll(placeholder.placeholder, placeholder.value);
-			}
-			try {
-				target.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(msg));
-			} catch (NoSuchMethodError | NoClassDefFoundError e) {
-				target.sendMessage(msg);
-			}
 		}
 	}
 

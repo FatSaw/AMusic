@@ -1,6 +1,8 @@
 package me.bomb.amusic.resourceserver;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.LongBuffer;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,7 +39,16 @@ public final class ResourceManager {
 		} else {
 			resource = new CachedResource(fileresource, maxbuffersize);
 		}
-		UUID token = this.clientcache ? resource.hash : UUID.randomUUID();
+		UUID token = null;
+		if(this.clientcache) {
+			long msb = targetplayer.getMostSignificantBits(), lsb = targetplayer.getLeastSignificantBits();
+			LongBuffer buffer = ByteBuffer.wrap(resource.hash).asLongBuffer();
+			msb ^= buffer.get();
+			lsb ^= buffer.get();
+			token = new UUID(msb, lsb);
+		} else {
+			token = UUID.randomUUID();
+		}
 		tokenres.put(token, resource);
 		targets.put(targetplayer, token);
 		return token;

@@ -1,0 +1,9 @@
+name: AMusic
+main: me.bomb.amusic.bukkit.AMusicBukkit
+version: ${version}
+author: Bomb
+softdepend: [PlaceholderAPI]
+commands:
+  loadmusic:
+  playmusic:
+  repeat:

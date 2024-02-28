@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>me.bomb</groupId>
+    <artifactId>amusic</artifactId>
+    <version>0.13</version>
+  </parent>
+  <artifactId>amusic_nms_v1_9</artifactId>
+  <dependencies>
+    <dependency>
+           <groupId>org.bukkit</groupId>
+           <artifactId>craftbukkit</artifactId>
+           <version>1.9.4-R0.1-SNAPSHOT</version>
+           <scope>provided</scope>
+    </dependency>
+    <dependency>
+    	<groupId>me.bomb</groupId>
+    	<artifactId>amusic_core</artifactId>
+    	<version>0.13</version>
+    </dependency>
+  </dependencies>
+</project>

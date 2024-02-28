@@ -43,7 +43,6 @@ public final class PlaymusicCommand implements CommandExecutor {
 			}
 			positiontracker.stopMusic(target.getUniqueId());
 			LangOptions.playmusic_stop.sendMsg(sender);
-			LangOptions.playmusic_stopping.sendMsgActionbar(target);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
 				if(sender instanceof Player) {

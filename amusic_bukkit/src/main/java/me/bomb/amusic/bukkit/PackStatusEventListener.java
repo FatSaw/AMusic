@@ -36,11 +36,7 @@ public final class PackStatusEventListener implements Listener {
 		}
 		if(status==Status.SUCCESSFULLY_LOADED) {
 			PackApplyListener.reset(uuid);
-			if(resourcemanager.remove(uuid)) { //Removes resource send if pack applied from client cache
-				LangOptions.loadmusic_finished_cache.sendMsgPlayer(player);
-			} else {
-				LangOptions.loadmusic_finished_upload.sendMsgPlayer(player);
-			}
+			resourcemanager.remove(uuid); //Removes resource send if pack applied from client cache
 		}
 	}
 }

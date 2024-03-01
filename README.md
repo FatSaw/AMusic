@@ -1,6 +1,36 @@
 # AMusic
 Music through resource pack
 
+CONFIGURATION:
+
+```
+host: (String) #Внешний ip сервера
+port: (int) #Порт сервера отправки ресурспаков
+
+processpack: (boolean) #Если false, упаковка ресурспаков запрещена
+
+checkpackstatus: (boolean) #Проверка статуса ресурспака через (PlayerResourcePackStatusEvent)
+
+packapplystatus: (boolean) #Более точное определение момента применения ресурспака (работает только до 1.14).
+#Должен быть false если сервер на версии до 1.14 и используется заход с версий 1.14+
+
+cache:
+  server: (boolean) #Если true ресурспаки кешируются на сервере
+  client: (boolean) #Если true ресурспаки кешируются у клиента (Максимум 10 ресурспаков, требует повторной загрузки если изменить host, port, uuid игрока)
+
+strictdownloaderlist: (boolean) #Если true, присоединится к серверу скачивания ресурспака могут только подключеные игроки.
+
+#Если заблокировано (закоментировано) то конвертер не используется (будут использованы звуки только .ogg).
+#encoder: #В директории /plugins/AMusic/ должен быть файл ffmpeg(add '.exe' if windows, '-osx' if mac) (version 4.4.1)
+#  bitrate: 64000
+#  channels: 2
+#  samplingrate: 44100
+#  async: true
+```
+Already build ffmpeg may be found there: [jave2 repository](https://github.com/a-schild/jave2)
+
+FFMpeg sources: [ffmpeg-4.4.1.tar.gz](https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz)
+
 BUILD:
 
 1) Build craftbukkit 1.8.8, 1.9.4, 1.10.2, 1.11.2, 1.12.2, 1.13.2 via [BuildTools](https://www.spigotmc.org/wiki/buildtools/)

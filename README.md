@@ -1,6 +1,12 @@
 # AMusic
 Music through resource pack
 
+BUILD:
+
+1) Build craftbukkit 1.8.8, 1.9.4, 1.10.2, 1.11.2, 1.12.2, 1.13.2 via [BuildTools](https://www.spigotmc.org/wiki/buildtools/)
+2) Clone repository https://github.com/FatSaw/AMusic.git
+3) Build project with: `mvn package`
+
 API:
 ```
 AMusic.getPlaylists(); //список плейлистов

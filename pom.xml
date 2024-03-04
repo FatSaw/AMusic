@@ -15,12 +15,6 @@
 	</repositories>
 	<modules>
 		<module>amusic_core</module>
-		<module>amusic_nms_v1_13</module>
-		<module>amusic_nms_v1_12</module>
-		<module>amusic_nms_v1_11</module>
-		<module>amusic_nms_v1_10</module>
-		<module>amusic_nms_v1_9</module>
-		<module>amusic_nms_v1_8</module>
 		<module>amusic_velocity</module>
 		<module>amusic_bukkit</module>
 	</modules>

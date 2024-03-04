@@ -10,8 +10,7 @@ import org.bukkit.entity.Player;
 
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundInfo;
-import me.bomb.amusic.bukkit.LangOptions;
-import me.bomb.amusic.bukkit.LangOptions.Placeholders;
+import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 
 public final class PlaymusicCommand implements CommandExecutor {
 	private final PositionTracker positiontracker;

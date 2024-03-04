@@ -8,22 +8,24 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.bukkit.ConfigOptions;
+import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.bukkit.Data;
-import me.bomb.amusic.bukkit.LangOptions;
-import me.bomb.amusic.bukkit.LangOptions.Placeholders;
+import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.bukkit.ResourcePacked;
 
 public final class LoadmusicCommand implements CommandExecutor {
+	private final ConfigOptions configuptions;
 	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final PackSender packsender;
 
-	public LoadmusicCommand(Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+		LangOptions.values();
+		this.configuptions = configuptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
@@ -54,7 +56,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 			}
 
 			try {
-				if (!ResourcePacked.load(data, resourcemanager, positiontracker, packsender, target.getUniqueId(), args[1], args.length > 2 && ConfigOptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
+				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, target.getUniqueId(), args[1], args.length > 2 && configuptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return true;
 				}

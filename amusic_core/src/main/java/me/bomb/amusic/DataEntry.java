@@ -8,14 +8,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-public final class Options {
+public final class DataEntry {
 	public final int size;
 	public final String name;
 	public final List<String> sounds;
 	public final List<Short> length;
 	public final byte[] sha1;
 
-	public Options(int size, String name, List<String> sounds, List<Short> length, byte[] sha1) throws IllegalArgumentException {
+	public DataEntry(int size, String name, List<String> sounds, List<Short> length, byte[] sha1) throws IllegalArgumentException {
 		if (size < 0 || name == null || sounds == null || length == null || sha1 == null || sounds.size() != length.size() || sha1.length != 20) {
 			throw new IllegalArgumentException();
 		}

@@ -1,4 +1,4 @@
-package me.bomb.amusic.bukkit;
+package me.bomb.amusic;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -6,20 +6,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-
-import me.bomb.amusic.Options;
-import me.bomb.amusic.PackSender;
-import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.ResourcePacker;
-import me.bomb.amusic.SoundInfo;
-import me.bomb.amusic.bukkit.moveapplylistener.PackApplyListener;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
-public final class ResourcePacked implements Runnable {
+public final class ResourceFactory implements Runnable {
 	private final String name;
 	private final UUID target;
+	private final ConfigOptions configoptions;
 	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final ResourcePacker resourcepacker;
@@ -30,24 +22,25 @@ public final class ResourcePacked implements Runnable {
 	private final byte[] sha1;
 	private final File resourcefile;
 
-	private ResourcePacked(Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws NoSuchElementException {
+	private ResourceFactory(ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws NoSuchElementException {
 		this.name = name;
 		this.target = target;
+		this.configoptions = configoptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.packsender = packsender;
-		File musicdir = new File(ConfigOptions.musicpath.toString(), name);
-		File tempdir = new File(ConfigOptions.temppath.toString(), name);
-		File sourcearchive = new File(ConfigOptions.musicpath.toString(), name.concat(".zip"));
+		File musicdir = new File(configoptions.musicdir, name);
+		File tempdir = new File(configoptions.tempdir, name);
+		File sourcearchive = new File(configoptions.musicdir, name.concat(".zip"));
 		List<String> asongnames = null;
 		List<Short> asonglengths = null;
 		byte[] asha1 = null;
 		File resourcefile = null;
 		boolean ok = false;
 		if (data.containsPlaylist(name)) {
-			Options options = data.getPlaylist(name);
-			resourcefile = new File(ConfigOptions.packedpath.toString(), options.name);
+			DataEntry options = data.getPlaylist(name);
+			resourcefile = new File(configoptions.packeddir, options.name);
 			if (resourcefile != null && resourcefile.exists()) {
 				if (update) {
 					delete(resourcefile);
@@ -66,11 +59,11 @@ public final class ResourcePacked implements Runnable {
 			}
 			if(resourcefile==null) {
 				File aresourcefile = null;
-				for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(ConfigOptions.packedpath.toString(), "music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {
+				for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(configoptions.packeddir, "music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {
 				}
 				resourcefile = aresourcefile;
 			}
-			this.resourcepacker = new ResourcePacker(ConfigOptions.useconverter, ConfigOptions.bitrate, ConfigOptions.channels, ConfigOptions.samplingrate, ConfigOptions.encodetracksasynchronly, ConfigOptions.maxpacksize, ConfigOptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+			this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 			this.soundnames = resourcepacker.soundnames;
 			this.soundlengths = resourcepacker.soundlengths;
 			this.sha1 = null;
@@ -85,21 +78,22 @@ public final class ResourcePacked implements Runnable {
 		}
 	}
 
-	private ResourcePacked(Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String name) throws NoSuchElementException {
+	private ResourceFactory(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String name) throws NoSuchElementException {
+		this.configoptions = configoptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.name = name;
 		this.target = null;
 		this.packsender = null;
-		File musicdir = new File(ConfigOptions.musicpath.toString(), name);
-		File tempdir = new File(ConfigOptions.temppath.toString(), name);
-		File sourcearchive = new File(ConfigOptions.musicpath.toString(), name.concat(".zip"));
+		File musicdir = new File(configoptions.musicdir, name);
+		File tempdir = new File(configoptions.tempdir, name);
+		File sourcearchive = new File(configoptions.musicdir, name.concat(".zip"));
 		if (!data.containsPlaylist(name)) {
 			throw new NoSuchElementException();
 		}
-		Options options = data.getPlaylist(name);
-		File resourcefile = new File(ConfigOptions.packedpath.toString(), options.name);
+		DataEntry options = data.getPlaylist(name);
+		File resourcefile = new File(configoptions.packeddir, options.name);
 		if (resourcefile != null && resourcefile.exists()) {
 			delete(resourcefile);
 			data.removePlaylist(name);
@@ -109,20 +103,20 @@ public final class ResourcePacked implements Runnable {
 		if (!musicdir.exists()) {
 			throw new NoSuchElementException();
 		}
-		for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(ConfigOptions.packedpath.toString(),
+		for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(configoptions.packeddir,
 				"music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {
 		}
 		this.resourcefile = aresourcefile;
-		this.resourcepacker = new ResourcePacker(ConfigOptions.useconverter, ConfigOptions.bitrate, ConfigOptions.channels, ConfigOptions.samplingrate, ConfigOptions.encodetracksasynchronly, ConfigOptions.maxpacksize, ConfigOptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+		this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 		soundnames = resourcepacker.soundnames;
 		soundlengths = resourcepacker.soundlengths;
 		this.sha1 = resourcepacker.sha1;
 	}
 
-	public static boolean load(Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) {
-		boolean processpack = ConfigOptions.processpack;
+	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) {
+		boolean processpack = configoptions.processpack;
 		if (target == null && processpack) {
-			ResourcePacked resourcepacked = new ResourcePacked(data, resourcemanager, positiontracker, name);
+			ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
 
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();
@@ -131,7 +125,7 @@ public final class ResourcePacked implements Runnable {
 			return false;
 		}
 		update &= processpack;
-		ResourcePacked resourcepacked = new ResourcePacked(data, resourcemanager, positiontracker, packsender, target, name, update);
+		ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, target, name, update);
 		if (resourcepacked.resourcepacker == null) {
 			positiontracker.remove(target);
 			return true;
@@ -177,15 +171,14 @@ public final class ResourcePacked implements Runnable {
 		if(target == null || packsender == null) {
 			return;
 		}
-		Player player = Bukkit.getPlayer(target);
 		int soundssize = soundnames.size();
-		if (player == null || soundssize != soundlengths.size()) {
+		if (soundssize != soundlengths.size()) {
 			return;
 		}
 		StringBuilder sb = new StringBuilder("http://");
-		sb.append(ConfigOptions.host);
+		sb.append(configoptions.host);
 		sb.append(":");
-		sb.append(ConfigOptions.port);
+		sb.append(configoptions.port);
 		sb.append("/");
 		sb.append(resourcemanager.add(target, this.resourcefile));
 		sb.append(".zip");
@@ -194,29 +187,6 @@ public final class ResourcePacked implements Runnable {
 		for(int i=0;i<soundssize;++i) {
 			soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
 		}
-		if(!ConfigOptions.checkpackstatus) {
-			resourcemanager.setAccepted(target);
-			PackApplyListener.reset(target);
-		}
-		
-		if(!ConfigOptions.packapplystatus) {
-			positiontracker.setPlaylistInfo(target, name, soundinfos);
-			return;
-		}
-		
-		byte i = 0;
-		while(++i!=0) {
-			try {
-				Thread.sleep(250);
-			} catch (InterruptedException e) {
-			}
-			if(!player.isOnline()) {
-				return;
-			}
-			if(PackApplyListener.applied(target)) {
-				positiontracker.setPlaylistInfo(target, name, soundinfos);
-				return;
-			}
-		}
+		positiontracker.setPlaylistInfo(target, name, soundinfos);
 	}
 }

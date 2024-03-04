@@ -1,43 +1,29 @@
 package me.bomb.amusic.bukkit;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import me.bomb.amusic.Options;
+import me.bomb.amusic.DataEntry;
 
-public final class Data {
-	private static final File datafile;
-	private Map<String, Options> options = new HashMap<String, Options>();
-	static {
-		JavaPlugin plugin = JavaPlugin.getPlugin(AMusicBukkit.class);
-		File adatafile = new File(plugin.getDataFolder(), "data.yml");
-		datafile = adatafile;
-		if (!datafile.exists()) {
-			try {
-				datafile.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+public final class Data extends me.bomb.amusic.Data {
+	private final File datafile;
+	
+	public Data(File datafile) {
+		super();
+		this.datafile = datafile;
 	}
 
-	protected void save() {
+	public void save() {
 		YamlConfiguration data = new YamlConfiguration();
 		for (String playlistname : options.keySet()) {
-			Options option = options.get(playlistname);
+			DataEntry option = options.get(playlistname);
 			if (option.size > 0 && option.name != null && option.sounds != null) {
 				playlistname = "playlists.".concat(playlistname);
 				data.set(playlistname.concat(".size"), option.size);
@@ -61,7 +47,7 @@ public final class Data {
 		}
 	}
 
-	protected void load() {
+	public void load() {
 		options.clear();
 		YamlConfiguration data = YamlConfiguration.loadConfiguration(datafile);
 		ConfigurationSection playlists = data.getConfigurationSection("playlists");
@@ -87,7 +73,7 @@ public final class Data {
 						sha1[i] = (byte) ((Character.digit(sha1s.charAt(j), 16) << 4)
 								| Character.digit(sha1s.charAt(j + 1), 16));
 					}
-					Options option = new Options(data.getInt(aplaylistname.concat(".size")),
+					DataEntry option = new DataEntry(data.getInt(aplaylistname.concat(".size")),
 							data.getString(aplaylistname.concat(".name")),
 							data.getStringList(aplaylistname.concat(".sounds")), lengths, sha1);
 					options.put(playlistname, option);
@@ -95,41 +81,5 @@ public final class Data {
 				}
 			}
 		}
-	}
-
-	private static byte[] calcSHA1(File file) {
-		try {
-			FileInputStream fileInputStream = new FileInputStream(file);
-			MessageDigest digest = MessageDigest.getInstance("SHA-1");
-			DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, digest);
-			byte[] bytes = new byte[1024];
-			while (digestInputStream.read(bytes) > 0);
-			digestInputStream.close();
-			return digest.digest();
-		} catch (IOException | NoSuchAlgorithmException e) {
-		}
-		return null;
-	}
-
-	protected byte[] setPlaylist(String playlistname, List<String> sounds, List<Short> length, File file) {
-		byte[] sha1 = calcSHA1(file);
-		options.put(playlistname, new Options((int) file.length(), file.getName(), sounds, length, sha1));
-		return sha1;
-	}
-
-	protected Options getPlaylist(String playlistname) {
-		return options.get(playlistname);
-	}
-
-	protected boolean containsPlaylist(String playlistname) {
-		return options.containsKey(playlistname);
-	}
-
-	protected void removePlaylist(String playlistname) {
-		options.remove(playlistname);
-	}
-
-	public Set<String> getPlaylists() {
-		return options == null ? null : options.keySet();
 	}
 }

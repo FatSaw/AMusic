@@ -16,7 +16,7 @@ public final class PositionTracker extends Thread {
 	private final ConcurrentHashMap<UUID, String> loadedplaylistnames = new ConcurrentHashMap<UUID, String>();
 	private final SoundStarter soundstarter;
 	private final SoundStopper soundstopper;
-	private final boolean legacystopper, processformatedtime;
+	private final boolean processformatedtime;
 	
 	public void setPlaylistInfo(UUID playeruuid, String playlistname, ArrayList<SoundInfo> soundinfo) {
 		playlistinfo.put(playeruuid, soundinfo);
@@ -33,10 +33,9 @@ public final class PositionTracker extends Thread {
 
 	private boolean run = false;
 
-	public PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper, boolean legacystopper, boolean processformatedtime) {
+	public PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper, boolean processformatedtime) {
 		this.soundstarter = soundstarter;
 		this.soundstopper = soundstopper;
-		this.legacystopper = legacystopper;
 		this.processformatedtime = processformatedtime;
 		start();
 	}
@@ -191,7 +190,7 @@ public final class PositionTracker extends Thread {
 		if (id == -1) {
 			return;
 		}
-		if(!legacystopper && trackers.containsKey(uuid)) {
+		if(trackers.containsKey(uuid)) {
 			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
 		}
 		Playing playing = new Playing(id, soundssize, soundinfo.length, processformatedtime);
@@ -213,7 +212,7 @@ public final class PositionTracker extends Thread {
 			return;
 		}
 		SoundInfo soundinfo = soundsinfo.get(id);
-		if(!legacystopper && trackers.containsKey(uuid)) {
+		if(trackers.containsKey(uuid)) {
 			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
 		}
 

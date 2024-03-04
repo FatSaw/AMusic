@@ -10,10 +10,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerResourcePackStatusEvent.Status;
 
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.bukkit.moveapplylistener.PackApplyListener;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class EventListener implements Listener {
@@ -29,7 +30,6 @@ public final class EventListener implements Listener {
 	public void playerJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
 		playerips.put(player, player.getAddress().getAddress());
-		PackApplyListener.registerApplyListenTask(player);
 	}
 	@EventHandler
 	public void playerQuit(PlayerQuitEvent event) {
@@ -38,7 +38,6 @@ public final class EventListener implements Listener {
 		UUID playeruuid = player.getUniqueId();
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
-		PackApplyListener.unregisterApplyListenTask(player);
 	}
 	@EventHandler
 	public void playerRespawn(PlayerRespawnEvent event) {
@@ -47,5 +46,23 @@ public final class EventListener implements Listener {
 	@EventHandler
 	public void playerWorldChange(PlayerChangedWorldEvent event) {
 		positiontracker.stopMusic(event.getPlayer().getUniqueId());
+	}
+	@EventHandler
+	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
+		Player player = event.getPlayer();
+		UUID uuid = player.getUniqueId();
+		Status status = event.getStatus();
+		if(status==Status.ACCEPTED) {
+			resourcemanager.setAccepted(uuid);
+			return;
+		}
+		if(status==Status.DECLINED||status==Status.FAILED_DOWNLOAD) {
+			positiontracker.remove(uuid);
+			resourcemanager.remove(uuid);
+			return;
+		}
+		if(status==Status.SUCCESSFULLY_LOADED) {
+			resourcemanager.remove(uuid); //Removes resource send if pack applied from client cache
+		}
 	}
 }

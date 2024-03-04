@@ -34,36 +34,6 @@
 			<artifactId>amusic_core</artifactId>
 			<version>0.13</version>
 		</dependency>
-		<dependency>
-			<groupId>me.bomb</groupId>
-			<artifactId>amusic_nms_v1_13</artifactId>
-			<version>0.13</version>
-		</dependency>
-		<dependency>
-			<groupId>me.bomb</groupId>
-			<artifactId>amusic_nms_v1_12</artifactId>
-			<version>0.13</version>
-		</dependency>
-		<dependency>
-			<groupId>me.bomb</groupId>
-			<artifactId>amusic_nms_v1_11</artifactId>
-			<version>0.13</version>
-		</dependency>
-		<dependency>
-			<groupId>me.bomb</groupId>
-			<artifactId>amusic_nms_v1_10</artifactId>
-			<version>0.13</version>
-		</dependency>
-		<dependency>
-			<groupId>me.bomb</groupId>
-			<artifactId>amusic_nms_v1_9</artifactId>
-			<version>0.13</version>
-		</dependency>
-		<dependency>
-			<groupId>me.bomb</groupId>
-			<artifactId>amusic_nms_v1_8</artifactId>
-			<version>0.13</version>
-		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

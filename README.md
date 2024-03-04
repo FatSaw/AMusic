@@ -1,37 +1,45 @@
 # AMusic
 Music through resource pack
+## Features:
+Clientside, serverside caching
 
-CONFIGURATION:
+Addition to exsisting resourcepack (Place source resourcepack .zip (with same name as playlist) into /AMusic/Music directory)
+
+5 repeat types (repeatone,repeatall,playone,playall,random)
+
+## Config:
 
 ```
-host: (String) #Внешний ip сервера
-port: (int) #Порт сервера отправки ресурспаков
+host: (String) #External server ip or hostname
+port: (int) #Resourcepack file server port
 
-processpack: (boolean) #Если false, упаковка ресурспаков запрещена
+processpack: (boolean) #If false, resourcepack packing disabled
 
 cache:
- server: (boolean) #Если true ресурспаки кешируются на сервере
- client: (boolean) #Если true ресурспаки кешируются у клиента (Максимум 10 ресурспаков, требует повторной загрузки если изменить host, port, uuid игрока)
+ server: (boolean) #If true resourcepack cached on server
+ client: (boolean) #If true resourcepack cached on client (Max 10), resets if host, port, player uuid changed)
 
-strictdownloaderlist: (boolean) #Если true, присоединится к серверу скачивания ресурспака могут только подключеные игроки.
+strictdownloaderlist: (boolean) #If true, only connected players can access resourcepack server
 
-encoder: #В директории /plugins/AMusic/ должен быть файл ffmpeg(add '.exe' if windows, '-osx' if mac) (version 4.4.1)
- use: false #Если false то конвертер не используется (разрешены только .ogg).
+encoder: 
+ use: false #If true place ffmpeg('.exe'(windows)/'-osx'(mac)/''(linux)) (version 4.4.1) into plugin directory
  bitrate: 64000
  channels: 2
  samplingrate: 44100
  async: true
 ```
+## Dependencies
+
 Already build ffmpeg may be found there: [jave2 repository](https://github.com/a-schild/jave2)
 
 FFMpeg sources: [ffmpeg-4.4.1.tar.gz](https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz)
 
-BUILD:
+## BUILD:
 
 1) Clone repository https://github.com/FatSaw/AMusic.git
 2) Build project with: `mvn package`
 
-API:
+## API:
 ```
 AMusic api = AMusic.API(); //GET API INSTANCE
 api.getPlaylists(); //список плейлистов

@@ -12,15 +12,11 @@ Addition to exsisting resourcepack (Place source resourcepack .zip (with same na
 ```
 host: (String) #External server ip or hostname
 port: (int) #Resourcepack file server port
-
 processpack: (boolean) #If false, resourcepack packing disabled
-
 cache:
  server: (boolean) #If true resourcepack cached on server
  client: (boolean) #If true resourcepack cached on client (Max 10), resets if host, port, player uuid changed)
-
 strictdownloaderlist: (boolean) #If true, only connected players can access resourcepack server
-
 encoder: 
  use: false #If true place ffmpeg('.exe'(windows)/'-osx'(mac)/''(linux)) (version 4.4.1) into plugin directory
  bitrate: 64000

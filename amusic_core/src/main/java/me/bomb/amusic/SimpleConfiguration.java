@@ -20,13 +20,6 @@ public final class SimpleConfiguration {
 	
 	private final HashMap<String,String> kv;
 	
-	/*public SimpleConfiguration(InputStream is) throws IOException {
-		int i = is.available();
-		byte[] bytes = new byte[++i];
-		is.read(bytes);
-		is.close();
-	}*/
-	
 	public SimpleConfiguration(byte[] bytes) {
 		HashMap<String,String> kv = new HashMap<>();
 		int pstrid = bytes.length;
@@ -141,37 +134,16 @@ public final class SimpleConfiguration {
 			return defaultvalue;
 		}
 	}
-	public String getStringOrDefault(String key, String defaultvalue) throws NoSuchElementException {
+	public String getStringOrDefault(String key, String defaultvalue) {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;
 		return value;
 	}
-	public byte[] getBytesBase64OrDefault(String key, byte[] defaultvalue) throws NoSuchElementException {
+	public byte[] getBytesBase64OrDefault(String key, byte[] defaultvalue) throws IllegalArgumentException {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;
 		return base64decoder.decode(value);
 	}
-	/*
-	public boolean getBoolean(String key) throws NoSuchElementException {
-		String value = kv.get(key);
-		if(value==null) throw new NoSuchElementException();
-		if(value.equals("true")) {
-			return true;
-		} else if(value.equals("false")) {
-			return false;
-		}
-		throw new NoSuchElementException();
-	}
-	public int getInt(String key) throws NoSuchElementException, NumberFormatException {
-		String value = kv.get(key);
-		if(value==null) throw new NoSuchElementException();
-		return Integer.parseInt(value);
-	}
-	public String getString(String key) throws NoSuchElementException {
-		String value = kv.get(key);
-		if(value==null) throw new NoSuchElementException();
-		return value;
-	}*/
 	public HashMap<String,String> getSub(String key) {
 		HashMap<String,String> map = new HashMap<String,String>();
 		byte keylvl = 0;

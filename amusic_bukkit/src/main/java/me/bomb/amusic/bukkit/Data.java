@@ -3,9 +3,7 @@ package me.bomb.amusic.bukkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -13,14 +11,16 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import me.bomb.amusic.DataEntry;
 
 public final class Data extends me.bomb.amusic.Data {
+	
 	private final File datafile;
 	
-	public Data(File datafile) {
+	protected Data(File datafile) {
 		super();
 		this.datafile = datafile;
 	}
-
-	public void save() {
+	
+	@Override
+	protected void save() {
 		YamlConfiguration data = new YamlConfiguration();
 		for (String playlistname : options.keySet()) {
 			DataEntry option = options.get(playlistname);
@@ -47,7 +47,8 @@ public final class Data extends me.bomb.amusic.Data {
 		}
 	}
 
-	public void load() {
+	@Override
+	protected void load() {
 		options.clear();
 		YamlConfiguration data = YamlConfiguration.loadConfiguration(datafile);
 		ConfigurationSection playlists = data.getConfigurationSection("playlists");
@@ -82,4 +83,5 @@ public final class Data extends me.bomb.amusic.Data {
 			}
 		}
 	}
+	
 }

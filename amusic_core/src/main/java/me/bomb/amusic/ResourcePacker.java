@@ -225,7 +225,9 @@ public final class ResourcePacker extends Thread {
 		} catch (IOException e) {
 			return;
 		}
-		this.sha1 = sha1hash.digest(buf);
+		synchronized(sha1hash) {
+			this.sha1 = sha1hash.digest(buf);
+		}
 		resourcemanager.putResource(resourcefile.toPath(), buf);
 		if(runafter == null) {
 			return;

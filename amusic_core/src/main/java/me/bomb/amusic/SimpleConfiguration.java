@@ -4,11 +4,19 @@ package me.bomb.amusic;
 //import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Base64.Decoder;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 public final class SimpleConfiguration {
+	
+	private final static Decoder base64decoder;
+	
+	static {
+		base64decoder = Base64.getDecoder();
+	}
 	
 	private final HashMap<String,String> kv;
 	
@@ -137,6 +145,11 @@ public final class SimpleConfiguration {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;
 		return value;
+	}
+	public byte[] getBytesBase64OrDefault(String key, byte[] defaultvalue) throws NoSuchElementException {
+		String value = kv.get(key);
+		if(value==null) return defaultvalue;
+		return base64decoder.decode(value);
 	}
 	/*
 	public boolean getBoolean(String key) throws NoSuchElementException {

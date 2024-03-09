@@ -2,6 +2,7 @@ package me.bomb.amusic.bukkit;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
@@ -44,7 +45,10 @@ public final class AMusicBukkit extends JavaPlugin {
 		soundstopper = new BukkitSoundStopper();
 		packsender = new BukkitPackSender();
 		SoundStarter soundstarter = new BukkitSoundStarter();
-		resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache);
+		try {
+			resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt);
+		} catch (NoSuchAlgorithmException e) {
+		}
 		positiontracker = new PositionTracker(soundstarter, soundstopper, configoptions.hasplaceholderapi);
 		
 		server = new ResourceServer(playerips, configoptions.port, resourcemanager);

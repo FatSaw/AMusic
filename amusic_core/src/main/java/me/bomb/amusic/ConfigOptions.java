@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 
 public final class ConfigOptions {
 	protected static Class<? extends ConfigOptions> oclass;
@@ -17,6 +16,7 @@ public final class ConfigOptions {
 	public final byte channels;
 	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi, legacystopper, legacysender;
 	public final File musicdir, packeddir, tempdir;
+	public final byte[] tokensalt;
 	public ConfigOptions(File plugindir, byte version) {
 		ConfigOptions.plugindir = plugindir;
 		ConfigOptions.version = version;
@@ -74,6 +74,12 @@ public final class ConfigOptions {
 		strictdownloaderlist = sc.getBooleanOrDefault("strictdownloaderlist", true);
 		hasplaceholderapi = sc.getBooleanOrDefault("useplaceholderapi", false);
 		
+		byte[] salt = sc.getBytesBase64OrDefault("tokensalt", new byte[0]);
+		if(salt == null || salt.length < 2) {
+			tokensalt = salt;
+		} else {
+			tokensalt = null;
+		}
 		useconverter = sc.getBooleanOrDefault("encoder.use", false);
 		bitrate = sc.getIntOrDefault("encoder.bitrate", 65000);
 		channels = (byte) sc.getIntOrDefault("encoder.channels", 2);

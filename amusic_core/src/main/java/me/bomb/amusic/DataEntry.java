@@ -9,6 +9,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public final class DataEntry {
+	
 	public final int size;
 	public final String name;
 	public final List<String> sounds;
@@ -30,27 +31,27 @@ public final class DataEntry {
 		if (file.length() != size) {
 			return false;
 		}
-		byte[] filesha1 = calcSHA1(file);
+		byte[] filesha1 = null;
+		try {
+			MessageDigest sha1hash;
+			try {
+				sha1hash = MessageDigest.getInstance("SHA-1");
+			} catch (NoSuchAlgorithmException e) {
+				return false;
+			}
+			DigestInputStream digestInputStream = new DigestInputStream(new FileInputStream(file), sha1hash);
+			byte[] bytes = new byte[1024];
+			while (digestInputStream.read(bytes) > 0);
+			digestInputStream.close();
+			filesha1 = sha1hash.digest();
+		} catch (IOException e) {
+		}	
 		for (byte i = 0; i < 20; ++i) {
 			if (sha1[i] != filesha1[i]) {
 				return false;
 			}
 		}
 		return true;
-	}
-	
-	private static byte[] calcSHA1(File file) {
-		try {
-			FileInputStream fileInputStream = new FileInputStream(file);
-			MessageDigest digest = MessageDigest.getInstance("SHA-1");
-			DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, digest);
-			byte[] bytes = new byte[1024];
-			while (digestInputStream.read(bytes) > 0);
-			digestInputStream.close();
-			return digest.digest();
-		} catch (IOException | NoSuchAlgorithmException e) {
-		}
-		return null;
 	}
 	
 }

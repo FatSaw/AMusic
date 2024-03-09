@@ -6,7 +6,7 @@ cache:
  server: true
  client: true
 strictdownloaderlist: true
-tokensalt: PlaceHereRandomBase64StringIfClientCacheEnabled=
+tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
 encoder:
  use: false
  bitrate: 64000

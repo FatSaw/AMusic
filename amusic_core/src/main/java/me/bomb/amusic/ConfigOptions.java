@@ -74,12 +74,7 @@ public final class ConfigOptions {
 		strictdownloaderlist = sc.getBooleanOrDefault("strictdownloaderlist", true);
 		hasplaceholderapi = sc.getBooleanOrDefault("useplaceholderapi", false);
 		
-		byte[] salt = null;
-		try {
-			salt = sc.getBytesBase64OrDefault("tokensalt", new byte[0]);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();;
-		}
+		byte[] salt = sc.getBytesBase64OrDefault("tokensalt", new byte[0]);
 		
 		if(salt == null || salt.length < 2) {
 			tokensalt = salt;

@@ -1,6 +1,7 @@
 package me.bomb.amusic;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -22,7 +23,7 @@ public final class ResourceFactory implements Runnable {
 	private final byte[] sha1;
 	private final File resourcefile;
 
-	private ResourceFactory(ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws NoSuchElementException {
+	private ResourceFactory(ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws FileNotFoundException {
 		this.name = name;
 		this.target = target;
 		this.configoptions = configoptions;
@@ -55,7 +56,7 @@ public final class ResourceFactory implements Runnable {
 		}
 		if (!ok) {
 			if (!musicdir.exists()) {
-				throw new NoSuchElementException();
+				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()).concat(name));
 			}
 			if(resourcefile==null) {
 				File aresourcefile = null;
@@ -78,7 +79,7 @@ public final class ResourceFactory implements Runnable {
 		}
 	}
 
-	private ResourceFactory(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String name) throws NoSuchElementException {
+	private ResourceFactory(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String name) throws FileNotFoundException {
 		this.configoptions = configoptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
@@ -101,7 +102,7 @@ public final class ResourceFactory implements Runnable {
 		File aresourcefile = null;
 
 		if (!musicdir.exists()) {
-			throw new NoSuchElementException();
+			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()).concat(name));
 		}
 		for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(configoptions.packeddir,
 				"music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {
@@ -116,7 +117,13 @@ public final class ResourceFactory implements Runnable {
 	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) {
 		boolean processpack = configoptions.processpack;
 		if (target == null && processpack) {
-			ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
+			ResourceFactory resourcepacked;
+			try {
+				resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				return false;
+			}
 
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();
@@ -125,7 +132,13 @@ public final class ResourceFactory implements Runnable {
 			return false;
 		}
 		update &= processpack;
-		ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, target, name, update);
+		ResourceFactory resourcepacked;
+		try {
+			resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, target, name, update);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return false;
+		}
 		if (resourcepacked.resourcepacker == null) {
 			positiontracker.remove(target);
 			return true;
@@ -164,9 +177,9 @@ public final class ResourceFactory implements Runnable {
 	@Override
 	public void run() {
 		if(this.resourcepacker != null) {
-			data.setPlaylist(name, soundnames, soundlengths, resourcefile);
+			data.setPlaylist(name, soundnames, soundlengths, (int)resourcefile.length(), resourcefile.getName(), this.sha1);
 			data.save();
-			data.load();
+			//data.load();
 		}
 		if(target == null || packsender == null) {
 			return;

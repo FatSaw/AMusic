@@ -139,10 +139,15 @@ public final class SimpleConfiguration {
 		if(value==null) return defaultvalue;
 		return value;
 	}
-	public byte[] getBytesBase64OrDefault(String key, byte[] defaultvalue) throws IllegalArgumentException {
+	public byte[] getBytesBase64OrDefault(String key, byte[] defaultvalue) {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;
-		return base64decoder.decode(value);
+		try {
+			return base64decoder.decode(value);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			return defaultvalue;
+		}
 	}
 	public HashMap<String,String> getSub(String key) {
 		HashMap<String,String> map = new HashMap<String,String>();

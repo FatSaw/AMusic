@@ -1,6 +1,7 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -38,25 +39,29 @@ public final class LoadmusicCommand implements CommandExecutor {
 			return true;
 		}
 		if (args.length > 1) {
-			if (args[0].equals("@s")) {
-				if (sender instanceof Player) {
-					args[0] = ((Player) sender).getName();
-				} else {
-					LangOptions.loadmusic_noconsoleselector.sendMsg(sender);
+			UUID targetuuid = null;
+			if (!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.null")) {
+				if (args[0].equals("@s")) {
+					if (sender instanceof Player) {
+						args[0] = ((Player) sender).getName();
+					} else {
+						LangOptions.loadmusic_noconsoleselector.sendMsg(sender);
+						return true;
+					}
+				} else if (!sender.hasPermission("amusic.loadmusic.other")) {
+					LangOptions.loadmusic_nopermissionother.sendMsg(sender);
 					return true;
 				}
-			} else if (!sender.hasPermission("amusic.loadmusic.other")) {
-				LangOptions.loadmusic_nopermissionother.sendMsg(sender);
-				return true;
-			}
-			Player target = Bukkit.getPlayerExact(args[0]);
-			if (target == null) {
-				LangOptions.loadmusic_targetoffline.sendMsg(sender);
-				return true;
+				Player target = Bukkit.getPlayerExact(args[0]);
+				if (target == null) {
+					LangOptions.loadmusic_targetoffline.sendMsg(sender);
+					return true;
+				}
+				targetuuid = target.getUniqueId();
 			}
 
 			try {
-				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, target.getUniqueId(), args[1], args.length > 2 && configuptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
+				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuid, args[1], args.length > 2 && configuptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return true;
 				}

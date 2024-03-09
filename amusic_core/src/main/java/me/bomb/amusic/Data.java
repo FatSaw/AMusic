@@ -1,11 +1,5 @@
 package me.bomb.amusic;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,31 +8,15 @@ import java.util.Set;
 public abstract class Data {
 	protected final Map<String, DataEntry> options = new HashMap<String, DataEntry>();
 	
-	public Data() {
+	protected Data() {
 	}
 
-	public abstract void save();
+	protected abstract void save();
 
-	public abstract void load();
-
-	private static byte[] calcSHA1(File file) {
-		try {
-			FileInputStream fileInputStream = new FileInputStream(file);
-			MessageDigest digest = MessageDigest.getInstance("SHA-1");
-			DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, digest);
-			byte[] bytes = new byte[1024];
-			while (digestInputStream.read(bytes) > 0);
-			digestInputStream.close();
-			return digest.digest();
-		} catch (IOException | NoSuchAlgorithmException e) {
-		}
-		return null;
-	}
-
-	public final byte[] setPlaylist(String playlistname, List<String> sounds, List<Short> length, File file) {
-		byte[] sha1 = calcSHA1(file);
-		options.put(playlistname, new DataEntry((int) file.length(), file.getName(), sounds, length, sha1));
-		return sha1;
+	protected abstract void load();
+	
+	public final void setPlaylist(String playlistname, List<String> sounds, List<Short> lengths, int resourcesize, String resourcename, byte[] sha1) {
+		options.put(playlistname, new DataEntry(resourcesize, resourcename, sounds, lengths, sha1));
 	}
 
 	public final DataEntry getPlaylist(String playlistname) {

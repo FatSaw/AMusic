@@ -45,10 +45,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		soundstopper = new BukkitSoundStopper();
 		packsender = new BukkitPackSender();
 		SoundStarter soundstarter = new BukkitSoundStarter();
-		try {
-			resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt);
-		} catch (NoSuchAlgorithmException e) {
-		}
+		resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt);
 		positiontracker = new PositionTracker(soundstarter, soundstopper, configoptions.hasplaceholderapi);
 		
 		server = new ResourceServer(playerips, configoptions.port, resourcemanager);

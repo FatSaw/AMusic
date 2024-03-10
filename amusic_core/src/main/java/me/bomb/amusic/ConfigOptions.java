@@ -77,9 +77,9 @@ public final class ConfigOptions {
 		byte[] salt = sc.getBytesBase64OrDefault("tokensalt", new byte[0]);
 		
 		if(salt == null || salt.length < 2) {
-			tokensalt = salt;
-		} else {
 			tokensalt = null;
+		} else {
+			tokensalt = salt;
 		}
 		useconverter = sc.getBooleanOrDefault("encoder.use", false);
 		bitrate = sc.getIntOrDefault("encoder.bitrate", 65000);

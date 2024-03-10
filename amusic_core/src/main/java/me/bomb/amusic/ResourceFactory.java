@@ -177,7 +177,7 @@ public final class ResourceFactory implements Runnable {
 	@Override
 	public void run() {
 		if(this.resourcepacker != null) {
-			data.setPlaylist(name, soundnames, soundlengths, (int)resourcefile.length(), resourcefile.getName(), this.sha1);
+			data.setPlaylist(name, soundnames, soundlengths, (int)resourcefile.length(), resourcefile.getName(), resourcepacker.sha1);
 			data.save();
 			//data.load();
 		}

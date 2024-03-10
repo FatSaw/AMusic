@@ -79,6 +79,7 @@ public final class Data extends me.bomb.amusic.Data {
 							data.getStringList(aplaylistname.concat(".sounds")), lengths, sha1);
 					options.put(playlistname, option);
 				} catch (IllegalArgumentException e) {
+					e.printStackTrace();
 				}
 			}
 		}

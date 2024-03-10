@@ -1,14 +1,11 @@
 package me.bomb.amusic;
 
-//import java.io.IOException;
-//import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 
 public final class SimpleConfiguration {
 	

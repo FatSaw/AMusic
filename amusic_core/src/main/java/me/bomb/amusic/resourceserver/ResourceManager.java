@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class ResourceManager {
 	
-	private static MessageDigest md5hash;
+	private final MessageDigest md5hash;
 	
 	private final ConcurrentSkipListSet<UUID> accepted = new ConcurrentSkipListSet<UUID>();
 	private final ConcurrentHashMap<UUID, UUID> targets = new ConcurrentHashMap<UUID, UUID>();
@@ -21,16 +21,21 @@ public final class ResourceManager {
 	private final boolean servercache, clientcache;
 	private final byte[] salt;
 	
-	public ResourceManager(int maxbuffersize, boolean servercache, boolean clientcache, byte[] salt) throws NoSuchAlgorithmException {
+	public ResourceManager(int maxbuffersize, boolean servercache, boolean clientcache, byte[] salt) {
 		this.maxbuffersize = maxbuffersize;
 		this.servercache = servercache;
 		this.salt = salt;
 		clientcache &= salt != null;
+		MessageDigest md = null;
 		if(clientcache) {
-			md5hash = MessageDigest.getInstance("MD5");
-		} else {
-			md5hash = null;
+			try {
+				md = MessageDigest.getInstance("MD5");
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+				clientcache = false;
+			}
 		}
+		this.md5hash = md;
 		this.clientcache = clientcache;
 	}
 	
@@ -51,8 +56,6 @@ public final class ResourceManager {
 		}
 		UUID token = null; //Token should be unique for each player.
 		if(this.clientcache) { //Use salty token, to be hard predictable.
-			int saltlength = salt.length, halfsalt = saltlength >> 1;
-			--saltlength;
 			long msb = targetplayer.getMostSignificantBits(), lsb = targetplayer.getLeastSignificantBits();
 			byte[] hash = new byte[0x10];
 			hash[0x00] = (byte) msb;
@@ -87,10 +90,9 @@ public final class ResourceManager {
 			hash[0x0F] = (byte) lsb;
 			synchronized (md5hash) {
 				md5hash.reset();
-				md5hash.update(salt, 0, halfsalt);
 				md5hash.update(resource.resource);
 				md5hash.update(hash);
-				md5hash.update(salt, halfsalt, saltlength);
+				md5hash.update(this.salt);
 				hash = md5hash.digest();
 			}
 			msb = (long) hash[0];

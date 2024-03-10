@@ -16,7 +16,11 @@ public abstract class Data {
 	protected abstract void load();
 	
 	public final void setPlaylist(String playlistname, List<String> sounds, List<Short> lengths, int resourcesize, String resourcename, byte[] sha1) {
-		options.put(playlistname, new DataEntry(resourcesize, resourcename, sounds, lengths, sha1));
+		try {
+			options.put(playlistname, new DataEntry(resourcesize, resourcename, sounds, lengths, sha1));
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public final DataEntry getPlaylist(String playlistname) {

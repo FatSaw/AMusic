@@ -37,7 +37,6 @@ public final class PositionTracker extends Thread {
 		this.soundstarter = soundstarter;
 		this.soundstopper = soundstopper;
 		this.processformatedtime = processformatedtime;
-		start();
 	}
 
 	@Override

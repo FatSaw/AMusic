@@ -15,7 +15,7 @@ port: (int) #Resourcepack file server port
 processpack: (boolean) #If false, resourcepack packing disabled
 cache:
  server: (boolean) #If true resourcepack cached on server
- client: (boolean) #If true resourcepack cached on client (Max 10), resets if host, port, player uuid changed)
+ client: (boolean) #If true resourcepack cached on client (Max 10), resets if host, port, tokensalt, player uuid changed)
 strictdownloaderlist: (boolean) #If true, only connected players can access resourcepack server
 tokensalt: (Base64 String) #Salt for token generator, replace it to random Base64, needs only when client cache enabled
 encoder: 

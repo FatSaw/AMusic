@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import me.bomb.amusic.resourceserver.ResourceManager;
@@ -90,14 +89,13 @@ public final class ResourceFactory implements Runnable {
 		File musicdir = new File(configoptions.musicdir, name);
 		File tempdir = new File(configoptions.tempdir, name);
 		File sourcearchive = new File(configoptions.musicdir, name.concat(".zip"));
-		if (!data.containsPlaylist(name)) {
-			throw new NoSuchElementException();
-		}
-		DataEntry options = data.getPlaylist(name);
-		File resourcefile = new File(configoptions.packeddir, options.name);
-		if (resourcefile != null && resourcefile.exists()) {
-			delete(resourcefile);
-			data.removePlaylist(name);
+		if (data.containsPlaylist(name)) {
+			DataEntry options = data.getPlaylist(name);
+			File resourcefile = new File(configoptions.packeddir, options.name);
+			if (resourcefile != null && resourcefile.exists()) {
+				delete(resourcefile);
+				data.removePlaylist(name);
+			}
 		}
 		File aresourcefile = null;
 
@@ -114,17 +112,10 @@ public final class ResourceFactory implements Runnable {
 		this.sha1 = resourcepacker.sha1;
 	}
 
-	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) {
+	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws FileNotFoundException {
 		boolean processpack = configoptions.processpack;
 		if (target == null && processpack) {
-			ResourceFactory resourcepacked;
-			try {
-				resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				return false;
-			}
-
+			ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();
 				return true;
@@ -132,13 +123,7 @@ public final class ResourceFactory implements Runnable {
 			return false;
 		}
 		update &= processpack;
-		ResourceFactory resourcepacked;
-		try {
-			resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, target, name, update);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return false;
-		}
+		ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, target, name, update);
 		if (resourcepacked.resourcepacker == null) {
 			positiontracker.remove(target);
 			return true;

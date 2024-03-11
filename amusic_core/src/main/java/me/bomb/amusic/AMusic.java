@@ -1,5 +1,6 @@
 package me.bomb.amusic;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -130,7 +131,7 @@ public final class AMusic {
 	/**
 	 * Loads resource pack to player.
 	 */
-	public void loadPack(UUID playeruuid, String name, boolean update) {
+	public void loadPack(UUID playeruuid, String name, boolean update) throws FileNotFoundException {
 		ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
 	}
 

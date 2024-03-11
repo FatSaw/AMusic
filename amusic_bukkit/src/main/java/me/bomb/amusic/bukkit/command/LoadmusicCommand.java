@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.ConfigOptions;
@@ -40,7 +42,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 		}
 		if (args.length > 1) {
 			UUID targetuuid = null;
-			if (!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.null")) {
+			if (!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.nulltarget")) {
 				if (args[0].equals("@s")) {
 					if (sender instanceof Player) {
 						args[0] = ((Player) sender).getName();
@@ -74,6 +76,13 @@ public final class LoadmusicCommand implements CommandExecutor {
 				LangOptions.loadmusic_noplaylist.sendMsg(sender, placeholders);
 				return true;
 			}
+		} else if(args.length == 1 && args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
+			StringBuilder sb = new StringBuilder("Playlists: ");
+			for(String playlistname : data.getPlaylists()) {
+				sb.append(playlistname);
+				sb.append(' ');
+			}
+			sender.sendMessage(sb.toString());
 		} else {
 			LangOptions.loadmusic_usage.sendMsg(sender);
 		}

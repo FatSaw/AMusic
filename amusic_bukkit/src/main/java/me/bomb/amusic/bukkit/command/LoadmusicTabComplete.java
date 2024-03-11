@@ -38,7 +38,7 @@ public final class LoadmusicTabComplete implements TabCompleter {
 			}
 			return tabcomplete;
 		}
-		if (args.length == 2) {
+		if (args.length == 2 && !args[0].equals("@l")) {
 			Set<String> playlists = data.getPlaylists();
 			if (playlists != null) {
 				for (String playlist : playlists) {

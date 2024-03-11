@@ -1,11 +1,14 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.PositionTracker;
@@ -50,6 +53,41 @@ public final class PlaymusicCommand implements CommandExecutor {
 					LangOptions.playmusic_noconsoleselector.sendMsg(sender);
 					return true;
 				}
+			} else if(args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
+				Player target = Bukkit.getPlayerExact(args[1]);
+				if(target==null) {
+					LangOptions.playmusic_targetoffline.sendMsg(sender);
+					return true;
+				}
+				UUID targetuuid = target.getUniqueId();
+				List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(targetuuid);
+				if(soundsinfo==null) {
+					LangOptions.playmusic_noplaylist.sendMsg(sender);
+					return true;
+				}
+				String playing = positiontracker.getPlaying(targetuuid);
+				short playingsize = positiontracker.getPlayingSize(targetuuid), playingstate = positiontracker.getPlayingRemain(targetuuid);;
+				
+				StringBuilder sb = new StringBuilder();
+				if(playing!=null) {
+					sb.append("Playing: ");
+					sb.append(playing);
+					sb.append(' ');
+				}
+				if(playingsize!=-1&&playingstate!=-1) {
+					playingstate=(short) (playingsize-playingstate);
+					sb.append(Short.toString(playingstate));
+					sb.append('/');
+					sb.append(Short.toString(playingsize));
+					sb.append(' ');
+				}
+				sb.append("Playlists: ");
+				for(SoundInfo soundinfo : soundsinfo) {
+					sb.append(soundinfo.name);
+					sb.append(' ');
+				}
+				sender.sendMessage(sb.toString());
+				return true;
 			}
 			Player target = Bukkit.getPlayerExact(args[0]);
 			if(target==null) {

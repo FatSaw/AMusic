@@ -36,7 +36,7 @@ public final class PlaymusicTabComplete implements TabCompleter {
 			}
 			return tabcomplete;
 		}
-		if (args.length == 2) {
+		if (args.length == 2 && !args[0].equals("@l")) {
 			boolean selfsender = false;
 			if (args[0].equals("@s") && sender instanceof Player) {
 				args[0] = sender.getName();

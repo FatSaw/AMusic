@@ -30,7 +30,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PackSender packsender;
-	private final ResourceServer server;
+	private final ResourceServer resourceserver;
 	private final PositionTracker positiontracker;
 	
 	public AMusicBukkit() {
@@ -46,12 +46,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		packsender = new BukkitPackSender();
 		resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt);
 		positiontracker = new PositionTracker(new BukkitSoundStarter(), new BukkitSoundStopper(), configoptions.hasplaceholderapi);
-		server = new ResourceServer(playerips, configoptions.port, resourcemanager);
-		try {
-			new AMusic(configoptions, positiontracker, resourcemanager, packsender, data);
-		} catch (ExceptionInInitializerError e) {
-			e.printStackTrace();
-		}
+		resourceserver = new ResourceServer(playerips, configoptions.port, resourcemanager);
 	}
 	
 	//PLUGIN INIT START
@@ -73,12 +68,19 @@ public final class AMusicBukkit extends JavaPlugin {
 		if (configoptions.hasplaceholderapi) {
 			new AMusicPlaceholderExpansion(positiontracker).register();
 		}
+		try {
+			new AMusic(configoptions, positiontracker, resourcemanager, packsender, data);
+		} catch (ExceptionInInitializerError e) {
+			e.printStackTrace();
+		}
+		positiontracker.start();
+		resourceserver.start();
 	}
 
 	public void onDisable() {
 		positiontracker.end();
-		server.end();
-		while (positiontracker.isAlive() || server.isAlive()) { //DONT STOP)
+		resourceserver.end();
+		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
 	}
 	//PLUGIN INIT END

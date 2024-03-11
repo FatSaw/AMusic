@@ -19,7 +19,6 @@ public final class ResourceServer extends Thread {
 		this.port = port;
 		this.backlog = 50;
 		this.resourcemanager = resourcemanager;
-		start();
 	}
 	
 	@Override

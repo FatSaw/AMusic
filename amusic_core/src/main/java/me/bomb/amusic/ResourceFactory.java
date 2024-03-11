@@ -5,10 +5,14 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class ResourceFactory implements Runnable {
+	
+	private final static Pattern DIRNAMEFILTER = Pattern.compile(new String(new byte[] {0x5B, 0x20, 0x2F, 0x5C, 0x5C, 0x3A, 0x3B, 0x5D}));
+	
 	private final String name;
 	private final UUID target;
 	private final ConfigOptions configoptions;
@@ -113,7 +117,11 @@ public final class ResourceFactory implements Runnable {
 	}
 
 	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws FileNotFoundException {
+		name = DIRNAMEFILTER.matcher(name).replaceAll("");
 		boolean processpack = configoptions.processpack;
+		if(name.isEmpty()) {
+			return processpack;
+		}
 		if (target == null && processpack) {
 			ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {

@@ -61,18 +61,18 @@ public final class LoadmusicCommand implements CommandExecutor {
 				}
 				targetuuid = target.getUniqueId();
 			}
-
+			String name = ResourceFactory.filterName(args[1]);
 			try {
-				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuid, args[1], args.length > 2 && configuptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
+				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, args.length > 2 && configuptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return true;
 				}
 				Placeholders[] placeholders = new Placeholders[1];
-				placeholders[0] = new Placeholders("%playlistname%", args[1]);
+				placeholders[0] = new Placeholders("%playlistname%", name);
 				LangOptions.loadmusic_success.sendMsg(sender, placeholders);
 			} catch (FileNotFoundException e) {
 				Placeholders[] placeholders = new Placeholders[1];
-				placeholders[0] = new Placeholders("%playlistname%", args[1]);
+				placeholders[0] = new Placeholders("%playlistname%", name);
 				LangOptions.loadmusic_noplaylist.sendMsg(sender, placeholders);
 				return true;
 			}

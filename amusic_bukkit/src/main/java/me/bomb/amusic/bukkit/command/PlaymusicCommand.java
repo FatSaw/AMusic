@@ -81,7 +81,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 					sb.append(Short.toString(playingsize));
 					sb.append(' ');
 				}
-				sb.append("Playlists: ");
+				sb.append("Sounds: ");
 				for(SoundInfo soundinfo : soundsinfo) {
 					sb.append(soundinfo.name);
 					sb.append(' ');

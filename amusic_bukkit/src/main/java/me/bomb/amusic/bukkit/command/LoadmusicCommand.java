@@ -1,6 +1,6 @@
 package me.bomb.amusic.bukkit.command;
 
-import java.util.NoSuchElementException;
+import java.io.FileNotFoundException;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -68,7 +68,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 				Placeholders[] placeholders = new Placeholders[1];
 				placeholders[0] = new Placeholders("%playlistname%", args[1]);
 				LangOptions.loadmusic_success.sendMsg(sender, placeholders);
-			} catch (NoSuchElementException e) {
+			} catch (FileNotFoundException e) {
 				Placeholders[] placeholders = new Placeholders[1];
 				placeholders[0] = new Placeholders("%playlistname%", args[1]);
 				LangOptions.loadmusic_noplaylist.sendMsg(sender, placeholders);

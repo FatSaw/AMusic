@@ -16,19 +16,19 @@
 		</repository>
 	</repositories>
 	<dependencies>
-        <dependency>
-            <groupId>com.velocitypowered</groupId>
-            <artifactId>velocity-api</artifactId>
-            <version>3.3.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+		<dependency>
+			<groupId>com.velocitypowered</groupId>
+			<artifactId>velocity-api</artifactId>
+			<version>3.3.0-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>me.bomb</groupId>
 			<artifactId>amusic_core</artifactId>
 			<version>0.13</version>
 		</dependency>
-    </dependencies>
-    <build>
+	</dependencies>
+	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -49,6 +49,16 @@
 						<goals>
 							<goal>shade</goal>
 						</goals>
+						<configuration>
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/**</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

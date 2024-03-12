@@ -9,6 +9,9 @@
     <version>0.13</version>
   </parent>
   <artifactId>amusic_bukkit</artifactId>
+  <properties>
+    <maven.deploy.skip>false</maven.deploy.skip>
+  </properties>
   <repositories>
 		<repository>
 			<id>spigot-repo</id>

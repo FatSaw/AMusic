@@ -12,4 +12,7 @@
 		<module>amusic_velocity</module>
 		<module>amusic_bukkit</module>
 	</modules>
+	<properties>
+		<maven.deploy.skip>true</maven.deploy.skip>
+	</properties>
 </project>

@@ -9,5 +9,4 @@
 		<version>0.13</version>
 	</parent>
 	<artifactId>amusic_core</artifactId>
-	<packaging>pom</packaging>
 </project>

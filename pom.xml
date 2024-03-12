@@ -12,11 +12,4 @@
 		<module>amusic_velocity</module>
 		<module>amusic_bukkit</module>
 	</modules>
-	<distributionManagement>
-		<repository>
-			<id>github</id>
-			<name>GitHub Packages</name>
-			<url>https://maven.pkg.github.com/FatSaw/AMusic</url>
-		</repository>
-	</distributionManagement>
 </project>

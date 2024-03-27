@@ -31,7 +31,6 @@ public final class ResourceServer extends Thread {
 		while (run) {
 			try {
 				server = new ServerSocket();
-				server.setReceiveBufferSize(512);
 				server.bind(new InetSocketAddress((InetAddress)null, port), backlog);
 			} catch (IOException|SecurityException|IllegalArgumentException e) {
 				e.printStackTrace();

@@ -24,7 +24,7 @@ import me.bomb.amusic.resourceserver.ResourceServer;
 
 
 public final class AMusicBukkit extends JavaPlugin {
-	
+
 	private final ConfigOptions configoptions;
 	private final Data data;
 	private final ResourceManager resourcemanager;
@@ -32,7 +32,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final PackSender packsender;
 	private final ResourceServer resourceserver;
 	private final PositionTracker positiontracker;
-	
+
 	public AMusicBukkit() {
 		byte ver = Byte.valueOf(Bukkit.getServer().getClass().getPackage().getName().substring(23).split("_", 3)[1]);
 		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), datafile = new File(plugindir, "data.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
@@ -50,7 +50,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
 		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir);
-		playerips = new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1);
+		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new Data(datafile);
 		data.load();
 		if(!datafile.exists()) {
@@ -61,7 +61,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		positiontracker = new PositionTracker(new BukkitSoundStarter(), new BukkitSoundStopper(), configoptions.hasplaceholderapi);
 		resourceserver = new ResourceServer(playerips, configoptions.port, resourcemanager);
 	}
-	
+
 	//PLUGIN INIT START
 	public void onEnable() {
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
@@ -73,9 +73,11 @@ public final class AMusicBukkit extends JavaPlugin {
 		PluginCommand repeatcommand = getCommand("repeat");
 		repeatcommand.setExecutor(new RepeatCommand(positiontracker));
 		repeatcommand.setTabCompleter(new RepeatTabComplete());
-		playerips.clear();
-		for(Player player : Bukkit.getOnlinePlayers()) {
-			playerips.put(player, player.getAddress().getAddress());
+		if(playerips != null) {
+			playerips.clear();
+			for(Player player : Bukkit.getOnlinePlayers()) {
+				playerips.put(player, player.getAddress().getAddress());
+			}
 		}
 		Bukkit.getPluginManager().registerEvents(new EventListener(resourcemanager, positiontracker, playerips), this);
 		if (configoptions.hasplaceholderapi) {

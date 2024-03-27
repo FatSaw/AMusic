@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 public final class SimpleConfiguration {
 	
@@ -37,22 +36,19 @@ public final class SimpleConfiguration {
 				level = 0;
 			}
 		}
-		intlist.add((int)level);
 		if(maxlevel<level) maxlevel = level;
 		++maxlevel;
 		i = intlist.size();
-		++i;
 		byte[] levels = new byte[i];
 		byte[][] strs = new byte[i][];
-		strs[0] = levels;
 		int j = 0;
-		while(--i>0) {
+
+		while(--i>-1) {
 			int strid = intlist.get(j);
 			++j;
 			byte ch = (byte) strid;
 			levels[i] = ch;
 			strid>>=8;
-			--pstrid;
 			int strsize = pstrid - strid;
 			strsize-=ch;
 			byte[] strbytes = new byte[strsize];
@@ -62,10 +58,6 @@ public final class SimpleConfiguration {
 			strs[i] = strbytes;
 			pstrid = strid;
 		}
-		levels[1] = ++level;
-		
-		
-		
 		i = 0;
 		byte plevel = 0;
 		String[] pkey = new String[maxlevel];
@@ -79,7 +71,7 @@ public final class SimpleConfiguration {
 				}
 				++valuekeysplit;
 			}
-			if(str[0] == 0x23) continue;
+			if(str.length == 0 || str[0] == 0x23) continue;
 			if(valuekeysplit != str.length) {
 				String key = new String(Arrays.copyOf(str, valuekeysplit));
 				StringBuilder fullkey = new StringBuilder();
@@ -145,48 +137,5 @@ public final class SimpleConfiguration {
 			e.printStackTrace();
 			return defaultvalue;
 		}
-	}
-	public HashMap<String,String> getSub(String key) {
-		HashMap<String,String> map = new HashMap<String,String>();
-		byte keylvl = 0;
-		while(keylvl!=-128 && key.indexOf(0xE2, keylvl)!=-1) {
-			++keylvl;
-		}
-		++keylvl;
-		for(Entry<String,String> entry : kv.entrySet()) {
-			String ekey = entry.getKey();
-			byte ekeylvl = 0;
-			while(ekeylvl!=-128 && ekey.indexOf(0xE2, ekeylvl)!=-1) {
-				++ekeylvl;
-			}
-			if(keylvl==ekeylvl&&ekey.startsWith(key)) {
-				map.put(ekey, entry.getValue());
-			}
-		}
-		return map;
-	}
-	public HashMap<String,String> getStartsWith(String key) {
-		HashMap<String,String> map = new HashMap<String,String>();
-		for(Entry<String,String> entry : kv.entrySet()) {
-			String ekey = entry.getKey();
-			if(ekey.startsWith(key)) {
-				map.put(ekey, entry.getValue());
-			}
-		}
-		return map;
-	}
-	public HashMap<String,String> getLevel(byte level) {
-		HashMap<String,String> map = new HashMap<String,String>();
-		for(Entry<String,String> entry : kv.entrySet()) {
-			String ekey = entry.getKey();
-			byte ekeylvl = 0;
-			while(ekeylvl!=-128 && ekey.indexOf(0xE2, level)!=-1) {
-				++ekeylvl;
-			}
-			if(level==ekeylvl) {
-				map.put(ekey, entry.getValue());
-			}
-		}
-		return map;
 	}
 }

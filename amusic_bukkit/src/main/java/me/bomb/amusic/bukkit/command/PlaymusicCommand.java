@@ -99,7 +99,14 @@ public final class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;
 			}
-
+			if(args.length>2) {
+				StringBuilder sb = new StringBuilder(args[1]);
+				for(int i = 2;i < args.length;++i) {
+					sb.append(' ');
+					sb.append(args[i]);
+				}
+				args[1] = sb.toString();
+			}
 			Placeholders[] placeholders = new Placeholders[1];
 			placeholders[0] = new Placeholders("%soundname%",args[1]);
 			for(SoundInfo soundinfo : soundsinfo) {

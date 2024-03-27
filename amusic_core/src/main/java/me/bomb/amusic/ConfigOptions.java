@@ -8,36 +8,14 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 public final class ConfigOptions {
-	protected static Class<? extends ConfigOptions> oclass;
-	protected static File plugindir;
-	protected static byte version;
 	public final String host;
 	public final int port, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
 	public final byte channels;
-	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi, legacystopper, legacysender;
+	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi;
 	public final File musicdir, packeddir, tempdir;
 	public final byte[] tokensalt;
-	public ConfigOptions(File plugindir, byte version) {
-		ConfigOptions.plugindir = plugindir;
-		ConfigOptions.version = version;
-		if(!plugindir.exists()) {
-			plugindir.mkdirs();
-		}
-		musicdir = new File(plugindir, "Music");
-		packeddir = new File(plugindir, "Packed");
-		tempdir = new File(plugindir, "Temp");
-		if(!musicdir.exists()) {
-			musicdir.mkdir();
-		}
-		if(!packeddir.exists()) {
-			packeddir.mkdir();
-		}
-		if(!tempdir.exists()) {
-			tempdir.mkdir();
-		}
-		File configfile = new File(plugindir, "config.yml");
+	public ConfigOptions(File configfile, int maxpacksize, File musicdir, File packeddir, File tempdir) {
 		byte[] bytes = null;
-		oclass = getClass();
 		if (!configfile.exists()) {
 			InputStream is = ConfigOptions.class.getClassLoader().getResourceAsStream("config.yml");
 			try {
@@ -86,11 +64,11 @@ public final class ConfigOptions {
 		channels = (byte) sc.getIntOrDefault("encoder.channels", 2);
 		samplingrate = sc.getIntOrDefault("encoder.samplingrate", 44100);
 		encodetracksasynchronly = sc.getBooleanOrDefault("encoder.async", true);
-		
-		maxpacksize = version < 15 ? 52428800 : version < 18 ? 104857600 : 262144000;
-		maxmusicfilesize = maxpacksize;
-		legacystopper = version < 9;
-		legacysender = version < 11;
+		this.maxpacksize = maxpacksize;
+		this.maxmusicfilesize = maxpacksize;
+		this.musicdir = musicdir;
+		this.packeddir = packeddir;
+		this.tempdir = tempdir;
 		
 	}
 }

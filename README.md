@@ -11,7 +11,9 @@ Addition to exsisting resourcepack (Place source resourcepack .zip (with same na
 
 
 `/loadmusic <playername> <playlistname> [update]` - loads playlist to player, update flag always true if playlist not loaded before
+
 `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
+
 `/repeat <playername> <repeat type>` - set repeat type
 
 ### Placeholders <playername>:

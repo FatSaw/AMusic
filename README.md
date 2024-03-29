@@ -7,6 +7,23 @@ Addition to exsisting resourcepack (Place source resourcepack .zip (with same na
 
 5 repeat types (repeatone,repeatall,playone,playall,random)
 
+## Commands:
+
+
+`/loadmusic <playername> <playlistname> [update]` - loads playlist to player, update flag always true if playlist not loaded before
+`/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
+`/repeat <playername> <repeat type>` - set repeat type
+
+### Placeholders <playername>:
+`@n` - null target
+`@s` - self
+
+`loadmusic @s, @n`
+
+`playmusic @s`
+
+`repeat @s`
+
 ## Config:
 
 ```

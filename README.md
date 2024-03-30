@@ -11,6 +11,7 @@ Addition to exsisting resourcepack (Place source resourcepack .zip (with same na
 
 ### How it works
 loadmusic - convert(if enabled),pack,send playlist(resourcepack) to target player (if target @n not sends, update flag force true)
+
 playmusic - start/stop sound from loaded resourcepack
 
 

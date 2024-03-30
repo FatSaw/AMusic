@@ -9,12 +9,33 @@ Addition to exsisting resourcepack (Place source resourcepack .zip (with same na
 
 ## Commands:
 
+### How it works
+loadmusic - convert(if enabled),pack,send playlist(resourcepack) to target player (if target @n not sends, update flag force true)
+playmusic - start/stop sound from loaded resourcepack
 
-`/loadmusic <playername> <playlistname> [update]` - loads playlist to player, update flag always true if playlist not loaded before
+
+`/loadmusic <playername> <playlistname> [update]` - loads playlist(resourcepack) to player, update flag always true if playlist not loaded before
 
 `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
 
 `/repeat <playername> <repeat type>` - set repeat type
+
+### Permissions
+`amusic.loadmusic` - load playlist(resourcepack), allows `@s` usage
+
+`amusic.playmusic` - start/stop sound, allows `@s` usage
+
+`amusic.repeat` - set repeat, allows `@s` usage
+
+`amusic.loadmusic.other` - load playlist(resourcepack) for other players
+
+`amusic.playmusic.other` - start/stop sound for other players
+
+`amusic.repeat.other` - set repeat for other players
+
+`amusic.loadmusic.update` - reconvert(if enabled), repack, send playlist(resourcepack)
+
+`amusic.loadmusic.nulltarget` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
 
 ### Placeholders <playername>:
 `@n` - null target
@@ -25,6 +46,10 @@ Addition to exsisting resourcepack (Place source resourcepack .zip (with same na
 `playmusic @s`
 
 `repeat @s`
+### Commands for console without tab complete:
+`/loadmusic @l` - get packed playlist(resourcepack) list
+
+`/playmusic @l <playername>` - get loaded to player soundnames, currently playing sound name and time
 
 ## Config:
 
@@ -58,17 +83,17 @@ FFMpeg sources: [ffmpeg-4.4.1.tar.gz](https://ffmpeg.org/releases/ffmpeg-4.4.1.t
 ## API:
 ```
 AMusic api = AMusic.API(); //GET API INSTANCE
-api.getPlaylists(); //список плейлистов
-api.getPlaylistSoundnames(String playlistname); //получить список звуков в плейлисте
-api.getPlaylistSoundnames(UUID playeruuid); //получить список звуков в плейлисте которые загружены игроку
-api.getPlaylistSoundlengths(String playlistname); //получить список длин звуков (в секундах)
-api.getPlaylistSoundlengths(UUID playeruuid); //получить список длин звуков (в секундах) которые загружены игроку
-api.loadPack(UUID playeruuid, String playlistname, boolean update); //загрузить ресурспак игроку
-api.getPackName(UUID playeruuid); //получить название загруженного  ресурспака
-api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //установить режим повтора
-api.stopSound(UUID playeruuid); //остановить звук
-api.playSound(UUID playeruuid, String name); //запустить звук
-api.getPlayingSoundName(UUID playeruuid); //получить название звука который играет сейчас
-api.getPlayingSoundSize(UUID playeruuid); //получить длину звука который играет сейчас (в секундах)
-api.getPlayingSoundRemain(UUID playeruuid); //получить оставшиеся время звука который играет сейчас (в секундах)
+api.getPlaylists(); //get list of already packed playlists(resourcepacks)
+api.getPlaylistSoundnames(String playlistname); //get list of sounds in playlist "playlistname"
+api.getPlaylistSoundnames(UUID playeruuid); //get list of sounds loaded to player with uuid "playeruuid"
+api.getPlaylistSoundlengths(String playlistname); //get list of sounds length in playlist "playlistname"
+api.getPlaylistSoundlengths(UUID playeruuid); //get list of sounds length loaded to player with uuid "playeruuid"
+api.loadPack(UUID playeruuid, String playlistname, boolean update); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
+api.getPackName(UUID playeruuid); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
+api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //set repeat mode "repeattype" to player with uuid "playeruuid"
+api.stopSound(UUID playeruuid); //stop sound to player with uuid "playeruuid"
+api.playSound(UUID playeruuid, String name); //start sound "name" to player with uuid "playeruuid"
+api.getPlayingSoundName(UUID playeruuid); //get currently playing sound of player with uuid "playeruuid"
+api.getPlayingSoundSize(UUID playeruuid); //get currently playing sound size of player with uuid "playeruuid"
+api.getPlayingSoundRemain(UUID playeruuid); //get currently playing sound remaining time of player with uuid "playeruuid"
 ```

@@ -56,7 +56,7 @@ public final class ResourceFactory implements Runnable {
 		}
 		if (!ok) {
 			if (!musicdir.exists()) {
-				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()).concat(name));
+				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 			}
 			if(resourcefile==null) {
 				File aresourcefile = null;
@@ -101,7 +101,7 @@ public final class ResourceFactory implements Runnable {
 		File aresourcefile = null;
 
 		if (!musicdir.exists()) {
-			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()).concat(name));
+			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 		}
 		for (short zip = 0; zip != Short.MIN_VALUE && (aresourcefile = new File(configoptions.packeddir,
 				"music".concat(Short.toString(zip)).concat(".zip"))).exists(); ++zip) {

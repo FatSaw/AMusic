@@ -28,16 +28,18 @@ public final class EventListener implements Listener {
 	}
 	@EventHandler
 	public void playerJoin(PlayerJoinEvent event) {
+		if(playerips == null) return;
 		Player player = event.getPlayer();
 		playerips.put(player, player.getAddress().getAddress());
 	}
 	@EventHandler
 	public void playerQuit(PlayerQuitEvent event) {
 		Player player = event.getPlayer();
-		playerips.remove(player);
 		UUID playeruuid = player.getUniqueId();
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
+		if(playerips == null) return;
+		playerips.remove(player);
 	}
 	@EventHandler
 	public void playerRespawn(PlayerRespawnEvent event) {

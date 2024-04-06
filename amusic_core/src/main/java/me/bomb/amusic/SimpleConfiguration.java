@@ -18,8 +18,7 @@ public final class SimpleConfiguration {
 	
 	public SimpleConfiguration(byte[] bytes) {
 		HashMap<String,String> kv = new HashMap<>();
-		int pstrid = bytes.length;
-		int i = pstrid;
+		int i = bytes.length;
 		byte level = 0, maxlevel = 0;
 		ArrayList<Integer> intlist = new ArrayList<Integer>();
 		while(--i>-1) {
@@ -41,27 +40,27 @@ public final class SimpleConfiguration {
 		i = intlist.size();
 		byte[] levels = new byte[i];
 		byte[][] strs = new byte[i][];
-		int j = 0;
-
+		int pstrid = 0;
 		while(--i>-1) {
-			int strid = intlist.get(j);
-			++j;
-			byte ch = (byte) strid;
-			levels[i] = ch;
+			int strid = intlist.get(i);
+			levels[i] = level;
+			int strsize = -level;
+			level = (byte) strid;
 			strid>>=8;
-			int strsize = pstrid - strid;
-			strsize-=ch;
+			strsize+=strid;
+			strsize-=pstrid;
 			byte[] strbytes = new byte[strsize];
+			pstrid = strid;
 			while(--strsize>-1) {
-				strbytes[strsize] = bytes[--pstrid];
+				strbytes[strsize] = bytes[--strid];
 			}
 			strs[i] = strbytes;
-			pstrid = strid;
 		}
-		i = 0;
+		i = strs.length;
 		byte plevel = 0;
 		String[] pkey = new String[maxlevel];
-		while(++i<strs.length) {
+		++levels[i-1];
+		while(--i>-1) {
 			level = levels[i];
 			byte[] str = strs[i];
 			int valuekeysplit = 0;
@@ -96,7 +95,7 @@ public final class SimpleConfiguration {
 				}
 				fullkey.delete(0, 1);
 				++valuekeysplit;
-				boolean hasvalue = valuekeysplit < str.length && str[valuekeysplit] ==  0x20;
+				boolean hasvalue = valuekeysplit < str.length && str[valuekeysplit] == 0x20;
 				String value = hasvalue&&++valuekeysplit != str.length ? new String(Arrays.copyOfRange(str, valuekeysplit, str.length)) : "";
 				kv.put(fullkey.toString(), value);
 			}

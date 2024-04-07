@@ -8,7 +8,7 @@ Addition to exsisting resourcepack (Place source resourcepack .zip (with same na
 5 repeat types (repeatone,repeatall,playone,playall,random)
 
 ## Restrictions
-Not allowed characters in playlist name: ` ` `@` `/` `\` `:` `;` `,` `[` `]` `(` `)` `{` `}` `<` `>` `,` `$` `&` `#` `*` `?` `|` `!` `%` `@` `^` `\t` `\b` `\n` `\r` `\f` `'` `"` `\0`
+Not allowed characters in playlist name: `@` `/` `\` `:` `;` `,` `[` `]` `(` `)` `{` `}` `<` `>` `,` `$` `&` `#` `*` `?` `|` `!` `%` `@` `^` `\t` `\b` `\n` `\r` `\f` `'` `"` `\0`
 
 ## Commands:
 

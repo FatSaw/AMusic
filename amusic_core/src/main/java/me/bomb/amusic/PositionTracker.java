@@ -2,6 +2,7 @@ package me.bomb.amusic;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -21,6 +22,14 @@ public final class PositionTracker extends Thread {
 	public void setPlaylistInfo(UUID playeruuid, String playlistname, ArrayList<SoundInfo> soundinfo) {
 		playlistinfo.put(playeruuid, soundinfo);
 		loadedplaylistnames.put(playeruuid, playlistname);
+	}
+	
+	public HashSet<UUID> getPlayersLoaded(String playlistname) {
+		HashSet<UUID> playersloaded = new HashSet<UUID>();
+		for(UUID playeruuid : loadedplaylistnames.keySet(playlistname)) {
+			playersloaded.add(playeruuid);
+		}
+		return playersloaded;
 	}
 
 	public String getPlaylistName(UUID playeruuid) {
@@ -198,7 +207,7 @@ public final class PositionTracker extends Thread {
 		soundstarter.startSound(uuid, id);
 	}
 
-	private void playMusic(UUID uuid, byte id) {
+	public void playMusic(UUID uuid, byte id) {
 		if (uuid == null || id < 0) {
 			return;
 		}

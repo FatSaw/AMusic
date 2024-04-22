@@ -53,7 +53,7 @@ enum LangOptions {
 			aavilablelocales.add("default");
 			for (LangOptions lang : values()) {
 				for (String locale : aavilablelocales) {
-					String optionpath = locale.concat(".").concat(lang.name().replaceAll("_", "."));
+					String optionpath = locale.concat(".").concat(lang.name().replace("_", "."));
 					String msg = alang.getString(optionpath);
 					if (!msg.isEmpty()) {
 						char startchar = msg.charAt(0), endchar = msg.charAt(msg.length() - 1);
@@ -75,7 +75,7 @@ enum LangOptions {
 		String msg = text.get(avilablelocales.contains(locale) ? locale : "default");
 		if (!msg.isEmpty()) {
 			for (Placeholders placeholder : placeholders) {
-				msg = msg.replaceAll(placeholder.placeholder, placeholder.value);
+				msg = msg.replace(placeholder.placeholder, placeholder.value);
 			}
 			target.sendMessage(msg);
 		}
@@ -94,7 +94,7 @@ enum LangOptions {
 		}
 		if (!msg.isEmpty()) {
 			for (Placeholders placeholder : placeholders) {
-				msg = msg.replaceAll(placeholder.placeholder, placeholder.value);
+				msg = msg.replace(placeholder.placeholder, placeholder.value);
 			}
 			target.sendMessage(msg);
 		}

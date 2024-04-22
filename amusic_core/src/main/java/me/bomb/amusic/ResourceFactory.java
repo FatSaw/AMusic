@@ -31,6 +31,7 @@ public final class ResourceFactory implements Runnable {
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.packsender = packsender;
+		name = filterName(name); //now name is safe for files
 		File musicdir = new File(configoptions.musicdir, name);
 		File tempdir = new File(configoptions.tempdir, name);
 		File sourcearchive = new File(configoptions.musicdir, name.concat(".zip"));
@@ -39,13 +40,13 @@ public final class ResourceFactory implements Runnable {
 		byte[] asha1 = null;
 		File resourcefile = null;
 		boolean ok = false;
-		if (data.containsPlaylist(name)) {
-			DataEntry options = data.getPlaylist(name);
+		if (data.containsPlaylist(this.name)) {
+			DataEntry options = data.getPlaylist(this.name);
 			resourcefile = new File(configoptions.packeddir, options.name);
 			if (resourcefile != null && resourcefile.exists()) {
 				if (update) {
-					delete(resourcefile);
-					data.removePlaylist(name);
+					resourcefile.delete();
+					data.removePlaylist(this.name);
 				} else if (resourcemanager.isCached(resourcefile.toPath()) || options.check(resourcefile)) {
 					asongnames = options.sounds;
 					asonglengths = options.length;
@@ -87,15 +88,16 @@ public final class ResourceFactory implements Runnable {
 		this.name = name;
 		this.target = null;
 		this.packsender = null;
+		name = filterName(name); //now name is safe for files
 		File musicdir = new File(configoptions.musicdir, name);
 		File tempdir = new File(configoptions.tempdir, name);
 		File sourcearchive = new File(configoptions.musicdir, name.concat(".zip"));
-		if (data.containsPlaylist(name)) {
-			DataEntry options = data.getPlaylist(name);
+		if (data.containsPlaylist(this.name)) {
+			DataEntry options = data.getPlaylist(this.name);
 			File resourcefile = new File(configoptions.packeddir, options.name);
 			if (resourcefile != null && resourcefile.exists()) {
-				delete(resourcefile);
-				data.removePlaylist(name);
+				resourcefile.delete();
+				data.removePlaylist(this.name);
 			}
 		}
 		File aresourcefile = null;
@@ -161,30 +163,6 @@ public final class ResourceFactory implements Runnable {
 			return true;
 		}
 		return false;
-	}
-	
-	private static void delete(File file) {
-		try {
-			if (file.isDirectory()) {
-				if (file.list().length == 0) {
-					file.delete();
-					return;
-				}
-				final String[] files = file.list();
-				String[] array;
-				for (int length = (array = files).length, i = 0; i < length; ++i) {
-					String temp = array[i];
-					File fileDelete = new File(file, temp);
-					delete(fileDelete);
-				}
-				if (file.list().length == 0) {
-					file.delete();
-				}
-			} else {
-				file.delete();
-			}
-		} catch (Exception e) {
-		}
 	}
 
 	@Override

@@ -61,7 +61,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 				}
 				targetuuid = target.getUniqueId();
 			}
-			String name = ResourceFactory.filterName(args[1]);
+			String name = args[1];
 			try {
 				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, args.length > 2 && configuptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);

@@ -1,34 +1,64 @@
 package me.bomb.amusic;
 
 import java.io.FileNotFoundException;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.resourceserver.ResourceServer;
 
 public final class AMusic {
 	
 	private static AMusic instance;
 	private final ConfigOptions configoptions;
-	private final PositionTracker positiontracker;
-	private final ResourceManager resourcemanager;
+	public final PositionTracker positiontracker;
+	public final ResourceManager resourcemanager;
+	public final ResourceServer resourceserver;
 	private final PackSender packsender;
 	private final Data data;
 	
-	public AMusic(ConfigOptions configoptions, PositionTracker positiontracker, ResourceManager resourcemanager, PackSender packsender, Data data) {
-		if(AMusic.instance!=null) throw new ExceptionInInitializerError("Already initialized!");
+	public AMusic(ConfigOptions configoptions, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.configoptions = configoptions;
-		this.positiontracker = positiontracker;
-		this.resourcemanager = resourcemanager;
-		this.packsender = packsender;
 		this.data = data;
+		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt);
+		this.positiontracker = new PositionTracker(soundstarter, soundstopper, configoptions.hasplaceholderapi);
+		this.packsender = packsender;
+		this.resourceserver = new ResourceServer(playerips, configoptions.port, resourcemanager);
+	}
+	
+	/**
+	 * Starts {@link AMusic#positiontracker} and {@link AMusic#resourceserver} threads.
+	 */
+	public void enable() {
+		positiontracker.start();
+		resourceserver.start();
+	}
+	
+	/**
+	 * Stops {@link AMusic#positiontracker} and {@link AMusic#resourceserver} threads.
+	 */
+	public void disable() {
+		positiontracker.end();
+		resourceserver.end();
+		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
+		}
+	}
+	
+	/**
+	 * Set main AMusic instance {@link AMusic#instance}.
+	 * Should be used only during AMusic plugin initialization;
+	 */
+	public void setAPI() throws ExceptionInInitializerError {
+		if(AMusic.instance!=null) throw new ExceptionInInitializerError("AMusic API already initialized!");
 		AMusic.instance = this;
 	}
 	
 	public static AMusic API() {
-		return instance;
+		return AMusic.instance;
 	}
 	
 	/**

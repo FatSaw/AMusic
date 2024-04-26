@@ -243,7 +243,9 @@ public final class PositionTracker extends Thread {
 		} catch (NoSuchMethodError e) {
 		}
 	}
-
+	/**
+	 * Removes player from {@link PositionTracker#trackers}, {@link PositionTracker#playlistinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
+	 */
 	public void remove(UUID uuid) {
 		trackers.remove(uuid);
 		playlistinfo.remove(uuid);

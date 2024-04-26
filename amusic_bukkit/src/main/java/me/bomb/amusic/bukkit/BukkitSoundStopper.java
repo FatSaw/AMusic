@@ -8,6 +8,9 @@ import org.bukkit.entity.Player;
 import me.bomb.amusic.SoundStopper;
 
 public final class BukkitSoundStopper implements SoundStopper {
+	
+	protected BukkitSoundStopper() {
+	}
 
 	@Override
 	public void stopSound(UUID uuid, byte id) {

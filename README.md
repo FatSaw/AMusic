@@ -85,8 +85,21 @@ FFMpeg sources: [ffmpeg-4.4.1.tar.gz](https://ffmpeg.org/releases/ffmpeg-4.4.1.t
 2) Build project with: `mvn package`
 
 ## API:
+
+### AMusic as plugin
+Should be used only if AMusic used as plugin
 ```
-AMusic api = AMusic.API(); //GET API INSTANCE
+AMusic api = AMusic.API(); //GET DEFAULT INSTANCE
+```
+### AMusic core
+May be used to add amusic core into other plugin, or create multiple independent AMusic instances
+```
+AMusic api = new AMusic(ConfigOptions configoptions, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips);
+api.enable(); //starts positiontracker and resourceserver threads
+api.disable(); //stops positiontracker and resourceserver threads
+```
+### For all operating modes
+```
 api.getPlaylists(); //get list of already packed playlists(resourcepacks)
 api.getPlaylistSoundnames(String playlistname); //get list of sounds in playlist "playlistname"
 api.getPlaylistSoundnames(UUID playeruuid); //get list of sounds loaded to player with uuid "playeruuid"

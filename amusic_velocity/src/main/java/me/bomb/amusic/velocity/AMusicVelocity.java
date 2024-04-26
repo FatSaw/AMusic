@@ -33,7 +33,7 @@ public class AMusicVelocity {
     private final Logger logger;
 	private final AMusic amusic;
     private final ConfigOptions configoptions;
-	private final Data data;
+	private final DataConfig data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
     private final PackSender packsender;
@@ -58,7 +58,7 @@ public class AMusicVelocity {
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
 		this.configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-		data = new Data(datafile);
+		data = new DataConfig(datafile);
 		data.load();
 		if(!datafile.exists()) {
 			data.save();

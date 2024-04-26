@@ -147,98 +147,105 @@ public final class ResourcePacker extends Thread {
 		}
 		// packing to archive
 		resourcemanager.resetCache(resourcefile.toPath());
-		ByteArrayOutputStream baos;
-		ZipOutputStream zos;
-		baos = new ByteArrayOutputStream(maxzipsize);
-		zos = new ZipOutputStream(baos, Charset.defaultCharset());
-		zos.setMethod(8);
-		zos.setLevel(5);
-		
-		try {
-			boolean packmcmetafound = false, soundsjsonappended = false;
-			if(sourcearchive!=null) {
-				ZipInputStream zis;
-				zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
-				ZipEntry entry;
-				int len;
-				byte[] buffer = new byte[1024];
-				while((entry = zis.getNextEntry()) != null) {
-					String entryname = entry.getName();
-					if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
-						packmcmetafound = true;
-					} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
-						
-						StringBuilder sb = new StringBuilder();
-						while ((len = zis.read(buffer)) != -1) {
-							if(len<1024) buffer = Arrays.copyOf(buffer, len);
-							sb.append(new String(buffer));
-						}
-						int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
-						if(open==-1||close==-1) {
-							continue;
-						}
-						
-						while(close>open&&sb.charAt(--close) == '}');
-						if(close==-1) {
-							continue;
-						}
-						sb.insert(close, ',');
-						sb.insert(++close, soundslist);
-						zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
-						zos.write(sb.toString().getBytes());
-						zos.closeEntry();
-						soundsjsonappended = true;
-						continue;
-					}
-					entry = new ZipEntry(entryname);
-					zos.putNextEntry(entry);
-	                while ((len = zis.read(buffer)) != -1) {
-	                	zos.write(buffer, 0, len);
-	                }
-	                zos.closeEntry();
-				}
-				zis.close();
+		if(musicfiles.isEmpty()) {
+			if(resourcefile.exists()) {
+				resourcefile.delete();
 			}
-			for(byte i = musicfilessize; --i>-1;) {
-				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
-	            zos.write(topack[i]);
-	            zos.closeEntry();
-				
-			}
-			if(!soundsjsonappended) {
-				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
-				zos.write("{".getBytes());
-				zos.write(soundslist.getBytes());
-				zos.write("}".getBytes());
-				zos.closeEntry();
-			}
-			if(!packmcmetafound) {
-				zos.putNextEntry(new ZipEntry("pack.mcmeta"));
-				zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
-				zos.closeEntry();
-			}
-		} catch (IOException e) {
-			return;
-		} finally {
+		} else {
+			ByteArrayOutputStream baos;
+			ZipOutputStream zos;
+			baos = new ByteArrayOutputStream(maxzipsize);
+			zos = new ZipOutputStream(baos, Charset.defaultCharset());
+			zos.setMethod(8);
+			zos.setLevel(5);
+			
 			try {
-				zos.close();
+				boolean packmcmetafound = false, soundsjsonappended = false;
+				if(sourcearchive!=null) {
+					ZipInputStream zis;
+					zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
+					ZipEntry entry;
+					int len;
+					byte[] buffer = new byte[1024];
+					while((entry = zis.getNextEntry()) != null) {
+						String entryname = entry.getName();
+						if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
+							packmcmetafound = true;
+						} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
+							
+							StringBuilder sb = new StringBuilder();
+							while ((len = zis.read(buffer)) != -1) {
+								if(len<1024) buffer = Arrays.copyOf(buffer, len);
+								sb.append(new String(buffer));
+							}
+							int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
+							if(open==-1||close==-1) {
+								continue;
+							}
+							
+							while(close>open&&sb.charAt(--close) == '}');
+							if(close==-1) {
+								continue;
+							}
+							sb.insert(close, ',');
+							sb.insert(++close, soundslist);
+							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+							zos.write(sb.toString().getBytes());
+							zos.closeEntry();
+							soundsjsonappended = true;
+							continue;
+						}
+						entry = new ZipEntry(entryname);
+						zos.putNextEntry(entry);
+		                while ((len = zis.read(buffer)) != -1) {
+		                	zos.write(buffer, 0, len);
+		                }
+		                zos.closeEntry();
+					}
+					zis.close();
+				}
+				for(byte i = musicfilessize; --i>-1;) {
+					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
+		            zos.write(topack[i]);
+		            zos.closeEntry();
+					
+				}
+				if(!soundsjsonappended) {
+					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+					zos.write("{".getBytes());
+					zos.write(soundslist.getBytes());
+					zos.write("}".getBytes());
+					zos.closeEntry();
+				}
+				if(!packmcmetafound) {
+					zos.putNextEntry(new ZipEntry("pack.mcmeta"));
+					zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
+					zos.closeEntry();
+				}
 			} catch (IOException e) {
+				return;
+			} finally {
+				try {
+					zos.close();
+				} catch (IOException e) {
+				}
 			}
+			
+			byte[] buf = Arrays.copyOf(baos.toByteArray(), baos.size());
+			FileOutputStream fos;
+			try {
+				fos = new FileOutputStream(resourcefile, false);
+				fos.write(buf);
+				fos.close();
+			} catch (IOException e) {
+				return;
+			}
+			synchronized(sha1hash) {
+				this.sha1 = sha1hash.digest(buf);
+			}
+			resourcemanager.putResource(resourcefile.toPath(), buf);
 		}
 		
-		byte[] buf = Arrays.copyOf(baos.toByteArray(), baos.size());
-		FileOutputStream fos;
-		try {
-			fos = new FileOutputStream(resourcefile, false);
-			fos.write(buf);
-			fos.close();
-		} catch (IOException e) {
-			return;
-		}
-		synchronized(sha1hash) {
-			this.sha1 = sha1hash.digest(buf);
-		}
-		resourcemanager.putResource(resourcefile.toPath(), buf);
 		if(runafter == null) {
 			return;
 		}

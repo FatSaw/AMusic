@@ -8,12 +8,41 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 public final class ConfigOptions {
+	
 	public final String host;
 	public final int port, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
 	public final byte channels;
 	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi;
 	public final File musicdir, packeddir, tempdir;
 	public final byte[] tokensalt;
+	
+	/**
+	 * Custom configuration storage.
+	 */
+	public ConfigOptions(String host, int port, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean encodetracksasynchronly, boolean hasplaceholderapi, File musicdir, File packeddir, File tempdir, byte[] tokensalt) {
+		this.host = host;
+		this.port = port;
+		this.maxpacksize = maxpacksize;
+		this.maxmusicfilesize = maxmusicfilesize;
+		this.bitrate = bitrate;
+		this.samplingrate = samplingrate;
+		this.channels = channels;
+		this.processpack = processpack;
+		this.servercache = servercache;
+		this.clientcache = clientcache;
+		this.strictdownloaderlist = strictdownloaderlist;
+		this.useconverter = useconverter;
+		this.encodetracksasynchronly = encodetracksasynchronly;
+		this.hasplaceholderapi = hasplaceholderapi;
+		this.musicdir = musicdir;
+		this.packeddir = packeddir;
+		this.tempdir = tempdir;
+		this.tokensalt = tokensalt;
+	}
+	
+	/**
+	 * Config file configuration storage.
+	 */
 	public ConfigOptions(File configfile, int maxpacksize, File musicdir, File packeddir, File tempdir) {
 		byte[] bytes = null;
 		if (!configfile.exists()) {
@@ -69,6 +98,5 @@ public final class ConfigOptions {
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
 		this.tempdir = tempdir;
-		
 	}
 }

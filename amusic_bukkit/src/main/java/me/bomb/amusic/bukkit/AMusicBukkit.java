@@ -20,17 +20,15 @@ import me.bomb.amusic.bukkit.command.PlaymusicTabComplete;
 import me.bomb.amusic.bukkit.command.RepeatCommand;
 import me.bomb.amusic.bukkit.command.RepeatTabComplete;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.resourceserver.ResourceServer;
 
 
 public final class AMusicBukkit extends JavaPlugin {
-
+	private final AMusic amusic;
 	private final ConfigOptions configoptions;
-	private final Data data;
+	private final DataConfig data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PackSender packsender;
-	private final ResourceServer resourceserver;
 	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
@@ -51,15 +49,16 @@ public final class AMusicBukkit extends JavaPlugin {
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
 		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-		data = new Data(datafile);
+		data = new DataConfig(datafile);
 		data.load();
 		if(!datafile.exists()) {
 			data.save();
 		}
 		packsender = new BukkitPackSender();
-		resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt);
-		positiontracker = new PositionTracker(new BukkitSoundStarter(), new BukkitSoundStopper(), configoptions.hasplaceholderapi);
-		resourceserver = new ResourceServer(playerips, configoptions.port, resourcemanager);
+		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), new BukkitSoundStopper(), playerips);
+		this.resourcemanager = amusic.resourcemanager;
+		this.positiontracker = amusic.positiontracker;
+		amusic.setAPI();
 	}
 
 	//PLUGIN INIT START
@@ -83,20 +82,11 @@ public final class AMusicBukkit extends JavaPlugin {
 		if (configoptions.hasplaceholderapi) {
 			new AMusicPlaceholderExpansion(positiontracker).register();
 		}
-		try {
-			new AMusic(configoptions, positiontracker, resourcemanager, packsender, data);
-		} catch (ExceptionInInitializerError e) {
-			e.printStackTrace();
-		}
-		positiontracker.start();
-		resourceserver.start();
+		this.amusic.enable();
 	}
 
 	public void onDisable() {
-		positiontracker.end();
-		resourceserver.end();
-		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
-		}
+		this.amusic.disable();
 	}
 	//PLUGIN INIT END
 

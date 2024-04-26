@@ -10,7 +10,6 @@ import me.bomb.amusic.SoundStarter;
 public final class BukkitSoundStarter implements SoundStarter {
 	
 	protected BukkitSoundStarter() {
-		
 	}
 
 	@Override

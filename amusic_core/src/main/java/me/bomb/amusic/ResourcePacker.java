@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -31,6 +32,7 @@ public final class ResourcePacker extends Thread {
 	private final File musicdir, tempdir, resourcefile, sourcearchive;
 	private final ResourceManager resourcemanager;
 	private static final MessageDigest sha1hash; 
+	private static final FilenameFilter oggfile;
 	private final Runnable runafter;
 	
 	static {
@@ -40,6 +42,12 @@ public final class ResourcePacker extends Thread {
 		} catch (NoSuchAlgorithmException e) {
 		}
 		sha1hash = md;
+		oggfile = new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".ogg");
+			}
+		};
 	}
 	
 	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
@@ -70,12 +78,12 @@ public final class ResourcePacker extends Thread {
 				soundnames.add(songname);
 			}
 		}
-		delete(tempdir);
-		tempdir.mkdirs();
 		// read base pack
 		boolean asyncconvertation = musicfiles.size() > 1 && encodetracksasynchronly;
 		byte musicfilessize = (byte) musicfiles.size();
 		if (useconverter) {
+			delete(tempdir);
+			tempdir.mkdirs();
 			List<Converter> convertators = new ArrayList<Converter>(musicfilessize);
 			for (byte i = 0; musicfilessize > i; ++i) {
 				File musicfile = musicfiles.get(i);
@@ -134,7 +142,9 @@ public final class ResourcePacker extends Thread {
 			}
 		}
 		String soundslist = sounds.toString();
-		delete(tempdir);
+		if (useconverter) {
+			delete(tempdir);
+		}
 		// packing to archive
 		resourcemanager.resetCache(resourcefile.toPath());
 		ByteArrayOutputStream baos;
@@ -235,32 +245,20 @@ public final class ResourcePacker extends Thread {
 		runafter.run();
 	}
 	
-	private static void delete(File file) {
-		try {
-			if (file.isDirectory()) {
-				if (file.list().length == 0) {
-					file.delete();
-					return;
+	private static void delete(File tempdirectory) {
+		if (tempdirectory.isDirectory()) {
+			for(File tempfile : tempdirectory.listFiles(oggfile)) {
+				if(tempfile.isFile()) {
+					tempfile.delete();
 				}
-				final String[] files = file.list();
-				String[] array;
-				for (int length = (array = files).length, i = 0; i < length; ++i) {
-					String temp = array[i];
-					File fileDelete = new File(file, temp);
-					delete(fileDelete);
-				}
-				if (file.list().length == 0) {
-					file.delete();
-				}
-			} else {
-				file.delete();
 			}
-		} catch (Exception e) {
+			if(tempdirectory.list().length == 0) {
+				tempdirectory.delete();
+			}
 		}
+		
 	}
 	
-
-
 	private static short calculateDuration(byte[] t) {
 		int rate = -1, length = -1, size = t.length;
 		for (int i = size - 15; i >= 0 && length < 0; i--) {

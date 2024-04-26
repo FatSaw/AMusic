@@ -10,11 +10,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import me.bomb.amusic.DataEntry;
 
-public final class Data extends me.bomb.amusic.Data {
+public final class DataConfig extends me.bomb.amusic.Data {
 	
 	private final File datafile;
 	
-	protected Data(File datafile) {
+	protected DataConfig(File datafile) {
 		super();
 		this.datafile = datafile;
 	}

@@ -10,9 +10,14 @@ public abstract class Data {
 	
 	protected Data() {
 	}
-
+	/**
+	 * Save {@link Data#options} to storage.
+	 */
 	protected abstract void save();
 
+	/**
+	 * Load {@link Data#options} from storage.
+	 */
 	protected abstract void load();
 	
 	public final void setPlaylist(String playlistname, List<String> sounds, List<Short> lengths, int resourcesize, String resourcename, byte[] sha1) {

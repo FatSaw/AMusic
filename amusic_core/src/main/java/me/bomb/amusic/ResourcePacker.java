@@ -151,6 +151,9 @@ public final class ResourcePacker extends Thread {
 			if(resourcefile.exists()) {
 				resourcefile.delete();
 			}
+			if(musicdir.isDirectory() && musicdir.list().length == 0) {
+				musicdir.delete();
+			}
 		} else {
 			ByteArrayOutputStream baos;
 			ZipOutputStream zos;

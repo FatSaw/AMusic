@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
@@ -13,7 +14,7 @@ import com.velocitypowered.api.proxy.Player;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
-public class EventListener {
+public final class EventListener {
 	
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
@@ -23,13 +24,13 @@ public class EventListener {
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
 	}
-
+	@Subscribe
 	public void onLoginEvent(LoginEvent event) {
 		if(playerips == null) return;
 		Player player = event.getPlayer();
 		playerips.put(player, player.getRemoteAddress().getAddress());
 	}
-
+	@Subscribe
 	public void onDisconnectEvent(DisconnectEvent event) {
 		Player player = event.getPlayer();
 		UUID playeruuid = player.getUniqueId();
@@ -38,7 +39,7 @@ public class EventListener {
 		if(playerips == null) return;
 		playerips.remove(player);
 	}
-	
+	@Subscribe
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
 		Player player = event.getPlayer();
 		UUID uuid = player.getUniqueId();

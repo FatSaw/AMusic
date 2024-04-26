@@ -5,7 +5,6 @@ import java.util.OptionalLong;
 import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -14,7 +13,6 @@ import me.bomb.amusic.SoundStarter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.SoundStop;
-import net.kyori.adventure.sound.Sound.Source;
 
 public class VelocitySoundStarter implements SoundStarter {
 	

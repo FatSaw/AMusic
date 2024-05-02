@@ -79,6 +79,11 @@ Already build ffmpeg may be found there: [jave2 repository](https://github.com/a
 
 FFMpeg sources: [ffmpeg-4.4.1.tar.gz](https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz)
 
+### Bukkit
+`PlaceholderAPI` (optional)
+### Velocity
+`Protocolise`
+
 ## BUILD:
 
 1) Clone repository https://github.com/FatSaw/AMusic.git

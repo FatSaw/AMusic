@@ -13,10 +13,14 @@ import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 
+import dev.simplix.protocolize.api.PacketDirection;
+import dev.simplix.protocolize.api.Protocol;
+import dev.simplix.protocolize.api.Protocolize;
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.PackSender;
@@ -26,7 +30,7 @@ import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
 
-@Plugin(id = "amusic", name = "AMusic", version = "0.13", authors = {"Bomb"})
+@Plugin(id = "amusic", name = "AMusic", dependencies = {@Dependency(id = "protocolize")}, version = "0.13", authors = {"Bomb"})
 public class AMusicVelocity {
 	
 	private final ProxyServer server;
@@ -65,7 +69,8 @@ public class AMusicVelocity {
 		}
 
         this.packsender = new VelocityPackSender(server);
-		this.amusic = new AMusic(configoptions, data, packsender, new VelocitySoundStarter(server), new VelocitySoundStopper(server), playerips);
+        
+		this.amusic = new AMusic(configoptions, data, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(), playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		this.server = server;
@@ -75,6 +80,8 @@ public class AMusicVelocity {
 	
 	@Subscribe
 	public void onProxyInitialization(ProxyInitializeEvent event) {
+		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
+		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
 		LoadmusicCommand loadmusic = new LoadmusicCommand(server, configoptions, data, resourcemanager, positiontracker, packsender);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);

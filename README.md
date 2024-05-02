@@ -51,9 +51,9 @@ playmusic - start/stop sound from loaded resourcepack
 
 `repeat @s`
 ### Commands for console without tab complete:
-`/loadmusic @l` - get packed playlist(resourcepack) list
+`loadmusic @l` - get packed playlist(resourcepack) list
 
-`/playmusic @l <playername>` - get loaded to player soundnames, currently playing sound name and time
+`playmusic @l <playername>` - get loaded to player soundnames, currently playing sound name and time
 
 ## Config:
 

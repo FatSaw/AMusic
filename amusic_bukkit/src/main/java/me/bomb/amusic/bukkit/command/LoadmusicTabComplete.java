@@ -10,12 +10,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.bukkit.DataConfig;
+import me.bomb.amusic.Data;
+
 
 public final class LoadmusicTabComplete implements TabCompleter {
-	private final DataConfig data;
+	private final Data data;
 
-	public LoadmusicTabComplete(DataConfig data) {
+	public LoadmusicTabComplete(Data data) {
 		this.data = data;
 	}
 

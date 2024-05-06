@@ -15,6 +15,7 @@ public final class DataEntry {
 	public final List<String> sounds;
 	public final List<Short> length;
 	public final byte[] sha1;
+	private boolean saved;
 
 	public DataEntry(int size, String name, List<String> sounds, List<Short> length, byte[] sha1) throws IllegalArgumentException {
 		if (size < 0 || name == null || sounds == null || length == null || sha1 == null || sounds.size() != length.size() || sha1.length != 20) {
@@ -52,6 +53,14 @@ public final class DataEntry {
 			}
 		}
 		return true;
+	}
+	
+	public void setSaved() {
+		saved = true;
+	}
+	
+	public boolean isSaved() {
+		return saved;
 	}
 	
 }

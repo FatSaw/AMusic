@@ -115,7 +115,7 @@ public final class ResourceFactory implements Runnable {
 	}
 	
 	public static String toBase64(String name) {
-		return new String(Base64.getEncoder().encode(name.getBytes(StandardCharsets.UTF_8)), StandardCharsets.US_ASCII);
+		return new String(Base64.getUrlEncoder().encode(name.getBytes(StandardCharsets.UTF_8)), StandardCharsets.US_ASCII);
 	}
 	
 	public static String filterName(String name) {

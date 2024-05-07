@@ -140,11 +140,11 @@ public class DataStorage extends me.bomb.amusic.Data {
 	}
 	
 	public static String toBase64(String name) {
-		return new String(Base64.getEncoder().encode(name.getBytes(StandardCharsets.UTF_8)), StandardCharsets.US_ASCII);
+		return new String(Base64.getUrlEncoder().encode(name.getBytes(StandardCharsets.UTF_8)), StandardCharsets.US_ASCII);
 	}
 	
 	public static String fromBase64(String name) {
-		return new String(Base64.getDecoder().decode(name.getBytes(StandardCharsets.US_ASCII)), StandardCharsets.UTF_8);
+		return new String(Base64.getUrlDecoder().decode(name.getBytes(StandardCharsets.US_ASCII)), StandardCharsets.UTF_8);
 	}
 	
 	protected final class DataSaveThread extends Thread {

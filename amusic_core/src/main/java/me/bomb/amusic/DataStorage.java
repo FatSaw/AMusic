@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -38,6 +39,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 		for(File file : datadirectory.listFiles(AMPIFILTER)) {
 			String name = file.getName();
 			name = name.substring(0, name.length() - FORMAT.length());
+			name = fromBase64(name);
 			if(!options.containsKey(name)) {
 				file.delete();
 			}
@@ -73,6 +75,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 		for(File file : files) {
 			String id = file.getName();
 			id = id.substring(0, id.length() - FORMAT.length());
+			id = fromBase64(id);
 			try {
 				FileInputStream fis = new FileInputStream(file);
 				byte[] buf = new byte[8];
@@ -136,6 +139,14 @@ public class DataStorage extends me.bomb.amusic.Data {
 		}
 	}
 	
+	public static String toBase64(String name) {
+		return new String(Base64.getEncoder().encode(name.getBytes(StandardCharsets.UTF_8)), StandardCharsets.US_ASCII);
+	}
+	
+	public static String fromBase64(String name) {
+		return new String(Base64.getDecoder().decode(name.getBytes(StandardCharsets.US_ASCII)), StandardCharsets.UTF_8);
+	}
+	
 	protected final class DataSaveThread extends Thread {
 		
 		private final File datadirectory;
@@ -176,6 +187,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 				while(start < end) {
 					Entry<String, DataEntry> entry = list[start];
 					String id = entry.getKey();
+					id = toBase64(id);
 					DataEntry dataentry = entry.getValue();
 					File amusicpackedinfo = new File(datadirectory, id.concat(FORMAT));
 					int soundcount = dataentry.sounds.size();

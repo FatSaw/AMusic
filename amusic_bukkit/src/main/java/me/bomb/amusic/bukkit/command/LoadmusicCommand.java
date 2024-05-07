@@ -12,21 +12,21 @@ import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Data;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
-import me.bomb.amusic.bukkit.DataConfig;
 import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class LoadmusicCommand implements CommandExecutor {
 	private final ConfigOptions configuptions;
-	private final DataConfig data;
+	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final PackSender packsender;
 
-	public LoadmusicCommand(ConfigOptions configuptions, DataConfig data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
 		LangOptions.values();
 		this.configuptions = configuptions;
 		this.data = data;

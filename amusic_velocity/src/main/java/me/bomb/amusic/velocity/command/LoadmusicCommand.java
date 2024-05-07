@@ -11,21 +11,21 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Data;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.velocity.DataConfig;
 
 public class LoadmusicCommand implements SimpleCommand {
 	private final ProxyServer server;
 	private final ConfigOptions configoptions;
-	private final DataConfig data;
+	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final PackSender packsender;
 	
-	public LoadmusicCommand(ProxyServer server, ConfigOptions configoptions, DataConfig data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+	public LoadmusicCommand(ProxyServer server, ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
 		this.server = server;
 		this.configoptions = configoptions;
 		this.data = data;

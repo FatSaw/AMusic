@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
@@ -25,7 +26,7 @@ import me.bomb.amusic.resourceserver.ResourceManager;
 public final class AMusicBukkit extends JavaPlugin {
 	private final AMusic amusic;
 	private final ConfigOptions configoptions;
-	private final DataConfig data;
+	private final DataStorage data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PackSender packsender;
@@ -49,7 +50,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
 		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-		data = new DataConfig(datafile);
+		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
 		if(!datafile.exists()) {
 			data.save();
@@ -87,6 +88,7 @@ public final class AMusicBukkit extends JavaPlugin {
 
 	public void onDisable() {
 		this.amusic.disable();
+		this.data.end();
 	}
 	//PLUGIN INIT END
 

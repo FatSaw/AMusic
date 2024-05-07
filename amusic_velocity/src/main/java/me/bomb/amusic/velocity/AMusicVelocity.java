@@ -23,6 +23,7 @@ import dev.simplix.protocolize.api.Protocol;
 import dev.simplix.protocolize.api.Protocolize;
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
@@ -34,10 +35,10 @@ import me.bomb.amusic.velocity.command.RepeatCommand;
 public class AMusicVelocity {
 	
 	private final ProxyServer server;
-    private final Logger logger;
+    //private final Logger logger;
 	private final AMusic amusic;
     private final ConfigOptions configoptions;
-	private final DataConfig data;
+	private final DataStorage data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
     private final PackSender packsender;
@@ -62,7 +63,7 @@ public class AMusicVelocity {
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
 		this.configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-		data = new DataConfig(datafile);
+		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
 		if(!datafile.exists()) {
 			data.save();
@@ -74,8 +75,8 @@ public class AMusicVelocity {
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		this.server = server;
-        this.logger = logger;
-        logger.info("AMusic loaded!");
+        //this.logger = logger;
+        amusic.setAPI();
     }
 	
 	@Subscribe
@@ -92,13 +93,12 @@ public class AMusicVelocity {
 		cmdmanager.register(repeatmeta, repeat);
 		this.server.getEventManager().register(this, new EventListener(resourcemanager, positiontracker, playerips));
 		this.amusic.enable();
-        logger.info("AMusic enabled!");
 	}
 	
 	@Subscribe
 	public void onProxyInitialization(ProxyShutdownEvent event) {
 		this.amusic.disable();
-        logger.info("AMusic disabled!");
+		this.data.end();
 	}
 	
 }

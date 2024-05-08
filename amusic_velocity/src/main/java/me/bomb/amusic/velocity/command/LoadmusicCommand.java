@@ -45,7 +45,7 @@ public class LoadmusicCommand implements SimpleCommand {
 		String[] args = invocation.arguments();
 		if (args.length > 1) {
 			UUID targetuuid = null;
-			if (!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.nulltarget")) {
+			if (!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update")) {
 				if (args[0].equals("@s")) {
 					if (sender instanceof Player) {
 						args[0] = ((Player) sender).getUsername();
@@ -69,9 +69,18 @@ public class LoadmusicCommand implements SimpleCommand {
 				}
 				targetuuid = target.get().getUniqueId();
 			}
+			if(args.length>2) {
+				StringBuilder sb = new StringBuilder(args[1]);
+				for(int i = 2;i < args.length;++i) {
+					sb.append(' ');
+					sb.append(args[i]);
+				}
+				args[1] = sb.toString();
+			}
 			String name = args[1];
 			try {
-				if (!ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, args.length > 2 && configoptions.processpack && sender.hasPermission("amusic.loadmusic.update") && args[2].toLowerCase().equals("update"))) {
+				if (!ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
+					sender.sendPlainMessage("Loader unavilable");
 					//LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return;
 				}

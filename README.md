@@ -15,7 +15,7 @@ loadmusic - convert(if enabled),pack,send playlist(resourcepack) to target playe
 playmusic - start/stop sound from loaded resourcepack
 
 
-`/loadmusic <playername> <playlistname> [update]` - loads playlist(resourcepack) to player, update flag always true if playlist not loaded before
+`/loadmusic <playername> <playlistname>` - loads playlist(resourcepack) to player, update flag true if playlist not loaded before or used null target `@n`
 
 `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
 
@@ -34,9 +34,7 @@ playmusic - start/stop sound from loaded resourcepack
 
 `amusic.repeat.other` - set repeat for other players
 
-`amusic.loadmusic.update` - reconvert(if enabled), repack, send playlist(resourcepack)
-
-`amusic.loadmusic.nulltarget` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
+`amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
 
 ### Placeholders <playername>:
 `@n` - null target

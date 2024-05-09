@@ -16,6 +16,7 @@ import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
 
 public class LoadmusicCommand implements SimpleCommand {
 	private final ProxyServer server;
@@ -38,8 +39,7 @@ public class LoadmusicCommand implements SimpleCommand {
 	public void execute(Invocation invocation) {
 		CommandSource sender = invocation.source();
 		if (!sender.hasPermission("amusic.loadmusic")) {
-			sender.sendPlainMessage("No permissions");
-			//LangOptions.loadmusic_nopermission.sendMsg(sender);
+			LangOptions.loadmusic_nopermission.sendMsg(sender);
 			return;
 		}
 		String[] args = invocation.arguments();
@@ -50,21 +50,18 @@ public class LoadmusicCommand implements SimpleCommand {
 					if (sender instanceof Player) {
 						args[0] = ((Player) sender).getUsername();
 					} else {
-						sender.sendPlainMessage("This selector unavilable from console");
-						//LangOptions.loadmusic_noconsoleselector.sendMsg(sender);
+						LangOptions.loadmusic_noconsoleselector.sendMsg(sender);
 						return;
 					}
 				} else if (!sender.hasPermission("amusic.loadmusic.other")) {
 
-					sender.sendPlainMessage("No permissions other");
-					//LangOptions.loadmusic_nopermissionother.sendMsg(sender);
+					LangOptions.loadmusic_nopermissionother.sendMsg(sender);
 					return;
 				}
 				
 				Optional<Player> target = server.getPlayer(args[0]);
 				if (target.isEmpty()) {
-					sender.sendPlainMessage("Target offline");
-					//LangOptions.loadmusic_targetoffline.sendMsg(sender);
+					LangOptions.loadmusic_targetoffline.sendMsg(sender);
 					return;
 				}
 				targetuuid = target.get().getUniqueId();
@@ -80,20 +77,17 @@ public class LoadmusicCommand implements SimpleCommand {
 			String name = args[1];
 			try {
 				if (!ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
-					sender.sendPlainMessage("Loader unavilable");
-					//LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
+					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return;
 				}
 
-				sender.sendPlainMessage("Loading music: " + name);
-				//Placeholders[] placeholders = new Placeholders[1];
-				//placeholders[0] = new Placeholders("%playlistname%", name);
-				//LangOptions.loadmusic_success.sendMsg(sender, placeholders);
+				Placeholders[] placeholders = new Placeholders[1];
+				placeholders[0] = new Placeholders("%playlistname%", name);
+				LangOptions.loadmusic_success.sendMsg(sender, placeholders);
 			} catch (FileNotFoundException e) {
-				sender.sendPlainMessage("No playlist: " + name);
-				//Placeholders[] placeholders = new Placeholders[1];
-				//placeholders[0] = new Placeholders("%playlistname%", name);
-				//LangOptions.loadmusic_noplaylist.sendMsg(sender, placeholders);
+				Placeholders[] placeholders = new Placeholders[1];
+				placeholders[0] = new Placeholders("%playlistname%", name);
+				LangOptions.loadmusic_noplaylist.sendMsg(sender, placeholders);
 				return;
 			}
 		} else if(args.length == 1 && args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
@@ -104,8 +98,7 @@ public class LoadmusicCommand implements SimpleCommand {
 			}
 			sender.sendPlainMessage(sb.toString());
 		} else {
-			sender.sendPlainMessage("/loadmusic <target> <playlistname> [update]");
-			//LangOptions.loadmusic_usage.sendMsg(sender);
+			LangOptions.loadmusic_usage.sendMsg(sender);
 		}
 		return;
 		

@@ -1,5 +1,7 @@
 package me.bomb.amusic.velocity.command;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import com.velocitypowered.api.command.CommandSource;
@@ -71,6 +73,47 @@ public class RepeatCommand implements SimpleCommand {
 		} else {
 			LangOptions.repeat_usage.sendMsg(sender);
 		}
+	}
+	
+	@Override
+	public List<String> suggest(Invocation invocation) {
+		CommandSource sender = invocation.source();
+		if (!sender.hasPermission("amusic.repeat")) {
+			return null;
+		}
+		String[] args = invocation.arguments();
+		ArrayList<String> tabcomplete = new ArrayList<String>();
+		if (args.length <= 1) {
+			if (sender instanceof Player) {
+				tabcomplete.add("@s");
+			}
+			if (sender.hasPermission("amusic.repeat.other")) {
+				for (Player player : server.getAllPlayers()) {
+					if (player.getUsername().toLowerCase().startsWith(args[0].toLowerCase())) {
+						tabcomplete.add(player.getUsername());
+					}
+				}
+			}
+		}
+		if (args.length == 2) {
+			String arg1 = args[1].toLowerCase();
+			if ("repeatall".startsWith(arg1)) {
+				tabcomplete.add("repeatall");
+			}
+			if ("repeatone".startsWith(arg1)) {
+				tabcomplete.add("repeatone");
+			}
+			if ("playone".startsWith(arg1)) {
+				tabcomplete.add("playone");
+			}
+			if ("playall".startsWith(arg1)) {
+				tabcomplete.add("playall");
+			}
+			if ("random".startsWith(arg1)) {
+				tabcomplete.add("random");
+			}
+		}
+		return tabcomplete;
 	}
 
 }

@@ -12,6 +12,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundInfo;
+import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
 
 public class PlaymusicCommand implements SimpleCommand  {
 
@@ -27,8 +28,7 @@ public class PlaymusicCommand implements SimpleCommand  {
 	public void execute(Invocation invocation) {
 		CommandSource sender = invocation.source();
 		if (!sender.hasPermission("amusic.playmusic")) {
-			sender.sendPlainMessage("No permissions");
-			//LangOptions.playmusic_nopermission.sendMsg(sender);
+			LangOptions.playmusic_nopermission.sendMsg(sender);
 			return;
 		}
 		String[] args = invocation.arguments();
@@ -37,46 +37,40 @@ public class PlaymusicCommand implements SimpleCommand  {
 				if(sender instanceof Player) {
 					args[0] = ((Player) sender).getUsername();
 				} else {
-					sender.sendPlainMessage("This selector unavilable from console");
-					//LangOptions.playmusic_noconsoleselector.sendMsg(sender);
+					LangOptions.playmusic_noconsoleselector.sendMsg(sender);
 					return;
 				}
 			} else if(!sender.hasPermission("amusic.playmusic.other")) {
-				sender.sendPlainMessage("No permissions other");
-				//LangOptions.playmusic_nopermissionother.sendMsg(sender);
+				LangOptions.playmusic_nopermissionother.sendMsg(sender);
 				return;
 			}
 			Optional<Player> otarget = server.getPlayer(args[0]);
 			if(otarget.isEmpty()) {
-				sender.sendPlainMessage("Target offline");
-				//LangOptions.playmusic_targetoffline.sendMsg(sender);
+				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return;
 			}
 			Player target = otarget.get();
 			positiontracker.stopMusic(target.getUniqueId());
-			sender.sendPlainMessage("Sound stopped");
-			//LangOptions.playmusic_stop.sendMsg(sender);
+			LangOptions.playmusic_stop.sendMsg(sender);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
 				if(sender instanceof Player) {
 					args[0] = ((Player) sender).getUsername();
 				} else {
-					//LangOptions.playmusic_noconsoleselector.sendMsg(sender);
+					LangOptions.playmusic_noconsoleselector.sendMsg(sender);
 					return;
 				}
 			} else if(args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 				Optional<Player> otarget = server.getPlayer(args[1]);
 				if(otarget.isEmpty()) {
-					sender.sendPlainMessage("Target offline");
-					//LangOptions.playmusic_targetoffline.sendMsg(sender);
+					LangOptions.playmusic_targetoffline.sendMsg(sender);
 					return;
 				}
 				Player target = otarget.get();
 				UUID targetuuid = target.getUniqueId();
 				List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(targetuuid);
 				if(soundsinfo==null) {
-					sender.sendPlainMessage("Playlist not loaded");
-					//LangOptions.playmusic_noplaylist.sendMsg(sender);
+					LangOptions.playmusic_noplaylist.sendMsg(sender);
 					return;
 				}
 				String playing = positiontracker.getPlaying(targetuuid);
@@ -105,15 +99,13 @@ public class PlaymusicCommand implements SimpleCommand  {
 			}
 			Optional<Player> otarget = server.getPlayer(args[0]);
 			if(otarget.isEmpty()) {
-				sender.sendPlainMessage("Target offline");
-				//LangOptions.playmusic_targetoffline.sendMsg(sender);
+				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return;
 			}
 			Player target = otarget.get();
 			List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 			if(soundsinfo==null) {
-				sender.sendPlainMessage("Playlist not loaded");
-				//LangOptions.playmusic_noplaylist.sendMsg(sender);
+				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return;
 			}
 			if(args.length>2) {
@@ -124,22 +116,20 @@ public class PlaymusicCommand implements SimpleCommand  {
 				}
 				args[1] = sb.toString();
 			}
-			//Placeholders[] placeholders = new Placeholders[1];
-			//placeholders[0] = new Placeholders("%soundname%",args[1]);
+			Placeholders[] placeholders = new Placeholders[1];
+			placeholders[0] = new Placeholders("%soundname%",args[1]);
 			for(SoundInfo soundinfo : soundsinfo) {
 				if(soundinfo.name.equals(args[1])) {
 					positiontracker.playMusic(target.getUniqueId(),args[1]);
 					sender.sendPlainMessage("Started sound: " + args[1]);
-					//LangOptions.playmusic_success.sendMsg(sender,placeholders);
+					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return;
 				}
 			}
-			sender.sendPlainMessage("Missing sound: " + args[1]);
-			//LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
+			LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
 			return;
 		} else {
-			sender.sendPlainMessage("/playmusic <target> <soundname>");
-			//LangOptions.playmusic_usage.sendMsg(sender);
+			LangOptions.playmusic_usage.sendMsg(sender);
 		}
 		return;
 	}

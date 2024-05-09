@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public final class SimpleConfiguration {
 	
@@ -136,5 +137,22 @@ public final class SimpleConfiguration {
 			e.printStackTrace();
 			return defaultvalue;
 		}
+	}
+	public String[] getSubKeys(String parentsection) {
+		HashSet<String> keys = new HashSet<>();
+		int parentsectionlength = parentsection.length();
+		for(String key : kv.keySet()) {
+			int keylength = key.length();
+			if(keylength < parentsectionlength || !key.startsWith(parentsection)) {
+				continue;
+			}
+			int sectionend = key.indexOf('.', parentsectionlength);
+			if(sectionend == -1) {
+				sectionend = keylength;
+			}
+			keys.add(key.substring(parentsectionlength, sectionend));
+
+		}
+		return keys.toArray(new String[keys.size()]);
 	}
 }

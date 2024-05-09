@@ -121,7 +121,6 @@ public class PlaymusicCommand implements SimpleCommand  {
 			for(SoundInfo soundinfo : soundsinfo) {
 				if(soundinfo.name.equals(args[1])) {
 					positiontracker.playMusic(target.getUniqueId(),args[1]);
-					sender.sendPlainMessage("Started sound: " + args[1]);
 					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return;
 				}

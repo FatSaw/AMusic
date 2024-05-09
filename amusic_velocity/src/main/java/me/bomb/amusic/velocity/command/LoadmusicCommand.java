@@ -1,7 +1,10 @@
 package me.bomb.amusic.velocity.command;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import com.velocitypowered.api.command.CommandSource;
@@ -105,8 +108,37 @@ public class LoadmusicCommand implements SimpleCommand {
 	}
 	
 	@Override
-    public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("amusic.loadmusic");
-    }
+	public List<String> suggest(Invocation invocation) {
+		CommandSource sender = invocation.source();
+		if (!sender.hasPermission("amusic.loadmusic")) {
+			return null;
+		}
+		String[] args = invocation.arguments();
+		List<String> tabcomplete = new ArrayList<String>();
+		if (args.length <= 1) {
+			if (sender instanceof Player) {
+				tabcomplete.add("@s");
+			}
+			if (sender.hasPermission("amusic.loadmusic.other")) {
+				for (Player player : server.getAllPlayers()) {
+					if (player.getUsername().toLowerCase().startsWith(args[0].toLowerCase())) {
+						tabcomplete.add(player.getUsername());
+					}
+				}
+			}
+			return tabcomplete;
+		}
+		if (args.length == 2 && !args[0].equals("@l")) {
+			Set<String> playlists = data.getPlaylists();
+			if (playlists != null) {
+				for (String playlist : playlists) {
+					if (playlist.startsWith(args[1])) {
+						tabcomplete.add(playlist);
+					}
+				}
+			}
+		}
+		return tabcomplete;
+	}
 
 }

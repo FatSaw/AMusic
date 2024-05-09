@@ -34,7 +34,7 @@ public final class AMusicBukkit extends JavaPlugin {
 
 	public AMusicBukkit() {
 		byte ver = Byte.valueOf(Bukkit.getServer().getClass().getPackage().getName().substring(23).split("_", 3)[1]);
-		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), datafile = new File(plugindir, "data.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
+		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
 		}
@@ -52,9 +52,6 @@ public final class AMusicBukkit extends JavaPlugin {
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
-		if(!datafile.exists()) {
-			data.save();
-		}
 		packsender = new BukkitPackSender();
 		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), new BukkitSoundStopper(), playerips);
 		this.resourcemanager = amusic.resourcemanager;

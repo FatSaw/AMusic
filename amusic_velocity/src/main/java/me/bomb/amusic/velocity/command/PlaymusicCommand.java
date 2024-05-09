@@ -1,5 +1,6 @@
 package me.bomb.amusic.velocity.command;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -131,6 +132,53 @@ public class PlaymusicCommand implements SimpleCommand  {
 			LangOptions.playmusic_usage.sendMsg(sender);
 		}
 		return;
+	}
+	
+	@Override
+	public List<String> suggest(Invocation invocation) {
+		CommandSource sender = invocation.source();
+		if (!sender.hasPermission("amusic.playmusic")) {
+			return null;
+		}
+		String[] args = invocation.arguments();
+		List<String> tabcomplete = new ArrayList<String>();
+		if (args.length <= 1) {
+			if (sender instanceof Player) {
+				tabcomplete.add("@s");
+			}
+			if (sender.hasPermission("amusic.playmusic.other")) {
+				for (Player player : server.getAllPlayers()) {
+					if (player.getUsername().toLowerCase().startsWith(args[0].toLowerCase())) {
+						tabcomplete.add(player.getUsername());
+					}
+				}
+			}
+			return tabcomplete;
+		}
+		if (args.length == 2 && !args[0].equals("@l")) {
+			boolean selfsender = false;
+			if (args[0].equals("@s") && sender instanceof Player) {
+				args[0] = ((Player)sender).getUsername();
+				selfsender = true;
+			}
+			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
+				Optional<Player> otarget = server.getPlayer(args[0]);
+				if(otarget.isEmpty()) {
+					return null;
+				}
+				List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(otarget.get().getUniqueId());
+				if (soundsinfo != null) {
+					for (SoundInfo soundinfo : soundsinfo) {
+						String soundname = soundinfo.name;
+						if (soundname.startsWith(args[1])) {
+							tabcomplete.add(soundname);
+						}
+					}
+				}
+			}
+		}
+		return tabcomplete;
+		
 	}
 
 }

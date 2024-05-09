@@ -27,6 +27,7 @@ import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.velocity.command.LangOptions;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
@@ -47,7 +48,7 @@ public class AMusicVelocity {
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
 		byte ver = 0;
-		File plugindir = dataDirectory.toFile(), configfile = new File(plugindir, "config.yml"), datafile = new File(plugindir, "data.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
+		File plugindir = dataDirectory.toFile(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
 		}
@@ -65,9 +66,6 @@ public class AMusicVelocity {
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
-		if(!datafile.exists()) {
-			data.save();
-		}
 
         this.packsender = new VelocityPackSender(server);
         
@@ -76,6 +74,7 @@ public class AMusicVelocity {
 		this.positiontracker = amusic.positiontracker;
 		this.server = server;
         //this.logger = logger;
+		LangOptions.loadLang(langfile, false);
         amusic.setAPI();
     }
 	
@@ -96,7 +95,7 @@ public class AMusicVelocity {
 	}
 	
 	@Subscribe
-	public void onProxyInitialization(ProxyShutdownEvent event) {
+	public void onProxyShutdown(ProxyShutdownEvent event) {
 		this.amusic.disable();
 		this.data.end();
 	}

@@ -14,6 +14,8 @@ import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent.Status;
 
+import com.drupaldoesnotexists.bundlelib.CrossBundleLib;
+
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
@@ -21,13 +23,21 @@ public final class EventListener implements Listener {
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips) {
+	private final CrossBundleLib lib;
+	
+	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, CrossBundleLib lib) {
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
+		this.lib = lib;
 	}
 	@EventHandler
 	public void playerJoin(PlayerJoinEvent event) {
+		try {
+			lib.inject(event.getPlayer());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		if(playerips == null) return;
 		Player player = event.getPlayer();
 		playerips.put(player, player.getAddress().getAddress());

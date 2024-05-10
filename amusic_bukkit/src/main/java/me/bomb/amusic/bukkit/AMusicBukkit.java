@@ -9,6 +9,9 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.drupaldoesnotexists.bundlelib.CrossBundleLib;
+import com.drupaldoesnotexists.bundlelib.impl.v1_16.BundleLibAdapter16;
+
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.DataStorage;
@@ -31,6 +34,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PackSender packsender;
 	private final PositionTracker positiontracker;
+	private final CrossBundleLib lib;
 
 	public AMusicBukkit() {
 		byte ver = Byte.valueOf(Bukkit.getServer().getClass().getPackage().getName().substring(23).split("_", 3)[1]);
@@ -52,8 +56,11 @@ public final class AMusicBukkit extends JavaPlugin {
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
+		this.lib = new CrossBundleLib(new BundleLibAdapter16());
+		
+		
 		packsender = new BukkitPackSender();
-		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), new BukkitSoundStopper(), playerips);
+		this.amusic = new AMusic(configoptions, data, packsender, new BundleLibSoundStarter(lib), new BukkitSoundStopper(), playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		amusic.setAPI();
@@ -76,7 +83,7 @@ public final class AMusicBukkit extends JavaPlugin {
 				playerips.put(player, player.getAddress().getAddress());
 			}
 		}
-		Bukkit.getPluginManager().registerEvents(new EventListener(resourcemanager, positiontracker, playerips), this);
+		Bukkit.getPluginManager().registerEvents(new EventListener(resourcemanager, positiontracker, playerips, lib), this);
 		if (configoptions.hasplaceholderapi) {
 			new AMusicPlaceholderExpansion(positiontracker).register();
 		}

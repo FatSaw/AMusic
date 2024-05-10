@@ -50,7 +50,7 @@
 		<dependency>
 			<groupId>com.github.DrupalDoesNotExists</groupId>
 			<artifactId>crossbundlelib</artifactId>
-			<version>1.1</version>
+			<version>1.2</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -80,6 +80,7 @@
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/**</exclude>
+										<exclude>io/**</exclude>
 									</excludes>
 								</filter>
 							</filters>

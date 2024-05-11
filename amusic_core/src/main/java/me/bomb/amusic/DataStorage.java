@@ -102,18 +102,18 @@ public class DataStorage extends me.bomb.amusic.Data {
 					fis.close();
 					continue;
 				}
-				int soundcount = (short) (buf[0] & 0xFF | buf[1]<<8);
+				short soundcount = (short) (buf[0] & 0xFF | (buf[1]<<8));
 				byte[] namelengths = new byte[soundcount];
 				buf = new byte[soundcount<<1];
 				fis.read(namelengths);
 				List<Short> lengths = new ArrayList<>(soundcount);
 				fis.read(buf);
 				
-				for(int soundcountd = (short) (soundcount<<1),j = 0;j<soundcountd;) {
+				for(int soundcountd = soundcount<<1,j = 0;j<soundcountd;) {
 					lengths.add((short) (buf[j] & 0xFF | buf[++j]<<8));
 					++j;
 				}
-				soundcount = lengths.size();
+				soundcount = (short) lengths.size();
 				List<String> sounds = new ArrayList<>(soundcount);
 				
 				int i = 0;
@@ -227,14 +227,15 @@ public class DataStorage extends me.bomb.amusic.Data {
 						}
 						fos.write((byte) packednamelength); //PACKED FILE PATH
 						fos.write(packednamebytes); //PACKED FILE PATH
-
-						fos.write((byte)soundcount);
-						soundcount >>= 8;
-						fos.write((byte)soundcount);
+						byte[] soundcountb = new byte[2];
+						soundcountb[0] = (byte) soundcount;
+						soundcountb[1] = (byte) (soundcount>>8);
+						fos.write(soundcountb);
 						int lengthscount = soundcount<<1;
-						byte[] namelengths = new byte[soundcount], lengths = new byte[lengthscount], names = new byte[65536];
-						int namessize = 0;
+						byte[] namelengths = new byte[soundcount], lengths = new byte[lengthscount];
 						short i = 0, j = 0;
+						int totalsoundnamelength = 0;
+						byte[][] anames = new byte[soundcount][];
 						while(i < soundcount) {
 							byte[] soundnamebytes = dataentry.sounds.get(i).getBytes(StandardCharsets.UTF_8);
 							int soundnamelength = soundnamebytes.length;
@@ -242,6 +243,8 @@ public class DataStorage extends me.bomb.amusic.Data {
 								soundnamelength = 255;
 								soundnamebytes = Arrays.copyOf(soundnamebytes, 255);
 							}
+							totalsoundnamelength += (byte) soundnamelength;
+							anames[i] = soundnamebytes;
 							namelengths[i] = (byte) soundnamelength;
 							short length = dataentry.length.get(i);
 							++i;
@@ -250,17 +253,23 @@ public class DataStorage extends me.bomb.amusic.Data {
 							++j;
 							lengths[j] = (byte) length;
 							++j;
+						}
+						byte[] names = new byte[totalsoundnamelength];
+						int namesi = 0;
+						i = 0;
+						while(i < soundcount) {
+							byte[] soundnamebytes = anames[i];
+							int soundnamelength = soundnamebytes.length;
 							short k = 0;
-							while(k < soundnamelength) {
-								names[namessize] = soundnamebytes[k];
-								++namessize;
+							while(k < soundnamelength && namesi < totalsoundnamelength) {
+								names[namesi] = soundnamebytes[k];
+								++namesi;
 								++k;
 							}
 						}
-						names = Arrays.copyOf(names, namessize);
 						fos.write(namelengths); //NAME LENGTHS  ENTRY 0-255
 						fos.write(lengths); //SOUND LENGTHS  ENTRY 0-65535
-						fos.write(names); //SOUND LENGTHS ALL 0-65535
+						fos.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
 						
 						fos.close();
 						dataentry.setSaved();

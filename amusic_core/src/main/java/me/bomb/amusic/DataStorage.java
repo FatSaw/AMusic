@@ -196,7 +196,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 						++start;
 						continue;
 					}
-					if(soundcount > 255) soundcount = 255;
+					if(soundcount > 32767) soundcount = 32767;
 					
 					try {
 						FileOutputStream fos = new FileOutputStream(amusicpackedinfo, false);
@@ -261,15 +261,17 @@ public class DataStorage extends me.bomb.amusic.Data {
 							byte[] soundnamebytes = anames[i];
 							int soundnamelength = soundnamebytes.length;
 							short k = 0;
-							while(k < soundnamelength && namesi < totalsoundnamelength) {
+							while(k < soundnamelength) {
 								names[namesi] = soundnamebytes[k];
 								++namesi;
 								++k;
 							}
+							++i;
 						}
 						fos.write(namelengths); //NAME LENGTHS  ENTRY 0-255
 						fos.write(lengths); //SOUND LENGTHS  ENTRY 0-65535
-						fos.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
+						fos.write(names);
+						//fos.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
 						
 						fos.close();
 						dataentry.setSaved();

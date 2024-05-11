@@ -1,10 +1,10 @@
 package me.bomb.amusic;
 
 public final class Playing {
-	protected final byte currenttrack, maxid;
+	protected final short currenttrack, maxid;
 	protected short remaining, remainingf;
 
-	protected Playing(byte currenttrack, byte maxid, short remaining, boolean processformatedtime) {
+	protected Playing(short currenttrack, short maxid, short remaining, boolean processformatedtime) {
 		this.currenttrack = currenttrack;
 		this.maxid = maxid;
 		this.remaining = remaining;

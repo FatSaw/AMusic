@@ -13,12 +13,12 @@ public final class BukkitSoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, byte id) {
+	public void stopSound(UUID uuid, short id) {
 		if(uuid == null) {
 			return;
 		}
 		Player player = Bukkit.getPlayer(uuid);
-		player.stopSound("amusic.music".concat(Byte.toString(id)));
+		player.stopSound("amusic.music".concat(Short.toString(id)));
 	}
 
 }

@@ -97,18 +97,19 @@ public class DataStorage extends me.bomb.amusic.Data {
 				buf = new byte[packednamelength];
 				fis.read(buf);
 				String packedname = new String(buf, StandardCharsets.UTF_8);
-				int soundcount = fis.read();
-				if(soundcount == -1) {
+				buf = new byte[2];
+				if(fis.read(buf) != 2) {
 					fis.close();
 					continue;
 				}
+				int soundcount = (short) (buf[0] & 0xFF | buf[1]<<8);
 				byte[] namelengths = new byte[soundcount];
 				buf = new byte[soundcount<<1];
 				fis.read(namelengths);
 				List<Short> lengths = new ArrayList<>(soundcount);
 				fis.read(buf);
 				
-				for(short soundcountd = (short) (soundcount<<1),j = 0;j<soundcountd;) {
+				for(int soundcountd = (short) (soundcount<<1),j = 0;j<soundcountd;) {
 					lengths.add((short) (buf[j] & 0xFF | buf[++j]<<8));
 					++j;
 				}
@@ -227,7 +228,9 @@ public class DataStorage extends me.bomb.amusic.Data {
 						fos.write((byte) packednamelength); //PACKED FILE PATH
 						fos.write(packednamebytes); //PACKED FILE PATH
 
-						fos.write((byte)soundcount); //SOUNDCOUNT
+						fos.write((byte)soundcount);
+						soundcount >>= 8;
+						fos.write((byte)soundcount);
 						int lengthscount = soundcount<<1;
 						byte[] namelengths = new byte[soundcount], lengths = new byte[lengthscount], names = new byte[65536];
 						int namessize = 0;

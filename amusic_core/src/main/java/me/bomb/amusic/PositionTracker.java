@@ -215,7 +215,7 @@ public final class PositionTracker extends Thread {
 		if (soundsinfo == null) {
 			return;
 		}
-		byte soundssize = (byte) soundsinfo.size();
+		short soundssize = (short) soundsinfo.size();
 		if (id >= soundssize) {
 			return;
 		}

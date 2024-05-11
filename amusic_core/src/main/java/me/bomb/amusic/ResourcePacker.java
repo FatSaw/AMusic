@@ -80,14 +80,14 @@ public final class ResourcePacker extends Thread {
 		}
 		// read base pack
 		boolean asyncconvertation = musicfiles.size() > 1 && encodetracksasynchronly;
-		byte musicfilessize = (byte) musicfiles.size();
+		short musicfilessize = (short) musicfiles.size();
 		if (useconverter) {
 			delete(tempdir);
 			tempdir.mkdirs();
 			List<Converter> convertators = new ArrayList<Converter>(musicfilessize);
-			for (byte i = 0; musicfilessize > i; ++i) {
+			for (short i = 0; musicfilessize > i; ++i) {
 				File musicfile = musicfiles.get(i);
-				File outfile = new File(tempdir, "music".concat(Byte.toString(i)).concat(".ogg"));
+				File outfile = new File(tempdir, "music".concat(Short.toString(i)).concat(".ogg"));
 				convertators.add(new Converter(asyncconvertation, bitrate, channels, samplingrate, musicfile, outfile));
 			}
 			if (asyncconvertation) {
@@ -110,7 +110,7 @@ public final class ResourcePacker extends Thread {
 				}
 			}
 			musicfiles.clear();
-			for (byte i = 0; i < musicfilessize; ++i) {
+			for (short i = 0; i < musicfilessize; ++i) {
 				File outfile = convertators.get(i).output;
 				musicfiles.add(outfile);
 			}
@@ -119,7 +119,7 @@ public final class ResourcePacker extends Thread {
 		// read files
 		byte[][] topack = new byte[musicfilessize][];
 		StringBuffer sounds = new StringBuffer("\n");
-		for (byte i = 0; i < musicfilessize; ++i) {
+		for (short i = 0; i < musicfilessize; ++i) {
 			sounds.append("\t\"amusic.music");
 			sounds.append(i);
 			sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
@@ -207,7 +207,7 @@ public final class ResourcePacker extends Thread {
 					}
 					zis.close();
 				}
-				for(byte i = musicfilessize; --i>-1;) {
+				for(short i = musicfilessize; --i>-1;) {
 					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
 		            zos.write(topack[i]);
 		            zos.closeEntry();

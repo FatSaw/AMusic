@@ -12,12 +12,12 @@ public class ProtocoliseSoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, byte id) {
+	public void stopSound(UUID uuid, short id) {
 		ProtocolizePlayer player = Protocolize.playerProvider().player(uuid);
 		if(player==null) {
 			return;
 		}
-		SoundStopPacket soundstop = new SoundStopPacket("amusic.music".concat(Byte.toString(id)));
+		SoundStopPacket soundstop = new SoundStopPacket("amusic.music".concat(Short.toString(id)));
 		player.sendPacket(soundstop);
 	}
 

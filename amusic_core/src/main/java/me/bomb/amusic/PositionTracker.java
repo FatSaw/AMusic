@@ -189,7 +189,7 @@ public final class PositionTracker extends Thread {
 		if (soundsinfo == null) {
 			return;
 		}
-		byte soundssize = (byte) soundsinfo.size(), id = soundssize;
+		short soundssize = (short) soundsinfo.size(), id = soundssize;
 		SoundInfo soundinfo = null;
 		while (--id > -1) {
 			if ((soundinfo = soundsinfo.get(id)).name.equals(name))
@@ -207,7 +207,7 @@ public final class PositionTracker extends Thread {
 		soundstarter.startSound(uuid, id);
 	}
 
-	public void playMusic(UUID uuid, byte id) {
+	public void playMusic(UUID uuid, short id) {
 		if (uuid == null || id < 0) {
 			return;
 		}

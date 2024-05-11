@@ -19,13 +19,13 @@ public class VelocitySoundStopper implements SoundStopper {
 	}
 	
 	@Override
-	public void stopSound(UUID uuid, byte id) {
+	public void stopSound(UUID uuid, short id) {
 		Optional<Player> oplayer = server.getPlayer(uuid);
 		if(oplayer.isEmpty()) {
 			return;
 		}
 		Player player = oplayer.get();
-		Sound sound = Sound.sound(Key.key("amusic.music".concat(Byte.toString(id))), Sound.Source.MASTER, 1.0E9f, 1.0f);
+		Sound sound = Sound.sound(Key.key("amusic.music".concat(Short.toString(id))), Sound.Source.MASTER, 1.0E9f, 1.0f);
 		player.stopSound(sound); //Velocity stopSound not implemented
 		
 	}

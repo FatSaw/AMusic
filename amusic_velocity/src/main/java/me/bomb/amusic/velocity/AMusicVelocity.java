@@ -32,7 +32,7 @@ import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
 
-@Plugin(id = "amusic", name = "AMusic", dependencies = {@Dependency(id = "protocolize")}, version = "0.13", authors = {"Bomb"})
+@Plugin(id = "amusic", name = "AMusic", dependencies = {@Dependency(id = "protocolize")}, version = "0.14", authors = {"Bomb"})
 public class AMusicVelocity {
 	
 	private final ProxyServer server;

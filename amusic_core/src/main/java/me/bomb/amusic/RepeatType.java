@@ -5,12 +5,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public enum RepeatType {
 	REPEATONE {
 		@Override
-		public byte next(byte curid,byte maxid) {
+		public short next(short curid,short maxid) {
 			return curid;
 		}
 	}, REPEATALL {
 		@Override
-		public byte next(byte curid,byte maxid) {
+		public short next(short curid,short maxid) {
 			if (++curid >= maxid) {
 				curid = 0;
 			}
@@ -18,14 +18,14 @@ public enum RepeatType {
 		}
 	}, PLAYALL {
 		@Override
-		public byte next(byte curid,byte maxid) {
+		public short next(short curid,short maxid) {
 			return ++curid;
 		}
 	}, RANDOM {
 		@Override
-		public byte next(byte curid,byte maxid) {
-			return (byte) ThreadLocalRandom.current().nextInt(maxid);
+		public short next(short curid,short maxid) {
+			return (short) ThreadLocalRandom.current().nextInt(maxid);
 		}
 	};
-	public abstract byte next(byte curid,byte maxid);
+	public abstract short next(short curid,short maxid);
 }

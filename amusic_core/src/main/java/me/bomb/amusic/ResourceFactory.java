@@ -87,9 +87,6 @@ public final class ResourceFactory implements Runnable {
 		this.target = null;
 		this.packsender = null;
 		id = toBase64(id); //now name is safe for files
-		File musicdir = new File(configoptions.musicdir, this.id);
-		File tempdir = new File(configoptions.tempdir, id);
-		File sourcearchive = new File(configoptions.musicdir, id.concat(".zip"));
 		String name = null;
 		if (data.containsPlaylist(this.id)) {
 			DataEntry options = data.getPlaylist(this.id);
@@ -103,7 +100,9 @@ public final class ResourceFactory implements Runnable {
 			name = filterName(this.id);
 		}
 		this.name = name;
-
+		File musicdir = new File(configoptions.musicdir, this.name);
+		File tempdir = new File(configoptions.tempdir, id);
+		File sourcearchive = new File(configoptions.musicdir, this.name.concat(".zip"));
 		if (!musicdir.exists()) {
 			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 		}

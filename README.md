@@ -71,7 +71,7 @@ encoder:
 ## Dependencies
 
 ### Ffmpeg
-[Size reduced ffmpeg 7.0.1 build commands](/FFMPEG_BUILD.md)
+[Size reduced ffmpeg 7.0.1 building arguments Linux](/FFMPEG_BUILD.md)
 
 ### Bukkit
 `PlaceholderAPI` (optional)

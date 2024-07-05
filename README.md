@@ -70,9 +70,8 @@ encoder:
 ```
 ## Dependencies
 
-Already build ffmpeg may be found there: [jave2 repository](https://github.com/a-schild/jave2)
-
-FFMpeg sources: [ffmpeg-4.4.1.tar.gz](https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz)
+### Ffmpeg
+[Size reduced ffmpeg 7.0.1 build commands](/FFMPEG_BUILD.md)
 
 ### Bukkit
 `PlaceholderAPI` (optional)

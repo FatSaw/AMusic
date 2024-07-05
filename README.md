@@ -62,7 +62,7 @@ cache:
 strictdownloaderlist: (boolean) #If true, only connected players can access resourcepack server
 tokensalt: (Base64 String) #Salt for token generator, replace it to random Base64, needs only when client cache enabled
 encoder: 
- use: false #If true place ffmpeg('.exe'(windows)/'-osx'(mac)/''(linux)) (version 4.4.1) into plugin directory
+ use: false #If true place ffmpeg('.exe'(windows)/'-osx'(mac)/''(linux)) into plugin directory
  bitrate: 64000
  channels: 2
  samplingrate: 44100
@@ -70,9 +70,8 @@ encoder:
 ```
 ## Dependencies
 
-Already build ffmpeg may be found there: [jave2 repository](https://github.com/a-schild/jave2)
-
-FFMpeg sources: [ffmpeg-4.4.1.tar.gz](https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.gz)
+### Ffmpeg
+[Size reduced ffmpeg 7.0.1 building arguments Linux](/FFMPEG_BUILD.md)
 
 ### Bukkit
 `PlaceholderAPI` (optional)

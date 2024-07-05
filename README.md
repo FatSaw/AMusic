@@ -62,7 +62,7 @@ cache:
 strictdownloaderlist: (boolean) #If true, only connected players can access resourcepack server
 tokensalt: (Base64 String) #Salt for token generator, replace it to random Base64, needs only when client cache enabled
 encoder: 
- use: false #If true place ffmpeg('.exe'(windows)/'-osx'(mac)/''(linux)) (version 4.4.1) into plugin directory
+ use: false #If true place ffmpeg('.exe'(windows)/'-osx'(mac)/''(linux)) into plugin directory
  bitrate: 64000
  channels: 2
  samplingrate: 44100

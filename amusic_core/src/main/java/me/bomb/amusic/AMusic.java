@@ -25,9 +25,9 @@ public final class AMusic {
 		this.configoptions = configoptions;
 		this.data = data;
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt);
-		this.positiontracker = new PositionTracker(soundstarter, soundstopper, configoptions.hasplaceholderapi);
+		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.packsender = packsender;
-		this.resourceserver = new ResourceServer(playerips, configoptions.port, resourcemanager);
+		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
 	}
 	
 	/**

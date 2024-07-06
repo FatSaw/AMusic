@@ -15,7 +15,7 @@ import java.util.Map;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 
-import me.bomb.amusic.SimpleConfiguration;
+import me.bomb.amusic.util.SimpleConfiguration;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 

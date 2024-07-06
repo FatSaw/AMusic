@@ -17,7 +17,6 @@ public final class PositionTracker extends Thread {
 	private final ConcurrentHashMap<UUID, String> loadedplaylistnames = new ConcurrentHashMap<UUID, String>();
 	private final SoundStarter soundstarter;
 	private final SoundStopper soundstopper;
-	private final boolean processformatedtime;
 	
 	public void setPlaylistInfo(UUID playeruuid, String playlistname, ArrayList<SoundInfo> soundinfo) {
 		playlistinfo.put(playeruuid, soundinfo);
@@ -42,10 +41,9 @@ public final class PositionTracker extends Thread {
 
 	private boolean run = false;
 
-	public PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper, boolean processformatedtime) {
+	public PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper) {
 		this.soundstarter = soundstarter;
 		this.soundstopper = soundstopper;
-		this.processformatedtime = processformatedtime;
 	}
 
 	@Override
@@ -82,7 +80,6 @@ public final class PositionTracker extends Thread {
 						Entry<UUID, Playing> entry = entrysiterator.next();
 						UUID uuid = entry.getKey();
 						Playing playing = entry.getValue();
-						playing.remainingf = playing.sectotime(--playing.remaining);
 						if (playing.remaining < 0) {
 							entrysiterator.remove();
 							RepeatType repeattype;
@@ -159,29 +156,12 @@ public final class PositionTracker extends Thread {
 		return soundsinfo.get(playing.currenttrack).length;
 	}
 
-	public short getPlayingSizeF(UUID uuid) {
-		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
-		if (!trackers.containsKey(uuid) || soundsinfo == null) {
-			return -1;
-		}
-		Playing playing = trackers.get(uuid);
-		return playing.sectotime(soundsinfo.get(playing.currenttrack).length);
-	}
-
 	public short getPlayingRemain(UUID uuid) {
 		if (!trackers.containsKey(uuid)) {
 			return -1;
 		}
 		Playing playing = trackers.get(uuid);
 		return playing.remaining;
-	}
-
-	public short getPlayingRemainF(UUID uuid) {
-		if (!trackers.containsKey(uuid)) {
-			return -1;
-		}
-		Playing playing = trackers.get(uuid);
-		return playing.remainingf;
 	}
 
 	public void playMusic(UUID uuid, String name) {
@@ -201,7 +181,7 @@ public final class PositionTracker extends Thread {
 		if(trackers.containsKey(uuid)) {
 			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
 		}
-		Playing playing = new Playing(id, soundssize, soundinfo.length, processformatedtime);
+		Playing playing = new Playing(id, soundssize, soundinfo.length);
 		trackers.put(uuid, playing);
 
 		soundstarter.startSound(uuid, id);
@@ -224,7 +204,7 @@ public final class PositionTracker extends Thread {
 			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
 		}
 
-		Playing playing = new Playing(id, soundssize, soundinfo.length, processformatedtime);
+		Playing playing = new Playing(id, soundssize, soundinfo.length);
 
 		trackers.put(uuid, playing);
 		soundstarter.startSound(uuid, id);

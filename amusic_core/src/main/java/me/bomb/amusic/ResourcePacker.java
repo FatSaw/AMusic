@@ -29,7 +29,7 @@ public final class ResourcePacker extends Thread {
 	private final boolean useconverter, encodetracksasynchronly;
 	private final int bitrate, samplingrate, maxzipsize, maxsoundsize;
 	private final byte channels;
-	private final File musicdir, tempdir, resourcefile, sourcearchive;
+	private final File ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive;
 	private final ResourceManager resourcemanager;
 	private static final MessageDigest sha1hash; 
 	private static final FilenameFilter oggfile;
@@ -50,7 +50,7 @@ public final class ResourcePacker extends Thread {
 		};
 	}
 	
-	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
+	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File ffmpegbinary, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
 		this.useconverter = useconverter;
 		this.bitrate = bitrate;
 		this.channels = channels;
@@ -58,6 +58,7 @@ public final class ResourcePacker extends Thread {
 		this.encodetracksasynchronly = encodetracksasynchronly;
 		this.maxzipsize = maxzipsize;
 		this.maxsoundsize = maxsoundsize;
+		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
 		this.tempdir = tempdir;
 		this.resourcefile = resourcefile;
@@ -88,7 +89,7 @@ public final class ResourcePacker extends Thread {
 			for (short i = 0; musicfilessize > i; ++i) {
 				File musicfile = musicfiles.get(i);
 				File outfile = new File(tempdir, "music".concat(Short.toString(i)).concat(".ogg"));
-				convertators.add(new Converter(asyncconvertation, bitrate, channels, samplingrate, musicfile, outfile));
+				convertators.add(new Converter(ffmpegbinary, asyncconvertation, bitrate, channels, samplingrate, musicfile, outfile));
 			}
 			if (asyncconvertation) {
 				boolean convertationrunning = true;

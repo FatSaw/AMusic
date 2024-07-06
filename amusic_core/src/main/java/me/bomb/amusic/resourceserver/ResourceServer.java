@@ -9,15 +9,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class ResourceServer extends Thread {
 	private final ConcurrentHashMap<Object,InetAddress> onlineips;
+	private final InetAddress ip;
 	private final int port, backlog;
 	private boolean run = false;
 	private ServerSocket server;
 	private final ResourceManager resourcemanager;
 	
-	public ResourceServer(ConcurrentHashMap<Object,InetAddress> onlineips, int port, ResourceManager resourcemanager) {
+	public ResourceServer(ConcurrentHashMap<Object,InetAddress> onlineips, InetAddress ip, int port, int backlog, ResourceManager resourcemanager) {
 		this.onlineips = onlineips;
+		this.ip = ip;
 		this.port = port;
-		this.backlog = 50;
+		this.backlog = backlog;
 		this.resourcemanager = resourcemanager;
 	}
 	
@@ -31,7 +33,7 @@ public final class ResourceServer extends Thread {
 		while (run) {
 			try {
 				server = new ServerSocket();
-				server.bind(new InetSocketAddress((InetAddress)null, port), backlog);
+				server.bind(new InetSocketAddress(ip, port), backlog);
 			} catch (IOException|SecurityException|IllegalArgumentException e) {
 				e.printStackTrace();
 				return;

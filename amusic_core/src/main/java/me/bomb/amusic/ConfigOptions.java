@@ -83,10 +83,14 @@ public final class ConfigOptions {
 		
 		host = sc.getStringOrDefault("server.host", "127.0.0.1:25530");
 		InetAddress ip = null;
-		try {
-			ip = InetAddress.getByName(sc.getStringOrDefault("server.ip", "127.0.0.1"));
-		} catch (UnknownHostException e) {
+		String ipstr = sc.getStringOrDefault("server.ip", null);
+		if(ipstr!=null) {
+			try {
+				ip = InetAddress.getByName(ipstr);
+			} catch (UnknownHostException e) {
+			}
 		}
+		
 		this.ip = ip;
 		port = sc.getIntOrDefault("server.port", 25530);
 		backlog = sc.getIntOrDefault("server.backlog", 50);

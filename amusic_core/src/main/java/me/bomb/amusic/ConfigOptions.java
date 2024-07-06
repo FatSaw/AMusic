@@ -5,23 +5,30 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
+
+import me.bomb.amusic.util.SimpleConfiguration;
 
 public final class ConfigOptions {
 	
 	public final String host;
-	public final int port, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
+	public final InetAddress ip;
+	public final int port, backlog, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
 	public final byte channels;
-	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, hasplaceholderapi;
-	public final File musicdir, packeddir, tempdir;
+	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly;
+	public final File ffmpegbinary, musicdir, packeddir, tempdir;
 	public final byte[] tokensalt;
 	
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, int port, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean encodetracksasynchronly, boolean hasplaceholderapi, File musicdir, File packeddir, File tempdir, byte[] tokensalt) {
+	public ConfigOptions(String host, InetAddress ip, int port, int backlog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt) {
 		this.host = host;
+		this.ip = ip;
 		this.port = port;
+		this.backlog = backlog;
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxmusicfilesize;
 		this.bitrate = bitrate;
@@ -33,7 +40,7 @@ public final class ConfigOptions {
 		this.strictdownloaderlist = strictdownloaderlist;
 		this.useconverter = useconverter;
 		this.encodetracksasynchronly = encodetracksasynchronly;
-		this.hasplaceholderapi = hasplaceholderapi;
+		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
 		this.tempdir = tempdir;
@@ -73,26 +80,35 @@ public final class ConfigOptions {
 		}
 		SimpleConfiguration sc = new SimpleConfiguration(bytes);
 		bytes = null;
-		host = sc.getStringOrDefault("host", "127.0.0.1");
-		port = sc.getIntOrDefault("port", 25530);
-		processpack = sc.getBooleanOrDefault("processpack", true);
-		servercache = sc.getBooleanOrDefault("cache.server", true);
-		clientcache = sc.getBooleanOrDefault("cache.client", true);
-		strictdownloaderlist = sc.getBooleanOrDefault("strictdownloaderlist", true);
-		hasplaceholderapi = sc.getBooleanOrDefault("useplaceholderapi", false);
 		
-		byte[] salt = sc.getBytesBase64OrDefault("tokensalt", new byte[0]);
+		host = sc.getStringOrDefault("server.host", "127.0.0.1:25530");
+		InetAddress ip = null;
+		try {
+			ip = InetAddress.getByName(sc.getStringOrDefault("server.ip", "127.0.0.1"));
+		} catch (UnknownHostException e) {
+		}
+		this.ip = ip;
+		port = sc.getIntOrDefault("server.port", 25530);
+		backlog = sc.getIntOrDefault("server.backlog", 50);
+		processpack = sc.getBooleanOrDefault("resource.processpack", true);
+		servercache = sc.getBooleanOrDefault("resource.cache.server", true);
+		clientcache = sc.getBooleanOrDefault("resource.cache.client", true);
+		strictdownloaderlist = sc.getBooleanOrDefault("server.strictdownloaderlist", true);
+		
+		byte[] salt = sc.getBytesBase64OrDefault("server.tokensalt", new byte[0]);
 		
 		if(salt == null || salt.length < 2) {
 			tokensalt = null;
 		} else {
 			tokensalt = salt;
 		}
-		useconverter = sc.getBooleanOrDefault("encoder.use", false);
-		bitrate = sc.getIntOrDefault("encoder.bitrate", 65000);
-		channels = (byte) sc.getIntOrDefault("encoder.channels", 2);
-		samplingrate = sc.getIntOrDefault("encoder.samplingrate", 44100);
-		encodetracksasynchronly = sc.getBooleanOrDefault("encoder.async", true);
+		useconverter = sc.getBooleanOrDefault("resource.encoder.use", false);
+		String ffmpegbinartypath = sc.getStringOrDefault("resource.encoder.ffmpegbinary", null);
+		ffmpegbinary = ffmpegbinartypath == null ? null : new File(ffmpegbinartypath);
+		bitrate = sc.getIntOrDefault("resource.encoder.bitrate", 65000);
+		channels = (byte) sc.getIntOrDefault("resource.encoder.channels", 2);
+		samplingrate = sc.getIntOrDefault("resource.encoder.samplingrate", 44100);
+		encodetracksasynchronly = sc.getBooleanOrDefault("resource.encoder.async", true);
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxpacksize;
 		this.musicdir = musicdir;

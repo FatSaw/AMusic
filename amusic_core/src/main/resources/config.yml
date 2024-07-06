@@ -1,15 +1,18 @@
-host: 127.0.0.1
-port: 25530
-processpack: true
-useplaceholderapi: false
-cache:
- server: true
- client: true
-strictdownloaderlist: true
-tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
-encoder:
- use: false
- bitrate: 64000
- channels: 2
- samplingrate: 44100
- async: true
+server:
+ host: 127.0.0.1:25530
+ #ip: 127.0.0.1
+ port: 25530
+ strictdownloaderlist: true
+ tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
+resource:
+ processpack: true
+  cache:
+   server: true
+   client: true
+ encoder:
+  use: false
+  ffmpegbinary: ffmpeg
+  bitrate: 64000
+  channels: 2
+  samplingrate: 44100
+  async: true

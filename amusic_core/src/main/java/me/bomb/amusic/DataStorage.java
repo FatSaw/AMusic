@@ -20,6 +20,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 			return name.endsWith(FORMAT);
 		}
 	};
+	private static final byte VERSION = 2;
 	private final File datadirectory;
 	private final DataSaveThread[] savethreads;
 	
@@ -89,7 +90,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 				int packednamelength;
 				fis.read(buf);
 				fis.read(sha1);
-				if(version != 2 || (packednamelength = fis.read()) == -1) {
+				if(version != VERSION || (packednamelength = fis.read()) == -1) {
 					fis.close();
 					continue;
 				}
@@ -161,6 +162,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 		}
 		
 		protected boolean save(Entry<String, DataEntry>[] list, int start,int end) {
+			if(!run) return false;
 			this.list = list;
 			this.start = start;
 			this.end = end;
@@ -208,7 +210,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 						fos.write(0); //0
 						fos.write(0); //0
 						fos.write(0); //FORMATID
-						fos.write(2); //VERSION
+						fos.write(VERSION); //VERSION
 						int entryfilesize = dataentry.size;
 						//fos.write(dataentry.size);
 						fos.write((byte)entryfilesize); //FILESIZE

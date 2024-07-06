@@ -3,7 +3,6 @@ main: me.bomb.amusic.bukkit.AMusicBukkit
 version: ${version}
 api-version: 1.13
 author: Bomb
-softdepend: [PlaceholderAPI]
 commands:
   loadmusic:
   playmusic:

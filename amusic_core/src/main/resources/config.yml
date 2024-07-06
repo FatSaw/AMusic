@@ -2,6 +2,7 @@ server:
  host: 127.0.0.1:25530
  #ip: 127.0.0.1
  port: 25530
+ backlog: 50
  strictdownloaderlist: true
  tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
 resource:

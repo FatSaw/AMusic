@@ -65,7 +65,7 @@ public final class ResourceFactory implements Runnable {
 			if (!musicdir.exists()) {
 				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 			}
-			this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+			this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 			this.soundnames = resourcepacker.soundnames;
 			this.soundlengths = resourcepacker.soundlengths;
 			this.sha1 = null;
@@ -107,7 +107,7 @@ public final class ResourceFactory implements Runnable {
 			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 		}
 		this.resourcefile = new File(configoptions.packeddir, id.concat(".zip"));
-		this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+		this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 		soundnames = resourcepacker.soundnames;
 		soundlengths = resourcepacker.soundlengths;
 		this.sha1 = resourcepacker.sha1;
@@ -189,8 +189,6 @@ public final class ResourceFactory implements Runnable {
 		}
 		StringBuilder sb = new StringBuilder("http://");
 		sb.append(configoptions.host);
-		sb.append(":");
-		sb.append(configoptions.port);
 		sb.append("/");
 		sb.append(resourcemanager.add(target, this.resourcefile));
 		sb.append(".zip");

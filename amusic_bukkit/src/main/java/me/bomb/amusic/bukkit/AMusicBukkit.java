@@ -77,9 +77,6 @@ public final class AMusicBukkit extends JavaPlugin {
 			}
 		}
 		Bukkit.getPluginManager().registerEvents(new EventListener(resourcemanager, positiontracker, playerips), this);
-		if (configoptions.hasplaceholderapi) {
-			new AMusicPlaceholderExpansion(positiontracker).register();
-		}
 		this.amusic.enable();
 	}
 

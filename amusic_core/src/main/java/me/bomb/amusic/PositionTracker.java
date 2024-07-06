@@ -80,7 +80,7 @@ public final class PositionTracker extends Thread {
 						Entry<UUID, Playing> entry = entrysiterator.next();
 						UUID uuid = entry.getKey();
 						Playing playing = entry.getValue();
-						if (playing.remaining < 0) {
+						if (--playing.remaining < 0) {
 							entrysiterator.remove();
 							RepeatType repeattype;
 							repeattype = repeaters.get(uuid);

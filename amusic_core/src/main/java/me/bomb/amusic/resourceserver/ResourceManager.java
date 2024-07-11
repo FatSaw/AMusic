@@ -18,13 +18,14 @@ public final class ResourceManager {
 	private final ConcurrentHashMap<Path, CachedResource> resources = new ConcurrentHashMap<Path, CachedResource>();
 
 	private final int maxbuffersize;
-	private final boolean servercache, clientcache;
+	private final boolean servercache, clientcache, waitacception;
 	private final byte[] salt;
 	
-	public ResourceManager(int maxbuffersize, boolean servercache, boolean clientcache, byte[] salt) {
+	public ResourceManager(int maxbuffersize, boolean servercache, boolean clientcache, byte[] salt, boolean waitacception) {
 		this.maxbuffersize = maxbuffersize;
 		this.servercache = servercache;
 		this.salt = salt;
+		this.waitacception = waitacception;
 		clientcache &= salt != null;
 		MessageDigest md = null;
 		if(clientcache) {
@@ -138,7 +139,7 @@ public final class ResourceManager {
 	 * Set accept status by targetplayer uuid
 	 */
 	public void setAccepted(UUID targetplayer) {
-		if (!targets.containsKey(targetplayer)) {
+		if (!waitacception || !targets.containsKey(targetplayer)) {
 			return;
 		}
 		accepted.add(targets.get(targetplayer));
@@ -149,7 +150,7 @@ public final class ResourceManager {
 	 * @return true if token valid and no accept status.
 	 */
 	protected boolean waitAcception(UUID token) {
-		if(!targets.containsValue(token)) {
+		if(!waitacception || !targets.containsValue(token)) {
 			return false;
 		}
 		return !accepted.contains(token);

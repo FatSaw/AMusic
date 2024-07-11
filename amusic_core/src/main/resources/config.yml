@@ -4,6 +4,7 @@ server:
  port: 25530
  backlog: 50
  strictdownloaderlist: true
+ #waitacception: true
  tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
 resource:
  processpack: true

@@ -14,12 +14,19 @@ import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
 import me.bomb.amusic.bukkit.command.LoadmusicTabComplete;
 import me.bomb.amusic.bukkit.command.PlaymusicCommand;
 import me.bomb.amusic.bukkit.command.PlaymusicTabComplete;
 import me.bomb.amusic.bukkit.command.RepeatCommand;
 import me.bomb.amusic.bukkit.command.RepeatTabComplete;
+import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_10_R1;
+import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_7_R4;
+import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_8_R3;
+import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_9_R2;
+import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_7_R4;
+import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 
@@ -33,7 +40,8 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
-		byte ver = Byte.valueOf(Bukkit.getServer().getClass().getPackage().getName().substring(23).split("_", 3)[1]);
+		String nmsver = Bukkit.getServer().getClass().getPackage().getName().substring(23);
+		byte ver = Byte.valueOf(nmsver.split("_", 3)[1]);
 		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
@@ -47,13 +55,37 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(!tempdir.exists()) {
 			tempdir.mkdir();
 		}
+		boolean waitacception = true;
+		SoundStopper soundstopper;
+		switch (nmsver) {
+		case "v1_7_R4":
+			packsender = new LegacyPackSender_1_7_R4();
+			soundstopper = new LegacySoundStopper_1_7_R4();
+			waitacception = false;
+		break;
+		case "v1_8_R3":
+			packsender = new LegacyPackSender_1_8_R3();
+			soundstopper = new LegacySoundStopper_1_8_R3();
+		break;
+		case "v1_9_R2":
+			packsender = new LegacyPackSender_1_9_R2();
+			soundstopper = new BukkitSoundStopper();
+		break;
+		case "v1_10_R1":
+			packsender = new LegacyPackSender_1_10_R1();
+			soundstopper = new BukkitSoundStopper();
+		break;
+		default:
+			packsender = new BukkitPackSender();
+			soundstopper = new BukkitSoundStopper();
+		break;
+		}
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
-		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir);
+		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir, waitacception);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
-		packsender = new BukkitPackSender();
-		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), new BukkitSoundStopper(), playerips);
+		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		amusic.setAPI();

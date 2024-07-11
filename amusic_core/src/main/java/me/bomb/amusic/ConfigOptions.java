@@ -17,14 +17,14 @@ public final class ConfigOptions {
 	public final InetAddress ip;
 	public final int port, backlog, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
 	public final byte channels;
-	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly;
+	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, waitacception;
 	public final File ffmpegbinary, musicdir, packeddir, tempdir;
 	public final byte[] tokensalt;
 	
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, InetAddress ip, int port, int backlog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt) {
+	public ConfigOptions(String host, InetAddress ip, int port, int backlog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
 		this.host = host;
 		this.ip = ip;
 		this.port = port;
@@ -45,12 +45,13 @@ public final class ConfigOptions {
 		this.packeddir = packeddir;
 		this.tempdir = tempdir;
 		this.tokensalt = tokensalt;
+		this.waitacception = waitacception;
 	}
 	
 	/**
 	 * Config file configuration storage.
 	 */
-	public ConfigOptions(File configfile, int maxpacksize, File musicdir, File packeddir, File tempdir) {
+	public ConfigOptions(File configfile, int maxpacksize, File musicdir, File packeddir, File tempdir, boolean waitacception) {
 		byte[] bytes = null;
 		if (!configfile.exists()) {
 			InputStream is = ConfigOptions.class.getClassLoader().getResourceAsStream("config.yml");
@@ -113,10 +114,12 @@ public final class ConfigOptions {
 		channels = (byte) sc.getIntOrDefault("resource.encoder.channels", 2);
 		samplingrate = sc.getIntOrDefault("resource.encoder.samplingrate", 44100);
 		encodetracksasynchronly = sc.getBooleanOrDefault("resource.encoder.async", true);
+		waitacception = sc.getBooleanOrDefault("server.waitacception", waitacception);
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxpacksize;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
 		this.tempdir = tempdir;
+		this.waitacception = waitacception;
 	}
 }

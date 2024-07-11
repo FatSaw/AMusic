@@ -53,20 +53,25 @@ playmusic - start/stop sound from loaded resourcepack
 ## Config:
 
 ```
-host: (String) #External server ip or hostname
-port: (int) #Resourcepack file server port
-processpack: (boolean) #If false, resourcepack packing disabled
-cache:
- server: (boolean) #If true resourcepack cached on server
- client: (boolean) #If true resourcepack cached on client (Max 10), resets if host, port, tokensalt, player uuid changed)
-strictdownloaderlist: (boolean) #If true, only connected players can access resourcepack server
-tokensalt: (Base64 String) #Salt for token generator, replace it to random Base64, needs only when client cache enabled
-encoder: 
- use: false #If true place ffmpeg('.exe'(windows)/'-osx'(mac)/''(linux)) into plugin directory
- bitrate: 64000
- channels: 2
- samplingrate: 44100
- async: true
+server:
+ host: 127.0.0.1:25530 #External server ip or hostname
+ #ip: 127.0.0.1
+ port: 25530 #Resourcepack file server port
+ backlog: 50
+ strictdownloaderlist: true
+ tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
+resource:
+ processpack: true #If false, resourcepack packing disabled
+  cache:
+   server: true #If true resourcepack cached on server
+   client: true #If true resourcepack cached on client (Max 10), resets if host, port, tokensalt, player uuid changed)
+ encoder:
+  use: false
+  ffmpegbinary: ffmpeg #Path to ffmpeg binary
+  bitrate: 64000
+  channels: 2
+  samplingrate: 44100
+  async: true
 ```
 ## Dependencies
 

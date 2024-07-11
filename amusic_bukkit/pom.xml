@@ -55,6 +55,8 @@
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/**</exclude>
+										<exclude>org/bukkit/**</exclude>
+										<exclude>net/minecraft/**</exclude>
 									</excludes>
 								</filter>
 							</filters>

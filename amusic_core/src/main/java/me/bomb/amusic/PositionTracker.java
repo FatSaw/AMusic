@@ -214,9 +214,6 @@ public final class PositionTracker extends Thread {
 		Playing playing = trackers.remove(uuid);
 		try {
 			if (playing == null) {
-				for (byte i = 0; i != -128; ++i) {
-					soundstopper.stopSound(uuid, i);
-				}
 				return;
 			}
 			soundstopper.stopSound(uuid, playing.currenttrack);

@@ -57,6 +57,7 @@
 										<exclude>META-INF/**</exclude>
 										<exclude>org/bukkit/**</exclude>
 										<exclude>net/minecraft/**</exclude>
+										<exclude>io/netty/**</exclude>
 									</excludes>
 								</filter>
 							</filters>

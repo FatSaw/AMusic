@@ -27,6 +27,7 @@ import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_9_R2;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
+import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 
@@ -69,7 +70,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		break;
 		case "v1_9_R2":
 			packsender = new LegacyPackSender_1_9_R2();
-			soundstopper = new BukkitSoundStopper();
+			soundstopper = new LegacySoundStopper_1_9_R2();
 		break;
 		case "v1_10_R1":
 			packsender = new LegacyPackSender_1_10_R1();

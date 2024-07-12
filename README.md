@@ -80,7 +80,7 @@ resource:
 [Size reduced ffmpeg 7.0.1 building arguments Linux](/FFMPEG_BUILD.md)
 
 ### Bukkit
-`PlaceholderAPI` (optional)
+`...`
 ### Velocity
 `Protocolise`
 

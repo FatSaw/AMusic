@@ -57,8 +57,9 @@ server:
  host: 127.0.0.1:25530 #External server ip or hostname
  #ip: 127.0.0.1
  port: 25530 #Resourcepack file server port
- backlog: 50
+ #backlog: 50 #Maximum length of the queue of incoming connections
  strictdownloaderlist: true
+ #waitacception: true #ResourcePack Status accepted need to access server (if blocked using recomended value 'true', if 1.7.10 'false')
  tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
 resource:
  processpack: true #If false, resourcepack packing disabled

@@ -94,7 +94,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 					fis.close();
 					continue;
 				}
-				int packedsize = 0xFF & buf[3] << 24 | 0xFF & buf[2] << 16 | 0xFF & buf[1] << 8 | 0xFF & buf[0];
+				int packedsize = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0];
 				buf = new byte[packednamelength];
 				fis.read(buf);
 				String packedname = new String(buf, StandardCharsets.UTF_8);

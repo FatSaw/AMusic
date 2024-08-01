@@ -78,7 +78,6 @@ public final class ConfigOptions {
 					filesize = 0x00010000;
 				}
 				bytes = new byte[(int) filesize];
-				is.read(bytes);
 				int size = is.read(bytes);
 				if(size < filesize) {
 					bytes = Arrays.copyOf(bytes, size);

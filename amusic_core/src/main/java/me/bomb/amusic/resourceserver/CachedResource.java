@@ -14,12 +14,18 @@ final class CachedResource {
 	}
 
 	protected CachedResource(File fileresource, int buffersize) {
-		byte[] resource = new byte[buffersize];
+		long filesize = fileresource.length();
+		if(filesize > buffersize) {
+			filesize = buffersize;
+		}
+		byte[] resource = new byte[(int) filesize];
 		try {
 			FileInputStream streamresource = new FileInputStream(fileresource);
 			int size = streamresource.read(resource);
 			streamresource.close();
-			resource = Arrays.copyOf(resource, size);
+			if(size < filesize) {
+				resource = Arrays.copyOf(resource, size);
+			}
 		} catch (IOException e) {
 		}
 		this.resource = resource;

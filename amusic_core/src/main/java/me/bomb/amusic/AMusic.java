@@ -1,5 +1,6 @@
 package me.bomb.amusic;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -46,6 +47,10 @@ public final class AMusic {
 		resourceserver.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
+	}
+	
+	public File getMusicDir() {
+		return configoptions.musicdir;
 	}
 	
 	/**

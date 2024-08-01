@@ -73,7 +73,11 @@ public final class ConfigOptions {
 		} else {
 			try {
 				InputStream is = new FileInputStream(configfile);
-				bytes = new byte[is.available()];
+				long filesize = configfile.length();
+				if(filesize > 0x0000FFFF) {
+					filesize = 0x0000FFFF;
+				}
+				bytes = new byte[(int) filesize];
 				is.read(bytes);
 				is.close();
 			} catch (IOException e) {

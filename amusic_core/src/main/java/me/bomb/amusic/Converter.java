@@ -13,7 +13,7 @@ final class Converter implements Runnable {
 	protected Converter(File fmpegbinary, boolean async,int bitrate, byte channels, int samplingrate, File input, File output) {
 		this.input = input;
 		this.output = output;
-		this.args = new String[] {fmpegbinary.getAbsolutePath(), "-i", input.getAbsolutePath(), "-strict", "-2", "-acodec", "vorbis", "-ab", Integer.toString(bitrate), "-ac", Byte.toString(channels), "-ar", Integer.toString(samplingrate), "-f", "ogg", "-y", output.getAbsolutePath()};
+		this.args = new String[] {fmpegbinary.getAbsolutePath(), "-i", input.getAbsolutePath(), "-strict", "-2", "-acodec", "vorbis", "-ab", Integer.toString(bitrate), "-ac", Byte.toString(channels), "-ar", Integer.toString(samplingrate), "-f", "ogg", "-vn", "-y", output.getAbsolutePath()};
 		if (async) {
 			status = new AtomicBoolean(false);
 			new Thread(this).start();

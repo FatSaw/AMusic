@@ -10,27 +10,21 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import me.bomb.amusic.bukkit.AMusicBukkit;
 import me.bomb.amusic.util.SimpleConfiguration;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 
-enum LangOptions {
+public enum LangOptions {
 	loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_noconsoleselector, loadmusic_targetoffline, loadmusic_noplaylist, loadmusic_loaderunavilable, loadmusic_success, playmusic_usage, playmusic_nopermission, playmusic_nopermissionother, playmusic_noconsoleselector, playmusic_targetoffline, playmusic_noplaylist, playmusic_missingtrack, playmusic_success, playmusic_stop, repeat_usage, repeat_nopermission, repeat_nopermissionother, repeat_noconsoleselector, repeat_targetoffline, repeat_unknownrepeattype, repeat_repeatall, repeat_repeatone, repeat_playall, repeat_playone, repeat_random;
-	static {
-		JavaPlugin plugin = JavaPlugin.getPlugin(AMusicBukkit.class);
-		File langfile = new File(plugin.getDataFolder(), "lang.yml");
+	public static void loadLang(File langfile, boolean rgb) {
 		byte[] buf = null;
 		if (!langfile.exists()) {
 			try {
-				buf = new byte[8096];
-				String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
-				InputStream in = plugin.getResource(nmsversion.equals("v1_7_R4") || nmsversion.equals("v1_8_R3") || nmsversion.equals("v1_9_R2") || nmsversion.equals("v1_10_R1") || nmsversion.equals("v1_11_R1") || nmsversion.equals("v1_12_R1") || nmsversion.equals("v1_13_R2") || nmsversion.equals("v1_14_R1") || nmsversion.equals("v1_15_R1") ? "lang_old.yml" : "lang_rgb.yml");
+				buf = new byte[0x2000];
+				InputStream in = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
 				if (in != null) {
 					buf = Arrays.copyOf(buf, in.read(buf));
 					in.close();
@@ -44,9 +38,16 @@ enum LangOptions {
 			}
 		} else {
 			try {
+				long filesize = langfile.length();
+				if(filesize > 0x7FFFFFFD) {
+					filesize = 0x7FFFFFFD;
+				}
 				FileInputStream in = new FileInputStream(langfile);
-				buf = new byte[in.available()];
-				in.read(buf);
+				buf = new byte[(int) filesize];
+				int size = in.read(buf);
+				if(size < filesize) {
+					buf = Arrays.copyOf(buf, size);
+				}
 				in.close();
 			} catch (IOException e) {
 			}

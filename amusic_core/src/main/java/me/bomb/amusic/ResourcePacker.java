@@ -19,6 +19,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import me.bomb.amusic.Convertator.ConvertationFiles;
+import me.bomb.amusic.Convertator.ConvertatorSession;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class ResourcePacker extends Thread {
@@ -27,10 +29,10 @@ public final class ResourcePacker extends Thread {
 	public final List<Short> soundlengths = new ArrayList<>();
 	public byte[] sha1 = null;
 	
-	private final boolean useconverter, encodetracksasynchronly;
-	private final int bitrate, samplingrate, maxzipsize, maxsoundsize;
-	private final byte channels;
-	private final File ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive;
+	private final Convertator convertator;
+	private final int maxzipsize, maxsoundsize;
+	private final short convertatorthreads;
+	private final File musicdir, tempdir, resourcefile, sourcearchive;
 	private final ResourceManager resourcemanager;
 	private static final MessageDigest sha1hash; 
 	private static final FilenameFilter oggfile;
@@ -51,15 +53,11 @@ public final class ResourcePacker extends Thread {
 		};
 	}
 	
-	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File ffmpegbinary, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
-		this.useconverter = useconverter;
-		this.bitrate = bitrate;
-		this.channels = channels;
-		this.samplingrate = samplingrate;
-		this.encodetracksasynchronly = encodetracksasynchronly;
+	public ResourcePacker(Convertator convertator, short convertatorthreads, int maxzipsize, int maxsoundsize, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
+		this.convertator = convertator;
+		this.convertatorthreads = convertatorthreads;
 		this.maxzipsize = maxzipsize;
 		this.maxsoundsize = maxsoundsize;
-		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
 		this.tempdir = tempdir;
 		this.resourcefile = resourcefile;
@@ -69,6 +67,7 @@ public final class ResourcePacker extends Thread {
 	}
 	
 	public void run() {
+		boolean useconverter = this.convertator != null;
 		List<File> musicfiles = new ArrayList<File>();
 		for (File musicfile : musicdir.listFiles()) {
 			if (useconverter || musicfile.getName().endsWith(".ogg")) {
@@ -85,38 +84,22 @@ public final class ResourcePacker extends Thread {
 		if(musicfilessize > 0x0000FFFF) {
 			musicfilessize = 0x0000FFFF;
 		}
-		boolean asyncconvertation = musicfilessize > 1 && encodetracksasynchronly;
 		if (useconverter) {
 			delete(tempdir);
 			tempdir.mkdirs();
-			List<Converter> convertators = new ArrayList<Converter>(musicfilessize);
+			ConvertationFiles[] convertationfiles = new ConvertationFiles[musicfilessize];
 			for (int i = 0; musicfilessize > i; ++i) {
 				File musicfile = musicfiles.get(i);
 				File outfile = new File(tempdir, "music".concat(Integer.toString(i)).concat(".ogg"));
-				convertators.add(new Converter(ffmpegbinary, asyncconvertation, bitrate, channels, samplingrate, musicfile, outfile));
+				convertationfiles[i] = new ConvertationFiles(musicfile, outfile);
 			}
-			if (asyncconvertation) {
-				boolean convertationrunning = true;
-				byte checkcount = 0;
-				while (convertationrunning) {
-					try {
-						sleep(1000);
-					} catch (InterruptedException e) {
-					}
-					boolean finished = true;
-					byte i = (byte) convertators.size();
-					while(--i > -1) {
-						finished &= convertators.get(i).finished();
-					}
-					convertationrunning = !finished;
-					if (++checkcount == 0) {
-						return; // drop task if not finished for 4 minutes
-					}
-				}
-			}
+
+			ConvertatorSession convertationsession = convertator.convertTask(convertationfiles, this.convertatorthreads);
+			convertationsession.run();
+			
 			musicfiles.clear();
 			for (int i = 0; i < musicfilessize; ++i) {
-				File outfile = convertators.get(i).output;
+				File outfile = convertationfiles[i].output;
 				musicfiles.add(outfile);
 			}
 		}

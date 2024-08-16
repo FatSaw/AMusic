@@ -11,6 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Convertator;
 import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
@@ -40,6 +41,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PackSender packsender;
 	private final PositionTracker positiontracker;
+	private final Convertator convertator;
 
 	public AMusicBukkit() {
 		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
@@ -90,6 +92,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
+		this.convertator = amusic.convertator;
 		LangOptions.loadLang(langfile, ver < 16);
 		amusic.setAPI();
 	}
@@ -97,7 +100,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	//PLUGIN INIT START
 	public void onEnable() {
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender));
+		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, convertator, packsender));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
 		PluginCommand playmusiccommand = getCommand("playmusic");
 		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker));

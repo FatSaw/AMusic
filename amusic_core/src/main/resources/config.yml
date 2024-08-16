@@ -17,4 +17,6 @@ resource:
   bitrate: 64000
   channels: 2
   samplingrate: 44100
-  async: true
+  parallellimit:
+   total: 6
+   session: 2

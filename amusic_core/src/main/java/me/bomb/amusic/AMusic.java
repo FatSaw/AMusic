@@ -19,6 +19,7 @@ public final class AMusic {
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final ResourceServer resourceserver;
+	public final Convertator convertator;
 	private final PackSender packsender;
 	private final Data data;
 	
@@ -29,6 +30,7 @@ public final class AMusic {
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.packsender = packsender;
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
+		this.convertator = new Convertator(configoptions.musicdir, (short) 4, configoptions.bitrate, configoptions.channels, configoptions.samplingrate);
 	}
 	
 	/**
@@ -37,6 +39,7 @@ public final class AMusic {
 	public void enable() {
 		positiontracker.start();
 		resourceserver.start();
+		convertator.init();
 	}
 	
 	/**
@@ -45,6 +48,7 @@ public final class AMusic {
 	public void disable() {
 		positiontracker.end();
 		resourceserver.end();
+		convertator.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
 	}
@@ -166,8 +170,8 @@ public final class AMusic {
 	/**
 	 * Loads resource pack to player.
 	 */
-	public void loadPack(UUID playeruuid, String name, boolean update) throws FileNotFoundException {
-		ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
+	public void loadPack(UUID playeruuid, String name, short convertatorthreadcount, boolean update) throws FileNotFoundException {
+		ResourceFactory.load(configoptions.processpack, configoptions.packeddir, configoptions.musicdir, configoptions.tempdir, convertator, convertatorthreadcount, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.host, data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
 	}
 
 	/**

@@ -12,9 +12,9 @@ import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class ResourceFactory implements Runnable {
 	
-	private final String id, name;
+	private final String id, name, host;
 	private final UUID target;
-	private final ConfigOptions configoptions;
+	private final Convertator convertator;
 	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final ResourcePacker resourcepacker;
@@ -25,10 +25,11 @@ public final class ResourceFactory implements Runnable {
 	private final byte[] sha1;
 	private final File resourcefile;
 
-	private ResourceFactory(ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String id, boolean update) throws FileNotFoundException {
+	private ResourceFactory(File packeddir, File musicdir, File tempdir, Convertator convertator, short convertatorthreads, int maxpacksize, int maxmusicfilesize, String host, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String id, boolean update) throws FileNotFoundException {
 		this.id = id;
 		this.target = target;
-		this.configoptions = configoptions;
+		this.convertator = convertator;
+		this.host = host;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
@@ -37,7 +38,7 @@ public final class ResourceFactory implements Runnable {
 		List<String> asongnames = null;
 		List<Short> asonglengths = null;
 		byte[] asha1 = null;
-		this.resourcefile = new File(configoptions.packeddir, id.concat(".zip"));
+		this.resourcefile = new File(packeddir, id.concat(".zip"));
 		boolean ok = false;
 		String name = null;
 		if (data.containsPlaylist(this.id)) {
@@ -58,14 +59,14 @@ public final class ResourceFactory implements Runnable {
 			name = filterName(this.id);
 		}
 		this.name = name;
-		File musicdir = new File(configoptions.musicdir, this.name);
-		File tempdir = new File(configoptions.tempdir, id);
-		File sourcearchive = new File(configoptions.musicdir, this.name.concat(".zip"));
+		File musicsubdir = new File(musicdir, this.name);
+		File tempsubdir = new File(tempdir, id);
+		File sourcearchive = new File(musicdir, this.name.concat(".zip"));
 		if (!ok) {
-			if (!musicdir.exists()) {
-				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
+			if (!musicsubdir.exists()) {
+				throw new FileNotFoundException("No music directory: ".concat(musicsubdir.getPath()));
 			}
-			this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+			this.resourcepacker = new ResourcePacker(convertator, convertatorthreads, maxpacksize, maxmusicfilesize, musicsubdir, tempsubdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 			this.soundnames = resourcepacker.soundnames;
 			this.soundlengths = resourcepacker.soundlengths;
 			this.sha1 = null;
@@ -78,8 +79,9 @@ public final class ResourceFactory implements Runnable {
 		}
 	}
 
-	private ResourceFactory(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String id) throws FileNotFoundException {
-		this.configoptions = configoptions;
+	private ResourceFactory(File packeddir, File musicdir, File tempdir, Convertator convertator, short convertatorthreads, int maxpacksize, int maxmusicfilesize, String host, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String id) throws FileNotFoundException {
+		this.host = host;
+		this.convertator = convertator;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
@@ -91,7 +93,7 @@ public final class ResourceFactory implements Runnable {
 		if (data.containsPlaylist(this.id)) {
 			DataEntry options = data.getPlaylist(this.id);
 			name = options.name;
-			File resourcefile = new File(configoptions.packeddir, id);
+			File resourcefile = new File(packeddir, id);
 			if (resourcefile != null && resourcefile.exists()) {
 				resourcefile.delete();
 				data.removePlaylist(this.id);
@@ -100,14 +102,14 @@ public final class ResourceFactory implements Runnable {
 			name = filterName(this.id);
 		}
 		this.name = name;
-		File musicdir = new File(configoptions.musicdir, this.name);
-		File tempdir = new File(configoptions.tempdir, id);
-		File sourcearchive = new File(configoptions.musicdir, this.name.concat(".zip"));
-		if (!musicdir.exists()) {
-			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
+		File musicsubdir = new File(musicdir, this.name);
+		File tempsubdir = new File(tempdir, id);
+		File sourcearchive = new File(musicdir, this.name.concat(".zip"));
+		if (!musicsubdir.exists()) {
+			throw new FileNotFoundException("No music directory: ".concat(musicsubdir.getPath()));
 		}
-		this.resourcefile = new File(configoptions.packeddir, id.concat(".zip"));
-		this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+		this.resourcefile = new File(packeddir, id.concat(".zip"));
+		this.resourcepacker = new ResourcePacker(convertator, convertatorthreads, maxpacksize, maxmusicfilesize, musicsubdir, tempsubdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 		soundnames = resourcepacker.soundnames;
 		soundlengths = resourcepacker.soundlengths;
 		this.sha1 = resourcepacker.sha1;
@@ -142,13 +144,12 @@ public final class ResourceFactory implements Runnable {
 		return new String(filtered);
 	}
 
-	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws FileNotFoundException {
+	public static boolean load(boolean processpack, File packeddir, File musicdir, File tempdir, Convertator convertator, short convertatorthreads, int maxpacksize, int maxmusicfilesize, String host, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws FileNotFoundException {
 		if(name==null || name.isEmpty()) {
 			return false;
 		}
-		boolean processpack = configoptions.processpack;
 		if (target == null && processpack) {
-			ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
+			ResourceFactory resourcepacked = new ResourceFactory(packeddir, musicdir, tempdir, convertator, convertatorthreads, maxmusicfilesize, maxpacksize, host, data, resourcemanager, positiontracker, name);
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();
 				return true;
@@ -156,7 +157,7 @@ public final class ResourceFactory implements Runnable {
 			return false;
 		}
 		update &= processpack;
-		ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, target, name, update);
+		ResourceFactory resourcepacked = new ResourceFactory(packeddir, musicdir, tempdir, convertator, convertatorthreads, maxmusicfilesize, maxpacksize, host, data, resourcemanager, positiontracker, packsender, target, name, update);
 		if (resourcepacked.resourcepacker == null) {
 			positiontracker.remove(target);
 			return true;
@@ -188,7 +189,7 @@ public final class ResourceFactory implements Runnable {
 			return;
 		}
 		StringBuilder sb = new StringBuilder("http://");
-		sb.append(configoptions.host);
+		sb.append(this.host);
 		sb.append("/");
 		sb.append(resourcemanager.add(target, this.resourcefile));
 		sb.append(".zip");

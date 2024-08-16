@@ -23,6 +23,7 @@ import dev.simplix.protocolize.api.Protocol;
 import dev.simplix.protocolize.api.Protocolize;
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Convertator;
 import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
@@ -44,6 +45,7 @@ public class AMusicVelocity {
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
     private final PackSender packsender;
 	private final PositionTracker positiontracker;
+	private final Convertator convertator;
     
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -72,6 +74,7 @@ public class AMusicVelocity {
 		this.amusic = new AMusic(configoptions, data, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(), playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
+		this.convertator = amusic.convertator;
 		this.server = server;
         //this.logger = logger;
 		LangOptions.loadLang(langfile, false);
@@ -82,7 +85,7 @@ public class AMusicVelocity {
 	public void onProxyInitialization(ProxyInitializeEvent event) {
 		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
-		LoadmusicCommand loadmusic = new LoadmusicCommand(server, configoptions, data, resourcemanager, positiontracker, packsender);
+		LoadmusicCommand loadmusic = new LoadmusicCommand(server, configoptions, data, resourcemanager, positiontracker, convertator, packsender);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);
 		CommandManager cmdmanager = this.server.getCommandManager();

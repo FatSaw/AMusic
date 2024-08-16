@@ -14,6 +14,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Convertator;
 import me.bomb.amusic.Data;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
@@ -27,14 +28,16 @@ public class LoadmusicCommand implements SimpleCommand {
 	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
+	private final Convertator convertator;
 	private final PackSender packsender;
 	
-	public LoadmusicCommand(ProxyServer server, ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+	public LoadmusicCommand(ProxyServer server, ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, Convertator convertator, PackSender packsender) {
 		this.server = server;
 		this.configoptions = configoptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
+		this.convertator = convertator;
 		this.packsender = packsender;
 	}
 
@@ -79,7 +82,7 @@ public class LoadmusicCommand implements SimpleCommand {
 			}
 			String name = args[1];
 			try {
-				if (!ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
+				if (!ResourceFactory.load(configoptions.processpack, configoptions.packeddir, configoptions.musicdir, configoptions.tempdir, convertator, configoptions.convertorthreadpersessionlimit, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.host, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return;
 				}

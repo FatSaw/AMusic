@@ -12,6 +12,7 @@ import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Convertator;
 import me.bomb.amusic.Data;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
@@ -20,18 +21,20 @@ import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class LoadmusicCommand implements CommandExecutor {
-	private final ConfigOptions configuptions;
+	private final ConfigOptions configoptions;
 	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
+	private final Convertator convertator;
 	private final PackSender packsender;
 
-	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, Convertator convertator, PackSender packsender) {
 		LangOptions.values();
-		this.configuptions = configuptions;
+		this.configoptions = configuptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
+		this.convertator = convertator;
 		this.packsender = packsender;
 	}
 
@@ -71,7 +74,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 			}
 			String name = args[1];
 			try {
-				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
+				if (!ResourceFactory.load(configoptions.processpack, configoptions.packeddir, configoptions.musicdir, configoptions.tempdir, convertator, configoptions.convertorthreadpersessionlimit, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.host, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return true;
 				}

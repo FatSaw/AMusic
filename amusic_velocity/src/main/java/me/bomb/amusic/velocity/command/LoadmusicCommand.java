@@ -14,11 +14,11 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.ConfigOptions;
-import me.bomb.amusic.Convertator;
 import me.bomb.amusic.Data;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
+import me.bomb.amusic.converter.Convertator;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
 

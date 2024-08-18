@@ -19,8 +19,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import me.bomb.amusic.Convertator.ConvertationFiles;
-import me.bomb.amusic.Convertator.ConvertatorSession;
+import me.bomb.amusic.converter.ConvertationFiles;
+import me.bomb.amusic.converter.Convertator;
+import me.bomb.amusic.converter.Convertator.ConvertatorSession;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class ResourcePacker extends Thread {
@@ -36,6 +37,7 @@ public final class ResourcePacker extends Thread {
 	private final ResourceManager resourcemanager;
 	private static final MessageDigest sha1hash; 
 	private static final FilenameFilter oggfile;
+	private static final byte[] zerosizebuf;
 	private final Runnable runafter;
 	
 	static {
@@ -51,6 +53,7 @@ public final class ResourcePacker extends Thread {
 				return name.endsWith(".ogg");
 			}
 		};
+		zerosizebuf = new byte[0];
 	}
 	
 	public ResourcePacker(Convertator convertator, short convertatorthreads, int maxzipsize, int maxsoundsize, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
@@ -99,8 +102,12 @@ public final class ResourcePacker extends Thread {
 			
 			musicfiles.clear();
 			for (int i = 0; i < musicfilessize; ++i) {
-				File outfile = convertationfiles[i].output;
-				musicfiles.add(outfile);
+				if(convertationfiles[i].finished()) {
+					File outfile = convertationfiles[i].output;
+					musicfiles.add(outfile);
+				} else {
+					musicfiles.add(null);
+				}
 			}
 		}
 		
@@ -117,6 +124,10 @@ public final class ResourcePacker extends Thread {
 			sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
 			sounds.append(i==lastmusicfileindex ? "\t}\n" : "\t},\n");
 			File outfile = musicfiles.get(i);
+			if(outfile == null) {
+				topack[i] = zerosizebuf;
+				continue;
+			}
 			try {
 				long filesize = outfile.length();
 				if (filesize > maxsoundsize) {

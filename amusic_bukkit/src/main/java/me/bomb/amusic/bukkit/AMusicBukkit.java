@@ -11,7 +11,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
-import me.bomb.amusic.Convertator;
 import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
@@ -30,6 +29,7 @@ import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_9_R2;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
+import me.bomb.amusic.converter.Convertator;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 

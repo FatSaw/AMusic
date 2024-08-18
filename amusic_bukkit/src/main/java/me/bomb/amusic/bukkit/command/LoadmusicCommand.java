@@ -12,12 +12,12 @@ import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.ConfigOptions;
-import me.bomb.amusic.Convertator;
 import me.bomb.amusic.Data;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
+import me.bomb.amusic.converter.Convertator;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class LoadmusicCommand implements CommandExecutor {

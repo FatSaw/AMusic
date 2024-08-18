@@ -1,6 +1,5 @@
 package me.bomb.amusic;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -9,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import me.bomb.amusic.converter.Convertator;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 
@@ -30,7 +30,7 @@ public final class AMusic {
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.packsender = packsender;
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
-		this.convertator = new Convertator(configoptions.musicdir, (short) 4, configoptions.bitrate, configoptions.channels, configoptions.samplingrate);
+		this.convertator = new Convertator(configoptions.ffmpegbinary, configoptions.convertorthreadlimit, configoptions.bitrate, configoptions.channels, configoptions.samplingrate);
 	}
 	
 	/**
@@ -51,10 +51,6 @@ public final class AMusic {
 		convertator.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
-	}
-	
-	public File getMusicDir() {
-		return configoptions.musicdir;
 	}
 	
 	/**

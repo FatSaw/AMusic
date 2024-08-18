@@ -8,6 +8,12 @@ import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ResourceServer extends Thread {
+	
+	private static int threadNumber;
+    private static synchronized int nextThreadNum() {
+        return threadNumber++;
+    }
+	
 	private final ConcurrentHashMap<Object,InetAddress> onlineips;
 	private final InetAddress ip;
 	private final int port, backlog;
@@ -16,6 +22,7 @@ public final class ResourceServer extends Thread {
 	private final ResourceManager resourcemanager;
 	
 	public ResourceServer(ConcurrentHashMap<Object,InetAddress> onlineips, InetAddress ip, int port, int backlog, ResourceManager resourcemanager) {
+		super("ResourceServer-" + nextThreadNum());
 		this.onlineips = onlineips;
 		this.ip = ip;
 		this.port = port;

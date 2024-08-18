@@ -8,13 +8,13 @@ import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
+import me.bomb.amusic.converter.Convertator;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class ResourceFactory implements Runnable {
 	
 	private final String id, name, host;
 	private final UUID target;
-	private final Convertator convertator;
 	private final Data data;
 	private final ResourceManager resourcemanager;
 	private final ResourcePacker resourcepacker;
@@ -28,7 +28,6 @@ public final class ResourceFactory implements Runnable {
 	private ResourceFactory(File packeddir, File musicdir, File tempdir, Convertator convertator, short convertatorthreads, int maxpacksize, int maxmusicfilesize, String host, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String id, boolean update) throws FileNotFoundException {
 		this.id = id;
 		this.target = target;
-		this.convertator = convertator;
 		this.host = host;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
@@ -81,7 +80,6 @@ public final class ResourceFactory implements Runnable {
 
 	private ResourceFactory(File packeddir, File musicdir, File tempdir, Convertator convertator, short convertatorthreads, int maxpacksize, int maxmusicfilesize, String host, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String id) throws FileNotFoundException {
 		this.host = host;
-		this.convertator = convertator;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;

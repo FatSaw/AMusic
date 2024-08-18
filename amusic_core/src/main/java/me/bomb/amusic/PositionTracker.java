@@ -10,6 +10,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class PositionTracker extends Thread {
+	
+	private static int threadNumber;
+    private static synchronized int nextThreadNum() {
+        return threadNumber++;
+    }
 
 	private final ConcurrentHashMap<UUID, Playing> trackers = new ConcurrentHashMap<UUID, Playing>();
 	private final ConcurrentHashMap<UUID, RepeatType> repeaters = new ConcurrentHashMap<UUID, RepeatType>();
@@ -42,6 +47,7 @@ public final class PositionTracker extends Thread {
 	private boolean run = false;
 
 	public PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper) {
+		super("PositionTracker-" + nextThreadNum());
 		this.soundstarter = soundstarter;
 		this.soundstopper = soundstopper;
 	}

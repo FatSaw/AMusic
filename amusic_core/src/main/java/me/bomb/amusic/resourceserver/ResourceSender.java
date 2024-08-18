@@ -9,12 +9,18 @@ import java.util.UUID;
 
 final class ResourceSender extends Thread {
 	
+	private static int threadNumber;
+    private static synchronized int nextThreadNum() {
+        return threadNumber++;
+    }
+    
 	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nContent-Length: ".getBytes(), responsepart1 = "\r\nConnection: close\r\n\r\n".getBytes();
 	
 	private final Socket client;
 	private final ResourceManager resourcemanager;
 
 	protected ResourceSender(Socket client, ResourceManager resourcemanager) {
+		super("ResourceSender-" + nextThreadNum());
 		this.client = client;
 		this.resourcemanager = resourcemanager;
 		start();

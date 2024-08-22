@@ -178,19 +178,18 @@ public final class ResourcePacker extends Thread {
 					ZipInputStream zis;
 					zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
 					ZipEntry entry;
+					int len;
+					byte[] buf = new byte[0x2000];
 					while((entry = zis.getNextEntry()) != null) {
 						String entryname = entry.getName();
-						long entrysize = entry.getSize();
-						if(entrysize > 0x7FFFFFFD) {
-							entrysize = 0x7FFFFFFD;
-						}
-						byte[] buffer = new byte[(int) entrysize];
 						if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
 							packmcmetafound = true;
 						} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
 							StringBuilder sb = new StringBuilder();
-							zis.read(buffer);
-							sb.append(new String(buffer, StandardCharsets.UTF_8));
+							while ((len = zis.read(buf)) != -1) {
+								if(len<0x2000) buf = Arrays.copyOf(buf, len);
+				            	sb.append(new String(buf, StandardCharsets.US_ASCII));
+				            }
 							int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
 							if(open==-1||close==-1) {
 								continue;
@@ -198,14 +197,16 @@ public final class ResourcePacker extends Thread {
 							sb.insert(close, ',');
 							sb.insert(++close, soundslist);
 							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
-							zos.write(sb.toString().getBytes(StandardCharsets.UTF_8));
+							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
 							zos.closeEntry();
 							soundsjsonappended = true;
 							continue;
 						}
 						entry = new ZipEntry(entryname);
 						zos.putNextEntry(entry);
-						zos.write(buffer, 0, zis.read(buffer));
+			            while ((len = zis.read(buf)) != -1) {
+			            	zos.write(buf, 0, len);
+			            }
 		                zos.closeEntry();
 					}
 					zis.close();
@@ -219,7 +220,7 @@ public final class ResourcePacker extends Thread {
 				if(!soundsjsonappended) {
 					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 					zos.write("{".getBytes());
-					zos.write(soundslist.getBytes(StandardCharsets.UTF_8));
+					zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
 					zos.write("}".getBytes());
 					zos.closeEntry();
 				}

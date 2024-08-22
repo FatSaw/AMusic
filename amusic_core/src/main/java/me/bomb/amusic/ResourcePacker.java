@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -80,15 +81,18 @@ public final class ResourcePacker extends Thread {
 			}
 		}
 		// read base pack
-		boolean asyncconvertation = musicfiles.size() > 1 && encodetracksasynchronly;
-		short musicfilessize = (short) musicfiles.size();
+		int musicfilessize = musicfiles.size();
+		if(musicfilessize > 0x0000FFFF) {
+			musicfilessize = 0x0000FFFF;
+		}
+		boolean asyncconvertation = musicfilessize > 1 && encodetracksasynchronly;
 		if (useconverter) {
 			delete(tempdir);
 			tempdir.mkdirs();
 			List<Converter> convertators = new ArrayList<Converter>(musicfilessize);
-			for (short i = 0; musicfilessize > i; ++i) {
+			for (int i = 0; musicfilessize > i; ++i) {
 				File musicfile = musicfiles.get(i);
-				File outfile = new File(tempdir, "music".concat(Short.toString(i)).concat(".ogg"));
+				File outfile = new File(tempdir, "music".concat(Integer.toString(i)).concat(".ogg"));
 				convertators.add(new Converter(ffmpegbinary, asyncconvertation, bitrate, channels, samplingrate, musicfile, outfile));
 			}
 			if (asyncconvertation) {
@@ -111,7 +115,7 @@ public final class ResourcePacker extends Thread {
 				}
 			}
 			musicfiles.clear();
-			for (short i = 0; i < musicfilessize; ++i) {
+			for (int i = 0; i < musicfilessize; ++i) {
 				File outfile = convertators.get(i).output;
 				musicfiles.add(outfile);
 			}
@@ -120,22 +124,27 @@ public final class ResourcePacker extends Thread {
 		// read files
 		byte[][] topack = new byte[musicfilessize][];
 		StringBuffer sounds = new StringBuffer("\n");
+		int lastmusicfileindex = musicfilessize;
+		--lastmusicfileindex;
 		for (short i = 0; i < musicfilessize; ++i) {
 			sounds.append("\t\"amusic.music");
 			sounds.append(i);
 			sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
 			sounds.append(i);
 			sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
-			sounds.append(i==musicfilessize-1 ? "\t}\n" : "\t},\n");
+			sounds.append(i==lastmusicfileindex ? "\t}\n" : "\t},\n");
 			File outfile = musicfiles.get(i);
 			try {
-				int musicfilelength;
-				if ((musicfilelength = (int) outfile.length()) > maxsoundsize) {
+				long filesize = outfile.length();
+				if (filesize > maxsoundsize) {
 					continue;
 				}
-				byte[] resource = new byte[musicfilelength];
+				byte[] resource = new byte[(int) filesize];
 				FileInputStream in = new FileInputStream(outfile);
-				resource = Arrays.copyOf(resource, in.read(resource));
+				int size = in.read(resource);
+				if(size < filesize) {
+					resource = Arrays.copyOf(resource, size);
+				}
 				in.close();
 				soundlengths.add(calculateDuration(resource));
 				topack[i] = resource;
@@ -149,7 +158,7 @@ public final class ResourcePacker extends Thread {
 		// packing to archive
 		resourcemanager.resetCache(resourcefile.toPath());
 		if(musicfiles.isEmpty()) {
-			if(resourcefile.exists()) {
+			if(resourcefile.isFile()) {
 				resourcefile.delete();
 			}
 			if(musicdir.isDirectory() && musicdir.list().length == 0) {
@@ -169,46 +178,39 @@ public final class ResourcePacker extends Thread {
 					ZipInputStream zis;
 					zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
 					ZipEntry entry;
-					int len;
-					byte[] buffer = new byte[1024];
 					while((entry = zis.getNextEntry()) != null) {
 						String entryname = entry.getName();
+						long entrysize = entry.getSize();
+						if(entrysize > 0x7FFFFFFD) {
+							entrysize = 0x7FFFFFFD;
+						}
+						byte[] buffer = new byte[(int) entrysize];
 						if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
 							packmcmetafound = true;
 						} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
-							
 							StringBuilder sb = new StringBuilder();
-							while ((len = zis.read(buffer)) != -1) {
-								if(len<1024) buffer = Arrays.copyOf(buffer, len);
-								sb.append(new String(buffer));
-							}
+							zis.read(buffer);
+							sb.append(new String(buffer, StandardCharsets.UTF_8));
 							int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
 							if(open==-1||close==-1) {
-								continue;
-							}
-							
-							while(close>open&&sb.charAt(--close) == '}');
-							if(close==-1) {
 								continue;
 							}
 							sb.insert(close, ',');
 							sb.insert(++close, soundslist);
 							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
-							zos.write(sb.toString().getBytes());
+							zos.write(sb.toString().getBytes(StandardCharsets.UTF_8));
 							zos.closeEntry();
 							soundsjsonappended = true;
 							continue;
 						}
 						entry = new ZipEntry(entryname);
 						zos.putNextEntry(entry);
-		                while ((len = zis.read(buffer)) != -1) {
-		                	zos.write(buffer, 0, len);
-		                }
+						zos.write(buffer, 0, zis.read(buffer));
 		                zos.closeEntry();
 					}
 					zis.close();
 				}
-				for(short i = musicfilessize; --i>-1;) {
+				for(int i = musicfilessize; --i>-1;) {
 					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
 		            zos.write(topack[i]);
 		            zos.closeEntry();
@@ -217,7 +219,7 @@ public final class ResourcePacker extends Thread {
 				if(!soundsjsonappended) {
 					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 					zos.write("{".getBytes());
-					zos.write(soundslist.getBytes());
+					zos.write(soundslist.getBytes(StandardCharsets.UTF_8));
 					zos.write("}".getBytes());
 					zos.closeEntry();
 				}
@@ -234,8 +236,7 @@ public final class ResourcePacker extends Thread {
 				} catch (IOException e) {
 				}
 			}
-			
-			byte[] buf = Arrays.copyOf(baos.toByteArray(), baos.size());
+			byte[] buf = baos.toByteArray();
 			FileOutputStream fos;
 			try {
 				fos = new FileOutputStream(resourcefile, false);

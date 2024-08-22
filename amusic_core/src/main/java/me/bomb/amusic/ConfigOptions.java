@@ -56,7 +56,7 @@ public final class ConfigOptions {
 		if (!configfile.exists()) {
 			InputStream is = ConfigOptions.class.getClassLoader().getResourceAsStream("config.yml");
 			try {
-				bytes = new byte[512];
+				bytes = new byte[0x0200];
 				bytes = Arrays.copyOf(bytes, is.read(bytes));
 			} catch (IOException e) {
 			}
@@ -73,8 +73,15 @@ public final class ConfigOptions {
 		} else {
 			try {
 				InputStream is = new FileInputStream(configfile);
-				bytes = new byte[is.available()];
-				is.read(bytes);
+				long filesize = configfile.length();
+				if(filesize > 0x00010000) {
+					filesize = 0x00010000;
+				}
+				bytes = new byte[(int) filesize];
+				int size = is.read(bytes);
+				if(size < filesize) {
+					bytes = Arrays.copyOf(bytes, size);
+				}
 				is.close();
 			} catch (IOException e) {
 			}

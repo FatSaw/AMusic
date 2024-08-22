@@ -34,7 +34,7 @@ public enum LangOptions {
 		if (!langfile.exists()) {
 			try {
 				InputStream in = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
-				buf = new byte[8096];
+				buf = new byte[0x2000];
 				buf = Arrays.copyOf(buf, in.read(buf));
 				in.close();
 				OutputStream out = new FileOutputStream(langfile);
@@ -46,9 +46,16 @@ public enum LangOptions {
 			}
 		} else {
 			try {
+				long filesize = langfile.length();
+				if(filesize > 0x7FFFFFFD) {
+					filesize = 0x7FFFFFFD;
+				}
 				FileInputStream in = new FileInputStream(langfile);
-				buf = new byte[in.available()];
-				in.read(buf);
+				buf = new byte[(int) filesize];
+				int size = in.read(buf);
+				if(size < filesize) {
+					buf = Arrays.copyOf(buf, size);
+				}
 				in.close();
 			} catch (IOException e) {
 			}

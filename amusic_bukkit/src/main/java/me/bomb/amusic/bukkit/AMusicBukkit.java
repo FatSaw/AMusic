@@ -15,6 +15,7 @@ import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundStopper;
+import me.bomb.amusic.bukkit.command.LangOptions;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
 import me.bomb.amusic.bukkit.command.LoadmusicTabComplete;
 import me.bomb.amusic.bukkit.command.PlaymusicCommand;
@@ -41,8 +42,8 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
-		String nmsver = Bukkit.getServer().getClass().getPackage().getName().substring(23);
-		byte ver = Byte.valueOf(nmsver.split("_", 3)[1]);
+		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
+		byte ver = Byte.valueOf(nmsversion.split("_", 3)[1]);
 		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
@@ -58,21 +59,21 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		boolean waitacception = true;
 		SoundStopper soundstopper;
-		switch (nmsver) {
-		case "v1_7_R4":
+		switch (ver) {
+		case 7:
 			packsender = new LegacyPackSender_1_7_R4();
 			soundstopper = new LegacySoundStopper_1_7_R4();
 			waitacception = false;
 		break;
-		case "v1_8_R3":
+		case 8:
 			packsender = new LegacyPackSender_1_8_R3();
 			soundstopper = new LegacySoundStopper_1_8_R3();
 		break;
-		case "v1_9_R2":
+		case 9:
 			packsender = new LegacyPackSender_1_9_R2();
 			soundstopper = new LegacySoundStopper_1_9_R2();
 		break;
-		case "v1_10_R1":
+		case 10:
 			packsender = new LegacyPackSender_1_10_R1();
 			soundstopper = new BukkitSoundStopper();
 		break;
@@ -89,6 +90,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
+		LangOptions.loadLang(langfile, ver < 16);
 		amusic.setAPI();
 	}
 

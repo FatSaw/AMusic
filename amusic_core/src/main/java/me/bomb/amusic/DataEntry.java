@@ -47,7 +47,7 @@ public final class DataEntry {
 			filesha1 = sha1hash.digest();
 		} catch (IOException e) {
 		}	
-		for (byte i = 0; i < 20; ++i) {
+		for(byte i = 20;--i > -1;) {
 			if (sha1[i] != filesha1[i]) {
 				return false;
 			}

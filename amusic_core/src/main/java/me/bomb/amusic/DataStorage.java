@@ -94,7 +94,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 					fis.close();
 					continue;
 				}
-				int packedsize = ((0xFF & buf[3]) << 24) | ((0xFF & buf[2]) << 16) | ((0xFF & buf[1]) << 8) | (0xFF & buf[0]);
+				int packedsize = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0];
 				buf = new byte[packednamelength];
 				fis.read(buf);
 				String packedname = new String(buf, StandardCharsets.UTF_8);
@@ -103,7 +103,8 @@ public class DataStorage extends me.bomb.amusic.Data {
 					fis.close();
 					continue;
 				}
-				short soundcount = (short) (buf[0] & 0xFF | (buf[1]<<8));
+				int soundcount = 0x0000FFFF;
+				soundcount &= 0xFF & buf[0] | buf[1] << 8;
 				byte[] namelengths = new byte[soundcount];
 				buf = new byte[soundcount<<1];
 				fis.read(namelengths);
@@ -198,7 +199,9 @@ public class DataStorage extends me.bomb.amusic.Data {
 						++start;
 						continue;
 					}
-					if(soundcount > 32767) soundcount = 32767;
+					if(soundcount > 0x0000FFFF) {
+						soundcount = 0x0000FFFF;
+					}
 					
 					try {
 						FileOutputStream fos = new FileOutputStream(amusicpackedinfo, false);
@@ -223,8 +226,8 @@ public class DataStorage extends me.bomb.amusic.Data {
 						fos.write(dataentry.sha1); //SHA1
 						byte[] packednamebytes = dataentry.name.getBytes(StandardCharsets.UTF_8);
 						int packednamelength = packednamebytes.length;
-						if(packednamelength > 255) {
-							packednamelength = 255;
+						if(packednamelength > 0xFF) {
+							packednamelength = 0xFF;
 							packednamebytes = Arrays.copyOf(packednamebytes, packednamelength);
 						}
 						fos.write((byte) packednamelength); //PACKED FILE PATH
@@ -241,9 +244,9 @@ public class DataStorage extends me.bomb.amusic.Data {
 						while(i < soundcount) {
 							byte[] soundnamebytes = dataentry.sounds.get(i).getBytes(StandardCharsets.UTF_8);
 							int soundnamelength = soundnamebytes.length;
-							if(soundnamelength > 255) {
-								soundnamelength = 255;
-								soundnamebytes = Arrays.copyOf(soundnamebytes, 255);
+							if(soundnamelength > 0xFF) {
+								soundnamelength = 0xFF;
+								soundnamebytes = Arrays.copyOf(soundnamebytes, soundnamelength);
 							}
 							totalsoundnamelength += (byte) soundnamelength;
 							anames[i] = soundnamebytes;

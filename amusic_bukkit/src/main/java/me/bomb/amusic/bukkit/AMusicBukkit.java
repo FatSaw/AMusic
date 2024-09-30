@@ -42,8 +42,13 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
-		String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
-		byte ver = Byte.valueOf(nmsversion.split("_", 3)[1]);
+		byte ver = 127;
+		try {
+			String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
+			ver = Byte.valueOf(nmsversion.split("_", 3)[1]);
+		} catch (StringIndexOutOfBoundsException e) {
+		}
+		
 		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();

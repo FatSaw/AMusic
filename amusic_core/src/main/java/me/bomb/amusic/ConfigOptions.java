@@ -89,9 +89,9 @@ public final class ConfigOptions {
 		SimpleConfiguration sc = new SimpleConfiguration(bytes);
 		bytes = null;
 		
-		host = sc.getStringOrDefault("server.host", "127.0.0.1:25530");
+		host = sc.getStringOrDefault("server\0host", "127.0.0.1:25530");
 		InetAddress ip = null;
-		String ipstr = sc.getStringOrDefault("server.ip", null);
+		String ipstr = sc.getStringOrDefault("server\0ip", null);
 		if(ipstr!=null) {
 			try {
 				ip = InetAddress.getByName(ipstr);
@@ -100,28 +100,28 @@ public final class ConfigOptions {
 		}
 		
 		this.ip = ip;
-		port = sc.getIntOrDefault("server.port", 25530);
-		backlog = sc.getIntOrDefault("server.backlog", 50);
-		processpack = sc.getBooleanOrDefault("resource.processpack", true);
-		servercache = sc.getBooleanOrDefault("resource.cache.server", true);
-		clientcache = sc.getBooleanOrDefault("resource.cache.client", true);
-		strictdownloaderlist = sc.getBooleanOrDefault("server.strictdownloaderlist", true);
+		port = sc.getIntOrDefault("server\0port", 25530);
+		backlog = sc.getIntOrDefault("server\0backlog", 50);
+		processpack = sc.getBooleanOrDefault("resource\0processpack", true);
+		servercache = sc.getBooleanOrDefault("resource\0cache\0server", true);
+		clientcache = sc.getBooleanOrDefault("resource\0cache\0client", true);
+		strictdownloaderlist = sc.getBooleanOrDefault("server\0strictdownloaderlist", true);
 		
-		byte[] salt = sc.getBytesBase64OrDefault("server.tokensalt", new byte[0]);
+		byte[] salt = sc.getBytesBase64OrDefault("server\0tokensalt", new byte[0]);
 		
 		if(salt == null || salt.length < 2) {
 			tokensalt = null;
 		} else {
 			tokensalt = salt;
 		}
-		useconverter = sc.getBooleanOrDefault("resource.encoder.use", false);
-		String ffmpegbinartypath = sc.getStringOrDefault("resource.encoder.ffmpegbinary", null);
+		useconverter = sc.getBooleanOrDefault("resource\0encoder\0use", false);
+		String ffmpegbinartypath = sc.getStringOrDefault("resource\0encoder\0ffmpegbinary", null);
 		ffmpegbinary = ffmpegbinartypath == null ? null : new File(ffmpegbinartypath);
-		bitrate = sc.getIntOrDefault("resource.encoder.bitrate", 65000);
-		channels = (byte) sc.getIntOrDefault("resource.encoder.channels", 2);
-		samplingrate = sc.getIntOrDefault("resource.encoder.samplingrate", 44100);
-		encodetracksasynchronly = sc.getBooleanOrDefault("resource.encoder.async", true);
-		waitacception = sc.getBooleanOrDefault("server.waitacception", waitacception);
+		bitrate = sc.getIntOrDefault("resource\0encoder\0bitrate", 65000);
+		channels = (byte) sc.getIntOrDefault("resource\0encoder\0channels", 2);
+		samplingrate = sc.getIntOrDefault("resource\0encoder\0samplingrate", 44100);
+		encodetracksasynchronly = sc.getBooleanOrDefault("resource\0encoder\0async", true);
+		waitacception = sc.getBooleanOrDefault("server\0waitacception", waitacception);
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxpacksize;
 		this.musicdir = musicdir;

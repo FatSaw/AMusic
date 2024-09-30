@@ -64,9 +64,9 @@ public enum LangOptions {
 		String[] locales = sc.getSubKeys("");
 		int i = locales.length;
 		while(--i > -1) {
-			String locale = locales[i];
+			String locale = locales[i], locale0 = locale.concat("\0");
 			for (LangOptions lang : values()) {
-				String optionpath = locale.concat(".").concat(lang.name().replace("_", "."));
+				String optionpath = locale0.concat(lang.name().replace("_", "\0"));
 				String msg = sc.getStringOrDefault(optionpath, optionpath);
 				lang.text.put(locale, msg);
 			}

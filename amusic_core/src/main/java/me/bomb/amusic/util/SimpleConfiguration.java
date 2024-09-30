@@ -93,7 +93,7 @@ public final class SimpleConfiguration {
 				for(byte k = 1; k < level;++k) {
 					String apk = pkey[k];
 					if(apk==null) continue;
-					fullkey.append('.');
+					fullkey.append('\0');
 					fullkey.append(apk);
 				}
 				fullkey.delete(0, 1);
@@ -104,6 +104,10 @@ public final class SimpleConfiguration {
 			}
 		}
 		this.kv = kv;
+	}
+	
+	public boolean hasKey(String key) {
+		return kv.containsKey(key);
 	}
 	
 	public boolean getBooleanOrDefault(String key, boolean defaultvalue) {
@@ -148,7 +152,7 @@ public final class SimpleConfiguration {
 			if(keylength < parentsectionlength || !key.startsWith(parentsection)) {
 				continue;
 			}
-			int sectionend = key.indexOf('.', parentsectionlength);
+			int sectionend = key.indexOf('\0', parentsectionlength);
 			if(sectionend == -1) {
 				sectionend = keylength;
 			}

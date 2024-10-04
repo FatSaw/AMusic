@@ -2,6 +2,7 @@ package me.bomb.amusic.bukkit;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
@@ -95,20 +96,25 @@ public final class AMusicBukkit extends JavaPlugin {
 		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
-		LangOptions.loadLang(langfile, ver < 16);
+		LangOptions.loadLang(langfile, ver > 15);
 		amusic.setAPI();
 	}
 
 	//PLUGIN INIT START
 	public void onEnable() {
+		Random random = new Random();
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender));
+		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender, random));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
+		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(positiontracker);
 		PluginCommand playmusiccommand = getCommand("playmusic");
-		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker));
-		playmusiccommand.setTabCompleter(new PlaymusicTabComplete(positiontracker));
+		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker, random, true));
+		playmusiccommand.setTabCompleter(pmtc);
+		PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
+		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(positiontracker, random, false));
+		playmusicntrackablecommand.setTabCompleter(pmtc);
 		PluginCommand repeatcommand = getCommand("repeat");
-		repeatcommand.setExecutor(new RepeatCommand(positiontracker));
+		repeatcommand.setExecutor(new RepeatCommand(positiontracker, random));
 		repeatcommand.setTabCompleter(new RepeatTabComplete());
 		if(playerips != null) {
 			playerips.clear();

@@ -166,7 +166,7 @@ public final class AMusic {
 	/**
 	 * Loads resource pack to player.
 	 */
-	public void loadPack(UUID playeruuid, String name, boolean update) throws FileNotFoundException {
+	public void loadPack(UUID[] playeruuid, String name, boolean update) throws FileNotFoundException {
 		ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
 	}
 

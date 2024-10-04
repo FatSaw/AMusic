@@ -13,7 +13,7 @@ import me.bomb.amusic.resourceserver.ResourceManager;
 public final class ResourceFactory implements Runnable {
 	
 	private final String id, name;
-	private final UUID target;
+	private final UUID[] targets;
 	private final ConfigOptions configoptions;
 	private final Data data;
 	private final ResourceManager resourcemanager;
@@ -25,9 +25,9 @@ public final class ResourceFactory implements Runnable {
 	private final byte[] sha1;
 	private final File resourcefile;
 
-	private ResourceFactory(ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String id, boolean update) throws FileNotFoundException {
+	private ResourceFactory(ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID[] targets, String id, boolean update) throws FileNotFoundException {
 		this.id = id;
-		this.target = target;
+		this.targets = targets;
 		this.configoptions = configoptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
@@ -84,7 +84,7 @@ public final class ResourceFactory implements Runnable {
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.id = id;
-		this.target = null;
+		this.targets = null;
 		this.packsender = null;
 		id = toBase64(id); //now name is safe for files
 		String name = null;
@@ -142,12 +142,12 @@ public final class ResourceFactory implements Runnable {
 		return new String(filtered);
 	}
 
-	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID target, String name, boolean update) throws FileNotFoundException {
+	public static boolean load(ConfigOptions configoptions,Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID[] targets, String name, boolean update) throws FileNotFoundException {
 		if(name==null || name.isEmpty()) {
 			return false;
 		}
 		boolean processpack = configoptions.processpack;
-		if (target == null && processpack) {
+		if ((targets == null || targets.length == 0) && processpack) {
 			ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, name);
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();
@@ -156,13 +156,13 @@ public final class ResourceFactory implements Runnable {
 			return false;
 		}
 		update &= processpack;
-		ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, target, name, update);
+		ResourceFactory resourcepacked = new ResourceFactory(configoptions, data, resourcemanager, positiontracker, packsender, targets, name, update);
 		if (resourcepacked.resourcepacker == null) {
-			positiontracker.remove(target);
+			positiontracker.removeAll(targets);
 			return true;
 		} else if(processpack) {
 			resourcepacked.resourcepacker.start();
-			positiontracker.remove(target);
+			positiontracker.removeAll(targets);
 			return true;
 		}
 		return false;
@@ -180,23 +180,25 @@ public final class ResourceFactory implements Runnable {
 				return;
 			}
 		}
-		if(target == null || packsender == null) {
+		if(targets == null || packsender == null) {
 			return;
 		}
 		int soundssize = soundnames.size();
 		if (soundssize != soundlengths.size()) {
 			return;
 		}
-		StringBuilder sb = new StringBuilder("http://");
-		sb.append(configoptions.host);
-		sb.append("/");
-		sb.append(resourcemanager.add(target, this.resourcefile));
-		sb.append(".zip");
-		packsender.send(target, sb.toString(), this.sha1 == null ? resourcepacker.sha1 : this.sha1);
-		ArrayList<SoundInfo> soundinfos = new ArrayList<SoundInfo>(soundssize);
-		for(int i=0;i<soundssize;++i) {
-			soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
+		for(UUID target : targets) {
+			StringBuilder sb = new StringBuilder("http://");
+			sb.append(configoptions.host);
+			sb.append("/");
+			sb.append(resourcemanager.add(target, this.resourcefile));
+			sb.append(".zip");
+			packsender.send(target, sb.toString(), this.sha1 == null ? resourcepacker.sha1 : this.sha1);
+			ArrayList<SoundInfo> soundinfos = new ArrayList<SoundInfo>(soundssize);
+			for(int i=0;i<soundssize;++i) {
+				soundinfos.add(new SoundInfo(soundnames.get(i), soundlengths.get(i)));
+			}
+			positiontracker.setPlaylistInfo(target, this.id, soundinfos);
 		}
-		positiontracker.setPlaylistInfo(target, this.id, soundinfos);
 	}
 }

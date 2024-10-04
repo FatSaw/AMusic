@@ -43,6 +43,74 @@ public final class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_nopermissionother.sendMsg(sender);
 				return true;
 			}
+			
+			if (args[0].equals("@p")) {
+				Location executorlocation = null;
+				Player senderplayer = null;
+				if (sender instanceof BlockCommandSender) {
+					BlockCommandSender commandblocksender = (BlockCommandSender) sender;
+					executorlocation = commandblocksender.getBlock().getLocation();
+				} else if (sender instanceof Player) {
+					senderplayer = (Player) sender;
+					executorlocation = senderplayer.getLocation();
+				}
+				if(executorlocation == null) {
+					LangOptions.playmusic_unavilableselector_near.sendMsg(sender);
+					return true;
+				}
+				List<Player> players = executorlocation.getWorld().getPlayers();
+				Player closestplayer = null;
+				double mindistance = Double.MAX_VALUE;
+				for(Player player : players) {
+					double distance = executorlocation.distance(player.getLocation());
+					if(player == senderplayer || distance > mindistance) {
+						continue;
+					}
+					mindistance = distance;
+					closestplayer = player;
+				}
+				args[0] = closestplayer.getName();
+			}
+			if (args[0].equals("@r")) {
+				Location executorlocation = null;
+				Player senderplayer = null;
+				if (sender instanceof BlockCommandSender) {
+					BlockCommandSender commandblocksender = (BlockCommandSender) sender;
+					executorlocation = commandblocksender.getBlock().getLocation();
+				} else if (sender instanceof Player) {
+					senderplayer = (Player) sender;
+					executorlocation = senderplayer.getLocation();
+				}
+				if(executorlocation == null) {
+					LangOptions.playmusic_unavilableselector_random.sendMsg(sender);
+					return true;
+				}
+				List<Player> players = executorlocation.getWorld().getPlayers();
+				int index = random.nextInt(players.size());
+				Player randomplayer = players.get(index);
+				args[0] = randomplayer.getName();
+			}
+			if (args[0].equals("@a")) {
+				Location executorlocation = null;
+				Player senderplayer = null;
+				if (sender instanceof BlockCommandSender) {
+					BlockCommandSender commandblocksender = (BlockCommandSender) sender;
+					executorlocation = commandblocksender.getBlock().getLocation();
+				} else if (sender instanceof Player) {
+					senderplayer = (Player) sender;
+					executorlocation = senderplayer.getLocation();
+				}
+				if(executorlocation == null) {
+					LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
+					return true;
+				}
+				List<Player> players = executorlocation.getWorld().getPlayers();
+				for(int i = players.size(); --i > -1;) {
+					positiontracker.stopMusic(players.get(i).getUniqueId());
+				}
+				return true;
+			}
+			
 			Player target = Bukkit.getPlayerExact(args[0]);
 			if(target==null) {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);

@@ -96,7 +96,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
-		LangOptions.loadLang(langfile, ver < 16);
+		LangOptions.loadLang(langfile, ver > 15);
 		amusic.setAPI();
 	}
 

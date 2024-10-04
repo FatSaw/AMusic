@@ -79,7 +79,7 @@ public class LoadmusicCommand implements SimpleCommand {
 			}
 			String name = args[1];
 			try {
-				if (!ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
+				if (!ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, new UUID[] {targetuuid}, name, false)) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return;
 				}

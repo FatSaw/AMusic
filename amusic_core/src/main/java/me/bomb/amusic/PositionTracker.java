@@ -220,6 +220,19 @@ public final class PositionTracker extends Thread {
 		} catch (NoSuchMethodError e) {
 		}
 	}
+	
+	/**
+	 * Removes players from {@link PositionTracker#trackers}, {@link PositionTracker#playlistinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
+	 */
+	public void removeAll(UUID[] uuids) {
+		for(UUID uuid : uuids) {
+			trackers.remove(uuid);
+			playlistinfo.remove(uuid);
+			repeaters.remove(uuid);
+			loadedplaylistnames.remove(uuid);
+		}
+	}
+	
 	/**
 	 * Removes player from {@link PositionTracker#trackers}, {@link PositionTracker#playlistinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
 	 */

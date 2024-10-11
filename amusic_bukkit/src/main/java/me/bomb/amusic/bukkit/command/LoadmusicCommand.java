@@ -29,15 +29,17 @@ public final class LoadmusicCommand implements CommandExecutor {
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final PackSender packsender;
+	private final SelectorProcessor selectorprocessor;
 	private final Random random;
 
-	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, Random random) {
+	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor, Random random) {
 		LangOptions.values();
 		this.configuptions = configuptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.packsender = packsender;
+		this.selectorprocessor = selectorprocessor;
 		this.random = random;
 	}
 

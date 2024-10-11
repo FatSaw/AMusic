@@ -20,10 +20,12 @@ import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 
 public final class PlaymusicCommand implements CommandExecutor {
 	private final PositionTracker positiontracker;
+	private final SelectorProcessor selectorprocessor;
 	private final Random random;
 	private final boolean trackable;
-	public PlaymusicCommand(PositionTracker positiontracker, Random random, boolean trackable) {
+	public PlaymusicCommand(PositionTracker positiontracker, SelectorProcessor selectorprocessor, Random random, boolean trackable) {
 		this.positiontracker = positiontracker;
+		this.selectorprocessor = selectorprocessor;
 		this.random = random;
 		this.trackable = trackable;
 	}

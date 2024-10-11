@@ -16,9 +16,11 @@ import me.bomb.amusic.RepeatType;
 
 public final class RepeatCommand implements CommandExecutor {
 	private final PositionTracker positiontracker;
+	private final SelectorProcessor selectorprocessor;
 	private final Random random;
-	public RepeatCommand(PositionTracker positiontracker, Random random) {
+	public RepeatCommand(PositionTracker positiontracker, SelectorProcessor selectorprocessor, Random random) {
 		this.positiontracker = positiontracker;
+		this.selectorprocessor = selectorprocessor;
 		this.random = random;
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {

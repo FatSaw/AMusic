@@ -23,6 +23,7 @@ import me.bomb.amusic.bukkit.command.PlaymusicCommand;
 import me.bomb.amusic.bukkit.command.PlaymusicTabComplete;
 import me.bomb.amusic.bukkit.command.RepeatCommand;
 import me.bomb.amusic.bukkit.command.RepeatTabComplete;
+import me.bomb.amusic.bukkit.command.SelectorProcessor;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_10_R1;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_8_R3;
@@ -103,18 +104,19 @@ public final class AMusicBukkit extends JavaPlugin {
 	//PLUGIN INIT START
 	public void onEnable() {
 		Random random = new Random();
+		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), random);
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender, random));
+		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor, random));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
 		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(positiontracker);
 		PluginCommand playmusiccommand = getCommand("playmusic");
-		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker, random, true));
+		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, random, true));
 		playmusiccommand.setTabCompleter(pmtc);
 		PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
-		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(positiontracker, random, false));
+		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, random, false));
 		playmusicntrackablecommand.setTabCompleter(pmtc);
 		PluginCommand repeatcommand = getCommand("repeat");
-		repeatcommand.setExecutor(new RepeatCommand(positiontracker, random));
+		repeatcommand.setExecutor(new RepeatCommand(positiontracker, selectorprocessor, random));
 		repeatcommand.setTabCompleter(new RepeatTabComplete());
 		if(playerips != null) {
 			playerips.clear();

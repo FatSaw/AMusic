@@ -1,13 +1,11 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.io.FileNotFoundException;
-import java.util.List;
-import java.util.Random;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -30,9 +28,8 @@ public final class LoadmusicCommand implements CommandExecutor {
 	private final PositionTracker positiontracker;
 	private final PackSender packsender;
 	private final SelectorProcessor selectorprocessor;
-	private final Random random;
 
-	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor, Random random) {
+	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor) {
 		LangOptions.values();
 		this.configuptions = configuptions;
 		this.data = data;
@@ -40,7 +37,6 @@ public final class LoadmusicCommand implements CommandExecutor {
 		this.positiontracker = positiontracker;
 		this.packsender = packsender;
 		this.selectorprocessor = selectorprocessor;
-		this.random = random;
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -61,88 +57,65 @@ public final class LoadmusicCommand implements CommandExecutor {
 				} else if (!sender.hasPermission("amusic.loadmusic.other")) {
 					LangOptions.loadmusic_nopermissionother.sendMsg(sender);
 					return true;
-				}
-				
-				if (args[0].equals("@p")) {
-					Location executorlocation = null;
-					Player senderplayer = null;
-					if (sender instanceof BlockCommandSender) {
-						BlockCommandSender commandblocksender = (BlockCommandSender) sender;
-						executorlocation = commandblocksender.getBlock().getLocation();
-					} else if (sender instanceof Player) {
-						senderplayer = (Player) sender;
-						executorlocation = senderplayer.getLocation();
-					}
-					if(executorlocation == null) {
-						LangOptions.loadmusic_unavilableselector_near.sendMsg(sender);
-						return true;
-					}
-					List<Player> players = executorlocation.getWorld().getPlayers();
-					Player closestplayer = null;
-					double mindistance = Double.MAX_VALUE;
-					for(Player player : players) {
-						double distance = executorlocation.distance(player.getLocation());
-						if(player == senderplayer || distance > mindistance) {
-							continue;
+				} else {
+					if (args[0].startsWith("@p")) {
+						String closestplayername = selectorprocessor.getNearest(sender, args[0].substring(2));
+						
+						if(closestplayername == null) {
+							LangOptions.loadmusic_unavilableselector_near.sendMsg(sender);
+							return true;
 						}
-						mindistance = distance;
-						closestplayer = player;
-					}
-					args[0] = closestplayer.getName();
-				}
-				if (args[0].equals("@r")) {
-					Location executorlocation = null;
-					Player senderplayer = null;
-					if (sender instanceof BlockCommandSender) {
-						BlockCommandSender commandblocksender = (BlockCommandSender) sender;
-						executorlocation = commandblocksender.getBlock().getLocation();
-					} else if (sender instanceof Player) {
-						senderplayer = (Player) sender;
-						executorlocation = senderplayer.getLocation();
-					}
-					if(executorlocation == null) {
-						LangOptions.loadmusic_unavilableselector_random.sendMsg(sender);
-						return true;
-					}
-					List<Player> players = executorlocation.getWorld().getPlayers();
-					int index = random.nextInt(players.size());
-					Player randomplayer = players.get(index);
-					args[0] = randomplayer.getName();
-				}
-				if (args[0].equals("@a")) {
-					Location executorlocation = null;
-					Player senderplayer = null;
-					if (sender instanceof BlockCommandSender) {
-						BlockCommandSender commandblocksender = (BlockCommandSender) sender;
-						executorlocation = commandblocksender.getBlock().getLocation();
-					} else if (sender instanceof Player) {
-						senderplayer = (Player) sender;
-						executorlocation = senderplayer.getLocation();
-					}
-					if(executorlocation == null) {
-						LangOptions.loadmusic_unavilableselector_all.sendMsg(sender);
-						return true;
-					}
-					List<Player> players = executorlocation.getWorld().getPlayers();
-					UUID[] targetarray = new UUID[players.size()];
-					for(int i = players.size(); --i > -1;) {
-						targetarray[i] = players.get(i).getUniqueId();
+						args[0] = closestplayername;
 					}
 					
-					if(args.length>2) {
-						StringBuilder sb = new StringBuilder(args[1]);
-						for(int i = 2;i < args.length;++i) {
-							sb.append(' ');
-							sb.append(args[i]);
+					if (args[0].startsWith("@r")) {
+						String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
+						if(randomplayername == null) {
+							LangOptions.loadmusic_unavilableselector_all.sendMsg(sender);
+							return true;
 						}
-						args[1] = sb.toString();
+						args[0] = randomplayername;
 					}
-					String name = args[1];
-					
-					this.executeCommand(sender, name, targetarray);
-					return true;
+					if (args[0].equals("@a")) {
+						Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+						int i = players.size();
+						UUID[] targetarray = new UUID[i];
+						Iterator<? extends Player> playersiterator = players.iterator();
+						while(playersiterator.hasNext()) {
+							targetarray[--i] = playersiterator.next().getUniqueId();
+						}
+						
+						if(args.length>2) {
+							StringBuilder sb = new StringBuilder(args[1]);
+							for(i = 2;i < args.length;++i) {
+								sb.append(' ');
+								sb.append(args[i]);
+							}
+							args[1] = sb.toString();
+						}
+						String name = args[1];
+						
+						this.executeCommand(sender, name, targetarray);
+						return true;
+					} else if (args[0].startsWith("@a")) {
+						UUID[] targetarray =  selectorprocessor.getSameWorld(sender, args[0].substring(2));
+						if(targetarray == null) {
+							LangOptions.loadmusic_unavilableselector_all.sendMsg(sender);
+							return true;
+						}
+						if(args.length>2) {
+							StringBuilder sb = new StringBuilder(args[1]);
+							for(int i = 2;i < args.length;++i) {
+								sb.append(' ');
+								sb.append(args[i]);
+							}
+							args[1] = sb.toString();
+						}
+						String name = args[1];
+						this.executeCommand(sender, name, targetarray);
+						return true;
+					}
 				}
-				
 				
 				Player target = Bukkit.getPlayerExact(args[0]);
 				if (target == null) {

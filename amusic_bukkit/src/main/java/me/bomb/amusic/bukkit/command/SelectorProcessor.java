@@ -22,7 +22,7 @@ public final class SelectorProcessor {
 		this.random = random;
 	}
 	
-	protected UUID getNearest(CommandSender sender, String selectorarg) {
+	protected String getNearest(CommandSender sender, String selectorarg) {
 		Location executorlocation;
 		if((executorlocation = getSenderLocation(sender)) == null) {
 			return null;
@@ -34,11 +34,13 @@ public final class SelectorProcessor {
 			players = aplayers.toArray(new Player[aplayers.size()]);
 		}
 		String[] args = getSelectorArgs(selectorarg);
-		filterPosition(players, args);
-		double[] distances = filterDistance(players, args, executorlocation);
-		sortNull(players, distances);
-		int i = players.length;
-		while(--i > -1 && players[i] == null);
+		int playerlength = players.length;
+		filterPosition(players, playerlength, args);
+		playerlength = sortNullCount(players);
+		double[] distances = filterDistance(players, playerlength, args, executorlocation);
+		playerlength = distances.length == 0 ? sortNullCount(players) : sortNullCount(players, distances);
+
+		int i = playerlength;
 		int j = i;
 		double distance = Double.MAX_VALUE;
 		while(--i > -1) {
@@ -46,10 +48,10 @@ public final class SelectorProcessor {
 			distance = distances[i];
 			j = i;
 		}
-		return players[j].getUniqueId();
+		return players[j].getName();
 	}
 	
-	protected UUID getRandom(CommandSender sender, String selectorarg) {
+	protected String getRandom(CommandSender sender, String selectorarg) {
 		Location executorlocation;
 		if((executorlocation = getSenderLocation(sender)) == null) {
 			return null;
@@ -61,12 +63,12 @@ public final class SelectorProcessor {
 			players = aplayers.toArray(new Player[aplayers.size()]);
 		}
 		String[] args = getSelectorArgs(selectorarg);
-		filterPosition(players, args);
-		filterDistance(players, args, executorlocation);
-		sortNull(players);
-		int i = players.length;
-		while(--i > -1 && players[i] == null);
-		return players[random.nextInt(i)].getUniqueId();
+		int playerlength = players.length;
+		filterPosition(players, playerlength, args);
+		playerlength = sortNullCount(players);
+		filterDistance(players, playerlength, args, executorlocation);
+		playerlength = sortNullCount(players);
+		return players[random.nextInt(playerlength)].getName();
 	}
 	
 	protected UUID[] getSameWorld(CommandSender sender, String selectorarg) {
@@ -81,15 +83,16 @@ public final class SelectorProcessor {
 			players = aplayers.toArray(new Player[aplayers.size()]);
 		}
 		String[] args = getSelectorArgs(selectorarg);
-		filterPosition(players, args);
-		
-		double[] distances = filterDistance(players, args, executorlocation);
-		filterCountDistance(players, distances, args, random);
-		
-		filterRandom(players, args, random);
-		sortNull(players, distances);
-		int i = players.length;
-		while(--i > -1 && players[i] == null);
+		int playerlength = players.length;
+		filterPosition(players, playerlength, args);
+		playerlength = sortNullCount(players);
+		double[] distances = filterDistance(players, playerlength, args, executorlocation);
+		playerlength = distances.length == 0 ? sortNullCount(players) : sortNullCount(players, distances);
+		filterCountDistance(players, playerlength, distances, args, random);
+		playerlength = sortNullCount(players);
+		filterRandom(players, playerlength, args, random);
+		playerlength = sortNullCount(players);
+		int i = playerlength;
 		UUID[] uuids = new UUID[i];
 		while(--i > -1) {
 			uuids[i] = players[i].getUniqueId();
@@ -102,8 +105,8 @@ public final class SelectorProcessor {
 	 * Max separator count = 0
 	 * Max arg = 17
 	 */
-	private static final void filterRandom(Player[] players, String[] args, Random random) {
-		int i = args.length, j = players.length;
+	private static final void filterRandom(Player[] players, final int playerscount, String[] args, Random random) {
+		int i = args.length, j = playerscount;
 		if (i == 0 || j == 0) return;
 		while(--i > -1) {
 			if(args[i] == null) continue;
@@ -117,7 +120,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				int k = 0;
 				while(--j > -1) {
 					if(players[j] == null) continue;
@@ -130,7 +133,7 @@ public final class SelectorProcessor {
 				while(--k > -1) {
 					continue;
 				}
-				int[] toremove = unrepeatableRandom(random, players.length, k);
+				int[] toremove = unrepeatableRandom(random, playerscount, k);
 				j = toremove.length;
 				while(--j > -1) {
 					players[j] = null;
@@ -146,8 +149,8 @@ public final class SelectorProcessor {
 	 * Max arg = 18
 	 */
 	// TODO Sorting by distance with same value randomization
-	private static final void filterCountDistance(Player[] players, double[] distances, String[] args, Random random) {
-		int i = args.length, j = players.length;
+	private static final void filterCountDistance(Player[] players, final int playerscount, double[] distances, String[] args, Random random) {
+		int i = args.length, j = playerscount;
 		if (i == 0 || j == 0 || distances.length == 0) return;
 		while(--i > -1) {
 			if(args[i] == null) continue;
@@ -161,14 +164,26 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
-				int k = 0;
-				while(--j > -1) {
-					if(players[j] == null || distances[j] == Double.NaN) continue;
-					++k;
-				}
+				j = playerscount;
 				
-				continue;
+				int k;
+				while(--j > -1) {
+					k = j;
+					while(--k > -1) {
+						double d1 = distances[j], d2 = distances[k];
+						if(d1 > d2) continue;
+						Player p = players[j];
+						players[j] = players[k];
+						players[k] = p;
+						distances[j] = d2;
+						distances[k] = d1;
+					}
+				}
+				while(--j > value) {
+					players[j] = null;
+					distances[j] = Double.NaN;
+				}
+				return;
 			}
 			if(args[i].startsWith("further=", 0)) {
 				args[i] = null;
@@ -180,41 +195,79 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
-				int k = 0;
+				j = playerscount;
+				int k;
 				while(--j > -1) {
-					if(players[j] == null || distances[j] == Double.NaN) continue;
-					++k;
+					k = j;
+					while(--k > -1) {
+						double d1 = distances[j], d2 = distances[k];
+						if(d1 < d2) continue;
+						Player p = players[j];
+						players[j] = players[k];
+						players[k] = p;
+						distances[j] = d2;
+						distances[k] = d1;
+					}
+				}
+				while(--j > value) {
+					players[j] = null;
+					distances[j] = Double.NaN;
 				}
 				
-				continue;
+				return;
 			}
 		}
 	}
 	
-	private static final void sortNull(Object[] object) {
+	private static final int sortNullCount(Object[] object) {
 		int i = object.length, j = -1;
 		while(true) {
-			while(++j < i && object[j] != null); //found first null
-			while(--i > j && object[i] == null); //found last not null
+			while(++j < i && object[j] != null || --i > j && object[i] == null);
+			if(j>i) break;
+			object[j] = object[i];
+			object[i] = null;
+		}
+		i = object.length;
+		while(--i > -1 && object[i] == null);
+		return ++i;
+	}
+	
+	/*private static final void sortNull(Object[] object) {
+		int i = object.length, j = -1;
+		while(true) {
+			while(++j < i && object[j] != null || --i > j && object[i] == null);
 			if(j>i) return;
 			object[j] = object[i];
 			object[i] = null;
 		}
-	}
+	}*/
 	
-	private static final void sortNull(Object[] object, double[] distance) {
+	private static final int sortNullCount(Object[] object, double[] distance) {
 		int i = object.length, j = -1;
 		while(true) {
-			while(++j < i && object[j] != null); //found first null
-			while(--i > j && object[i] == null); //found last not null
+			while(++j < i && object[j] != null || --i > j && object[i] == null);
+			if(j>i) break;
+			object[j] = object[i];
+			distance[j] = distance[i];
+			object[i] = null;
+			distance[i] = Double.NaN;
+		}
+		i = object.length;
+		while(--i > -1 && object[i] == null);
+		return ++i;
+	}
+	
+	/*private static final void sortNull(Object[] object, double[] distance) {
+		int i = object.length, j = -1;
+		while(true) {
+			while(++j < i && object[j] != null || --i > j && object[i] == null);
 			if(j>i) return;
 			object[j] = object[i];
 			distance[j] = distance[i];
 			object[i] = null;
 			distance[i] = Double.NaN;
 		}
-	}
+	}*/
 	
 	/*private static final void sortNull(Object[] object, int j) {
 		int i = object.length;
@@ -224,8 +277,8 @@ public final class SelectorProcessor {
 		object[i] = null;
 	}*/
 	
-	private static final void sortByDistance(Player[] players, double[] distances, Random random) {
-		int j = players.length;
+	private static final void sortByDistance(Player[] players, final int playerscount, double[] distances, Random random) {
+		int j = playerscount;
 		if (j == 0 || distances.length == 0) return;
 		
 	}
@@ -247,8 +300,8 @@ public final class SelectorProcessor {
 	 * Max separator count = 5
 	 * Max arg = 96
 	 */
-	private static final void filterPosition(Player[] players, String[] args) {
-		int i = args.length, j = players.length;
+	private static final void filterPosition(Player[] players, final int playerscount, String[] args) {
+		int i = args.length, j = playerscount;
 		if (i == 0 || j == 0) return;
 		final double[] x = new double[j], y = new double[j], z = new double[j];
 		while(--j > -1) {
@@ -270,7 +323,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value < x[j]) {
@@ -289,7 +342,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value <= x[j]) {
@@ -308,7 +361,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value > x[j]) {
@@ -327,7 +380,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value >= x[j]) {
@@ -348,7 +401,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value < y[j]) {
@@ -367,7 +420,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value <= y[j]) {
@@ -386,7 +439,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value > y[j]) {
@@ -405,7 +458,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value >= y[j]) {
@@ -426,7 +479,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value < z[j]) {
@@ -445,7 +498,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value <= z[j]) {
@@ -464,7 +517,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value > z[j]) {
@@ -483,7 +536,7 @@ public final class SelectorProcessor {
 				} catch (NumberFormatException e) {
 					continue;
 				}
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value >= z[j]) {
@@ -500,8 +553,8 @@ public final class SelectorProcessor {
 	 * Max separator count = 1
 	 * Max arg = 36
 	 */
-	private static final double[] filterDistance(Player[] players, String[] args, Location location) {
-		int i = args.length, j = players.length;
+	private static final double[] filterDistance(Player[] players, final int playerscount, String[] args, Location location) {
+		int i = args.length, j = playerscount;
 		if (i == 0 || j == 0) return new double[0];
 		final double[] distancesqr = new double[j];
 		double sx = location.getX(), sy = location.getY(), sz = location.getZ();
@@ -533,7 +586,7 @@ public final class SelectorProcessor {
 					continue;
 				}
 				value*=value;
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value < distancesqr[j]) {
@@ -553,7 +606,7 @@ public final class SelectorProcessor {
 					continue;
 				}
 				value*=value;
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value > distancesqr[j]) {
@@ -573,7 +626,7 @@ public final class SelectorProcessor {
 					continue;
 				}
 				value*=value;
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value <= distancesqr[j]) {
@@ -593,7 +646,7 @@ public final class SelectorProcessor {
 					continue;
 				}
 				value*=value;
-				j = players.length;
+				j = playerscount;
 				while(--j > -1) {
 					if(players[j] == null) continue;
 					if(value >= distancesqr[j]) {

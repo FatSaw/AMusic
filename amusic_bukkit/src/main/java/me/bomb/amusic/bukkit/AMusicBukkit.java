@@ -103,20 +103,19 @@ public final class AMusicBukkit extends JavaPlugin {
 
 	//PLUGIN INIT START
 	public void onEnable() {
-		Random random = new Random();
-		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), random);
+		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor, random));
+		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
 		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(positiontracker);
 		PluginCommand playmusiccommand = getCommand("playmusic");
-		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, random, true));
+		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, true));
 		playmusiccommand.setTabCompleter(pmtc);
 		PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
-		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, random, false));
+		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, false));
 		playmusicntrackablecommand.setTabCompleter(pmtc);
 		PluginCommand repeatcommand = getCommand("repeat");
-		repeatcommand.setExecutor(new RepeatCommand(positiontracker, selectorprocessor, random));
+		repeatcommand.setExecutor(new RepeatCommand(positiontracker, selectorprocessor));
 		repeatcommand.setTabCompleter(new RepeatTabComplete());
 		if(playerips != null) {
 			playerips.clear();

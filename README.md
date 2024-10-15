@@ -36,15 +36,44 @@ playmusic - start/stop sound from loaded resourcepack
 
 `amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
 
-### Placeholders <playername>:
+### Selectors <playername>:
 `@n` - null target
 `@s` - self
 
-`loadmusic @s, @n`
+Argument format (`@p`, `@r`, `@a`): `[arg1,arg2,arg3,...]`
 
-`playmusic @s`
+- `loadmusic` `@s`, `@p`, `@r`, `@a`, `@n`
 
-`repeat @s`
+- `playmusic` `@s`, `@p`, `@r`, `@a`
+
+- `repeat` `@s`, `@p`, `@r`, `@a`
+
+#### Selector `@p`, `@r`, `@a` arguments
+##### Distance and position
+Args:
+- `dist`
+- `x`
+- `y`
+- `z`
+
+Format: `<arg><operation><double_value>`
+
+Avilable operations: `<=`, `<`, `>=`, `>`
+
+Description: `Distance and postition`
+
+#### Selector `@a` arguments
+##### Closer, further, random
+Args:
+- `closer`
+- `further`
+- `random`
+Format: `<arg><operation><int_value>`
+
+Avilable operations: `=`
+
+Description: `Limits player count`
+
 ### Commands for console without tab complete:
 `loadmusic @l` - get packed playlist(resourcepack) list
 

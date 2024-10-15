@@ -55,26 +55,17 @@ public final class RepeatCommand implements CommandExecutor {
 				}
 				args[0] = randomplayername;
 			}
-			if (args[0].equals("@a")) {
-				Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-				int i = players.size();
-				UUID[] targetarray = new UUID[i];
-				Iterator<? extends Player> playersiterator = players.iterator();
-				while(playersiterator.hasNext()) {
-					targetarray[--i] = playersiterator.next().getUniqueId();
-				}
-				this.executeCommand(sender, args[1].toLowerCase(), targetarray);
-				return true;
-			} else if (args[0].startsWith("@a")) {
-				UUID[] targetarray = selectorprocessor.getSameWorld(sender, args[0].substring(2));
+			
+			if(args[0].startsWith("@a")) {
+				UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
 				if(targetarray == null) {
-					LangOptions.repeat_unavilableselector_all.sendMsg(sender);
+					LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
 					return true;
 				}
-				
 				this.executeCommand(sender, args[1].toLowerCase(), targetarray);
 				return true;
 			}
+			
 			Player target = Bukkit.getPlayerExact(args[0]);
 			if (target == null) {
 				LangOptions.repeat_targetoffline.sendMsg(sender);

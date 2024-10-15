@@ -1,7 +1,5 @@
 package me.bomb.amusic.bukkit.command;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,27 +60,8 @@ public final class PlaymusicCommand implements CommandExecutor {
 					}
 					args[0] = randomplayername;
 				}
-				if (args[0].equals("@a")) {
-					Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-					int i = players.size();
-					UUID[] targetarray = new UUID[i];
-					Iterator<? extends Player> playersiterator = players.iterator();
-					while(playersiterator.hasNext()) {
-						targetarray[--i] = playersiterator.next().getUniqueId();
-					}
-					if(trackable) {
-						for(i = targetarray.length; --i > -1;) {
-							positiontracker.stopMusic(targetarray[i]);
-						}
-					} else {
-						for(i = targetarray.length; --i > -1;) {
-							positiontracker.stopMusicUntrackable(targetarray[i]);
-						}
-					}
-					
-					return true;
-				} else if (args[0].startsWith("@a")) {
-					UUID[] targetarray = selectorprocessor.getSameWorld(sender, args[0].substring(2));
+				if(args[0].startsWith("@a")) {
+					UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
 					if(targetarray == null) {
 						LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
 						return true;
@@ -98,6 +77,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 					}
 					return true;
 				}
+				
 			}
 			
 			Player target = Bukkit.getPlayerExact(args[0]);
@@ -177,29 +157,8 @@ public final class PlaymusicCommand implements CommandExecutor {
 					}
 					args[0] = randomplayername;
 				}
-				if (args[0].equals("@a")) {
-					Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-					int i = players.size();
-					UUID[] targetarray = new UUID[i];
-					Iterator<? extends Player> playersiterator = players.iterator();
-					while(playersiterator.hasNext()) {
-						targetarray[--i] = playersiterator.next().getUniqueId();
-					}
-					
-					if(args.length>2) {
-						StringBuilder sb = new StringBuilder(args[1]);
-						for(i = 2;i < args.length;++i) {
-							sb.append(' ');
-							sb.append(args[i]);
-						}
-						args[1] = sb.toString();
-					}
-					String name = args[1];
-					
-					this.executeCommand(name, targetarray);
-					return true;
-				} else if (args[0].startsWith("@a")) {
-					UUID[] targetarray = selectorprocessor.getSameWorld(sender, args[0].substring(2));
+				if(args[0].startsWith("@a")) {
+					UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
 					if(targetarray == null) {
 						LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
 						return true;
@@ -217,6 +176,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 					this.executeCommand(name, targetarray);
 					return true;
 				}
+				
 			}
 			
 			Player target = Bukkit.getPlayerExact(args[0]);

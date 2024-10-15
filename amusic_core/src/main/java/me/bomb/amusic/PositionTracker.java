@@ -178,7 +178,7 @@ public final class PositionTracker extends Thread {
 			return;
 		}
 		if(trackers.containsKey(uuid)) {
-			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
+			soundstopper.stopSound(uuid, trackers.remove(uuid).currenttrack);
 		}
 
 		soundstarter.startSound(uuid, id);
@@ -190,6 +190,7 @@ public final class PositionTracker extends Thread {
 			return;
 		}
 		short soundssize = (short) soundsinfo.size(), id = soundssize;
+		trackers.remove(uuid);
 		while (--id > -1) {
 			soundstopper.stopSound(uuid, id);
 		}

@@ -110,7 +110,7 @@ api.getPlaylistSoundnames(String playlistname); //get list of sounds in playlist
 api.getPlaylistSoundnames(UUID playeruuid); //get list of sounds loaded to player with uuid "playeruuid"
 api.getPlaylistSoundlengths(String playlistname); //get list of sounds length in playlist "playlistname"
 api.getPlaylistSoundlengths(UUID playeruuid); //get list of sounds length loaded to player with uuid "playeruuid"
-api.loadPack(UUID playeruuid, String playlistname, boolean update); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
+api.loadPack(UUID[] playeruuid, String playlistname, boolean update); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
 api.getPackName(UUID playeruuid); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
 api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //set repeat mode "repeattype" to player with uuid "playeruuid"
 api.stopSound(UUID playeruuid); //stop sound to player with uuid "playeruuid"

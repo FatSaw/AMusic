@@ -111,8 +111,8 @@ public final class SelectorProcessor {
 		while(--i > -1) {
 			if(args[i] == null) continue;
 			if(args[i].startsWith("random=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(7);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				int value;
 				try {
@@ -155,8 +155,8 @@ public final class SelectorProcessor {
 		while(--i > -1) {
 			if(args[i] == null) continue;
 			if(args[i].startsWith("closer=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(7);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				int value;
 				try {
@@ -186,8 +186,8 @@ public final class SelectorProcessor {
 				return;
 			}
 			if(args[i].startsWith("further=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(8);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				int value;
 				try {
@@ -314,8 +314,8 @@ public final class SelectorProcessor {
 		while(--i > -1) {
 			if(args[i] == null) continue;
 			if(args[i].startsWith("x>=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(3);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -333,8 +333,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("x>", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(2);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -352,8 +352,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("x<=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(3);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -371,8 +371,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("x<", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(2);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -392,8 +392,8 @@ public final class SelectorProcessor {
 			
 			
 			if(args[i].startsWith("y>=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(3);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -411,8 +411,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("y>", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(2);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -430,8 +430,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("y<=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(3);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -449,8 +449,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("y<", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(2);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -470,8 +470,8 @@ public final class SelectorProcessor {
 			
 			
 			if(args[i].startsWith("z>=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(3);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -489,8 +489,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("z>", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(2);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -508,8 +508,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("z<=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(3);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -527,8 +527,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("z<", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(2);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -576,8 +576,8 @@ public final class SelectorProcessor {
 		while(--i > -1) {
 			if(args[i] == null) continue;
 			if(args[i].startsWith("dist>=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(6);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -596,8 +596,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("dist<=", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(6);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -616,8 +616,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("dist>", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(5);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {
@@ -636,8 +636,8 @@ public final class SelectorProcessor {
 				continue;
 			}
 			if(args[i].startsWith("dist<", 0)) {
-				args[i] = null;
 				String valuestr = args[i].substring(5);
+				args[i] = null;
 				if(valuestr.isEmpty()) continue;
 				double value;
 				try {

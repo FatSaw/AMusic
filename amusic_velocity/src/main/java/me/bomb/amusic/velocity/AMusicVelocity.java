@@ -62,7 +62,7 @@ public class AMusicVelocity {
 			tempdir.mkdir();
 		}
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
-		this.configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir, true);
+		this.configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, true);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();

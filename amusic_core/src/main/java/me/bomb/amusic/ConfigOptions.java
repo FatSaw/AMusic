@@ -18,7 +18,7 @@ public final class ConfigOptions {
 	public final int port, backlog, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
 	public final byte channels;
 	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, waitacception;
-	public final File ffmpegbinary, musicdir, packeddir, tempdir;
+	public final File ffmpegbinary, musicdir, packeddir;
 	public final byte[] tokensalt;
 	
 	/**
@@ -43,7 +43,6 @@ public final class ConfigOptions {
 		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
-		this.tempdir = tempdir;
 		this.tokensalt = tokensalt;
 		this.waitacception = waitacception;
 	}
@@ -51,7 +50,7 @@ public final class ConfigOptions {
 	/**
 	 * Config file configuration storage.
 	 */
-	public ConfigOptions(File configfile, int maxpacksize, File musicdir, File packeddir, File tempdir, boolean waitacception) {
+	public ConfigOptions(File configfile, int maxpacksize, File musicdir, File packeddir, boolean waitacception) {
 		byte[] bytes = null;
 		if (!configfile.exists()) {
 			InputStream is = ConfigOptions.class.getClassLoader().getResourceAsStream("config.yml");
@@ -126,7 +125,6 @@ public final class ConfigOptions {
 		this.maxmusicfilesize = maxpacksize;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
-		this.tempdir = tempdir;
 		this.waitacception = waitacception;
 	}
 }

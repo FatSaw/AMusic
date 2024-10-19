@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -30,28 +29,13 @@ public final class ResourcePacker extends Thread {
 	private final boolean useconverter, encodetracksasynchronly;
 	private final int bitrate, samplingrate, maxzipsize, maxsoundsize;
 	private final byte channels;
-	private final File ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive;
+	private final File ffmpegbinary, musicdir, resourcefile, sourcearchive;
 	private final ResourceManager resourcemanager;
-	private static final MessageDigest sha1hash; 
-	private static final FilenameFilter oggfile;
+	private final MessageDigest sha1hash; 
 	private final Runnable runafter;
 	
-	static {
-		MessageDigest md = null;
-		try {
-			md = MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-		}
-		sha1hash = md;
-		oggfile = new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".ogg");
-			}
-		};
-	}
 	
-	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File ffmpegbinary, File musicdir, File tempdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
+	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File ffmpegbinary, File musicdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
 		this.useconverter = useconverter;
 		this.bitrate = bitrate;
 		this.channels = channels;
@@ -61,11 +45,16 @@ public final class ResourcePacker extends Thread {
 		this.maxsoundsize = maxsoundsize;
 		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
-		this.tempdir = tempdir;
 		this.resourcefile = resourcefile;
 		this.sourcearchive = sourcearchive;
 		this.resourcemanager = resourcemanager;
 		this.runafter = runafter;
+		MessageDigest md = null;
+		try {
+			md = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+		}
+		sha1hash = md;
 	}
 	
 	public void run() {
@@ -85,15 +74,30 @@ public final class ResourcePacker extends Thread {
 		if(musicfilessize > 0x0000FFFF) {
 			musicfilessize = 0x0000FFFF;
 		}
+		
+		String soundslist;
+		{
+			StringBuffer sounds = new StringBuffer("\n");
+			int lastmusicfileindex = musicfilessize;
+			--lastmusicfileindex;
+			for (int i = 0; i < musicfilessize; ++i) {
+				sounds.append("\t\"amusic.music");
+				sounds.append(i);
+				sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
+				sounds.append(i);
+				sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
+				sounds.append(i==lastmusicfileindex ? "\t}\n" : "\t},\n");
+			}
+			soundslist = sounds.toString();
+		}
+		
+		byte[][] topack = new byte[musicfilessize][];
 		boolean asyncconvertation = musicfilessize > 1 && encodetracksasynchronly;
 		if (useconverter) {
-			delete(tempdir);
-			tempdir.mkdirs();
 			List<Converter> convertators = new ArrayList<Converter>(musicfilessize);
 			for (int i = 0; musicfilessize > i; ++i) {
 				File musicfile = musicfiles.get(i);
-				File outfile = new File(tempdir, "music".concat(Integer.toString(i)).concat(".ogg"));
-				convertators.add(new Converter(ffmpegbinary, asyncconvertation, bitrate, channels, samplingrate, musicfile, outfile));
+				convertators.add(new Converter(ffmpegbinary, asyncconvertation, bitrate, channels, samplingrate, musicfile, maxsoundsize));
 			}
 			if (asyncconvertation) {
 				boolean convertationrunning = true;
@@ -114,47 +118,33 @@ public final class ResourcePacker extends Thread {
 					}
 				}
 			}
-			musicfiles.clear();
 			for (int i = 0; i < musicfilessize; ++i) {
-				File outfile = convertators.get(i).output;
-				musicfiles.add(outfile);
+				byte[] resource = convertators.get(i).output;
+				soundlengths.add(calculateDuration(resource));
+				topack[i] = resource;
+			}
+		} else {
+			for (int i = 0; i < musicfilessize; ++i) {
+				File infile = musicfiles.get(i);
+				try {
+					long filesize = infile.length();
+					if (filesize > maxsoundsize) {
+						continue;
+					}
+					byte[] resource = new byte[(int) filesize];
+					FileInputStream in = new FileInputStream(infile);
+					int size = in.read(resource);
+					if(size < filesize) {
+						resource = Arrays.copyOf(resource, size);
+					}
+					in.close();
+					soundlengths.add(calculateDuration(resource));
+					topack[i] = resource;
+				} catch (IOException e) {
+				}
 			}
 		}
 		
-		// read files
-		byte[][] topack = new byte[musicfilessize][];
-		StringBuffer sounds = new StringBuffer("\n");
-		int lastmusicfileindex = musicfilessize;
-		--lastmusicfileindex;
-		for (short i = 0; i < musicfilessize; ++i) {
-			sounds.append("\t\"amusic.music");
-			sounds.append(i);
-			sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
-			sounds.append(i);
-			sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
-			sounds.append(i==lastmusicfileindex ? "\t}\n" : "\t},\n");
-			File outfile = musicfiles.get(i);
-			try {
-				long filesize = outfile.length();
-				if (filesize > maxsoundsize) {
-					continue;
-				}
-				byte[] resource = new byte[(int) filesize];
-				FileInputStream in = new FileInputStream(outfile);
-				int size = in.read(resource);
-				if(size < filesize) {
-					resource = Arrays.copyOf(resource, size);
-				}
-				in.close();
-				soundlengths.add(calculateDuration(resource));
-				topack[i] = resource;
-			} catch (IOException e) {
-			}
-		}
-		String soundslist = sounds.toString();
-		if (useconverter) {
-			delete(tempdir);
-		}
 		// packing to archive
 		resourcemanager.resetCache(resourcefile.toPath());
 		if(musicfiles.isEmpty()) {
@@ -164,112 +154,99 @@ public final class ResourcePacker extends Thread {
 			if(musicdir.isDirectory() && musicdir.list().length == 0) {
 				musicdir.delete();
 			}
-		} else {
-			ByteArrayOutputStream baos;
-			ZipOutputStream zos;
-			baos = new ByteArrayOutputStream(maxzipsize);
-			zos = new ZipOutputStream(baos, Charset.defaultCharset());
-			zos.setMethod(8);
-			zos.setLevel(5);
-			
-			try {
-				boolean packmcmetafound = false, soundsjsonappended = false;
-				if(sourcearchive!=null) {
-					ZipInputStream zis;
-					zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
-					ZipEntry entry;
-					int len;
-					byte[] buf = new byte[0x2000];
-					while((entry = zis.getNextEntry()) != null) {
-						String entryname = entry.getName();
-						if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
-							packmcmetafound = true;
-						} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
-							StringBuilder sb = new StringBuilder();
-							while ((len = zis.read(buf)) != -1) {
-								if(len<0x2000) buf = Arrays.copyOf(buf, len);
-				            	sb.append(new String(buf, StandardCharsets.US_ASCII));
-				            }
-							int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
-							if(open==-1||close==-1) {
-								continue;
-							}
-							sb.insert(close, ',');
-							sb.insert(++close, soundslist);
-							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
-							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
-							zos.closeEntry();
-							soundsjsonappended = true;
+			return;
+		}
+		
+		ByteArrayOutputStream baos;
+		ZipOutputStream zos;
+		baos = new ByteArrayOutputStream(maxzipsize);
+		zos = new ZipOutputStream(baos, Charset.defaultCharset());
+		zos.setMethod(8);
+		zos.setLevel(5);
+		
+		try {
+			boolean packmcmetafound = false, soundsjsonappended = false;
+			if(sourcearchive!=null) {
+				ZipInputStream zis;
+				zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
+				ZipEntry entry;
+				int len;
+				byte[] buf = new byte[0x2000];
+				while((entry = zis.getNextEntry()) != null) {
+					String entryname = entry.getName();
+					if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
+						packmcmetafound = true;
+					} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
+						StringBuilder sb = new StringBuilder();
+						while ((len = zis.read(buf)) != -1) {
+							if(len<0x2000) buf = Arrays.copyOf(buf, len);
+			            	sb.append(new String(buf, StandardCharsets.US_ASCII));
+			            }
+						int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
+						if(open==-1||close==-1) {
 							continue;
 						}
-						entry = new ZipEntry(entryname);
-						zos.putNextEntry(entry);
-			            while ((len = zis.read(buf)) != -1) {
-			            	zos.write(buf, 0, len);
-			            }
-		                zos.closeEntry();
+						sb.insert(close, ',');
+						sb.insert(++close, soundslist);
+						zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+						zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
+						zos.closeEntry();
+						soundsjsonappended = true;
+						continue;
 					}
-					zis.close();
+					entry = new ZipEntry(entryname);
+					zos.putNextEntry(entry);
+		            while ((len = zis.read(buf)) != -1) {
+		            	zos.write(buf, 0, len);
+		            }
+	                zos.closeEntry();
 				}
-				for(int i = musicfilessize; --i>-1;) {
-					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
-		            zos.write(topack[i]);
-		            zos.closeEntry();
-					
-				}
-				if(!soundsjsonappended) {
-					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
-					zos.write("{".getBytes());
-					zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
-					zos.write("}".getBytes());
-					zos.closeEntry();
-				}
-				if(!packmcmetafound) {
-					zos.putNextEntry(new ZipEntry("pack.mcmeta"));
-					zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
-					zos.closeEntry();
-				}
-			} catch (IOException e) {
-				return;
-			} finally {
-				try {
-					zos.close();
-				} catch (IOException e) {
-				}
+				zis.close();
 			}
-			byte[] buf = baos.toByteArray();
-			FileOutputStream fos;
+			for(int i = musicfilessize; --i>-1;) {
+				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
+	            zos.write(topack[i]);
+	            zos.closeEntry();
+				
+			}
+			if(!soundsjsonappended) {
+				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+				zos.write("{".getBytes());
+				zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
+				zos.write("}".getBytes());
+				zos.closeEntry();
+			}
+			if(!packmcmetafound) {
+				zos.putNextEntry(new ZipEntry("pack.mcmeta"));
+				zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
+				zos.closeEntry();
+			}
+		} catch (IOException e) {
+			return;
+		} finally {
 			try {
-				fos = new FileOutputStream(resourcefile, false);
-				fos.write(buf);
-				fos.close();
+				zos.close();
 			} catch (IOException e) {
-				return;
 			}
-			synchronized(sha1hash) {
-				this.sha1 = sha1hash.digest(buf);
-			}
-			resourcemanager.putResource(resourcefile.toPath(), buf);
 		}
+		byte[] buf = baos.toByteArray();
+		FileOutputStream fos;
+		try {
+			fos = new FileOutputStream(resourcefile, false);
+			fos.write(buf);
+			fos.close();
+		} catch (IOException e) {
+			return;
+		}
+		
+		this.sha1 = sha1hash.digest(buf);
+		
+		resourcemanager.putResource(resourcefile.toPath(), buf);
 		
 		if(runafter == null) {
 			return;
 		}
 		runafter.run();
-	}
-	
-	private static void delete(File tempdirectory) {
-		if (tempdirectory.isDirectory()) {
-			for(File tempfile : tempdirectory.listFiles(oggfile)) {
-				if(tempfile.isFile()) {
-					tempfile.delete();
-				}
-			}
-			if(tempdirectory.list().length == 0) {
-				tempdirectory.delete();
-			}
-		}
-		
 	}
 	
 	private static short calculateDuration(byte[] t) {

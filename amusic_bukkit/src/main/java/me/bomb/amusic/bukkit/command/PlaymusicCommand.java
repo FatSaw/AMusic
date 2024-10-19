@@ -17,8 +17,12 @@ import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 
 public final class PlaymusicCommand implements CommandExecutor {
 	private final PositionTracker positiontracker;
-	public PlaymusicCommand(PositionTracker positiontracker) {
+	private final SelectorProcessor selectorprocessor;
+	private final boolean trackable;
+	public PlaymusicCommand(PositionTracker positiontracker, SelectorProcessor selectorprocessor, boolean trackable) {
 		this.positiontracker = positiontracker;
+		this.selectorprocessor = selectorprocessor;
+		this.trackable = trackable;
 	}
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -37,13 +41,56 @@ public final class PlaymusicCommand implements CommandExecutor {
 			} else if(!sender.hasPermission("amusic.playmusic.other")) {
 				LangOptions.playmusic_nopermissionother.sendMsg(sender);
 				return true;
+			} else {
+				if (args[0].startsWith("@p")) {
+					String closestplayername = selectorprocessor.getNearest(sender, args[0].substring(2));
+					
+					if(closestplayername == null) {
+						LangOptions.playmusic_unavilableselector_near.sendMsg(sender);
+						return true;
+					}
+					args[0] = closestplayername;
+				}
+				
+				if (args[0].startsWith("@r")) {
+					String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
+					if(randomplayername == null) {
+						LangOptions.playmusic_unavilableselector_random.sendMsg(sender);
+						return true;
+					}
+					args[0] = randomplayername;
+				}
+				if(args[0].startsWith("@a")) {
+					UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
+					if(targetarray == null) {
+						LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
+						return true;
+					}
+					if(trackable) {
+						for(int i = targetarray.length; --i > -1;) {
+							positiontracker.stopMusic(targetarray[i]);
+						}
+					} else {
+						for(int i = targetarray.length; --i > -1;) {
+							positiontracker.stopMusicUntrackable(targetarray[i]);
+						}
+					}
+					return true;
+				}
+				
 			}
+			
 			Player target = Bukkit.getPlayerExact(args[0]);
 			if(target==null) {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			positiontracker.stopMusic(target.getUniqueId());
+			if(trackable) {
+				positiontracker.stopMusic(target.getUniqueId());
+			} else {
+				positiontracker.stopMusicUntrackable(target.getUniqueId());
+			}
+			
 			LangOptions.playmusic_stop.sendMsg(sender);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
@@ -88,7 +135,50 @@ public final class PlaymusicCommand implements CommandExecutor {
 				}
 				sender.sendMessage(sb.toString());
 				return true;
+			} else if(!sender.hasPermission("amusic.playmusic.other")) {
+				LangOptions.playmusic_nopermissionother.sendMsg(sender);
+				return true;
+			} else {
+				if (args[0].startsWith("@p")) {
+					String closestplayername = selectorprocessor.getNearest(sender, args[0].substring(2));
+					
+					if(closestplayername == null) {
+						LangOptions.playmusic_unavilableselector_near.sendMsg(sender);
+						return true;
+					}
+					args[0] = closestplayername;
+				}
+				
+				if (args[0].startsWith("@r")) {
+					String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
+					if(randomplayername == null) {
+						LangOptions.playmusic_unavilableselector_random.sendMsg(sender);
+						return true;
+					}
+					args[0] = randomplayername;
+				}
+				if(args[0].startsWith("@a")) {
+					UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
+					if(targetarray == null) {
+						LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
+						return true;
+					}
+					if(args.length>2) {
+						StringBuilder sb = new StringBuilder(args[1]);
+						for(int i = 2;i < args.length;++i) {
+							sb.append(' ');
+							sb.append(args[i]);
+						}
+						args[1] = sb.toString();
+					}
+					String name = args[1];
+					
+					this.executeCommand(name, targetarray);
+					return true;
+				}
+				
 			}
+			
 			Player target = Bukkit.getPlayerExact(args[0]);
 			if(target==null) {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
@@ -111,7 +201,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 			placeholders[0] = new Placeholders("%soundname%",args[1]);
 			for(SoundInfo soundinfo : soundsinfo) {
 				if(soundinfo.name.equals(args[1])) {
-					positiontracker.playMusic(target.getUniqueId(),args[1]);
+					executeCommand(args[1], target.getUniqueId());
 					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return true;
 				}
@@ -122,6 +212,19 @@ public final class PlaymusicCommand implements CommandExecutor {
 			LangOptions.playmusic_usage.sendMsg(sender);
 		}
 		return true;
+	}
+	
+	private void executeCommand(String soundname, UUID... targetuuids) {
+		if(trackable) {
+			for(UUID targetuuid : targetuuids) {
+				positiontracker.playMusic(targetuuid,soundname);
+			}
+		} else {
+			for(UUID targetuuid : targetuuids) {
+				positiontracker.playMusicUntrackable(targetuuid,soundname);
+			}
+		}
+		
 	}
 
 }

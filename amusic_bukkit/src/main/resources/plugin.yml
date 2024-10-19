@@ -6,4 +6,5 @@ author: Bomb
 commands:
   loadmusic:
   playmusic:
+  playmusicuntrackable:
   repeat:

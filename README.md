@@ -36,15 +36,44 @@ playmusic - start/stop sound from loaded resourcepack
 
 `amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
 
-### Placeholders <playername>:
+### Selectors <playername>:
 `@n` - null target
 `@s` - self
 
-`loadmusic @s, @n`
+Argument format (`@p`, `@r`, `@a`): `[arg1,arg2,arg3,...]`
 
-`playmusic @s`
+- `loadmusic` `@s`, `@p`, `@r`, `@a`, `@n`
 
-`repeat @s`
+- `playmusic` `@s`, `@p`, `@r`, `@a`
+
+- `repeat` `@s`, `@p`, `@r`, `@a`
+
+#### Selector `@p`, `@r`, `@a` arguments
+##### Distance and position
+Args:
+- `dist`
+- `x`
+- `y`
+- `z`
+
+Format: `<arg><operation><double_value>`
+
+Avilable operations: `<=`, `<`, `>=`, `>`
+
+Description: `Distance and postition`
+
+#### Selector `@a` arguments
+##### Closer, further, random
+Args:
+- `closer`
+- `further`
+- `random`
+Format: `<arg><operation><int_value>`
+
+Avilable operations: `=`
+
+Description: `Limits player count`
+
 ### Commands for console without tab complete:
 `loadmusic @l` - get packed playlist(resourcepack) list
 
@@ -110,7 +139,7 @@ api.getPlaylistSoundnames(String playlistname); //get list of sounds in playlist
 api.getPlaylistSoundnames(UUID playeruuid); //get list of sounds loaded to player with uuid "playeruuid"
 api.getPlaylistSoundlengths(String playlistname); //get list of sounds length in playlist "playlistname"
 api.getPlaylistSoundlengths(UUID playeruuid); //get list of sounds length loaded to player with uuid "playeruuid"
-api.loadPack(UUID playeruuid, String playlistname, boolean update); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
+api.loadPack(UUID[] playeruuid, String playlistname, boolean update); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
 api.getPackName(UUID playeruuid); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
 api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //set repeat mode "repeattype" to player with uuid "playeruuid"
 api.stopSound(UUID playeruuid); //stop sound to player with uuid "playeruuid"

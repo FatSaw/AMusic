@@ -8,6 +8,10 @@ default:
   noplaylist: [{"color":"#ee2222","text":"Playlist "},{"color":"#eeee22","text":"%playlistname%"},{"color":"#ee2222","text":" not exsit"}]
   loaderunavilable: {"color":"#ee2222","text":"Loader temporarily unavilable"}
   success: [{"color":"#22ee22","text":"Loading playlist... "},{"color":"#eeee22","text":"%playlistname%"}]
+  unavilableselector:
+   near: {"color":"#ee2222","text":"Selector @p unavilable for this source"}
+   random: {"color":"#ee2222","text":"Selector @r unavilable for this source"}
+   all: {"color":"#ee2222","text":"Selector @a unavilable for this source"}
  playmusic:
   usage: [{"color":"#cccccc","text":"Usage: "},{"color":"#cccccc","italic":true,"text":"/playmusic <player> [soundname]"}]
   nopermission: {"color":"#ee2222","text":"No permission"}
@@ -18,6 +22,10 @@ default:
   missingtrack: [{"color":"#ee2222","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" not exsit"}]
   success: [{"color":"#22ee22","text":"Starting playing... "},{"color":"#eeee22","text":"%soundname%"}]
   stop: {"color":"#22ee22","text":"Stopping playing..."}
+  unavilableselector:
+   near: {"color":"#ee2222","text":"Selector @p unavilable for this source"}
+   random: {"color":"#ee2222","text":"Selector @r unavilable for this source"}
+   all: {"color":"#ee2222","text":"Selector @a unavilable for this source"}
  repeat:
   usage: [{"color":"#cccccc","text":"Usage: "},{"color":"#cccccc","italic":true,"text":"/repeat <player> <repeatmode>"}]
   nopermission: {"color":"#ee2222","text":"No permission"}
@@ -30,6 +38,10 @@ default:
   repeatall: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"repeat all"}]
   repeatone: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"repeat one"}]
   random: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"random"}]
+  unavilableselector:
+   near: {"color":"#ee2222","text":"Selector @p unavilable for this source"}
+   random: {"color":"#ee2222","text":"Selector @r unavilable for this source"}
+   all: {"color":"#ee2222","text":"Selector @a unavilable for this source"}
 ru_ru:
  loadmusic:
   usage: [{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"/loadmusic <player> <playlist>"}]

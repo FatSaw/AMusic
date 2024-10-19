@@ -163,6 +163,38 @@ public final class PositionTracker extends Thread {
 		Playing playing = trackers.get(uuid);
 		return playing.remaining;
 	}
+	
+	public void playMusicUntrackable(UUID uuid, String name) {
+		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		if (soundsinfo == null) {
+			return;
+		}
+		short soundssize = (short) soundsinfo.size(), id = soundssize;
+		while (--id > -1) {
+			if (soundsinfo.get(id).name.equals(name))
+				break;
+		}
+		if (id == -1) {
+			return;
+		}
+		if(trackers.containsKey(uuid)) {
+			soundstopper.stopSound(uuid, trackers.remove(uuid).currenttrack);
+		}
+
+		soundstarter.startSound(uuid, id);
+	}
+	
+	public void stopMusicUntrackable(UUID uuid) {
+		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		if (soundsinfo == null) {
+			return;
+		}
+		short soundssize = (short) soundsinfo.size(), id = soundssize;
+		trackers.remove(uuid);
+		while (--id > -1) {
+			soundstopper.stopSound(uuid, id);
+		}
+	}
 
 	public void playMusic(UUID uuid, String name) {
 		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
@@ -220,6 +252,19 @@ public final class PositionTracker extends Thread {
 		} catch (NoSuchMethodError e) {
 		}
 	}
+	
+	/**
+	 * Removes players from {@link PositionTracker#trackers}, {@link PositionTracker#playlistinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
+	 */
+	public void removeAll(UUID[] uuids) {
+		for(UUID uuid : uuids) {
+			trackers.remove(uuid);
+			playlistinfo.remove(uuid);
+			repeaters.remove(uuid);
+			loadedplaylistnames.remove(uuid);
+		}
+	}
+	
 	/**
 	 * Removes player from {@link PositionTracker#trackers}, {@link PositionTracker#playlistinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
 	 */

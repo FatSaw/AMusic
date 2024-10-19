@@ -1,6 +1,8 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.io.FileNotFoundException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -25,14 +27,16 @@ public final class LoadmusicCommand implements CommandExecutor {
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final PackSender packsender;
+	private final SelectorProcessor selectorprocessor;
 
-	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor) {
 		LangOptions.values();
 		this.configuptions = configuptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.packsender = packsender;
+		this.selectorprocessor = selectorprocessor;
 	}
 
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -53,7 +57,45 @@ public final class LoadmusicCommand implements CommandExecutor {
 				} else if (!sender.hasPermission("amusic.loadmusic.other")) {
 					LangOptions.loadmusic_nopermissionother.sendMsg(sender);
 					return true;
+				} else {
+					if (args[0].startsWith("@p")) {
+						String closestplayername = selectorprocessor.getNearest(sender, args[0].substring(2));
+						
+						if(closestplayername == null) {
+							LangOptions.loadmusic_unavilableselector_near.sendMsg(sender);
+							return true;
+						}
+						args[0] = closestplayername;
+					}
+					
+					if (args[0].startsWith("@r")) {
+						String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
+						if(randomplayername == null) {
+							LangOptions.loadmusic_unavilableselector_all.sendMsg(sender);
+							return true;
+						}
+						args[0] = randomplayername;
+					}
+					if(args[0].startsWith("@a")) {
+						UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
+						if(targetarray == null) {
+							LangOptions.loadmusic_unavilableselector_all.sendMsg(sender);
+							return true;
+						}
+						if(args.length>2) {
+							StringBuilder sb = new StringBuilder(args[1]);
+							for(int i = 2;i < args.length;++i) {
+								sb.append(' ');
+								sb.append(args[i]);
+							}
+							args[1] = sb.toString();
+						}
+						String name = args[1];
+						this.executeCommand(sender, name, targetarray);
+						return true;
+					}
 				}
+				
 				Player target = Bukkit.getPlayerExact(args[0]);
 				if (target == null) {
 					LangOptions.loadmusic_targetoffline.sendMsg(sender);
@@ -70,20 +112,11 @@ public final class LoadmusicCommand implements CommandExecutor {
 				args[1] = sb.toString();
 			}
 			String name = args[1];
-			try {
-				if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuid, name, false)) {
-					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
-					return true;
-				}
-				Placeholders[] placeholders = new Placeholders[1];
-				placeholders[0] = new Placeholders("%playlistname%", name);
-				LangOptions.loadmusic_success.sendMsg(sender, placeholders);
-			} catch (FileNotFoundException e) {
-				Placeholders[] placeholders = new Placeholders[1];
-				placeholders[0] = new Placeholders("%playlistname%", name);
-				LangOptions.loadmusic_noplaylist.sendMsg(sender, placeholders);
+			if(targetuuid == null) {
+				executeCommand(sender, name);
 				return true;
 			}
+			executeCommand(sender, name, targetuuid);
 		} else if(args.length == 1 && args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
 			for(String playlistname : data.getPlaylists()) {
@@ -96,4 +129,19 @@ public final class LoadmusicCommand implements CommandExecutor {
 		}
 		return true;
 	}
+	
+	private void executeCommand(CommandSender sender, String playlistname, UUID... targetuuids) {
+		try {
+			if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuids, playlistname, false)) {
+				LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
+				return;
+			}
+			LangOptions.loadmusic_success.sendMsg(sender, new Placeholders("%playlistname%", playlistname));
+		} catch (FileNotFoundException e) {
+			LangOptions.loadmusic_noplaylist.sendMsg(sender, new Placeholders("%playlistname%", playlistname));
+			return;
+		}
+		
+	}
+	
 }

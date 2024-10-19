@@ -59,13 +59,12 @@ public final class ResourceFactory implements Runnable {
 		}
 		this.name = name;
 		File musicdir = new File(configoptions.musicdir, this.name);
-		File tempdir = new File(configoptions.tempdir, id);
 		File sourcearchive = new File(configoptions.musicdir, this.name.concat(".zip"));
 		if (!ok) {
 			if (!musicdir.exists()) {
 				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 			}
-			this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+			this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 			this.soundnames = resourcepacker.soundnames;
 			this.soundlengths = resourcepacker.soundlengths;
 			this.sha1 = null;
@@ -101,13 +100,12 @@ public final class ResourceFactory implements Runnable {
 		}
 		this.name = name;
 		File musicdir = new File(configoptions.musicdir, this.name);
-		File tempdir = new File(configoptions.tempdir, id);
 		File sourcearchive = new File(configoptions.musicdir, this.name.concat(".zip"));
 		if (!musicdir.exists()) {
 			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 		}
 		this.resourcefile = new File(configoptions.packeddir, id.concat(".zip"));
-		this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, tempdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
+		this.resourcepacker = new ResourcePacker(configoptions.useconverter, configoptions.bitrate, configoptions.channels, configoptions.samplingrate, configoptions.encodetracksasynchronly, configoptions.maxpacksize, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, musicdir, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 		soundnames = resourcepacker.soundnames;
 		soundlengths = resourcepacker.soundlengths;
 		this.sha1 = resourcepacker.sha1;

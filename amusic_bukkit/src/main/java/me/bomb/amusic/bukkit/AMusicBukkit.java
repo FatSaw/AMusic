@@ -51,7 +51,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		} catch (StringIndexOutOfBoundsException e) {
 		}
 		
-		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
+		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
 		}
@@ -60,9 +60,6 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		if(!packeddir.exists()) {
 			packeddir.mkdir();
-		}
-		if(!tempdir.exists()) {
-			tempdir.mkdir();
 		}
 		boolean waitacception = true;
 		SoundStopper soundstopper;
@@ -90,7 +87,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		break;
 		}
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
-		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, tempdir, waitacception);
+		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, waitacception);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();

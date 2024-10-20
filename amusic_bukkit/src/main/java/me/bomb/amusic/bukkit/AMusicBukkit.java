@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,6 +33,10 @@ import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.source.LocalConvertedSource;
+import me.bomb.amusic.source.LocalUnconvertedParallelSource;
+import me.bomb.amusic.source.LocalUnconvertedSource;
+import me.bomb.amusic.source.SoundSource;
 
 
 public final class AMusicBukkit extends JavaPlugin {
@@ -91,7 +96,9 @@ public final class AMusicBukkit extends JavaPlugin {
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
-		this.amusic = new AMusic(configoptions, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
+		Runtime runtime = Runtime.getRuntime();
+		SoundSource source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
+		this.amusic = new AMusic(configoptions, source, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		LangOptions.loadLang(langfile, ver > 15);
@@ -100,20 +107,21 @@ public final class AMusicBukkit extends JavaPlugin {
 
 	//PLUGIN INIT START
 	public void onEnable() {
+		Server server = Bukkit.getServer();
 		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(amusic.source, configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor));
-		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
-		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(positiontracker);
+		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic.source, configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor));
+		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, data));
+		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, positiontracker);
 		PluginCommand playmusiccommand = getCommand("playmusic");
-		playmusiccommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, true));
+		playmusiccommand.setExecutor(new PlaymusicCommand(server, positiontracker, selectorprocessor, true));
 		playmusiccommand.setTabCompleter(pmtc);
 		PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
-		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(positiontracker, selectorprocessor, false));
+		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(server, positiontracker, selectorprocessor, false));
 		playmusicntrackablecommand.setTabCompleter(pmtc);
 		PluginCommand repeatcommand = getCommand("repeat");
-		repeatcommand.setExecutor(new RepeatCommand(positiontracker, selectorprocessor));
-		repeatcommand.setTabCompleter(new RepeatTabComplete());
+		repeatcommand.setExecutor(new RepeatCommand(server, positiontracker, selectorprocessor));
+		repeatcommand.setTabCompleter(new RepeatTabComplete(server));
 		if(playerips != null) {
 			playerips.clear();
 			for(Player player : Bukkit.getOnlinePlayers()) {

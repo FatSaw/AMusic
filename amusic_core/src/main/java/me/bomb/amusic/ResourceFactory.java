@@ -64,8 +64,8 @@ public final class ResourceFactory implements Runnable {
 				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 			}
 			this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
-			this.soundnames = resourcepacker.soundnames;
-			this.soundlengths = resourcepacker.soundlengths;
+			this.soundnames = null;
+			this.soundlengths = null;
 			this.sha1 = null;
 		} else {
 			this.resourcepacker = null;
@@ -105,8 +105,8 @@ public final class ResourceFactory implements Runnable {
 		}
 		this.resourcefile = new File(packeddir, id.concat(".zip"));
 		this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
-		soundnames = resourcepacker.soundnames;
-		soundlengths = resourcepacker.soundlengths;
+		this.soundnames = null;
+		this.soundlengths = null;
 		this.sha1 = resourcepacker.sha1;
 	}
 	
@@ -167,7 +167,11 @@ public final class ResourceFactory implements Runnable {
 
 	@Override
 	public void run() {
+		String[] soundnames;
+		short[] soundlengths;
 		if(this.resourcepacker != null) {
+			soundnames = resourcepacker.soundnames;
+			soundlengths = resourcepacker.soundlengths;
 			if(resourcefile.exists()) {
 				data.setPlaylist(id, soundnames, soundlengths, (int)resourcefile.length(), this.name, resourcepacker.sha1);
 				data.save();
@@ -176,6 +180,9 @@ public final class ResourceFactory implements Runnable {
 				data.save();
 				return;
 			}
+		} else {
+			soundnames = this.soundnames;
+			soundlengths = this.soundlengths;
 		}
 		if(targets == null || packsender == null) {
 			return;

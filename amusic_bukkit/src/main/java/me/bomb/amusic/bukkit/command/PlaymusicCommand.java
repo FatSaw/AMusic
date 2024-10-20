@@ -107,7 +107,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 					return true;
 				}
 				UUID targetuuid = target.getUniqueId();
-				List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(targetuuid);
+				SoundInfo[] soundsinfo = positiontracker.getSoundInfo(targetuuid);
 				if(soundsinfo==null) {
 					LangOptions.playmusic_noplaylist.sendMsg(sender);
 					return true;
@@ -184,7 +184,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
+			SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 			if(soundsinfo==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;

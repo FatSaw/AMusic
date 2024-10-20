@@ -102,7 +102,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	public void onEnable() {
 		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor));
+		loadmusiccommand.setExecutor(new LoadmusicCommand(amusic.source, configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(data));
 		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(positiontracker);
 		PluginCommand playmusiccommand = getCommand("playmusic");

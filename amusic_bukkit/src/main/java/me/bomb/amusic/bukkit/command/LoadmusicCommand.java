@@ -20,8 +20,10 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.source.SoundSource;
 
 public final class LoadmusicCommand implements CommandExecutor {
+	private final SoundSource source;
 	private final ConfigOptions configuptions;
 	private final Data data;
 	private final ResourceManager resourcemanager;
@@ -29,8 +31,9 @@ public final class LoadmusicCommand implements CommandExecutor {
 	private final PackSender packsender;
 	private final SelectorProcessor selectorprocessor;
 
-	public LoadmusicCommand(ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor) {
+	public LoadmusicCommand(SoundSource source, ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor) {
 		LangOptions.values();
+		this.source = source;
 		this.configuptions = configuptions;
 		this.data = data;
 		this.resourcemanager = resourcemanager;
@@ -132,7 +135,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 	
 	private void executeCommand(CommandSender sender, String playlistname, UUID... targetuuids) {
 		try {
-			if (!ResourceFactory.load(configuptions, data, resourcemanager, positiontracker, packsender, targetuuids, playlistname, false)) {
+			if (!ResourceFactory.load(source, configuptions, data, resourcemanager, positiontracker, packsender, targetuuids, playlistname, false)) {
 				LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 				return;
 			}

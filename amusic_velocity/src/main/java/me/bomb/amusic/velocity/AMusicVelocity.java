@@ -82,7 +82,7 @@ public class AMusicVelocity {
 	public void onProxyInitialization(ProxyInitializeEvent event) {
 		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
-		LoadmusicCommand loadmusic = new LoadmusicCommand(server, configoptions, data, resourcemanager, positiontracker, packsender);
+		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, configoptions, data, resourcemanager, positiontracker, packsender);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);
 		CommandManager cmdmanager = this.server.getCommandManager();

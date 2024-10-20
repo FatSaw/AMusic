@@ -5,46 +5,38 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.source.SourceEntry;
 
 public final class ResourcePacker extends Thread {
 	
-	public final List<String> soundnames = new ArrayList<>();
-	public final List<Short> soundlengths = new ArrayList<>();
+	public String[] soundnames;
+	public short[] soundlengths;
 	public byte[] sha1 = null;
-	
-	private final boolean useconverter, encodetracksasynchronly;
-	private final int bitrate, samplingrate, maxzipsize, maxsoundsize;
-	private final byte channels;
-	private final File ffmpegbinary, musicdir, resourcefile, sourcearchive;
+
+	private final SoundSource source;
+	private final int maxzipsize;
+	private final String entryname;
+	private final File resourcefile, sourcearchive;
 	private final ResourceManager resourcemanager;
 	private final MessageDigest sha1hash; 
 	private final Runnable runafter;
 	
 	
-	public ResourcePacker(boolean useconverter, int bitrate, byte channels, int samplingrate, boolean encodetracksasynchronly, int maxzipsize, int maxsoundsize, File ffmpegbinary, File musicdir, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
-		this.useconverter = useconverter;
-		this.bitrate = bitrate;
-		this.channels = channels;
-		this.samplingrate = samplingrate;
-		this.encodetracksasynchronly = encodetracksasynchronly;
+	public ResourcePacker(SoundSource source, int maxzipsize, String entryname, File resourcefile, File sourcearchive, ResourceManager resourcemanager, Runnable runafter) {
+		this.source = source;
 		this.maxzipsize = maxzipsize;
-		this.maxsoundsize = maxsoundsize;
-		this.ffmpegbinary = ffmpegbinary;
-		this.musicdir = musicdir;
+		this.entryname = entryname;
 		this.resourcefile = resourcefile;
 		this.sourcearchive = sourcearchive;
 		this.resourcemanager = resourcemanager;
@@ -58,23 +50,12 @@ public final class ResourcePacker extends Thread {
 	}
 	
 	public void run() {
-		List<File> musicfiles = new ArrayList<File>();
-		for (File musicfile : musicdir.listFiles()) {
-			if (useconverter || musicfile.getName().endsWith(".ogg")) {
-				musicfiles.add(musicfile);
-				String songname = musicfile.getName();
-				if (songname.contains(".")) {
-					songname = songname.substring(0, songname.lastIndexOf("."));
-				}
-				soundnames.add(songname);
-			}
-		}
-		// read base pack
-		int musicfilessize = musicfiles.size();
+		SourceEntry sourceentry = source.get(entryname);
+		String[] soundnames = sourceentry.names;
+		int musicfilessize = soundnames.length;
 		if(musicfilessize > 0x0000FFFF) {
 			musicfilessize = 0x0000FFFF;
 		}
-		
 		String soundslist;
 		{
 			StringBuffer sounds = new StringBuffer("\n");
@@ -91,81 +72,15 @@ public final class ResourcePacker extends Thread {
 			soundslist = sounds.toString();
 		}
 		
-		byte[][] topack = new byte[musicfilessize][];
-		boolean asyncconvertation = musicfilessize > 1 && encodetracksasynchronly;
-		if (useconverter) {
-			List<Converter> convertators = new ArrayList<Converter>(musicfilessize);
-			for (int i = 0; musicfilessize > i; ++i) {
-				File musicfile = musicfiles.get(i);
-				convertators.add(new Converter(ffmpegbinary, asyncconvertation, bitrate, channels, samplingrate, musicfile, maxsoundsize));
-			}
-			if (asyncconvertation) {
-				boolean convertationrunning = true;
-				byte checkcount = 0;
-				while (convertationrunning) {
-					try {
-						sleep(1000);
-					} catch (InterruptedException e) {
-					}
-					boolean finished = true;
-					byte i = (byte) convertators.size();
-					while(--i > -1) {
-						finished &= convertators.get(i).finished();
-					}
-					convertationrunning = !finished;
-					if (++checkcount == 0) {
-						return; // drop task if not finished for 4 minutes
-					}
-				}
-			}
-			for (int i = 0; i < musicfilessize; ++i) {
-				byte[] resource = convertators.get(i).output;
-				soundlengths.add(calculateDuration(resource));
-				topack[i] = resource;
-			}
-		} else {
-			for (int i = 0; i < musicfilessize; ++i) {
-				File infile = musicfiles.get(i);
-				try {
-					long filesize = infile.length();
-					if (filesize > maxsoundsize) {
-						continue;
-					}
-					byte[] resource = new byte[(int) filesize];
-					FileInputStream in = new FileInputStream(infile);
-					int size = in.read(resource);
-					if(size < filesize) {
-						resource = Arrays.copyOf(resource, size);
-					}
-					in.close();
-					soundlengths.add(calculateDuration(resource));
-					topack[i] = resource;
-				} catch (IOException e) {
-				}
-			}
-		}
-		
-		// packing to archive
-		resourcemanager.resetCache(resourcefile.toPath());
-		if(musicfiles.isEmpty()) {
-			if(resourcefile.isFile()) {
-				resourcefile.delete();
-			}
-			if(musicdir.isDirectory() && musicdir.list().length == 0) {
-				musicdir.delete();
-			}
-			return;
-		}
-		
 		ByteArrayOutputStream baos;
 		ZipOutputStream zos;
 		baos = new ByteArrayOutputStream(maxzipsize);
 		zos = new ZipOutputStream(baos, Charset.defaultCharset());
 		zos.setMethod(8);
 		zos.setLevel(5);
+		boolean packmcmetafound = false, soundsjsonappended = false;
 		
 		try {
-			boolean packmcmetafound = false, soundsjsonappended = false;
 			if(sourcearchive!=null) {
 				ZipInputStream zis;
 				zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
@@ -203,12 +118,6 @@ public final class ResourcePacker extends Thread {
 				}
 				zis.close();
 			}
-			for(int i = musicfilessize; --i>-1;) {
-				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
-	            zos.write(topack[i]);
-	            zos.closeEntry();
-				
-			}
 			if(!soundsjsonappended) {
 				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 				zos.write("{".getBytes());
@@ -222,6 +131,25 @@ public final class ResourcePacker extends Thread {
 				zos.closeEntry();
 			}
 		} catch (IOException e) {
+		}
+		
+		byte sleepcount = 0;
+		while(!sourceentry.finished() && --sleepcount != 0) {
+			try {
+				sleep(1000);
+			} catch (InterruptedException e) {
+			}
+		}
+		
+		byte[][] topack = sourceentry.data;
+		
+		try {
+			for(int i = musicfilessize; --i>-1;) {
+				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
+	            zos.write(topack[i]);
+	            zos.closeEntry();
+			}
+		} catch (IOException e) {
 			return;
 		} finally {
 			try {
@@ -229,7 +157,11 @@ public final class ResourcePacker extends Thread {
 			} catch (IOException e) {
 			}
 		}
+		
 		byte[] buf = baos.toByteArray();
+		
+		resourcemanager.resetCache(resourcefile.toPath());
+		
 		FileOutputStream fos;
 		try {
 			fos = new FileOutputStream(resourcefile, false);
@@ -240,35 +172,15 @@ public final class ResourcePacker extends Thread {
 		}
 		
 		this.sha1 = sha1hash.digest(buf);
-		
 		resourcemanager.putResource(resourcefile.toPath(), buf);
+		
+		this.soundnames = soundnames;
+		this.soundlengths = sourceentry.lengths;
 		
 		if(runafter == null) {
 			return;
 		}
 		runafter.run();
-	}
-	
-	private static short calculateDuration(byte[] t) {
-		int rate = -1, length = -1, size = t.length;
-		for (int i = size - 15; i >= 0 && length < 0; i--) {
-			if (t[i] == (byte) 'O' && t[i + 1] == (byte) 'g' && t[i + 2] == (byte) 'g' && t[i + 3] == (byte) 'S') {
-				byte[] byteArray = new byte[] { t[i + 6], t[i + 7], t[i + 8], t[i + 9], t[i + 10], t[i + 11], t[i + 12], t[i + 13] };
-				ByteBuffer bb = ByteBuffer.wrap(byteArray);
-				bb.order(ByteOrder.LITTLE_ENDIAN);
-				length = bb.getInt(0);
-			}
-		}
-		for (int i = 0; i < size - 14 && rate < 0; i++) {
-			if (t[i] == (byte) 'v' && t[i + 1] == (byte) 'o' && t[i + 2] == (byte) 'r' && t[i + 3] == (byte) 'b' && t[i + 4] == (byte) 'i' && t[i + 5] == (byte) 's') {
-				byte[] byteArray = new byte[] { t[i + 11], t[i + 12], t[i + 13], t[i + 14] };
-				ByteBuffer bb = ByteBuffer.wrap(byteArray);
-				bb.order(ByteOrder.LITTLE_ENDIAN);
-				rate = bb.getInt(0);
-			}
-		}
-		int res = length / rate;
-		return res > Short.MAX_VALUE ? Short.MAX_VALUE : (short) res;
 	}
 
 }

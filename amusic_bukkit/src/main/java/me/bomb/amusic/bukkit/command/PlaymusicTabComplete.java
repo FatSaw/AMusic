@@ -45,7 +45,7 @@ public final class PlaymusicTabComplete implements TabCompleter {
 			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
 				Player target = Bukkit.getPlayerExact(args[0]);
 				if (target != null) {
-					List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
+					SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 					if (soundsinfo != null) {
 						for (SoundInfo soundinfo : soundsinfo) {
 							String soundname = soundinfo.name;

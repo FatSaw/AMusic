@@ -1,7 +1,6 @@
 package me.bomb.amusic;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,7 +19,7 @@ public abstract class Data {
 	 */
 	public abstract void load();
 	
-	public final void setPlaylist(String playlistname, List<String> sounds, List<Short> lengths, int resourcesize, String resourcename, byte[] sha1) {
+	public final void setPlaylist(String playlistname, String[] sounds, short[] lengths, int resourcesize, String resourcename, byte[] sha1) {
 		try {
 			options.put(playlistname, new DataEntry(resourcesize, resourcename, sounds, lengths, sha1));
 		} catch (IllegalArgumentException e) {

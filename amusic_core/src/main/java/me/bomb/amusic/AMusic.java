@@ -89,7 +89,16 @@ public final class AMusic {
 	 * @return the names of sounds in playlist.
 	 */
 	public List<String> getPlaylistSoundnames(String playlistname) {
-		return new CopyOnWriteArrayList<>(data.getPlaylist(playlistname).sounds);
+		SoundInfo[] soundinfos = data.getPlaylist(playlistname).sounds;
+		if(soundinfos==null) {
+			return null;
+		}
+		int infossize = soundinfos.length;
+		List<String> soundnames = new ArrayList<String>(infossize);
+		for(int i = 0;i<infossize;++i) {
+			soundnames.add(soundinfos[i].name);
+		}
+		return soundnames;
 	}
 
 	/**
@@ -116,12 +125,16 @@ public final class AMusic {
 	 * @return the lenghs of sounds in playlist.
 	 */
 	public List<Short> getPlaylistSoundlengths(String playlistname) {
-		short[] length = data.getPlaylist(playlistname).length;
-		List<Short> lengths = new ArrayList<Short>(length.length);
-		for(int i = 0;i<length.length;++i) {
-			lengths.add(length[i]);
+		SoundInfo[] soundinfos = data.getPlaylist(playlistname).sounds;
+		if(soundinfos==null) {
+			return null;
 		}
-		return lengths;
+		int infossize = soundinfos.length;
+		List<Short> soundlengths = new ArrayList<Short>(infossize);
+		for(int i = 0;i<infossize;++i) {
+			soundlengths.add(soundinfos[i].length);
+		}
+		return soundlengths;
 	}
 
 	/**

@@ -29,5 +29,9 @@ public final class SourceEntry {
 		}
 		return true;
 	}
+	
+	public boolean finished(int i) {
+		return finished == null || finished[i].get();
+	}
 
 }

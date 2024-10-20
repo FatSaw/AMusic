@@ -112,16 +112,16 @@ public class DataStorage extends me.bomb.amusic.Data {
 					lengths[k] = (short) (buf[j] & 0xFF | buf[++j]<<8);
 				}
 				soundcount = (short) lengths.length;
-				String[] sounds = new String[soundcount];
+				SoundInfo[] sounds = new SoundInfo[soundcount];
 				int i = 0;
 				while(i < soundcount) {
 					buf = new byte[namelengths[i]];
 					fis.read(buf);
-					sounds[i] = new String(buf, StandardCharsets.UTF_8);
+					sounds[i] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[i]);
 					++i;
 				}
 				fis.close();
-				DataEntry dataentry = new DataEntry(packedsize, packedname, sounds, lengths, sha1);
+				DataEntry dataentry = new DataEntry(packedsize, packedname, sounds, sha1);
 				dataentry.setSaved();
 				options.put(id, dataentry);
 			} catch (IOException e) {
@@ -190,7 +190,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 					DataEntry dataentry = entry.getValue();
 					File amusicpackedinfo = new File(datadirectory, id.concat(FORMAT));
 					int soundcount = dataentry.sounds.length;
-					if((dataentry.isSaved() && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.sounds.length != dataentry.length.length || dataentry.size < 0) {
+					if((dataentry.isSaved() && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.size < 0) {
 						++start;
 						continue;
 					}
@@ -237,7 +237,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 						int totalsoundnamelength = 0;
 						byte[][] anames = new byte[soundcount][];
 						while(i < soundcount) {
-							byte[] soundnamebytes = dataentry.sounds[i].getBytes(StandardCharsets.UTF_8);
+							byte[] soundnamebytes = dataentry.sounds[i].name.getBytes(StandardCharsets.UTF_8);
 							int soundnamelength = soundnamebytes.length;
 							if(soundnamelength > 0xFF) {
 								soundnamelength = 0xFF;
@@ -246,7 +246,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 							totalsoundnamelength += (byte) soundnamelength;
 							anames[i] = soundnamebytes;
 							namelengths[i] = (byte) soundnamelength;
-							short length = dataentry.length[i];
+							short length = dataentry.sounds[i].length;
 							++i;
 							lengths[j] = (byte) length;
 							length >>= 8;

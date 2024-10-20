@@ -20,8 +20,7 @@ import me.bomb.amusic.source.SourceEntry;
 
 public final class ResourcePacker extends Thread {
 	
-	public String[] soundnames;
-	public short[] soundlengths;
+	public SoundInfo[] sounds;
 	public byte[] sha1 = null;
 
 	private final SoundSource source;
@@ -174,8 +173,13 @@ public final class ResourcePacker extends Thread {
 		this.sha1 = sha1hash.digest(buf);
 		resourcemanager.putResource(resourcefile.toPath(), buf);
 		
-		this.soundnames = soundnames;
-		this.soundlengths = sourceentry.lengths;
+		int soundssize = soundnames.length;
+		short[] soundlengths = sourceentry.lengths;
+		
+		SoundInfo[] soundinfos = new SoundInfo[soundssize];
+		for(int i=0;i<soundssize;++i) {
+			soundinfos[i] = new SoundInfo(soundnames[i], soundlengths[i]);
+		}
 		
 		if(runafter == null) {
 			return;

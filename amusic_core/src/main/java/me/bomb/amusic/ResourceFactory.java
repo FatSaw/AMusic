@@ -19,8 +19,7 @@ public final class ResourceFactory implements Runnable {
 	private final ResourcePacker resourcepacker;
 	private final PositionTracker positiontracker;
 	private final PackSender packsender;
-	private final String[] soundnames;
-	private final short[] soundlengths;
+	private final SoundInfo[] sounds;
 	private final byte[] sha1;
 	private final File resourcefile;
 
@@ -33,7 +32,7 @@ public final class ResourceFactory implements Runnable {
 		this.positiontracker = positiontracker;
 		this.packsender = packsender;
 		id = toBase64(id); //now name is safe for files
-		String[] asongnames = null;
+		SoundInfo[] sounds = null;
 		short[] asonglengths = null;
 		byte[] asha1 = null;
 		this.resourcefile = new File(packeddir, id.concat(".zip"));
@@ -47,8 +46,7 @@ public final class ResourceFactory implements Runnable {
 					resourcefile.delete();
 					data.removePlaylist(this.id);
 				} else if (resourcemanager.isCached(resourcefile.toPath()) || options.check(resourcefile)) {
-					asongnames = options.sounds;
-					asonglengths = options.length;
+					sounds = options.sounds;
 					asha1 = options.sha1;
 					ok = true;
 				}
@@ -64,13 +62,11 @@ public final class ResourceFactory implements Runnable {
 				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 			}
 			this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
-			this.soundnames = null;
-			this.soundlengths = null;
+			this.sounds = null;
 			this.sha1 = null;
 		} else {
 			this.resourcepacker = null;
-			this.soundnames = asongnames;
-			this.soundlengths = asonglengths;
+			this.sounds = sounds;
 			this.sha1 = asha1;
 			new Thread(this).start();
 		}
@@ -105,8 +101,7 @@ public final class ResourceFactory implements Runnable {
 		}
 		this.resourcefile = new File(packeddir, id.concat(".zip"));
 		this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
-		this.soundnames = null;
-		this.soundlengths = null;
+		this.sounds = null;
 		this.sha1 = resourcepacker.sha1;
 	}
 	
@@ -167,13 +162,11 @@ public final class ResourceFactory implements Runnable {
 
 	@Override
 	public void run() {
-		String[] soundnames;
-		short[] soundlengths;
+		SoundInfo[] sounds;
 		if(this.resourcepacker != null) {
-			soundnames = resourcepacker.soundnames;
-			soundlengths = resourcepacker.soundlengths;
+			sounds = resourcepacker.sounds;
 			if(resourcefile.exists()) {
-				data.setPlaylist(id, soundnames, soundlengths, (int)resourcefile.length(), this.name, resourcepacker.sha1);
+				data.setPlaylist(id, sounds, (int)resourcefile.length(), this.name, resourcepacker.sha1);
 				data.save();
 			} else {
 				data.removePlaylist(id);
@@ -181,28 +174,19 @@ public final class ResourceFactory implements Runnable {
 				return;
 			}
 		} else {
-			soundnames = this.soundnames;
-			soundlengths = this.soundlengths;
+			sounds = this.sounds;
 		}
 		if(targets == null || packsender == null) {
 			return;
 		}
-		int soundssize = soundnames.length;
-		if (soundssize != soundlengths.length) {
-			return;
-		}
+
+		final String httphost = "http://".concat(host).concat("/");
 		for(UUID target : targets) {
-			StringBuilder sb = new StringBuilder("http://");
-			sb.append(host);
-			sb.append("/");
+			StringBuilder sb = new StringBuilder(httphost);
 			sb.append(resourcemanager.add(target, this.resourcefile));
 			sb.append(".zip");
 			packsender.send(target, sb.toString(), this.sha1 == null ? resourcepacker.sha1 : this.sha1);
-			SoundInfo[] soundinfos = new SoundInfo[soundssize];
-			for(int i=0;i<soundssize;++i) {
-				soundinfos[i] = new SoundInfo(soundnames[i], soundlengths[i]);
-			}
-			positiontracker.setPlaylistInfo(target, this.id, soundinfos);
+			positiontracker.setPlaylistInfo(target, this.id, sounds);
 		}
 	}
 }

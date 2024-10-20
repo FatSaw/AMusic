@@ -5,6 +5,10 @@ import java.nio.ByteOrder;
 
 public abstract class SoundSource {
 
+	/**
+	 * {@link SourceEntry#names} must be ready on return.
+	 * Other SourceEntry fields may be not ready.
+	 */
 	public abstract SourceEntry get(String entrykey);
 	
 	protected static short calculateDuration(byte[] t) {

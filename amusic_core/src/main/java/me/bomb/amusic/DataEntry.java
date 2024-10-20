@@ -11,19 +11,17 @@ public final class DataEntry {
 	
 	public final int size;
 	public final String name;
-	public final String[] sounds;
-	public final short[] length;
+	public final SoundInfo[] sounds;
 	public final byte[] sha1;
 	private boolean saved;
 
-	public DataEntry(int size, String name, String[] sounds, short[] length, byte[] sha1) throws IllegalArgumentException {
-		if (size < 0 || name == null || sounds == null || length == null || sha1 == null || sounds.length != length.length || sha1.length != 20) {
+	public DataEntry(int size, String name, SoundInfo[] sounds, byte[] sha1) throws IllegalArgumentException {
+		if (size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20) {
 			throw new IllegalArgumentException();
 		}
 		this.size = size;
 		this.name = name;
 		this.sounds = sounds;
-		this.length = length;
 		this.sha1 = sha1;
 	}
 

@@ -1,6 +1,5 @@
 package me.bomb.amusic;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -8,30 +7,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
-import me.bomb.amusic.source.LocalConvertedSource;
-import me.bomb.amusic.source.LocalUnconvertedParallelSource;
-import me.bomb.amusic.source.LocalUnconvertedSource;
 import me.bomb.amusic.source.SoundSource;
 
 public final class AMusic {
 	
 	private static AMusic instance;
-	public final SoundSource source;
 	private final ConfigOptions configoptions;
+	public final SoundSource source;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final ResourceServer resourceserver;
 	private final PackSender packsender;
 	private final Data data;
 	
-	public AMusic(ConfigOptions configoptions, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
-		Runtime runtime = Runtime.getRuntime();
-		this.source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
+	public AMusic(ConfigOptions configoptions, SoundSource source, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.configoptions = configoptions;
+		this.source = source;
 		this.data = data;
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
@@ -55,10 +49,6 @@ public final class AMusic {
 		resourceserver.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
-	}
-	
-	public File getMusicDir() {
-		return configoptions.musicdir;
 	}
 	
 	/**

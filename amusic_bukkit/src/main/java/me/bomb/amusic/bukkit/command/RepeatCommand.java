@@ -1,10 +1,8 @@
 package me.bomb.amusic.bukkit.command;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,9 +12,11 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.RepeatType;
 
 public final class RepeatCommand implements CommandExecutor {
+	private final Server server;
 	private final PositionTracker positiontracker;
 	private final SelectorProcessor selectorprocessor;
-	public RepeatCommand(PositionTracker positiontracker, SelectorProcessor selectorprocessor) {
+	public RepeatCommand(Server server, PositionTracker positiontracker, SelectorProcessor selectorprocessor) {
+		this.server = server;
 		this.positiontracker = positiontracker;
 		this.selectorprocessor = selectorprocessor;
 	}
@@ -66,7 +66,7 @@ public final class RepeatCommand implements CommandExecutor {
 				return true;
 			}
 			
-			Player target = Bukkit.getPlayerExact(args[0]);
+			Player target = server.getPlayerExact(args[0]);
 			if (target == null) {
 				LangOptions.repeat_targetoffline.sendMsg(sender);
 				return true;

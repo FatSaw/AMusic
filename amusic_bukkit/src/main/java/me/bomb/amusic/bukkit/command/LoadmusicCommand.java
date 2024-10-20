@@ -1,11 +1,9 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.io.FileNotFoundException;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -23,6 +21,7 @@ import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.SoundSource;
 
 public final class LoadmusicCommand implements CommandExecutor {
+	private final Server server;
 	private final SoundSource source;
 	private final ConfigOptions configuptions;
 	private final Data data;
@@ -31,8 +30,9 @@ public final class LoadmusicCommand implements CommandExecutor {
 	private final PackSender packsender;
 	private final SelectorProcessor selectorprocessor;
 
-	public LoadmusicCommand(SoundSource source, ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor) {
+	public LoadmusicCommand(Server server, SoundSource source, ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor) {
 		LangOptions.values();
+		this.server = server;
 		this.source = source;
 		this.configuptions = configuptions;
 		this.data = data;
@@ -99,7 +99,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 					}
 				}
 				
-				Player target = Bukkit.getPlayerExact(args[0]);
+				Player target = server.getPlayerExact(args[0]);
 				if (target == null) {
 					LangOptions.loadmusic_targetoffline.sendMsg(sender);
 					return true;

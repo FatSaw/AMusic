@@ -176,9 +176,9 @@ public final class ResourcePacker extends Thread {
 		int soundssize = soundnames.length;
 		short[] soundlengths = sourceentry.lengths;
 		
-		SoundInfo[] soundinfos = new SoundInfo[soundssize];
+		this.sounds = new SoundInfo[soundssize];
 		for(int i=0;i<soundssize;++i) {
-			soundinfos[i] = new SoundInfo(soundnames[i], soundlengths[i]);
+			this.sounds[i] = new SoundInfo(soundnames[i], soundlengths[i]);
 		}
 		
 		if(runafter == null) {

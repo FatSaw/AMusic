@@ -3,15 +3,16 @@ package me.bomb.amusic.bukkit.command;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 public final class RepeatTabComplete implements TabCompleter {
-	
-	public RepeatTabComplete() {
+	private final Server server;
+	public RepeatTabComplete(Server server) {
+		this.server = server;
 	}
 	
 	@Override
@@ -25,7 +26,7 @@ public final class RepeatTabComplete implements TabCompleter {
 				tabcomplete.add("@s");
 			}
 			if (sender.hasPermission("amusic.repeat.other")) {
-				for (Player player : Bukkit.getOnlinePlayers()) {
+				for (Player player : server.getOnlinePlayers()) {
 					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
 					}

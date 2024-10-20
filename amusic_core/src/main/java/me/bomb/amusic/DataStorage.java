@@ -116,9 +116,9 @@ public class DataStorage extends me.bomb.amusic.Data {
 				int i = 0;
 				while(i < soundcount) {
 					buf = new byte[namelengths[i]];
-					++i;
 					fis.read(buf);
 					sounds[i] = new String(buf, StandardCharsets.UTF_8);
+					++i;
 				}
 				fis.close();
 				DataEntry dataentry = new DataEntry(packedsize, packedname, sounds, lengths, sha1);

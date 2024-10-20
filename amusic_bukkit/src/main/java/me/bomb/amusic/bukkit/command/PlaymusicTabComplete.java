@@ -3,7 +3,7 @@ package me.bomb.amusic.bukkit.command;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -13,8 +13,10 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundInfo;
 
 public final class PlaymusicTabComplete implements TabCompleter {
+	private final Server server;
 	private final PositionTracker positiontracker;
-	public PlaymusicTabComplete(PositionTracker positiontracker) {
+	public PlaymusicTabComplete(Server server, PositionTracker positiontracker) {
+		this.server = server;
 		this.positiontracker = positiontracker;
 	}
 	@Override
@@ -28,7 +30,7 @@ public final class PlaymusicTabComplete implements TabCompleter {
 				tabcomplete.add("@s");
 			}
 			if (sender.hasPermission("amusic.playmusic.other")) {
-				for (Player player : Bukkit.getOnlinePlayers()) {
+				for (Player player : server.getOnlinePlayers()) {
 					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
 					}
@@ -43,7 +45,7 @@ public final class PlaymusicTabComplete implements TabCompleter {
 				selfsender = true;
 			}
 			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
-				Player target = Bukkit.getPlayerExact(args[0]);
+				Player target = server.getPlayerExact(args[0]);
 				if (target != null) {
 					SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 					if (soundsinfo != null) {

@@ -98,7 +98,6 @@ public final class SelectorProcessor {
 		filterRandom(players, playerlength, args, random);
 		playerlength = sortNullCount(players);
 		int i = playerlength;
-		if(playerlength == 0) return null;
 		UUID[] uuids = new UUID[i];
 		while(--i > -1) {
 			uuids[i] = players[i].getUniqueId();

@@ -67,7 +67,6 @@ public final class ResourceFactory implements Runnable {
 					return;
 				}
 				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
-				
 			}
 			this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 			this.sounds = null;
@@ -159,9 +158,8 @@ public final class ResourceFactory implements Runnable {
 			ResourceFactory resourcepacked = new ResourceFactory(source, configoptions.host, configoptions.musicdir, configoptions.packeddir, configoptions.maxpacksize, data, resourcemanager, positiontracker, name);
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();
-				return true;
 			}
-			return false;
+			return true;
 		}
 		update &= processpack;
 		ResourceFactory resourcepacked = new ResourceFactory(source, configoptions.host, configoptions.musicdir, configoptions.packeddir, configoptions.maxpacksize, data, resourcemanager, positiontracker, packsender, targets, name, update);

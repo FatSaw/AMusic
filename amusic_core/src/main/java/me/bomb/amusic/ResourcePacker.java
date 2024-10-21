@@ -50,10 +50,16 @@ public final class ResourcePacker extends Thread {
 	
 	public void run() {
 		SourceEntry sourceentry = source.get(entryname);
+		if(sourceentry == null) {
+			return;
+		}
 		String[] soundnames = sourceentry.names;
 		int musicfilessize = soundnames.length;
-		if(musicfilessize > 0x0000FFFF) {
-			musicfilessize = 0x0000FFFF;
+		if(musicfilessize < 1) {
+			return;
+		}
+		if(musicfilessize > 65536) {
+			musicfilessize = 65536;
 		}
 		String soundslist;
 		{

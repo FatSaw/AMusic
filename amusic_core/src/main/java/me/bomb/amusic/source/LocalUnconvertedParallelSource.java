@@ -27,8 +27,9 @@ public final class LocalUnconvertedParallelSource extends SoundSource {
 
 	@Override
 	public SourceEntry get(String entrykey) {
-		String[] args = new String[] {fmpegbinary.getAbsolutePath(), "-i", null, "-strict", "-2", "-acodec", "vorbis", "-ab", Integer.toString(bitrate), "-ac", Byte.toString(channels), "-ar", Integer.toString(samplingrate), "-f", "ogg", "-vn", "-y", "pipe:1"};
 		File musicdir = new File(this.musicdir, entrykey);
+		if(musicdir == null || !musicdir.exists()) return null;
+		String[] args = new String[] {fmpegbinary.getAbsolutePath(), "-i", null, "-strict", "-2", "-acodec", "vorbis", "-ab", Integer.toString(bitrate), "-ac", Byte.toString(channels), "-ar", Integer.toString(samplingrate), "-f", "ogg", "-vn", "-y", "pipe:1"};
 		ArrayList<File> musicfiles = new ArrayList<>();
 		ArrayList<String> soundnames = new ArrayList<>();
 		for (File musicfile : musicdir.listFiles()) {
@@ -117,6 +118,17 @@ public final class LocalUnconvertedParallelSource extends SoundSource {
 			finished.set(true);
 		}
 		
+	}
+
+	@Override
+	public boolean exists(String entrykey) {
+		File musicdir = new File(this.musicdir, entrykey);
+		if(musicdir == null || !musicdir.exists()) return false;
+		for (File musicfile : musicdir.listFiles()) {
+			if (musicfile.length() > maxsoundsize) continue;
+			return true;
+		}
+		return false;
 	}
 
 }

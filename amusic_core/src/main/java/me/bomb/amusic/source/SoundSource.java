@@ -11,6 +11,11 @@ public abstract class SoundSource {
 	 */
 	public abstract SourceEntry get(String entrykey);
 	
+	/**
+	 * @return true if entry has at least one element
+	 */
+	public abstract boolean exists(String entrykey);
+	
 	protected static short calculateDuration(byte[] t) {
 		int rate = -1, length = -1, size = t.length;
 		for (int i = size - 15; i >= 0 && length < 0; i--) {

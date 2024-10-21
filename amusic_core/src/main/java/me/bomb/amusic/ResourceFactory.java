@@ -33,7 +33,6 @@ public final class ResourceFactory implements Runnable {
 		this.packsender = packsender;
 		id = toBase64(id); //now name is safe for files
 		SoundInfo[] sounds = null;
-		short[] asonglengths = null;
 		byte[] asha1 = null;
 		this.resourcefile = new File(packeddir, id.concat(".zip"));
 		boolean ok = false;
@@ -41,15 +40,16 @@ public final class ResourceFactory implements Runnable {
 		if (data.containsPlaylist(this.id)) {
 			DataEntry options = data.getPlaylist(this.id);
 			name = options.name;
-			if (resourcefile != null && resourcefile.exists()) {
-				if (update) {
+			if (update) {
+				if (resourcefile != null && resourcefile.exists()) {
 					resourcefile.delete();
-					data.removePlaylist(this.id);
-				} else if (resourcemanager.isCached(resourcefile.toPath()) || options.check(resourcefile)) {
-					sounds = options.sounds;
-					asha1 = options.sha1;
-					ok = true;
 				}
+				data.removePlaylist(this.id);
+				data.save();
+			} else if (resourcefile != null && resourcefile.exists() && (resourcemanager.isCached(resourcefile.toPath()) || options.check(resourcefile))) {
+				sounds = options.sounds;
+				asha1 = options.sha1;
+				ok = true;
 			}
 		} else {
 			name = filterName(this.id);
@@ -58,7 +58,7 @@ public final class ResourceFactory implements Runnable {
 		musicdir = new File(musicdir, this.name);
 		File sourcearchive = new File(musicdir, this.name.concat(".zip"));
 		if (!ok) {
-			if (!musicdir.exists()) {
+			if(!source.exists(this.name)) {
 				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 			}
 			this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
@@ -85,18 +85,19 @@ public final class ResourceFactory implements Runnable {
 		if (data.containsPlaylist(this.id)) {
 			DataEntry options = data.getPlaylist(this.id);
 			name = options.name;
-			File resourcefile = new File(packeddir, id);
+			File resourcefile = new File(packeddir, id.concat(".zip"));
 			if (resourcefile != null && resourcefile.exists()) {
 				resourcefile.delete();
-				data.removePlaylist(this.id);
 			}
+			data.removePlaylist(this.id);
+			data.save();
 		} else {
 			name = filterName(this.id);
 		}
 		this.name = name;
 		musicdir = new File(musicdir, this.name);
 		File sourcearchive = new File(musicdir, this.name.concat(".zip"));
-		if (!musicdir.exists()) {
+		if(!source.exists(this.name)) {
 			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 		}
 		this.resourcefile = new File(packeddir, id.concat(".zip"));

@@ -19,6 +19,7 @@ public final class LocalConvertedSource extends SoundSource {
 	@Override
 	public SourceEntry get(String entrykey) {
 		File musicdir = new File(this.musicdir, entrykey);
+		if(musicdir == null || !musicdir.exists()) return null;
 		ArrayList<File> musicfiles = new ArrayList<>();
 		ArrayList<String> soundnames = new ArrayList<>();
 		for (File musicfile : musicdir.listFiles()) {
@@ -55,6 +56,17 @@ public final class LocalConvertedSource extends SoundSource {
 			}
 		}
 		return source;
+	}
+
+	@Override
+	public boolean exists(String entrykey) {
+		File musicdir = new File(this.musicdir, entrykey);
+		if(musicdir == null || !musicdir.exists()) return false;
+		for (File musicfile : musicdir.listFiles()) {
+			if (!musicfile.getName().endsWith(".ogg") || musicfile.length() > maxsoundsize) continue;
+			return true;
+		}
+		return false;
 	}
 
 }

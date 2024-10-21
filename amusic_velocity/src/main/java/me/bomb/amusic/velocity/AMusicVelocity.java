@@ -27,6 +27,10 @@ import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.source.LocalConvertedSource;
+import me.bomb.amusic.source.LocalUnconvertedParallelSource;
+import me.bomb.amusic.source.LocalUnconvertedSource;
+import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.velocity.command.LangOptions;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
@@ -69,7 +73,9 @@ public class AMusicVelocity {
 
         this.packsender = new VelocityPackSender(server);
         
-		this.amusic = new AMusic(configoptions, data, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(), playerips);
+		Runtime runtime = Runtime.getRuntime();
+		SoundSource source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
+		this.amusic = new AMusic(configoptions, source, data, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(), playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		this.server = server;
@@ -82,7 +88,7 @@ public class AMusicVelocity {
 	public void onProxyInitialization(ProxyInitializeEvent event) {
 		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
-		LoadmusicCommand loadmusic = new LoadmusicCommand(server, configoptions, data, resourcemanager, positiontracker, packsender);
+		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, configoptions, data, resourcemanager, positiontracker, packsender);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);
 		CommandManager cmdmanager = this.server.getCommandManager();

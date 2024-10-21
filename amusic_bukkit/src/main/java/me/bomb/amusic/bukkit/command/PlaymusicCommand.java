@@ -1,9 +1,8 @@
 package me.bomb.amusic.bukkit.command;
 
-import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -16,10 +15,12 @@ import me.bomb.amusic.SoundInfo;
 import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 
 public final class PlaymusicCommand implements CommandExecutor {
+	private final Server server;
 	private final PositionTracker positiontracker;
 	private final SelectorProcessor selectorprocessor;
 	private final boolean trackable;
-	public PlaymusicCommand(PositionTracker positiontracker, SelectorProcessor selectorprocessor, boolean trackable) {
+	public PlaymusicCommand(Server server, PositionTracker positiontracker, SelectorProcessor selectorprocessor, boolean trackable) {
+		this.server = server;
 		this.positiontracker = positiontracker;
 		this.selectorprocessor = selectorprocessor;
 		this.trackable = trackable;
@@ -80,7 +81,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 				
 			}
 			
-			Player target = Bukkit.getPlayerExact(args[0]);
+			Player target = server.getPlayerExact(args[0]);
 			if(target==null) {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
@@ -101,13 +102,13 @@ public final class PlaymusicCommand implements CommandExecutor {
 					return true;
 				}
 			} else if(args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
-				Player target = Bukkit.getPlayerExact(args[1]);
+				Player target = server.getPlayerExact(args[1]);
 				if(target==null) {
 					LangOptions.playmusic_targetoffline.sendMsg(sender);
 					return true;
 				}
 				UUID targetuuid = target.getUniqueId();
-				List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(targetuuid);
+				SoundInfo[] soundsinfo = positiontracker.getSoundInfo(targetuuid);
 				if(soundsinfo==null) {
 					LangOptions.playmusic_noplaylist.sendMsg(sender);
 					return true;
@@ -179,12 +180,12 @@ public final class PlaymusicCommand implements CommandExecutor {
 				
 			}
 			
-			Player target = Bukkit.getPlayerExact(args[0]);
+			Player target = server.getPlayerExact(args[0]);
 			if(target==null) {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
+			SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 			if(soundsinfo==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;

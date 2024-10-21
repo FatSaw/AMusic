@@ -128,7 +128,7 @@ AMusic api = AMusic.API(); //GET DEFAULT INSTANCE
 ### AMusic core
 May be used to add amusic core into other plugin, or create multiple independent AMusic instances
 ```
-AMusic api = new AMusic(ConfigOptions configoptions, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips);
+AMusic api = new AMusic(ConfigOptions configoptions, SoundSource source, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips);
 api.enable(); //starts positiontracker and resourceserver threads
 api.disable(); //stops positiontracker and resourceserver threads
 ```

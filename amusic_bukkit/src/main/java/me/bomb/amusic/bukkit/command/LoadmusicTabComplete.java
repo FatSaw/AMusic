@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -12,11 +12,12 @@ import org.bukkit.entity.Player;
 
 import me.bomb.amusic.Data;
 
-
 public final class LoadmusicTabComplete implements TabCompleter {
+	private final Server server;
 	private final Data data;
 
-	public LoadmusicTabComplete(Data data) {
+	public LoadmusicTabComplete(Server server, Data data) {
+		this.server = server;
 		this.data = data;
 	}
 
@@ -31,7 +32,7 @@ public final class LoadmusicTabComplete implements TabCompleter {
 				tabcomplete.add("@s");
 			}
 			if (sender.hasPermission("amusic.loadmusic.other")) {
-				for (Player player : Bukkit.getOnlinePlayers()) {
+				for (Player player : server.getOnlinePlayers()) {
 					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
 					}

@@ -1,10 +1,8 @@
 package me.bomb.amusic;
 
-import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,12 +11,12 @@ public final class PositionTracker extends Thread {
 
 	private final ConcurrentHashMap<UUID, Playing> trackers = new ConcurrentHashMap<UUID, Playing>();
 	private final ConcurrentHashMap<UUID, RepeatType> repeaters = new ConcurrentHashMap<UUID, RepeatType>();
-	private final ConcurrentHashMap<UUID, ArrayList<SoundInfo>> playlistinfo = new ConcurrentHashMap<UUID, ArrayList<SoundInfo>>();
+	private final ConcurrentHashMap<UUID, SoundInfo[]> playlistinfo = new ConcurrentHashMap<UUID, SoundInfo[]>();
 	private final ConcurrentHashMap<UUID, String> loadedplaylistnames = new ConcurrentHashMap<UUID, String>();
 	private final SoundStarter soundstarter;
 	private final SoundStopper soundstopper;
 	
-	public void setPlaylistInfo(UUID playeruuid, String playlistname, ArrayList<SoundInfo> soundinfo) {
+	public void setPlaylistInfo(UUID playeruuid, String playlistname, SoundInfo[] soundinfo) {
 		playlistinfo.put(playeruuid, soundinfo);
 		loadedplaylistnames.put(playeruuid, playlistname);
 	}
@@ -35,7 +33,7 @@ public final class PositionTracker extends Thread {
 		return playeruuid == null ? null : loadedplaylistnames.get(playeruuid);
 	}
 
-	public ArrayList<SoundInfo> getSoundInfo(UUID playeruuid) {
+	public SoundInfo[] getSoundInfo(UUID playeruuid) {
 		return playeruuid == null ? null : playlistinfo.get(playeruuid);
 	}
 
@@ -135,25 +133,25 @@ public final class PositionTracker extends Thread {
 		if (!trackers.containsKey(uuid)) {
 			return null;
 		}
-		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		SoundInfo[] soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return null;
 		}
 		Playing playing = trackers.get(uuid);
 
-		if (playing.currenttrack < soundsinfo.size()) {
-			return soundsinfo.get(playing.currenttrack).name;
+		if (playing.currenttrack < soundsinfo.length) {
+			return soundsinfo[playing.currenttrack].name;
 		}
 		return null;
 	}
 
 	public short getPlayingSize(UUID uuid) {
-		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		SoundInfo[] soundsinfo = getSoundInfo(uuid);
 		if (!trackers.containsKey(uuid) || soundsinfo == null) {
 			return -1;
 		}
 		Playing playing = trackers.get(uuid);
-		return soundsinfo.get(playing.currenttrack).length;
+		return soundsinfo[playing.currenttrack].length;
 	}
 
 	public short getPlayingRemain(UUID uuid) {
@@ -165,13 +163,13 @@ public final class PositionTracker extends Thread {
 	}
 	
 	public void playMusicUntrackable(UUID uuid, String name) {
-		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		SoundInfo[] soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return;
 		}
-		short soundssize = (short) soundsinfo.size(), id = soundssize;
+		short soundssize = (short) soundsinfo.length, id = soundssize;
 		while (--id > -1) {
-			if (soundsinfo.get(id).name.equals(name))
+			if (soundsinfo[id].name.equals(name))
 				break;
 		}
 		if (id == -1) {
@@ -185,11 +183,11 @@ public final class PositionTracker extends Thread {
 	}
 	
 	public void stopMusicUntrackable(UUID uuid) {
-		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		SoundInfo[] soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return;
 		}
-		short soundssize = (short) soundsinfo.size(), id = soundssize;
+		short soundssize = (short) soundsinfo.length, id = soundssize;
 		trackers.remove(uuid);
 		while (--id > -1) {
 			soundstopper.stopSound(uuid, id);
@@ -197,14 +195,14 @@ public final class PositionTracker extends Thread {
 	}
 
 	public void playMusic(UUID uuid, String name) {
-		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		SoundInfo[] soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return;
 		}
-		short soundssize = (short) soundsinfo.size(), id = soundssize;
+		short soundssize = (short) soundsinfo.length, id = soundssize;
 		SoundInfo soundinfo = null;
 		while (--id > -1) {
-			if ((soundinfo = soundsinfo.get(id)).name.equals(name))
+			if ((soundinfo = soundsinfo[id]).name.equals(name))
 				break;
 		}
 		if (id == -1) {
@@ -223,15 +221,15 @@ public final class PositionTracker extends Thread {
 		if (uuid == null || id < 0) {
 			return;
 		}
-		List<SoundInfo> soundsinfo = getSoundInfo(uuid);
+		SoundInfo[] soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return;
 		}
-		short soundssize = (short) soundsinfo.size();
+		short soundssize = (short) soundsinfo.length;
 		if (id >= soundssize) {
 			return;
 		}
-		SoundInfo soundinfo = soundsinfo.get(id);
+		SoundInfo soundinfo = soundsinfo[id];
 		if(trackers.containsKey(uuid)) {
 			soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack);
 		}

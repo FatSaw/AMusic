@@ -69,7 +69,7 @@ public class PlaymusicCommand implements SimpleCommand  {
 				}
 				Player target = otarget.get();
 				UUID targetuuid = target.getUniqueId();
-				List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(targetuuid);
+				SoundInfo[] soundsinfo = positiontracker.getSoundInfo(targetuuid);
 				if(soundsinfo==null) {
 					LangOptions.playmusic_noplaylist.sendMsg(sender);
 					return;
@@ -104,7 +104,7 @@ public class PlaymusicCommand implements SimpleCommand  {
 				return;
 			}
 			Player target = otarget.get();
-			List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
+			SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 			if(soundsinfo==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return;
@@ -166,7 +166,7 @@ public class PlaymusicCommand implements SimpleCommand  {
 				if(otarget.isEmpty()) {
 					return null;
 				}
-				List<SoundInfo> soundsinfo = positiontracker.getSoundInfo(otarget.get().getUniqueId());
+				SoundInfo[] soundsinfo = positiontracker.getSoundInfo(otarget.get().getUniqueId());
 				if (soundsinfo != null) {
 					for (SoundInfo soundinfo : soundsinfo) {
 						String soundname = soundinfo.name;

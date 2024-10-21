@@ -6,10 +6,8 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map.Entry;
 
 public class DataStorage extends me.bomb.amusic.Data {
@@ -108,25 +106,22 @@ public class DataStorage extends me.bomb.amusic.Data {
 				byte[] namelengths = new byte[soundcount];
 				buf = new byte[soundcount<<1];
 				fis.read(namelengths);
-				List<Short> lengths = new ArrayList<>(soundcount);
+				short[] lengths = new short[soundcount];
 				fis.read(buf);
-				
-				for(int soundcountd = soundcount<<1,j = 0;j<soundcountd;) {
-					lengths.add((short) (buf[j] & 0xFF | buf[++j]<<8));
-					++j;
+				for(int k = 0,j = 0; k < soundcount; ++k, ++j) {
+					lengths[k] = (short) (buf[j] & 0xFF | buf[++j]<<8);
 				}
-				soundcount = (short) lengths.size();
-				List<String> sounds = new ArrayList<>(soundcount);
-				
+				soundcount = (short) lengths.length;
+				SoundInfo[] sounds = new SoundInfo[soundcount];
 				int i = 0;
 				while(i < soundcount) {
 					buf = new byte[namelengths[i]];
-					++i;
 					fis.read(buf);
-					sounds.add(new String(buf, StandardCharsets.UTF_8));
+					sounds[i] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[i]);
+					++i;
 				}
 				fis.close();
-				DataEntry dataentry = new DataEntry(packedsize, packedname, sounds, lengths, sha1);
+				DataEntry dataentry = new DataEntry(packedsize, packedname, sounds, sha1);
 				dataentry.setSaved();
 				options.put(id, dataentry);
 			} catch (IOException e) {
@@ -194,8 +189,8 @@ public class DataStorage extends me.bomb.amusic.Data {
 					id = toBase64(id);
 					DataEntry dataentry = entry.getValue();
 					File amusicpackedinfo = new File(datadirectory, id.concat(FORMAT));
-					int soundcount = dataentry.sounds.size();
-					if((dataentry.isSaved() && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.sounds.size() != dataentry.length.size() || dataentry.size < 0) {
+					int soundcount = dataentry.sounds.length;
+					if((dataentry.isSaved() && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.size < 0) {
 						++start;
 						continue;
 					}
@@ -242,7 +237,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 						int totalsoundnamelength = 0;
 						byte[][] anames = new byte[soundcount][];
 						while(i < soundcount) {
-							byte[] soundnamebytes = dataentry.sounds.get(i).getBytes(StandardCharsets.UTF_8);
+							byte[] soundnamebytes = dataentry.sounds[i].name.getBytes(StandardCharsets.UTF_8);
 							int soundnamelength = soundnamebytes.length;
 							if(soundnamelength > 0xFF) {
 								soundnamelength = 0xFF;
@@ -251,7 +246,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 							totalsoundnamelength += (byte) soundnamelength;
 							anames[i] = soundnamebytes;
 							namelengths[i] = (byte) soundnamelength;
-							short length = dataentry.length.get(i);
+							short length = dataentry.sounds[i].length;
 							++i;
 							lengths[j] = (byte) length;
 							length >>= 8;

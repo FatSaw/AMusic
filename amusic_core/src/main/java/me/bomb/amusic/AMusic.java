@@ -1,6 +1,5 @@
 package me.bomb.amusic;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.util.ArrayList;
@@ -11,19 +10,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
+import me.bomb.amusic.source.SoundSource;
 
 public final class AMusic {
 	
 	private static AMusic instance;
 	private final ConfigOptions configoptions;
+	public final SoundSource source;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final ResourceServer resourceserver;
 	private final PackSender packsender;
 	private final Data data;
 	
-	public AMusic(ConfigOptions configoptions, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
+	public AMusic(ConfigOptions configoptions, SoundSource source, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.configoptions = configoptions;
+		this.source = source;
 		this.data = data;
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
@@ -47,10 +49,6 @@ public final class AMusic {
 		resourceserver.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
-	}
-	
-	public File getMusicDir() {
-		return configoptions.musicdir;
 	}
 	
 	/**
@@ -81,7 +79,16 @@ public final class AMusic {
 	 * @return the names of sounds in playlist.
 	 */
 	public List<String> getPlaylistSoundnames(String playlistname) {
-		return data.getPlaylist(playlistname).sounds;
+		SoundInfo[] soundinfos = data.getPlaylist(playlistname).sounds;
+		if(soundinfos==null) {
+			return null;
+		}
+		int infossize = soundinfos.length;
+		List<String> soundnames = new ArrayList<String>(infossize);
+		for(int i = 0;i<infossize;++i) {
+			soundnames.add(soundinfos[i].name);
+		}
+		return soundnames;
 	}
 
 	/**
@@ -90,14 +97,14 @@ public final class AMusic {
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
 	public List<String> getPlaylistSoundnames(UUID playeruuid) {
-		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(playeruuid);
+		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
 		if(soundinfos==null) {
 			return null;
 		}
-		int infossize = soundinfos.size();
+		int infossize = soundinfos.length;
 		List<String> soundnames = new ArrayList<String>(infossize);
 		for(int i = 0;i<infossize;++i) {
-			soundnames.add(soundinfos.get(i).name);
+			soundnames.add(soundinfos[i].name);
 		}
 		return soundnames;
 	}
@@ -108,7 +115,16 @@ public final class AMusic {
 	 * @return the lenghs of sounds in playlist.
 	 */
 	public List<Short> getPlaylistSoundlengths(String playlistname) {
-		return data.getPlaylist(playlistname).length;
+		SoundInfo[] soundinfos = data.getPlaylist(playlistname).sounds;
+		if(soundinfos==null) {
+			return null;
+		}
+		int infossize = soundinfos.length;
+		List<Short> soundlengths = new ArrayList<Short>(infossize);
+		for(int i = 0;i<infossize;++i) {
+			soundlengths.add(soundinfos[i].length);
+		}
+		return soundlengths;
 	}
 
 	/**
@@ -117,14 +133,14 @@ public final class AMusic {
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
 	public List<Short> getPlaylistSoundlengths(UUID playeruuid) {
-		ArrayList<SoundInfo> soundinfos = positiontracker.getSoundInfo(playeruuid);
+		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
 		if(soundinfos==null) {
 			return null;
 		}
-		int infossize = soundinfos.size();
+		int infossize = soundinfos.length;
 		List<Short> soundlengths = new ArrayList<Short>(infossize);
 		for(int i = 0;i<infossize;++i) {
-			soundlengths.add(soundinfos.get(i).length);
+			soundlengths.add(soundinfos[i].length);
 		}
 		return soundlengths;
 	}
@@ -167,7 +183,7 @@ public final class AMusic {
 	 * Loads resource pack to player.
 	 */
 	public void loadPack(UUID[] playeruuid, String name, boolean update) throws FileNotFoundException {
-		ResourceFactory.load(configoptions, data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
+		ResourceFactory.load(source, configoptions, data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
 	}
 
 	/**

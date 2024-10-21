@@ -6,25 +6,22 @@ import java.io.IOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 public final class DataEntry {
 	
 	public final int size;
 	public final String name;
-	public final List<String> sounds;
-	public final List<Short> length;
+	public final SoundInfo[] sounds;
 	public final byte[] sha1;
 	private boolean saved;
 
-	public DataEntry(int size, String name, List<String> sounds, List<Short> length, byte[] sha1) throws IllegalArgumentException {
-		if (size < 0 || name == null || sounds == null || length == null || sha1 == null || sounds.size() != length.size() || sha1.length != 20) {
+	public DataEntry(int size, String name, SoundInfo[] sounds, byte[] sha1) throws IllegalArgumentException {
+		if (size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20) {
 			throw new IllegalArgumentException();
 		}
 		this.size = size;
 		this.name = name;
 		this.sounds = sounds;
-		this.length = length;
 		this.sha1 = sha1;
 	}
 

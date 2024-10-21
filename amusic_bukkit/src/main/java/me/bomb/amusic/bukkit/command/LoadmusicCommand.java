@@ -116,10 +116,10 @@ public final class LoadmusicCommand implements CommandExecutor {
 			}
 			String name = args[1];
 			if(targetuuid == null) {
-				executeCommand(sender, name);
+				executeCommand(sender, name, null);
 				return true;
 			}
-			executeCommand(sender, name, targetuuid);
+			executeCommand(sender, name, new UUID[]{targetuuid});
 		} else if(args.length == 1 && args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
 			for(String playlistname : data.getPlaylists()) {
@@ -133,7 +133,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 		return true;
 	}
 	
-	private void executeCommand(CommandSender sender, String playlistname, UUID... targetuuids) {
+	private void executeCommand(CommandSender sender, String playlistname, UUID[] targetuuids) {
 		try {
 			if (!ResourceFactory.load(source, configuptions, data, resourcemanager, positiontracker, packsender, targetuuids, playlistname, false)) {
 				LangOptions.loadmusic_loaderunavilable.sendMsg(sender);

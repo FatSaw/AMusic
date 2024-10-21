@@ -35,7 +35,7 @@ public final class ResourceFactory implements Runnable {
 		SoundInfo[] sounds = null;
 		byte[] asha1 = null;
 		this.resourcefile = new File(packeddir, id.concat(".zip"));
-		boolean ok = false;
+		boolean ok = false, updateremove = false;
 		String name = null;
 		if (data.containsPlaylist(this.id)) {
 			DataEntry options = data.getPlaylist(this.id);
@@ -46,6 +46,7 @@ public final class ResourceFactory implements Runnable {
 				}
 				data.removePlaylist(this.id);
 				data.save();
+				updateremove = true;
 			} else if (resourcefile != null && resourcefile.exists() && (resourcemanager.isCached(resourcefile.toPath()) || options.check(resourcefile))) {
 				sounds = options.sounds;
 				asha1 = options.sha1;
@@ -59,7 +60,14 @@ public final class ResourceFactory implements Runnable {
 		File sourcearchive = new File(musicdir, this.name.concat(".zip"));
 		if (!ok) {
 			if(!source.exists(this.name)) {
+				if(updateremove) {
+					this.resourcepacker = null;
+					this.sounds = null;
+					this.sha1 = null;
+					return;
+				}
 				throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
+				
 			}
 			this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 			this.sounds = null;
@@ -81,16 +89,18 @@ public final class ResourceFactory implements Runnable {
 		this.targets = null;
 		this.packsender = null;
 		id = toBase64(id); //now name is safe for files
+		this.resourcefile = new File(packeddir, id.concat(".zip"));
+		boolean updateremove = false;
 		String name = null;
 		if (data.containsPlaylist(this.id)) {
 			DataEntry options = data.getPlaylist(this.id);
 			name = options.name;
-			File resourcefile = new File(packeddir, id.concat(".zip"));
 			if (resourcefile != null && resourcefile.exists()) {
 				resourcefile.delete();
 			}
 			data.removePlaylist(this.id);
 			data.save();
+			updateremove = true;
 		} else {
 			name = filterName(this.id);
 		}
@@ -98,9 +108,14 @@ public final class ResourceFactory implements Runnable {
 		musicdir = new File(musicdir, this.name);
 		File sourcearchive = new File(musicdir, this.name.concat(".zip"));
 		if(!source.exists(this.name)) {
+			if(updateremove) {
+				this.resourcepacker = null;
+				this.sounds = null;
+				this.sha1 = null;
+				return;
+			}
 			throw new FileNotFoundException("No music directory: ".concat(musicdir.getPath()));
 		}
-		this.resourcefile = new File(packeddir, id.concat(".zip"));
 		this.resourcepacker = new ResourcePacker(source, maxpacksize, this.name, resourcefile, sourcearchive.isFile() ? sourcearchive : null, resourcemanager, this);
 		this.sounds = null;
 		this.sha1 = resourcepacker.sha1;

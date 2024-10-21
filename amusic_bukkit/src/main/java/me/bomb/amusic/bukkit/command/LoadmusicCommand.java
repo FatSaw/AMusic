@@ -74,7 +74,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 					if (args[0].startsWith("@r")) {
 						String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
 						if(randomplayername == null) {
-							LangOptions.loadmusic_unavilableselector_all.sendMsg(sender);
+							LangOptions.loadmusic_unavilableselector_random.sendMsg(sender);
 							return true;
 						}
 						args[0] = randomplayername;

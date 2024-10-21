@@ -154,7 +154,7 @@ public final class ResourceFactory implements Runnable {
 			return false;
 		}
 		boolean processpack = configoptions.processpack;
-		if ((targets == null || targets.length == 0) && processpack) {
+		if (targets == null && processpack) {
 			ResourceFactory resourcepacked = new ResourceFactory(source, configoptions.host, configoptions.musicdir, configoptions.packeddir, configoptions.maxpacksize, data, resourcemanager, positiontracker, name);
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();

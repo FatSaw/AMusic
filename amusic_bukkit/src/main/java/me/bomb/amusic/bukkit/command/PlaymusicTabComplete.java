@@ -38,7 +38,8 @@ public final class PlaymusicTabComplete implements TabCompleter {
 			}
 			return tabcomplete;
 		}
-		if (args.length == 2 && !args[0].equals("@l") && !args[0].equals("@p") && !args[0].equals("@r") && !args[0].equals("@a")) {
+		
+		if (args.length > 1 && !args[0].equals("@l") && !args[0].equals("@p") && !args[0].equals("@r") && !args[0].equals("@a")) {
 			boolean selfsender = false;
 			if (args[0].equals("@s") && sender instanceof Player) {
 				args[0] = sender.getName();
@@ -49,10 +50,32 @@ public final class PlaymusicTabComplete implements TabCompleter {
 				if (target != null) {
 					SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
 					if (soundsinfo != null) {
-						for (SoundInfo soundinfo : soundsinfo) {
-							String soundname = soundinfo.name;
-							if (soundname.startsWith(args[1])) {
-								tabcomplete.add(soundname);
+						int lastspace = -1;
+						if(args.length > 2) {
+							StringBuilder sb = new StringBuilder(args[1]);
+							for(int i = 2;i < args.length;++i) {
+								sb.append(' ');
+								sb.append(args[i]);
+							}
+							args[1] = sb.toString();
+							lastspace = args[1].lastIndexOf(' ');
+						}
+						++lastspace;
+						
+						if(lastspace == 0) {
+							for (SoundInfo soundinfo : soundsinfo) {
+								String soundname = soundinfo.name;
+								if (soundname.startsWith(args[1])) {
+									tabcomplete.add(soundname);
+								}
+							}
+						} else {
+							for (SoundInfo soundinfo : soundsinfo) {
+								String soundname = soundinfo.name;
+								if (lastspace < soundname.length() && soundname.startsWith(args[1])) {
+									soundname = soundname.substring(lastspace);
+									tabcomplete.add(soundname);
+								}
 							}
 						}
 					}

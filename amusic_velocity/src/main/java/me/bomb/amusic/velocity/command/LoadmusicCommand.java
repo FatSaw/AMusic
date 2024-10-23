@@ -131,6 +131,7 @@ public class LoadmusicCommand implements SimpleCommand {
 			}
 			return tabcomplete;
 		}
+		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
 			Set<String> playlists = data.getPlaylists();
 			if (playlists != null) {

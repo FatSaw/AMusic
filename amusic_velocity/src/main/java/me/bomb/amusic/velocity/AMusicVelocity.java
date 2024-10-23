@@ -89,12 +89,13 @@ public class AMusicVelocity {
 		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
 		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, configoptions, data, resourcemanager, positiontracker, packsender);
-		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker);
+		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker, true), playmusicuntrackable = new PlaymusicCommand(server, positiontracker, false);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);
 		CommandManager cmdmanager = this.server.getCommandManager();
-		CommandMeta loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build(), playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build(), repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build();
+		CommandMeta loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build(), playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build(), playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build(), repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build();
 		cmdmanager.register(loadmusicmeta, loadmusic);
 		cmdmanager.register(playmusicmeta, playmusic);
+		cmdmanager.register(playmusicuntrackablemeta, playmusicuntrackable);
 		cmdmanager.register(repeatmeta, repeat);
 		this.server.getEventManager().register(this, new EventListener(resourcemanager, positiontracker, playerips));
 		this.amusic.enable();

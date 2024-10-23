@@ -19,10 +19,12 @@ public class PlaymusicCommand implements SimpleCommand  {
 
 	private final ProxyServer server;
 	private final PositionTracker positiontracker;
+	private final boolean trackable;
 	
-	public PlaymusicCommand(ProxyServer server, PositionTracker positiontracker) {
+	public PlaymusicCommand(ProxyServer server, PositionTracker positiontracker, boolean trackable) {
 		this.server = server;
 		this.positiontracker = positiontracker;
+		this.trackable = trackable;
 	}
 	
 	@Override
@@ -51,7 +53,11 @@ public class PlaymusicCommand implements SimpleCommand  {
 				return;
 			}
 			Player target = otarget.get();
-			positiontracker.stopMusic(target.getUniqueId());
+			if(trackable) {
+				positiontracker.stopMusic(target.getUniqueId());
+			} else {
+				positiontracker.stopMusicUntrackable(target.getUniqueId());
+			}
 			LangOptions.playmusic_stop.sendMsg(sender);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
@@ -121,7 +127,11 @@ public class PlaymusicCommand implements SimpleCommand  {
 			placeholders[0] = new Placeholders("%soundname%",args[1]);
 			for(SoundInfo soundinfo : soundsinfo) {
 				if(soundinfo.name.equals(args[1])) {
-					positiontracker.playMusic(target.getUniqueId(),args[1]);
+					if(trackable) {
+						positiontracker.playMusic(target.getUniqueId(),args[1]);
+					} else {
+						positiontracker.playMusicUntrackable(target.getUniqueId(),args[1]);
+					}
 					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return;
 				}

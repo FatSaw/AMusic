@@ -76,6 +76,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 							positiontracker.stopMusicUntrackable(targetarray[i]);
 						}
 					}
+					LangOptions.playmusic_stop.sendMsg(sender);
 					return true;
 				}
 				
@@ -173,8 +174,11 @@ public final class PlaymusicCommand implements CommandExecutor {
 						args[1] = sb.toString();
 					}
 					String name = args[1];
-					
+
+					Placeholders[] placeholders = new Placeholders[1];
+					placeholders[0] = new Placeholders("%soundname%",args[1]);
 					this.executeCommand(name, targetarray);
+					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return true;
 				}
 				

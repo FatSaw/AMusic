@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.bomb</groupId>
 	<artifactId>amusic</artifactId>
-	<version>0.14</version>
+	<version>0.15</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>amusic_core</module>

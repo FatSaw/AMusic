@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>me.bomb</groupId>
 		<artifactId>amusic</artifactId>
-		<version>0.14</version>
+		<version>0.15</version>
 	</parent>
 	<artifactId>amusic_velocity</artifactId>
 	<properties>
@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>me.bomb</groupId>
 			<artifactId>amusic_core</artifactId>
-			<version>0.14</version>
+			<version>0.15</version>
 		</dependency>
 	</dependencies>
 	<build>

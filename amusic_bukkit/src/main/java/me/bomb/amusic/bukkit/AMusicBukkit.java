@@ -45,7 +45,6 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final DataStorage data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	private final PackSender packsender;
 	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
@@ -67,6 +66,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			packeddir.mkdir();
 		}
 		boolean waitacception = true;
+		PackSender packsender;
 		SoundStopper soundstopper;
 		switch (ver) {
 		case 7:
@@ -110,7 +110,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		Server server = Bukkit.getServer();
 		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic.source, configoptions, data, resourcemanager, positiontracker, packsender, selectorprocessor));
+		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic.source, configoptions, data, amusic.dispatcher, resourcemanager, positiontracker, selectorprocessor));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, data));
 		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, positiontracker);
 		PluginCommand playmusiccommand = getCommand("playmusic");

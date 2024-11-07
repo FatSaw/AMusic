@@ -46,7 +46,6 @@ public class AMusicVelocity {
 	private final DataStorage data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-    private final PackSender packsender;
 	private final PositionTracker positiontracker;
     
 	@Inject
@@ -71,7 +70,7 @@ public class AMusicVelocity {
 		data = new DataStorage(packeddir, (byte) 2);
 		data.load();
 
-        this.packsender = new VelocityPackSender(server);
+		PackSender packsender = new VelocityPackSender(server);
         
 		Runtime runtime = Runtime.getRuntime();
 		SoundSource source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
@@ -88,7 +87,7 @@ public class AMusicVelocity {
 	public void onProxyInitialization(ProxyInitializeEvent event) {
 		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
-		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, configoptions, data, resourcemanager, positiontracker, packsender);
+		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, configoptions, data, amusic.dispatcher, resourcemanager, positiontracker);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker, true), playmusicuntrackable = new PlaymusicCommand(server, positiontracker, false);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);
 		CommandManager cmdmanager = this.server.getCommandManager();

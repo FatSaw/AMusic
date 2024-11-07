@@ -40,7 +40,7 @@ final class ResourceSender extends Thread {
 				} catch (InterruptedException e) {
 				}
 			}
-			if (resourcemanager.waitAcception(token) || (buf = resourcemanager.get(token)).length == 0) {
+			if (resourcemanager.waitAcception(token) || (buf = resourcemanager.get(token)) == null) {
 				client.close();
 				return;
 			}

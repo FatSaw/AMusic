@@ -13,10 +13,10 @@ import org.bukkit.entity.Player;
 
 import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.Data;
-import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
+import me.bomb.amusic.dispatcher.ResourceDispatcher;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.SoundSource;
 
@@ -25,20 +25,20 @@ public final class LoadmusicCommand implements CommandExecutor {
 	private final SoundSource source;
 	private final ConfigOptions configuptions;
 	private final Data data;
+	private final ResourceDispatcher dispatcher;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
-	private final PackSender packsender;
 	private final SelectorProcessor selectorprocessor;
 
-	public LoadmusicCommand(Server server, SoundSource source, ConfigOptions configuptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, SelectorProcessor selectorprocessor) {
+	public LoadmusicCommand(Server server, SoundSource source, ConfigOptions configuptions, Data data, ResourceDispatcher dispatcher, ResourceManager resourcemanager, PositionTracker positiontracker, SelectorProcessor selectorprocessor) {
 		LangOptions.values();
 		this.server = server;
 		this.source = source;
 		this.configuptions = configuptions;
 		this.data = data;
+		this.dispatcher = dispatcher;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
-		this.packsender = packsender;
 		this.selectorprocessor = selectorprocessor;
 	}
 
@@ -135,7 +135,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 	
 	private void executeCommand(CommandSender sender, String playlistname, UUID[] targetuuids) {
 		try {
-			if (!ResourceFactory.load(source, configuptions, data, resourcemanager, positiontracker, packsender, targetuuids, playlistname, false)) {
+			if (!ResourceFactory.load(source, configuptions, data, dispatcher, resourcemanager, positiontracker, targetuuids, playlistname, false)) {
 				LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 				return;
 			}

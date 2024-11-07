@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.UUID;
 
+import me.bomb.amusic.dispatcher.ResourceDispatcher;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.SoundSource;
 
@@ -13,24 +14,18 @@ public final class ResourceFactory implements Runnable {
 	
 	private final String id, name;
 	private final UUID[] targets;
-	private final String host;
 	private final Data data;
-	private final ResourceManager resourcemanager;
+	private final ResourceDispatcher dispatcher;
 	private final ResourcePacker resourcepacker;
-	private final PositionTracker positiontracker;
-	private final PackSender packsender;
 	private final SoundInfo[] sounds;
 	private final byte[] sha1;
 	private final File resourcefile;
 
-	private ResourceFactory(SoundSource source, String host, File musicdir, File packeddir, int maxpacksize, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID[] targets, String id, boolean update) throws FileNotFoundException {
+	private ResourceFactory(SoundSource source, String host, File musicdir, File packeddir, int maxpacksize, Data data, ResourceDispatcher dispatcher, ResourceManager resourcemanager, UUID[] targets, String id, boolean update) throws FileNotFoundException {
 		this.id = id;
 		this.targets = targets;
-		this.host = host;
 		this.data = data;
-		this.resourcemanager = resourcemanager;
-		this.positiontracker = positiontracker;
-		this.packsender = packsender;
+		this.dispatcher = dispatcher;
 		id = toBase64(id); //now name is safe for files
 		SoundInfo[] sounds = null;
 		byte[] asha1 = null;
@@ -79,14 +74,11 @@ public final class ResourceFactory implements Runnable {
 		}
 	}
 
-	private ResourceFactory(SoundSource source, String host, File musicdir, File packeddir, int maxpacksize, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, String id) throws FileNotFoundException {
-		this.host = host;
+	private ResourceFactory(SoundSource source, String host, File musicdir, File packeddir, int maxpacksize, Data data, ResourceManager resourcemanager, String id) throws FileNotFoundException {
 		this.data = data;
-		this.resourcemanager = resourcemanager;
-		this.positiontracker = positiontracker;
+		this.dispatcher = null;
 		this.id = id;
 		this.targets = null;
-		this.packsender = null;
 		id = toBase64(id); //now name is safe for files
 		this.resourcefile = new File(packeddir, id.concat(".zip"));
 		boolean updateremove = false;
@@ -149,20 +141,20 @@ public final class ResourceFactory implements Runnable {
 		return new String(filtered);
 	}
 
-	public static boolean load(SoundSource source, ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender, UUID[] targets, String name, boolean update) throws FileNotFoundException {
+	public static boolean load(SoundSource source, ConfigOptions configoptions, Data data, ResourceDispatcher dispatcher, ResourceManager resourcemanager, PositionTracker positiontracker, UUID[] targets, String name, boolean update) throws FileNotFoundException {
 		if(name==null || name.isEmpty()) {
 			return false;
 		}
 		boolean processpack = configoptions.processpack;
 		if (targets == null && processpack) {
-			ResourceFactory resourcepacked = new ResourceFactory(source, configoptions.host, configoptions.musicdir, configoptions.packeddir, configoptions.maxpacksize, data, resourcemanager, positiontracker, name);
+			ResourceFactory resourcepacked = new ResourceFactory(source, configoptions.host, configoptions.musicdir, configoptions.packeddir, configoptions.maxpacksize, data, resourcemanager, name);
 			if (resourcepacked.resourcepacker != null && !resourcepacked.resourcepacker.isAlive()) {
 				resourcepacked.resourcepacker.start();
 			}
 			return true;
 		}
 		update &= processpack;
-		ResourceFactory resourcepacked = new ResourceFactory(source, configoptions.host, configoptions.musicdir, configoptions.packeddir, configoptions.maxpacksize, data, resourcemanager, positiontracker, packsender, targets, name, update);
+		ResourceFactory resourcepacked = new ResourceFactory(source, configoptions.host, configoptions.musicdir, configoptions.packeddir, configoptions.maxpacksize, data, dispatcher, resourcemanager, targets, name, update);
 		if (resourcepacked.resourcepacker == null) {
 			positiontracker.removeAll(targets);
 			return true;
@@ -190,17 +182,9 @@ public final class ResourceFactory implements Runnable {
 		} else {
 			sounds = this.sounds;
 		}
-		if(targets == null || packsender == null) {
+		if(targets == null || dispatcher == null) {
 			return;
 		}
-
-		final String httphost = "http://".concat(host).concat("/");
-		for(UUID target : targets) {
-			StringBuilder sb = new StringBuilder(httphost);
-			sb.append(resourcemanager.add(target, this.resourcefile));
-			sb.append(".zip");
-			packsender.send(target, sb.toString(), this.sha1 == null ? resourcepacker.sha1 : this.sha1);
-			positiontracker.setPlaylistInfo(target, this.id, sounds);
-		}
+		dispatcher.dispatch(this.id, this.targets, this.resourcefile, this.sha1 == null ? resourcepacker.sha1 : this.sha1, sounds);
 	}
 }

@@ -14,7 +14,7 @@ public final class ResourceManager {
 	
 	private final ConcurrentSkipListSet<UUID> accepted = new ConcurrentSkipListSet<UUID>();
 	private final ConcurrentHashMap<UUID, UUID> targets = new ConcurrentHashMap<UUID, UUID>();
-	private final ConcurrentHashMap<UUID, CachedResource> tokenres = new ConcurrentHashMap<UUID, CachedResource>();
+	private final ConcurrentHashMap<UUID, byte[]> tokenres = new ConcurrentHashMap<UUID, byte[]>();
 	private final ConcurrentHashMap<Path, CachedResource> resources = new ConcurrentHashMap<Path, CachedResource>();
 
 	private final int maxbuffersize;
@@ -41,98 +41,111 @@ public final class ResourceManager {
 	}
 	
 	/**
-	 * Loads fileresource into memory or takes it from cache (if enabled)
-	 * Generates token
+	 * Generate tokens
 	 */
-	public UUID add(UUID targetplayer, File fileresource) {
-		CachedResource resource = null;
+	public UUID[] generateTokens(byte[] resource, UUID... targetplayers) {
+		int i = targetplayers.length;
+		UUID[] tokens = new UUID[i];
+		while(--i > -1) {
+			UUID targetplayer = targetplayers[i];
+			UUID token = null; //Token should be unique for each player.
+			if(this.clientcache) { //Use salty token, to be hard predictable.
+				long msb = targetplayer.getMostSignificantBits(), lsb = targetplayer.getLeastSignificantBits();
+				byte[] hash = new byte[0x10];
+				hash[0x00] = (byte) msb;
+				msb>>=8;
+				hash[0x01] = (byte) msb;
+				msb>>=8;
+				hash[0x02] = (byte) msb;
+				msb>>=8;
+				hash[0x03] = (byte) msb;
+				msb>>=8;
+				hash[0x04] = (byte) msb;
+				msb>>=8;
+				hash[0x05] = (byte) msb;
+				msb>>=8;
+				hash[0x06] = (byte) msb;
+				msb>>=8;
+				hash[0x07] = (byte) msb;
+				hash[0x08] = (byte) lsb;
+				lsb>>=8;
+				hash[0x09] = (byte) lsb;
+				lsb>>=8;
+				hash[0x0A] = (byte) lsb;
+				lsb>>=8;
+				hash[0x0B] = (byte) lsb;
+				lsb>>=8;
+				hash[0x0C] = (byte) lsb;
+				lsb>>=8;
+				hash[0x0D] = (byte) lsb;
+				lsb>>=8;
+				hash[0x0E] = (byte) lsb;
+				lsb>>=8;
+				hash[0x0F] = (byte) lsb;
+				synchronized (md5hash) {
+					md5hash.reset();
+					md5hash.update(resource);
+					md5hash.update(hash);
+					md5hash.update(this.salt);
+					hash = md5hash.digest();
+				}
+				msb = hash[0x07];
+				msb<<=8;
+				msb += hash[0x06];
+				msb<<=8;
+				msb += hash[0x05];
+				msb<<=8;
+				msb += hash[0x04];
+				msb<<=8;
+				msb += hash[0x03];
+				msb<<=8;
+				msb += hash[0x02];
+				msb<<=8;
+				msb += hash[0x01];
+				msb<<=8;
+				msb += hash[0x00];
+				lsb = hash[0x0F];
+				lsb<<=8;
+				lsb += hash[0x0E];
+				lsb<<=8;
+				lsb += hash[0x0D];
+				lsb<<=8;
+				lsb += hash[0x0C];
+				lsb<<=8;
+				lsb += hash[0x0B];
+				lsb<<=8;
+				lsb += hash[0x0A];
+				lsb<<=8;
+				lsb += hash[0x09];
+				lsb<<=8;
+				lsb += hash[0x08];
+				token = new UUID(msb, lsb);
+			} else {
+				token = UUID.randomUUID();
+			}
+			tokenres.put(token, resource);
+			targets.put(targetplayer, token);
+			tokens[i] = token;
+		}
+		return tokens;
+	}
+	
+	/**
+	 * Loads fileresource into memory or takes it from cache (if enabled)
+	 */
+	public UUID[] add(File fileresource, UUID... targetplayers) {
+		byte[] resource = null;
 		Path path = fileresource.toPath();
 		if (resources.containsKey(path)) {
-			resource = resources.get(path);
+			resource = resources.get(path).resource;
 		} else if (this.servercache) {
-			resource = new CachedResource(fileresource, maxbuffersize);
-			resources.put(path, resource);
+			CachedResource cachedresource = new CachedResource(fileresource, maxbuffersize);
+			resources.put(path, cachedresource);
+			resource = cachedresource.resource;
 		} else {
-			resource = new CachedResource(fileresource, maxbuffersize);
+			resource = new CachedResource(fileresource, maxbuffersize).resource;
 		}
-		UUID token = null; //Token should be unique for each player.
-		if(this.clientcache) { //Use salty token, to be hard predictable.
-			long msb = targetplayer.getMostSignificantBits(), lsb = targetplayer.getLeastSignificantBits();
-			byte[] hash = new byte[0x10];
-			hash[0x00] = (byte) msb;
-			msb>>=8;
-			hash[0x01] = (byte) msb;
-			msb>>=8;
-			hash[0x02] = (byte) msb;
-			msb>>=8;
-			hash[0x03] = (byte) msb;
-			msb>>=8;
-			hash[0x04] = (byte) msb;
-			msb>>=8;
-			hash[0x05] = (byte) msb;
-			msb>>=8;
-			hash[0x06] = (byte) msb;
-			msb>>=8;
-			hash[0x07] = (byte) msb;
-			hash[0x08] = (byte) lsb;
-			lsb>>=8;
-			hash[0x09] = (byte) lsb;
-			lsb>>=8;
-			hash[0x0A] = (byte) lsb;
-			lsb>>=8;
-			hash[0x0B] = (byte) lsb;
-			lsb>>=8;
-			hash[0x0C] = (byte) lsb;
-			lsb>>=8;
-			hash[0x0D] = (byte) lsb;
-			lsb>>=8;
-			hash[0x0E] = (byte) lsb;
-			lsb>>=8;
-			hash[0x0F] = (byte) lsb;
-			synchronized (md5hash) {
-				md5hash.reset();
-				md5hash.update(resource.resource);
-				md5hash.update(hash);
-				md5hash.update(this.salt);
-				hash = md5hash.digest();
-			}
-			msb = hash[0x07];
-			msb<<=8;
-			msb += hash[0x06];
-			msb<<=8;
-			msb += hash[0x05];
-			msb<<=8;
-			msb += hash[0x04];
-			msb<<=8;
-			msb += hash[0x03];
-			msb<<=8;
-			msb += hash[0x02];
-			msb<<=8;
-			msb += hash[0x01];
-			msb<<=8;
-			msb += hash[0x00];
-			lsb = hash[0x0F];
-			lsb<<=8;
-			lsb += hash[0x0E];
-			lsb<<=8;
-			lsb += hash[0x0D];
-			lsb<<=8;
-			lsb += hash[0x0C];
-			lsb<<=8;
-			lsb += hash[0x0B];
-			lsb<<=8;
-			lsb += hash[0x0A];
-			lsb<<=8;
-			lsb += hash[0x09];
-			lsb<<=8;
-			lsb += hash[0x08];
-			token = new UUID(msb, lsb);
-		} else {
-			token = UUID.randomUUID();
-		}
-		tokenres.put(token, resource);
-		targets.put(targetplayer, token);
-		return token;
+		return this.generateTokens(resource, targetplayers);
 	}
 	
 	/**
@@ -160,24 +173,21 @@ public final class ResourceManager {
 	 * Get resource bytes by token
 	 * Remove token
 	 * Clears accept status
-	 * @return 0 length byte array if token invalid
+	 * @return null if token invalid
 	 */
 	protected byte[] get(UUID token) {
-		if (token != null) {
-			if (targets.containsValue(token)) {
-				for (UUID target : targets.keySet()) {
-					if (targets.get(target).equals(token)) {
-						targets.remove(target);
-					}
+		if (token == null) {
+			return null;
+		}
+		if (targets.containsValue(token)) {
+			for (UUID target : targets.keySet()) {
+				if (targets.get(target).equals(token)) {
+					targets.remove(target);
 				}
 			}
-			accepted.remove(token);
-			CachedResource cr = tokenres.remove(token);
-			if (cr != null) {
-				return cr.resource;
-			}
 		}
-		return new byte[0];
+		accepted.remove(token);
+		return tokenres.remove(token);
 	}
 
 	/**

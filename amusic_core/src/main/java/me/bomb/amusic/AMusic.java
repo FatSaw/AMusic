@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import me.bomb.amusic.dispatcher.ResourceDispatcher;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
@@ -20,7 +21,7 @@ public final class AMusic {
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final ResourceServer resourceserver;
-	private final PackSender packsender;
+	public final ResourceDispatcher dispatcher;
 	private final Data data;
 	
 	public AMusic(ConfigOptions configoptions, SoundSource source, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
@@ -29,8 +30,8 @@ public final class AMusic {
 		this.data = data;
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
-		this.packsender = packsender;
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
+		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, "http://".concat(configoptions.host).concat("/"));
 	}
 	
 	/**
@@ -183,7 +184,7 @@ public final class AMusic {
 	 * Loads resource pack to player.
 	 */
 	public void loadPack(UUID[] playeruuid, String name, boolean update) throws FileNotFoundException {
-		ResourceFactory.load(source, configoptions, data, resourcemanager, positiontracker, packsender, playeruuid, name, update);
+		ResourceFactory.load(source, configoptions, data, dispatcher, resourcemanager, positiontracker, playeruuid, name, update);
 	}
 
 	/**

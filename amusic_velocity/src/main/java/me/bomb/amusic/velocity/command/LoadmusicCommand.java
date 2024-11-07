@@ -15,9 +15,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.Data;
-import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ResourceFactory;
+import me.bomb.amusic.dispatcher.ResourceDispatcher;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
@@ -27,18 +27,18 @@ public class LoadmusicCommand implements SimpleCommand {
 	private final SoundSource source;
 	private final ConfigOptions configoptions;
 	private final Data data;
+	private final ResourceDispatcher dispatcher;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
-	private final PackSender packsender;
 	
-	public LoadmusicCommand(ProxyServer server, SoundSource source, ConfigOptions configoptions, Data data, ResourceManager resourcemanager, PositionTracker positiontracker, PackSender packsender) {
+	public LoadmusicCommand(ProxyServer server, SoundSource source, ConfigOptions configoptions, Data data, ResourceDispatcher dispatcher, ResourceManager resourcemanager, PositionTracker positiontracker) {
 		this.server = server;
 		this.source = source;
 		this.configoptions = configoptions;
 		this.data = data;
+		this.dispatcher = dispatcher;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
-		this.packsender = packsender;
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class LoadmusicCommand implements SimpleCommand {
 			}
 			String name = args[1];
 			try {
-				if (!ResourceFactory.load(source, configoptions, data, resourcemanager, positiontracker, packsender, targetuuid == null ? null : new UUID[] {targetuuid}, name, false)) {
+				if (!ResourceFactory.load(source, configoptions, data, dispatcher, resourcemanager, positiontracker, targetuuid == null ? null : new UUID[] {targetuuid}, name, false)) {
 					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
 					return;
 				}

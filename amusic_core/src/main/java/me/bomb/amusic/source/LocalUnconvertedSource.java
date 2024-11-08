@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public final class LocalUnconvertedSource extends SoundSource {
+public final class LocalUnconvertedSource extends SoundSource<File> {
 	
 	private final Runtime runtime;
 	private final File musicdir, fmpegbinary;
@@ -96,6 +96,11 @@ public final class LocalUnconvertedSource extends SoundSource {
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	public File getSource() {
+		return this.musicdir;
 	}
 
 }

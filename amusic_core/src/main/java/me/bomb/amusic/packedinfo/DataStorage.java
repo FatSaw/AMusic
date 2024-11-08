@@ -1,4 +1,4 @@
-package me.bomb.amusic;
+package me.bomb.amusic.packedinfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map.Entry;
 
-public class DataStorage extends me.bomb.amusic.Data {
+public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 	private static final String FORMAT = ".ampi";
 	private static final FilenameFilter AMPIFILTER = new FilenameFilter() {
 		@Override
@@ -34,7 +34,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 	}
 
 	@Override
-	public void save() {
+	protected void save() {
 		for(File file : datadirectory.listFiles(AMPIFILTER)) {
 			String name = file.getName();
 			name = name.substring(0, name.length() - FORMAT.length());
@@ -130,6 +130,13 @@ public class DataStorage extends me.bomb.amusic.Data {
 		}
 	}
 	
+	public void start() {
+		int threadcount = savethreads.length;
+		while(--threadcount > -1) {
+			savethreads[threadcount].start();
+		}
+	}
+	
 	public void end() {
 		int threadcount = savethreads.length;
 		while(--threadcount > -1) {
@@ -154,7 +161,6 @@ public class DataStorage extends me.bomb.amusic.Data {
 		
 		protected DataSaveThread(File datadirectory) {
 			this.datadirectory = datadirectory;
-			start();
 		}
 		
 		protected boolean save(Entry<String, DataEntry>[] list, int start,int end) {
@@ -190,7 +196,7 @@ public class DataStorage extends me.bomb.amusic.Data {
 					DataEntry dataentry = entry.getValue();
 					File amusicpackedinfo = new File(datadirectory, id.concat(FORMAT));
 					int soundcount = dataentry.sounds.length;
-					if((dataentry.isSaved() && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.size < 0) {
+					if(dataentry.checkValues() || (dataentry.isSaved() && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.size < 0) {
 						++start;
 						continue;
 					}

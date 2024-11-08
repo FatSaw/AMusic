@@ -10,7 +10,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.SoundInfo;
+import me.bomb.amusic.packedinfo.SoundInfo;
 
 public final class PlaymusicTabComplete implements TabCompleter {
 	private final Server server;

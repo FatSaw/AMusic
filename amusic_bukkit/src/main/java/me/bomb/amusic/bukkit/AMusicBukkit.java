@@ -13,7 +13,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
-import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundStopper;
@@ -41,8 +40,6 @@ import me.bomb.amusic.source.SoundSource;
 
 public final class AMusicBukkit extends JavaPlugin {
 	private final AMusic amusic;
-	private final ConfigOptions configoptions;
-	private final DataStorage data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PositionTracker positiontracker;
@@ -92,13 +89,11 @@ public final class AMusicBukkit extends JavaPlugin {
 		break;
 		}
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
-		configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, waitacception);
+		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, waitacception);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-		data = new DataStorage(packeddir, (byte) 2);
-		data.load();
 		Runtime runtime = Runtime.getRuntime();
-		SoundSource source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		this.amusic = new AMusic(configoptions, source, data, packsender, new BukkitSoundStarter(), soundstopper, playerips);
+		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
+		this.amusic = new AMusic(configoptions, source, packsender, new BukkitSoundStarter(), soundstopper, playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		LangOptions.loadLang(langfile, ver > 15);
@@ -110,8 +105,8 @@ public final class AMusicBukkit extends JavaPlugin {
 		Server server = Bukkit.getServer();
 		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic.source, configoptions, data, amusic.dispatcher, resourcemanager, positiontracker, selectorprocessor));
-		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, data));
+		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic.source, amusic.datamanager, amusic.dispatcher, selectorprocessor));
+		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, amusic.datamanager));
 		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, positiontracker);
 		PluginCommand playmusiccommand = getCommand("playmusic");
 		playmusiccommand.setExecutor(new PlaymusicCommand(server, positiontracker, selectorprocessor, true));
@@ -134,7 +129,6 @@ public final class AMusicBukkit extends JavaPlugin {
 
 	public void onDisable() {
 		this.amusic.disable();
-		this.data.end();
 	}
 	//PLUGIN INIT END
 

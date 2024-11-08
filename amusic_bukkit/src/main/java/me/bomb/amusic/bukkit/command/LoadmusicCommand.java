@@ -1,6 +1,5 @@
 package me.bomb.amusic.bukkit.command;
 
-import java.io.FileNotFoundException;
 import java.util.UUID;
 
 import org.bukkit.Server;
@@ -11,34 +10,27 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.ConfigOptions;
-import me.bomb.amusic.Data;
-import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.dispatcher.ResourceDispatcher;
-import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.packedinfo.DataManager;
+import me.bomb.amusic.resource.EnumStatus;
+import me.bomb.amusic.resource.ResourceFactory;
+import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.SoundSource;
 
 public final class LoadmusicCommand implements CommandExecutor {
 	private final Server server;
-	private final SoundSource source;
-	private final ConfigOptions configuptions;
-	private final Data data;
+	private final SoundSource<?> source;
+	private final DataManager datamanager;
 	private final ResourceDispatcher dispatcher;
-	private final ResourceManager resourcemanager;
-	private final PositionTracker positiontracker;
 	private final SelectorProcessor selectorprocessor;
 
-	public LoadmusicCommand(Server server, SoundSource source, ConfigOptions configuptions, Data data, ResourceDispatcher dispatcher, ResourceManager resourcemanager, PositionTracker positiontracker, SelectorProcessor selectorprocessor) {
+	public LoadmusicCommand(Server server, SoundSource<?> source, DataManager datamanager, ResourceDispatcher dispatcher, SelectorProcessor selectorprocessor) {
 		LangOptions.values();
 		this.server = server;
 		this.source = source;
-		this.configuptions = configuptions;
-		this.data = data;
+		this.datamanager = datamanager;
 		this.dispatcher = dispatcher;
-		this.resourcemanager = resourcemanager;
-		this.positiontracker = positiontracker;
 		this.selectorprocessor = selectorprocessor;
 	}
 
@@ -122,7 +114,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 			executeCommand(sender, name, new UUID[]{targetuuid});
 		} else if(args.length == 1 && args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : data.getPlaylists()) {
+			for(String playlistname : datamanager.getPlaylists()) {
 				sb.append(playlistname);
 				sb.append(' ');
 			}
@@ -134,17 +126,18 @@ public final class LoadmusicCommand implements CommandExecutor {
 	}
 	
 	private void executeCommand(CommandSender sender, String playlistname, UUID[] targetuuids) {
-		try {
-			if (!ResourceFactory.load(source, configuptions, data, dispatcher, resourcemanager, positiontracker, targetuuids, playlistname, false)) {
-				LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
-				return;
+		Placeholders placeholder = new Placeholders("%playlistname%", playlistname);
+		StatusReport statusreport = new StatusReport() {
+			@Override
+			public void onStatusResponse(EnumStatus status) {
+				if(status == null) {
+					return;
+				}
+				(status == EnumStatus.NOTEXSIST ? LangOptions.loadmusic_noplaylist : status == EnumStatus.UNAVILABLE ? LangOptions.loadmusic_loaderunavilable : status == EnumStatus.REMOVED ? LangOptions.loadmusic_success_removed : status == EnumStatus.PACKED ? LangOptions.loadmusic_success_packed : LangOptions.loadmusic_success_dispatched).sendMsg(sender, placeholder);
 			}
-			LangOptions.loadmusic_success.sendMsg(sender, new Placeholders("%playlistname%", playlistname));
-		} catch (FileNotFoundException e) {
-			LangOptions.loadmusic_noplaylist.sendMsg(sender, new Placeholders("%playlistname%", playlistname));
-			return;
-		}
-		
+		};
+		LangOptions.loadmusic_processing.sendMsg(sender, placeholder);
+		new ResourceFactory(playlistname, targetuuids, datamanager, dispatcher, source, targetuuids == null, statusreport);
 	}
 	
 }

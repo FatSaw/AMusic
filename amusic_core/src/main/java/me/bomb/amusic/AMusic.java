@@ -1,6 +1,5 @@
 package me.bomb.amusic;
 
-import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +8,12 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import me.bomb.amusic.dispatcher.ResourceDispatcher;
+import me.bomb.amusic.packedinfo.Data;
+import me.bomb.amusic.packedinfo.DataManager;
+import me.bomb.amusic.packedinfo.DataStorage;
+import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.resource.ResourceFactory;
+import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
@@ -16,22 +21,22 @@ import me.bomb.amusic.source.SoundSource;
 public final class AMusic {
 	
 	private static AMusic instance;
-	private final ConfigOptions configoptions;
-	public final SoundSource source;
+	public final SoundSource<?> source;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final ResourceServer resourceserver;
 	public final ResourceDispatcher dispatcher;
+	public final DataManager datamanager;
 	private final Data data;
 	
-	public AMusic(ConfigOptions configoptions, SoundSource source, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
-		this.configoptions = configoptions;
+	public AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.source = source;
-		this.data = data;
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, "http://".concat(configoptions.host).concat("/"));
+		data = new DataStorage(configoptions.packeddir, (byte)2);
+		this.datamanager = new DataManager(data, configoptions.packeddir, !configoptions.processpack);
 	}
 	
 	/**
@@ -40,6 +45,8 @@ public final class AMusic {
 	public void enable() {
 		positiontracker.start();
 		resourceserver.start();
+		data.start();
+		data.load();
 	}
 	
 	/**
@@ -48,6 +55,7 @@ public final class AMusic {
 	public void disable() {
 		positiontracker.end();
 		resourceserver.end();
+		data.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
 	}
@@ -183,8 +191,8 @@ public final class AMusic {
 	/**
 	 * Loads resource pack to player.
 	 */
-	public void loadPack(UUID[] playeruuid, String name, boolean update) throws FileNotFoundException {
-		ResourceFactory.load(source, configoptions, data, dispatcher, resourcemanager, positiontracker, playeruuid, name, update);
+	public void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
+		new ResourceFactory(name, playeruuid, datamanager, dispatcher, source, update, statusreport);
 	}
 
 	/**

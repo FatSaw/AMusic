@@ -23,7 +23,6 @@ import dev.simplix.protocolize.api.Protocol;
 import dev.simplix.protocolize.api.Protocolize;
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
-import me.bomb.amusic.DataStorage;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
@@ -42,8 +41,6 @@ public class AMusicVelocity {
 	private final ProxyServer server;
     //private final Logger logger;
 	private final AMusic amusic;
-    private final ConfigOptions configoptions;
-	private final DataStorage data;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PositionTracker positiontracker;
@@ -65,16 +62,14 @@ public class AMusicVelocity {
 			tempdir.mkdir();
 		}
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
-		this.configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, true);
+		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, true);
 		playerips = configoptions.strictdownloaderlist ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-		data = new DataStorage(packeddir, (byte) 2);
-		data.load();
 
 		PackSender packsender = new VelocityPackSender(server);
         
 		Runtime runtime = Runtime.getRuntime();
-		SoundSource source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		this.amusic = new AMusic(configoptions, source, data, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(), playerips);
+		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
+		this.amusic = new AMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(), playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		this.server = server;
@@ -87,7 +82,7 @@ public class AMusicVelocity {
 	public void onProxyInitialization(ProxyInitializeEvent event) {
 		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
-		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, configoptions, data, amusic.dispatcher, resourcemanager, positiontracker);
+		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, amusic.datamanager, amusic.dispatcher);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker, true), playmusicuntrackable = new PlaymusicCommand(server, positiontracker, false);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);
 		CommandManager cmdmanager = this.server.getCommandManager();
@@ -103,7 +98,6 @@ public class AMusicVelocity {
 	@Subscribe
 	public void onProxyShutdown(ProxyShutdownEvent event) {
 		this.amusic.disable();
-		this.data.end();
 	}
 	
 }

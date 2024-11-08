@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import me.bomb.amusic.packedinfo.SoundInfo;
+
 public final class PositionTracker extends Thread {
 
 	private final ConcurrentHashMap<UUID, Playing> trackers = new ConcurrentHashMap<UUID, Playing>();
@@ -39,7 +41,7 @@ public final class PositionTracker extends Thread {
 
 	private boolean run = false;
 
-	public PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper) {
+	protected PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper) {
 		this.soundstarter = soundstarter;
 		this.soundstopper = soundstopper;
 	}
@@ -50,7 +52,7 @@ public final class PositionTracker extends Thread {
 		super.start();
 	}
 
-	public void end() {
+	protected void end() {
 		run = false;
 	}
 

@@ -1,4 +1,4 @@
-package me.bomb.amusic;
+package me.bomb.amusic.packedinfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,14 +12,18 @@ public abstract class Data {
 	/**
 	 * Save {@link Data#options} to storage.
 	 */
-	public abstract void save();
+	protected abstract void save();
 
 	/**
 	 * Load {@link Data#options} from storage.
 	 */
 	public abstract void load();
 	
-	public final void setPlaylist(String playlistname, SoundInfo[] sounds, int resourcesize, String resourcename, byte[] sha1) {
+	public abstract void start();
+	
+	public abstract void end();
+	
+	protected final void setPlaylist(String playlistname, SoundInfo[] sounds, int resourcesize, String resourcename, byte[] sha1) {
 		try {
 			options.put(playlistname, new DataEntry(resourcesize, resourcename, sounds, sha1));
 		} catch (IllegalArgumentException e) {
@@ -35,7 +39,7 @@ public abstract class Data {
 		return options.containsKey(playlistname);
 	}
 
-	public final void removePlaylist(String playlistname) {
+	protected final void removePlaylist(String playlistname) {
 		options.remove(playlistname);
 	}
 

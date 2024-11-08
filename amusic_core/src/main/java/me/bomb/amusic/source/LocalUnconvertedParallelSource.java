@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class LocalUnconvertedParallelSource extends SoundSource {
+public final class LocalUnconvertedParallelSource extends SoundSource<File> {
 	
 	private final Runtime runtime;
 	private final File musicdir, fmpegbinary;
@@ -129,6 +129,11 @@ public final class LocalUnconvertedParallelSource extends SoundSource {
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	public File getSource() {
+		return this.musicdir;
 	}
 
 }

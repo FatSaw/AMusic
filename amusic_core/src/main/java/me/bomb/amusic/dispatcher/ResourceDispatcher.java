@@ -6,13 +6,13 @@ import java.util.UUID;
 
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.SoundInfo;
+import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class ResourceDispatcher {
 	
 	private final PackSender packsender;
-	private final ResourceManager resourcemanager;
+	public final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final byte[] host;
 	private final int end;
@@ -48,6 +48,7 @@ public final class ResourceDispatcher {
 		int i = tokens.length;
 		byte[] host = new byte[this.host.length];
 		System.arraycopy(this.host, 0, host, 0, this.host.length);
+		positiontracker.removeAll(targets);
 		while(--i > -1) {
 			final UUID target = targets[i], token = tokens[i];
 			final byte[] tokenbytes = token.toString().getBytes(StandardCharsets.US_ASCII);
@@ -66,6 +67,7 @@ public final class ResourceDispatcher {
 		int i = tokens.length;
 		byte[] host = new byte[this.host.length];
 		System.arraycopy(this.host, 0, host, 0, this.host.length);
+		positiontracker.removeAll(targets);
 		while(--i > -1) {
 			final UUID target = targets[i], token = tokens[i];
 			final byte[] tokenbytes = token.toString().getBytes(StandardCharsets.US_ASCII);

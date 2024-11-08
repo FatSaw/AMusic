@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public final class LocalConvertedSource extends SoundSource {
+public final class LocalConvertedSource extends SoundSource<File> {
 	
 	private final File musicdir;
 	private final int maxsoundsize;
@@ -67,6 +67,11 @@ public final class LocalConvertedSource extends SoundSource {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public File getSource() {
+		return this.musicdir;
 	}
 
 }

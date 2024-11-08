@@ -3,7 +3,7 @@ package me.bomb.amusic.source;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public abstract class SoundSource {
+public abstract class SoundSource<T> {
 
 	/**
 	 * {@link SourceEntry#names} must be ready on return.
@@ -15,6 +15,8 @@ public abstract class SoundSource {
 	 * @return true if entry has at least one element
 	 */
 	public abstract boolean exists(String entrykey);
+	
+	public abstract T getSource();
 	
 	protected static short calculateDuration(byte[] t) {
 		int rate = -1, length = -1, size = t.length;

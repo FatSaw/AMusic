@@ -1,6 +1,5 @@
 package me.bomb.amusic.velocity.command;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,32 +12,25 @@ import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
-import me.bomb.amusic.ConfigOptions;
-import me.bomb.amusic.Data;
-import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.ResourceFactory;
 import me.bomb.amusic.dispatcher.ResourceDispatcher;
-import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.packedinfo.DataManager;
+import me.bomb.amusic.resource.EnumStatus;
+import me.bomb.amusic.resource.ResourceFactory;
+import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
 
 public class LoadmusicCommand implements SimpleCommand {
 	private final ProxyServer server;
-	private final SoundSource source;
-	private final ConfigOptions configoptions;
-	private final Data data;
+	private final SoundSource<?> source;
+	private final DataManager datamanager;
 	private final ResourceDispatcher dispatcher;
-	private final ResourceManager resourcemanager;
-	private final PositionTracker positiontracker;
 	
-	public LoadmusicCommand(ProxyServer server, SoundSource source, ConfigOptions configoptions, Data data, ResourceDispatcher dispatcher, ResourceManager resourcemanager, PositionTracker positiontracker) {
+	public LoadmusicCommand(ProxyServer server, SoundSource<?> source, DataManager datamanager, ResourceDispatcher dispatcher) {
 		this.server = server;
 		this.source = source;
-		this.configoptions = configoptions;
-		this.data = data;
+		this.datamanager = datamanager;
 		this.dispatcher = dispatcher;
-		this.resourcemanager = resourcemanager;
-		this.positiontracker = positiontracker;
 	}
 
 	@Override
@@ -81,24 +73,22 @@ public class LoadmusicCommand implements SimpleCommand {
 				args[1] = sb.toString();
 			}
 			String name = args[1];
-			try {
-				if (!ResourceFactory.load(source, configoptions, data, dispatcher, resourcemanager, positiontracker, targetuuid == null ? null : new UUID[] {targetuuid}, name, false)) {
-					LangOptions.loadmusic_loaderunavilable.sendMsg(sender);
-					return;
+			
+			Placeholders placeholder = new Placeholders("%playlistname%", name);
+			StatusReport statusreport = new StatusReport() {
+				@Override
+				public void onStatusResponse(EnumStatus status) {
+					if(status == null) {
+						return;
+					}
+					(status == EnumStatus.NOTEXSIST ? LangOptions.loadmusic_noplaylist : status == EnumStatus.UNAVILABLE ? LangOptions.loadmusic_loaderunavilable : status == EnumStatus.REMOVED ? LangOptions.loadmusic_success_removed : status == EnumStatus.PACKED ? LangOptions.loadmusic_success_packed : LangOptions.loadmusic_success_dispatched).sendMsg(sender, placeholder);
 				}
-
-				Placeholders[] placeholders = new Placeholders[1];
-				placeholders[0] = new Placeholders("%playlistname%", name);
-				LangOptions.loadmusic_success.sendMsg(sender, placeholders);
-			} catch (FileNotFoundException e) {
-				Placeholders[] placeholders = new Placeholders[1];
-				placeholders[0] = new Placeholders("%playlistname%", name);
-				LangOptions.loadmusic_noplaylist.sendMsg(sender, placeholders);
-				return;
-			}
+			};
+			LangOptions.loadmusic_processing.sendMsg(sender, placeholder);
+			new ResourceFactory(name, targetuuid == null ? null : new UUID[] {targetuuid}, datamanager, dispatcher, source, targetuuid == null, statusreport);
 		} else if(args.length == 1 && args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : data.getPlaylists()) {
+			for(String playlistname : datamanager.getPlaylists()) {
 				sb.append(playlistname);
 				sb.append(' ');
 			}
@@ -133,7 +123,7 @@ public class LoadmusicCommand implements SimpleCommand {
 		}
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			Set<String> playlists = data.getPlaylists();
+			Set<String> playlists = datamanager.getPlaylists();
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {

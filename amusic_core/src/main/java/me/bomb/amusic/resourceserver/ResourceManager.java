@@ -17,7 +17,7 @@ public final class ResourceManager {
 	private final ConcurrentHashMap<UUID, byte[]> tokenres = new ConcurrentHashMap<UUID, byte[]>();
 	private final ConcurrentHashMap<Path, CachedResource> resources = new ConcurrentHashMap<Path, CachedResource>();
 
-	private final int maxbuffersize;
+	public final int maxbuffersize;
 	private final boolean servercache, clientcache, waitacception;
 	private final byte[] salt;
 	

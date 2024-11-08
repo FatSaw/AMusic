@@ -128,7 +128,7 @@ AMusic api = AMusic.API(); //GET DEFAULT INSTANCE
 ### AMusic core
 May be used to add amusic core into other plugin, or create multiple independent AMusic instances
 ```
-AMusic api = new AMusic(ConfigOptions configoptions, SoundSource source, Data data, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips);
+AMusic api = new AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips);
 api.enable(); //starts positiontracker and resourceserver threads
 api.disable(); //stops positiontracker and resourceserver threads
 ```
@@ -139,7 +139,7 @@ api.getPlaylistSoundnames(String playlistname); //get list of sounds in playlist
 api.getPlaylistSoundnames(UUID playeruuid); //get list of sounds loaded to player with uuid "playeruuid"
 api.getPlaylistSoundlengths(String playlistname); //get list of sounds length in playlist "playlistname"
 api.getPlaylistSoundlengths(UUID playeruuid); //get list of sounds length loaded to player with uuid "playeruuid"
-api.loadPack(UUID[] playeruuid, String playlistname, boolean update); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
+api.loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
 api.getPackName(UUID playeruuid); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
 api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //set repeat mode "repeattype" to player with uuid "playeruuid"
 api.stopSound(UUID playeruuid); //stop sound to player with uuid "playeruuid"

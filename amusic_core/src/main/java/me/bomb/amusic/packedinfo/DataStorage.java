@@ -19,10 +19,11 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 	};
 	private static final byte VERSION = 2;
-	private final File datadirectory;
+	public final File datadirectory;
 	private final DataSaveThread[] savethreads;
 	
-	public DataStorage(File datadirectory, byte savethreadcount) {
+	public DataStorage(File datadirectory, boolean lockwrite, byte savethreadcount) {
+		super(lockwrite);
 		this.datadirectory = datadirectory;
 		if(savethreadcount < 0) {
 			savethreadcount = 0;

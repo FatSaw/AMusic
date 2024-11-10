@@ -12,9 +12,9 @@ import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
-import me.bomb.amusic.dispatcher.ResourceDispatcher;
-import me.bomb.amusic.packedinfo.DataManager;
+import me.bomb.amusic.packedinfo.DataStorage;
 import me.bomb.amusic.resource.EnumStatus;
+import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.SoundSource;
@@ -23,10 +23,10 @@ import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
 public class LoadmusicCommand implements SimpleCommand {
 	private final ProxyServer server;
 	private final SoundSource<?> source;
-	private final DataManager datamanager;
+	private final DataStorage datamanager;
 	private final ResourceDispatcher dispatcher;
 	
-	public LoadmusicCommand(ProxyServer server, SoundSource<?> source, DataManager datamanager, ResourceDispatcher dispatcher) {
+	public LoadmusicCommand(ProxyServer server, SoundSource<?> source, DataStorage datamanager, ResourceDispatcher dispatcher) {
 		this.server = server;
 		this.source = source;
 		this.datamanager = datamanager;

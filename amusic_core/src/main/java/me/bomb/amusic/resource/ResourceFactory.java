@@ -6,23 +6,23 @@ import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.UUID;
 
-import me.bomb.amusic.dispatcher.ResourceDispatcher;
 import me.bomb.amusic.packedinfo.DataEntry;
-import me.bomb.amusic.packedinfo.DataManager;
+import me.bomb.amusic.packedinfo.DataStorage;
+import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.source.SoundSource;
 
 public final class ResourceFactory extends Thread {
 	
 	private final String id;
 	private final UUID[] targets;
-	private final DataManager datamanager;
+	private final DataStorage datamanager;
 	private final ResourceDispatcher dispatcher;
 	private final SoundSource<?> source;
 	private final boolean update;
 	private final Encoder base64encoder;
 	private final StatusReport statusreport;
 	
-	public ResourceFactory(String id, UUID[] targets, DataManager datamanager, ResourceDispatcher dispatcher, SoundSource<?> source, boolean update, StatusReport statusreport) {
+	public ResourceFactory(String id, UUID[] targets, DataStorage datamanager, ResourceDispatcher dispatcher, SoundSource<?> source, boolean update, StatusReport statusreport) {
 		this.id = id;
 		this.targets = targets;
 		this.datamanager = datamanager;
@@ -45,7 +45,7 @@ public final class ResourceFactory extends Thread {
 		
 		DataEntry dataentry = datamanager.getPlaylist(this.id);
 		if(update) {
-			final String name = dataentry == null ? DataManager.filterName(this.id) : dataentry.name;
+			final String name = dataentry == null ? Data.filterName(this.id) : dataentry.name;
 			Object f = source.getSource();
 			File sourcearchive = f instanceof File ? new File((File) f, name.concat(".zip")) : null;
 			if(datamanager.update(this.id, source.exists(this.id) ? new ResourcePacker(source, this.id, resourcefile, sourcearchive, dispatcher.resourcemanager) : null)) {
@@ -85,10 +85,16 @@ public final class ResourceFactory extends Thread {
 			return;
 		}
 		
-		dispatcher.dispatch(this.id, this.targets, resourcefile, dataentry.sha1, dataentry.sounds);
+		if(dispatcher.dispatch(this.id, this.targets, dataentry.sounds, resourcefile, dataentry.sha1)) {
+			if(statusreport == null) {
+				return;
+			}
+			statusreport.onStatusResponse(EnumStatus.DISPATCHED);
+			return;
+		}
 		if(statusreport == null) {
 			return;
 		}
-		statusreport.onStatusResponse(EnumStatus.DISPATCHED);
+		statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
 	}
 }

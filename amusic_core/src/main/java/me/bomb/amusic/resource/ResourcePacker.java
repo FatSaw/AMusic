@@ -22,7 +22,7 @@ import me.bomb.amusic.source.SourceEntry;
 public final class ResourcePacker implements Runnable {
 	
 	public SoundInfo[] sounds;
-	public byte[] sha1 = null, resourcepack = null;
+	public byte[] sha1,resourcepack = null;
 
 	private final SoundSource<?> source;
 	private final String id;
@@ -178,7 +178,7 @@ public final class ResourcePacker implements Runnable {
 		if(resourcefile == null) {
 			return;
 		}
-		resourcemanager.resetCache(resourcefile.toPath());
+		//resourcemanager.removeCache(this.id); //maybe not need
 		FileOutputStream fos;
 		try {
 			fos = new FileOutputStream(resourcefile, false);
@@ -187,7 +187,7 @@ public final class ResourcePacker implements Runnable {
 		} catch (IOException e) {
 			return;
 		}
-		resourcemanager.putResource(resourcefile.toPath(), this.resourcepack);
+		resourcemanager.putCache(this.id, this.resourcepack);
 	}
 
 }

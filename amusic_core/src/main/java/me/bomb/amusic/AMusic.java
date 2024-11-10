@@ -7,11 +7,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import me.bomb.amusic.dispatcher.ResourceDispatcher;
-import me.bomb.amusic.packedinfo.Data;
-import me.bomb.amusic.packedinfo.DataManager;
 import me.bomb.amusic.packedinfo.DataStorage;
 import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
@@ -26,17 +24,15 @@ public final class AMusic {
 	public final ResourceManager resourcemanager;
 	public final ResourceServer resourceserver;
 	public final ResourceDispatcher dispatcher;
-	public final DataManager datamanager;
-	private final Data data;
+	public final DataStorage datamanager;
 	
 	public AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.source = source;
-		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache, configoptions.tokensalt, configoptions.waitacception);
+		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache ? configoptions.tokensalt : null, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, "http://".concat(configoptions.host).concat("/"));
-		data = new DataStorage(configoptions.packeddir, (byte)2);
-		this.datamanager = new DataManager(data, configoptions.packeddir, !configoptions.processpack);
+		datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
 	}
 	
 	/**
@@ -45,8 +41,8 @@ public final class AMusic {
 	public void enable() {
 		positiontracker.start();
 		resourceserver.start();
-		data.start();
-		data.load();
+		datamanager.start();
+		datamanager.load();
 	}
 	
 	/**
@@ -55,7 +51,7 @@ public final class AMusic {
 	public void disable() {
 		positiontracker.end();
 		resourceserver.end();
-		data.end();
+		datamanager.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
 	}
@@ -79,7 +75,7 @@ public final class AMusic {
 	 * @return the names of playlists that were loaded at least once.
 	 */
 	public Set<String> getPlaylists() {
-		return data.getPlaylists();
+		return datamanager.getPlaylists();
 	}
 
 	/**
@@ -88,7 +84,7 @@ public final class AMusic {
 	 * @return the names of sounds in playlist.
 	 */
 	public List<String> getPlaylistSoundnames(String playlistname) {
-		SoundInfo[] soundinfos = data.getPlaylist(playlistname).sounds;
+		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
 		if(soundinfos==null) {
 			return null;
 		}
@@ -124,7 +120,7 @@ public final class AMusic {
 	 * @return the lenghs of sounds in playlist.
 	 */
 	public List<Short> getPlaylistSoundlengths(String playlistname) {
-		SoundInfo[] soundinfos = data.getPlaylist(playlistname).sounds;
+		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
 		if(soundinfos==null) {
 			return null;
 		}

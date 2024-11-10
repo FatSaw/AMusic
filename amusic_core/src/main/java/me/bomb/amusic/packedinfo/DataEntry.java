@@ -21,33 +21,6 @@ public final class DataEntry {
 	public boolean checkValues() {
 		return size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20;
 	}
-
-	/*public boolean check(File file) {
-		if (file.length() != size) {
-			return false;
-		}
-		byte[] filesha1 = null;
-		try {
-			MessageDigest sha1hash;
-			try {
-				sha1hash = MessageDigest.getInstance("SHA-1");
-			} catch (NoSuchAlgorithmException e) {
-				return false;
-			}
-			DigestInputStream digestInputStream = new DigestInputStream(new FileInputStream(file), sha1hash);
-			byte[] bytes = new byte[1024];
-			while (digestInputStream.read(bytes) > 0);
-			digestInputStream.close();
-			filesha1 = sha1hash.digest();
-		} catch (IOException e) {
-		}	
-		for(byte i = 20;--i > -1;) {
-			if (sha1[i] != filesha1[i]) {
-				return false;
-			}
-		}
-		return true;
-	}*/
 	
 	public void setSaved() {
 		saved = true;

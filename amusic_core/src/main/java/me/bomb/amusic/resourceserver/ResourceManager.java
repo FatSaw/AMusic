@@ -1,43 +1,53 @@
 package me.bomb.amusic.resourceserver;
 
 import java.io.File;
-import java.nio.file.Path;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class ResourceManager {
 	
-	private final MessageDigest md5hash;
 	
-	private final ConcurrentSkipListSet<UUID> accepted = new ConcurrentSkipListSet<UUID>();
+	private final ConcurrentSkipListSet<UUID> accepted;
 	private final ConcurrentHashMap<UUID, UUID> targets = new ConcurrentHashMap<UUID, UUID>();
 	private final ConcurrentHashMap<UUID, byte[]> tokenres = new ConcurrentHashMap<UUID, byte[]>();
-	private final ConcurrentHashMap<Path, CachedResource> resources = new ConcurrentHashMap<Path, CachedResource>();
+	private final ConcurrentHashMap<String, byte[]> resources;
 
 	public final int maxbuffersize;
-	private final boolean servercache, clientcache, waitacception;
 	private final byte[] salt;
 	
-	public ResourceManager(int maxbuffersize, boolean servercache, boolean clientcache, byte[] salt, boolean waitacception) {
+	public ResourceManager(int maxbuffersize, boolean servercache, byte[] salt, boolean waitacception) {
 		this.maxbuffersize = maxbuffersize;
-		this.servercache = servercache;
+		resources = servercache ? new ConcurrentHashMap<String, byte[]>() : null;
 		this.salt = salt;
-		this.waitacception = waitacception;
-		clientcache &= salt != null;
-		MessageDigest md = null;
-		if(clientcache) {
-			try {
-				md = MessageDigest.getInstance("MD5");
-			} catch (NoSuchAlgorithmException e) {
-				e.printStackTrace();
-				clientcache = false;
-			}
+		accepted = waitacception ? new ConcurrentSkipListSet<UUID>() : null;
+	}
+	
+	public byte[] readResource(File fileresource) {
+		if(fileresource == null || !fileresource.isFile()) {
+			return null;
 		}
-		this.md5hash = md;
-		this.clientcache = clientcache;
+		long filesize = fileresource.length();
+		if(filesize > maxbuffersize) {
+			filesize = maxbuffersize;
+		}
+		byte[] resource = new byte[(int) filesize];
+		try {
+			FileInputStream streamresource = new FileInputStream(fileresource);
+			final int size = streamresource.read(resource);
+			streamresource.close();
+			if(size < filesize) {
+				resource = Arrays.copyOf(resource, size);
+			}
+		} catch (IOException e) {
+			return null;
+		}
+		return resource;
 	}
 	
 	/**
@@ -46,10 +56,15 @@ public final class ResourceManager {
 	public UUID[] generateTokens(byte[] resource, UUID... targetplayers) {
 		int i = targetplayers.length;
 		UUID[] tokens = new UUID[i];
-		while(--i > -1) {
-			UUID targetplayer = targetplayers[i];
-			UUID token = null; //Token should be unique for each player.
-			if(this.clientcache) { //Use salty token, to be hard predictable.
+		if(salt != null) {
+			final MessageDigest md5hash;
+			try {
+				md5hash = MessageDigest.getInstance("MD5");
+			} catch (NoSuchAlgorithmException e) {
+				return null;
+			}
+			while(--i > -1) {
+				UUID targetplayer = targetplayers[i];
 				long msb = targetplayer.getMostSignificantBits(), lsb = targetplayer.getLeastSignificantBits();
 				byte[] hash = new byte[0x10];
 				hash[0x00] = (byte) msb;
@@ -82,13 +97,13 @@ public final class ResourceManager {
 				hash[0x0E] = (byte) lsb;
 				lsb>>=8;
 				hash[0x0F] = (byte) lsb;
-				synchronized (md5hash) {
-					md5hash.reset();
-					md5hash.update(resource);
-					md5hash.update(hash);
-					md5hash.update(this.salt);
-					hash = md5hash.digest();
-				}
+				
+				md5hash.reset();
+				md5hash.update(resource);
+				md5hash.update(hash);
+				md5hash.update(this.salt);
+				hash = md5hash.digest();
+				
 				msb = hash[0x07];
 				msb<<=8;
 				msb += hash[0x06];
@@ -119,13 +134,18 @@ public final class ResourceManager {
 				lsb += hash[0x09];
 				lsb<<=8;
 				lsb += hash[0x08];
-				token = new UUID(msb, lsb);
-			} else {
-				token = UUID.randomUUID();
+				final UUID token = new UUID(msb, lsb);
+				tokens[i] = token;
+				tokenres.put(token, resource);
+				targets.put(targetplayer, token);
 			}
-			tokenres.put(token, resource);
-			targets.put(targetplayer, token);
+			return tokens;
+		}
+		while(--i > -1) {
+			final UUID token = UUID.randomUUID();
 			tokens[i] = token;
+			tokenres.put(token, resource);
+			targets.put(targetplayers[i], token);
 		}
 		return tokens;
 	}
@@ -133,26 +153,26 @@ public final class ResourceManager {
 	/**
 	 * Loads fileresource into memory or takes it from cache (if enabled)
 	 */
-	public UUID[] add(File fileresource, UUID... targetplayers) {
+	/*public UUID[] addD(File fileresource, UUID... targetplayers) {
 		byte[] resource = null;
 		Path path = fileresource.toPath();
+		resource = getCached(id);
 		if (resources.containsKey(path)) {
-			resource = resources.get(path).resource;
+			resource = resources.get(path);
 		} else if (this.servercache) {
-			CachedResource cachedresource = new CachedResource(fileresource, maxbuffersize);
-			resources.put(path, cachedresource);
-			resource = cachedresource.resource;
+			//resource = readResource(fileresource);
+			//resources.put(id, resource);
 		} else {
-			resource = new CachedResource(fileresource, maxbuffersize).resource;
+			resource = readResource(fileresource);
 		}
 		return this.generateTokens(resource, targetplayers);
-	}
+	}*/
 	
 	/**
 	 * Set accept status by targetplayer uuid
 	 */
 	public void setAccepted(UUID targetplayer) {
-		if (!waitacception || !targets.containsKey(targetplayer)) {
+		if (accepted == null || !targets.containsKey(targetplayer)) {
 			return;
 		}
 		accepted.add(targets.get(targetplayer));
@@ -163,7 +183,7 @@ public final class ResourceManager {
 	 * @return true if token valid and no accept status.
 	 */
 	protected boolean waitAcception(UUID token) {
-		if(!waitacception || !targets.containsValue(token)) {
+		if(accepted == null || !targets.containsValue(token)) {
 			return false;
 		}
 		return !accepted.contains(token);
@@ -186,28 +206,10 @@ public final class ResourceManager {
 				}
 			}
 		}
-		accepted.remove(token);
+		if(accepted != null) {
+			accepted.remove(token);
+		}
 		return tokenres.remove(token);
-	}
-
-	/**
-	 * Put resource into cache (if enabled)
-	 */
-	public void putResource(Path resourcepath, byte[] resource) {
-		if(this.servercache) {
-			CachedResource cachedresource = new CachedResource(resource);
-			resources.put(resourcepath, cachedresource);
-		}
-			
-	}
-
-	/**
-	 * Remove resource from cache
-	 */
-	public void resetCache(Path resource) {
-		if (resources.containsKey(resource)) {
-			resources.remove(resource);
-		}
 	}
 	
 	/**
@@ -220,22 +222,56 @@ public final class ResourceManager {
 		if (token == null) {
 			return false;
 		}
-		accepted.remove(token);
 		tokenres.remove(token);
+		if(accepted == null) {
+			return true;
+		}
+		accepted.remove(token);
 		return true;
+	}
+	
+	/**
+	 * Get resource from cache
+	 */
+	public byte[] getCached(String id) {
+		return resources == null ? null : resources.get(id);
+	}
+	
+	/**
+	 * Put resource into cache
+	 */
+	public void putCache(String id, byte[] resource) {
+		if(resources == null) {
+			return;
+		}
+		resources.put(id, resource);
+			
+	}
+
+	/**
+	 * Remove resource from cache
+	 */
+	public void removeCache(String id) {
+		if(resources == null) {
+			return;
+		}
+		resources.remove(id);
 	}
 	
 	/**
 	 * Clear resource cache
 	 */
-	public void clear() {
+	public void clearCache() {
+		if(resources == null) {
+			return;
+		}
 		resources.clear();
 	}
 	
 	/**
 	 * Checks resource cached
 	 */
-	public boolean isCached(Path resource) {
-		return resources.containsKey(resource);
+	public boolean isCached(String id) {
+		return resources != null && resources.containsKey(id);
 	}
 }

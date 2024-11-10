@@ -11,9 +11,9 @@ import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
-import me.bomb.amusic.dispatcher.ResourceDispatcher;
-import me.bomb.amusic.packedinfo.DataManager;
+import me.bomb.amusic.packedinfo.DataStorage;
 import me.bomb.amusic.resource.EnumStatus;
+import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.SoundSource;
@@ -21,11 +21,11 @@ import me.bomb.amusic.source.SoundSource;
 public final class LoadmusicCommand implements CommandExecutor {
 	private final Server server;
 	private final SoundSource<?> source;
-	private final DataManager datamanager;
+	private final DataStorage datamanager;
 	private final ResourceDispatcher dispatcher;
 	private final SelectorProcessor selectorprocessor;
 
-	public LoadmusicCommand(Server server, SoundSource<?> source, DataManager datamanager, ResourceDispatcher dispatcher, SelectorProcessor selectorprocessor) {
+	public LoadmusicCommand(Server server, SoundSource<?> source, DataStorage datamanager, ResourceDispatcher dispatcher, SelectorProcessor selectorprocessor) {
 		LangOptions.values();
 		this.server = server;
 		this.source = source;

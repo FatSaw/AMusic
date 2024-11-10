@@ -19,7 +19,7 @@ public final class ConfigOptions {
 	public final byte channels;
 	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, waitacception;
 	public final File ffmpegbinary, musicdir, packeddir;
-	public final byte[] tokensalt;
+	protected final byte[] tokensalt;
 	
 	/**
 	 * Custom configuration storage.

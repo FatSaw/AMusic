@@ -1,0 +1,20 @@
+server:
+ host: 127.0.0.1:25530
+ #ip: 127.0.0.1
+ port: 25530
+ backlog: 50
+ strictdownloaderlist: true
+ #waitacception: true
+ tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
+resource:
+ processpack: true
+  cache:
+   server: true
+   client: true
+ encoder:
+  use: true
+  ffmpegbinary: ffmpeg
+  bitrate: 64000
+  channels: 2
+  samplingrate: 44100
+  async: true

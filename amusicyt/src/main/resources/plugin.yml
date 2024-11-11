@@ -1,0 +1,10 @@
+name: AMusicYT
+main: me.bomb.amusic.yt.AMusicYT
+version: ${version}
+api-version: 1.13
+author: Bomb
+commands:
+  loadmusic:
+  playmusic:
+  playmusicuntrackable:
+  repeat:

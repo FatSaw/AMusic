@@ -32,7 +32,7 @@ public final class AMusic {
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, "http://".concat(configoptions.host).concat("/"));
-		datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
+		this.datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
 	}
 	
 	/**

@@ -10,7 +10,7 @@ public final class SourceEntry {
 	private final AtomicBoolean[] finished;
 	public final boolean[] success;
 	
-	protected SourceEntry(String[] names, short[] lengths, byte[][] data, AtomicBoolean[] finished, boolean[] success) {
+	public SourceEntry(String[] names, short[] lengths, byte[][] data, AtomicBoolean[] finished, boolean[] success) {
 		this.names = names;
 		this.lengths = lengths;
 		this.data = data;

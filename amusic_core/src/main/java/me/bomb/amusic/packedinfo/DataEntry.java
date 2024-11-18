@@ -22,12 +22,4 @@ public final class DataEntry {
 		return size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20;
 	}
 	
-	public void setSaved() {
-		saved = true;
-	}
-	
-	public boolean isSaved() {
-		return saved;
-	}
-	
 }

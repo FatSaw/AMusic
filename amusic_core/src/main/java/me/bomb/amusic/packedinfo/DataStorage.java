@@ -123,7 +123,7 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				}
 				fis.close();
 				DataEntry dataentry = new DataEntry(packedsize, packedname, sounds, sha1);
-				dataentry.setSaved();
+				dataentry.saved = true;
 				options.put(id, dataentry);
 			} catch (IOException e) {
 				continue;
@@ -197,7 +197,7 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 					DataEntry dataentry = entry.getValue();
 					File amusicpackedinfo = new File(datadirectory, id.concat(FORMAT));
 					int soundcount = dataentry.sounds.length;
-					if(dataentry.checkValues() || (dataentry.isSaved() && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.size < 0) {
+					if(dataentry.checkValues() || (dataentry.saved && amusicpackedinfo.exists()) || dataentry.sha1.length != 20 || dataentry.size < 0) {
 						++start;
 						continue;
 					}
@@ -281,7 +281,7 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 						//fos.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
 						
 						fos.close();
-						dataentry.setSaved();
+						dataentry.saved = true;
 					} catch (IOException e) {
 					}
 					++start;

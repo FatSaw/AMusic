@@ -48,27 +48,40 @@ public final class ResourceFactory extends Thread {
 			final String name = dataentry == null ? Data.filterName(this.id) : dataentry.name;
 			Object f = source.getSource();
 			File sourcearchive = f instanceof File ? new File((File) f, name.concat(".zip")) : null;
-			if(datamanager.update(this.id, source.exists(this.id) ? new ResourcePacker(source, this.id, resourcefile, sourcearchive, dispatcher.resourcemanager) : null)) {
-				dataentry = datamanager.getPlaylist(this.id);
-				if(dataentry == null) {
-					if(resourcefile.exists()) {
-						resourcefile.delete();
-						if(statusreport == null) {
-							return;
-						}
-						statusreport.onStatusResponse(EnumStatus.REMOVED);
-						return;
-					}
+			ResourcePacker resourcepacker = null;
+			if(!datamanager.update(this.id, source.exists(this.id) ? resourcepacker = new ResourcePacker(source, this.id, resourcefile, sourcearchive, dispatcher.resourcemanager) : null)) {
+				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
+				return;
+			}
+			dataentry = datamanager.getPlaylist(this.id);
+			if(dataentry == null) {
+				if(resourcefile.exists()) {
+					resourcefile.delete();
 					if(statusreport == null) {
 						return;
 					}
-					statusreport.onStatusResponse(EnumStatus.NOTEXSIST);
+					statusreport.onStatusResponse(EnumStatus.REMOVED);
 					return;
 				}
-			} else if(statusreport != null) {
-				statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
+				if(statusreport == null) {
+					return;
+				}
+				statusreport.onStatusResponse(EnumStatus.NOTEXSIST);
 				return;
 			}
+			if(targets == null) {
+				if(statusreport == null) {
+					return;
+				}
+				statusreport.onStatusResponse(EnumStatus.PACKED);
+				return;
+			}
+			dispatcher.dispatch(this.id, this.targets, resourcepacker.sounds, resourcepacker.resourcepack, resourcepacker.sha1);
+			if(statusreport == null) {
+				return;
+			}
+			statusreport.onStatusResponse(EnumStatus.DISPATCHED);
+			return;
 		}
 		if(dataentry == null) {
 			if(statusreport == null) {
@@ -84,7 +97,6 @@ public final class ResourceFactory extends Thread {
 			statusreport.onStatusResponse(EnumStatus.PACKED);
 			return;
 		}
-		
 		if(dispatcher.dispatch(this.id, this.targets, dataentry.sounds, resourcefile, dataentry.sha1)) {
 			if(statusreport == null) {
 				return;

@@ -15,6 +15,7 @@ import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.uploader.UploaderServer;
 
 public final class AMusic {
 	
@@ -25,6 +26,7 @@ public final class AMusic {
 	public final ResourceServer resourceserver;
 	public final ResourceDispatcher dispatcher;
 	public final DataStorage datamanager;
+	public final UploaderServer uploader;
 	
 	public AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.source = source;
@@ -33,6 +35,7 @@ public final class AMusic {
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, "http://".concat(configoptions.host).concat("/"));
 		this.datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
+		this.uploader = configoptions.useuploader ? new UploaderServer(playerips, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : null;
 	}
 	
 	/**
@@ -42,6 +45,7 @@ public final class AMusic {
 		positiontracker.start();
 		resourceserver.start();
 		datamanager.start();
+		if(this.uploader != null) uploader.start();
 		datamanager.load();
 	}
 	
@@ -52,6 +56,7 @@ public final class AMusic {
 		positiontracker.end();
 		resourceserver.end();
 		datamanager.end();
+		if(this.uploader != null) uploader.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
 	}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Convert to OGG</title>
+    <link rel="icon" href="data:,">
+    <script src="./index.js"></script>
+      <style>
+        html, body {
+          height: 100%;
+        }
+        .main {
+          height: 100%;
+          width: 100%;
+          display: table;
+        }
+        .wrapper {
+          display: table-cell;
+          height: 100%;
+          vertical-align: middle;
+        }
+        .content {
+          max-width: 500px;
+          margin: auto;
+          vertical-align: middle;
+        }
+      </style>
+  </head>
+  <body>
+    <div class="main">
+    <div class="wrapper">
+    <div class="content">
+      <audio id="output-audio" controls autoplay></audio><br/>
+      <input type="file" accept="audio/*, video/*" id="uploader" disabled>
+      <p id="message"></p>
+    </div>
+    </div>
+    </div>
+    <script>
+      
+      const { fetchFile } = FFmpegUtil;
+      const { FFmpeg } = FFmpegWASM;
+      let ffmpeg = null;
+      const uploader = document.getElementById('uploader');
+      const initffmpeg = async () => {
+      if (ffmpeg === null) {
+          ffmpeg = new FFmpeg();
+          ffmpeg.on("log", ({ message }) => {
+            console.log(message);
+          })
+          ffmpeg.on("progress", ({ progress, time }) => {
+            message.innerHTML = `${progress * 100} %, time: ${time / 1000000} s`;
+          });
+          await ffmpeg.load({
+            coreURL: "./ffmpeg-core.js",
+          });
+        }
+        uploader.disabled = false;
+      }
+
+      const transcode = async ({ target: { files } }) => {
+        const message = document.getElementById('message');
+        const { name } = files[0];
+        await ffmpeg.writeFile(name, await fetchFile(files[0]));
+        message.innerHTML = 'Start transcoding';
+        console.time('exec');
+        await ffmpeg.exec(["-i", name, "-strict", "-2", "-acodec", "vorbis", "-ab", "64000", "-ac", "2", "-ar", "44100", "-f", "ogg", "-vn", "-y", "output.ogg"]);
+        console.timeEnd('exec');
+        message.innerHTML = 'Complete transcoding';
+        const data = await ffmpeg.readFile('output.ogg');
+
+        const audio = document.getElementById('output-audio');
+        audio.src = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/ogg' }));
+      }
+
+      uploader.addEventListener('change', transcode);
+      initffmpeg();
+      
+    </script>
+  </body>
+</html>

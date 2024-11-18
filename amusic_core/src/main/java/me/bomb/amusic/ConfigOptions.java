@@ -14,21 +14,24 @@ import me.bomb.amusic.util.SimpleConfiguration;
 public final class ConfigOptions {
 	
 	public final String host;
-	public final InetAddress ip;
-	public final int port, backlog, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
+	public final InetAddress ip, uploaderip;
+	public final int port, uploaderport, backlog, uploaderbacklog, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
 	public final byte channels;
-	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, waitacception;
+	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, useuploader, encodetracksasynchronly, waitacception;
 	public final File ffmpegbinary, musicdir, packeddir;
 	protected final byte[] tokensalt;
 	
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, InetAddress ip, int port, int backlog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
+	public ConfigOptions(String host, InetAddress ip, InetAddress uploaderip, int port, int uploaderport, int backlog, int uploaderbacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean useuploader, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
 		this.host = host;
 		this.ip = ip;
+		this.uploaderip = uploaderip;
 		this.port = port;
+		this.uploaderport = uploaderport;
 		this.backlog = backlog;
+		this.uploaderbacklog = uploaderbacklog;
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxmusicfilesize;
 		this.bitrate = bitrate;
@@ -39,6 +42,7 @@ public final class ConfigOptions {
 		this.clientcache = clientcache;
 		this.strictdownloaderlist = strictdownloaderlist;
 		this.useconverter = useconverter;
+		this.useuploader = useuploader;
 		this.encodetracksasynchronly = encodetracksasynchronly;
 		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
@@ -101,6 +105,21 @@ public final class ConfigOptions {
 		this.ip = ip;
 		port = sc.getIntOrDefault("server\0port", 25530);
 		backlog = sc.getIntOrDefault("server\0backlog", 50);
+		
+		this.useuploader = sc.getBooleanOrDefault("uploaderserver\0use", false);
+		InetAddress uploaderip = null;
+		String uploaderipstr = sc.getStringOrDefault("uploaderserver\0ip", null);
+		if(uploaderipstr!=null) {
+			try {
+				uploaderip = InetAddress.getByName(uploaderipstr);
+			} catch (UnknownHostException e) {
+			}
+		}
+		
+		this.uploaderip = uploaderip;
+		uploaderport = sc.getIntOrDefault("uploaderserver\0port", 25532);
+		uploaderbacklog = sc.getIntOrDefault("uploaderserver\0backlog", 50);
+		
 		processpack = sc.getBooleanOrDefault("resource\0processpack", true);
 		servercache = sc.getBooleanOrDefault("resource\0cache\0server", true);
 		clientcache = sc.getBooleanOrDefault("resource\0cache\0client", true);

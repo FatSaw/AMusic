@@ -1,3 +1,8 @@
+uploaderserver:
+ use: false
+ #ip: 127.0.0.1
+ port: 25532
+ backlog: 50
 server:
  host: 127.0.0.1:25530
  #ip: 127.0.0.1

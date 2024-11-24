@@ -1,13 +1,16 @@
 package me.bomb.amusic.uploader;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Base64.Decoder;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class UploaderServer extends Thread {
@@ -61,33 +64,35 @@ public final class UploaderServer extends Thread {
 	}
 
 	public static final class PageSender extends Thread {
-		private static final byte[] responsenotfound;
+		
+		private static final byte[] notfound, clidentifier, headerend, headersplit;
 		private static final byte[][] web;
 		private static final byte[][] identifier;
 
 		private final Socket connected;
 
 		static {
-			{
-				responsenotfound = "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-				final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: text/html\r\nContent-Length: "
-						.getBytes(StandardCharsets.US_ASCII),
-						responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: text/javascript\r\nContent-Length: "
-								.getBytes(StandardCharsets.US_ASCII),
-						responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: application/wasm\r\nContent-Length: "
-								.getBytes(StandardCharsets.US_ASCII),
-						responseclose = "\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-				
-				final ClassLoader classloader = UploaderServer.class.getClassLoader();
-				web = new byte[5][];
-				identifier = new byte[5][];
-				loadStaticContent(classloader, (byte)0, 2397, "index.html", "", responseparthtml0, responseclose);
-				loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
-				loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
-				loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
-				loadStaticContent(classloader, (byte)4, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm0, responseclose);
-				
-			}
+			notfound = "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+			clidentifier = "Content-Length: ".getBytes(StandardCharsets.US_ASCII);
+			headerend = new byte[] {'\r','\n','\r','\n'};
+			headersplit = new byte[] {'\r','\n'};
+			final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: text/html\r\nContent-Length: "
+					.getBytes(StandardCharsets.US_ASCII),
+					responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: text/javascript\r\nContent-Length: "
+							.getBytes(StandardCharsets.US_ASCII),
+					responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: application/wasm\r\nContent-Length: "
+							.getBytes(StandardCharsets.US_ASCII),
+					responseclose = "\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+			
+			final ClassLoader classloader = UploaderServer.class.getClassLoader();
+			web = new byte[5][];
+			identifier = new byte[6][];
+			loadStaticContent(classloader, (byte)0, 3006, "index.html", "", responseparthtml0, responseclose);
+			loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
+			loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
+			loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
+			loadStaticContent(classloader, (byte)4, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm0, responseclose);
+			identifier[5] = "POST".getBytes(StandardCharsets.US_ASCII);
 		}
 		
 		private static void loadStaticContent(final ClassLoader classloader, final byte id, final int contentsize, final String contentid, final String contentpublicid, byte[] header, byte[] headerclose) {
@@ -122,12 +127,11 @@ public final class UploaderServer extends Thread {
 		}
 
 		public void run() {
-			byte[] buf = new byte[512];
+			byte[] buf = new byte[2048];
 			try {
-				InputStream cis = connected.getInputStream();
-				cis.read(buf);
-				connected.shutdownInput();
-				byte e = 5;
+				final InputStream cis = connected.getInputStream();
+				int readcount = cis.read(buf);
+				byte e = 6;
 				while (--e > -1) {
 					int i = identifier[e].length;
 					
@@ -145,13 +149,77 @@ public final class UploaderServer extends Thread {
 					}
 					break;
 				}
-				OutputStream cos = connected.getOutputStream();
-				if (e == -1) {
-					cos.write(responsenotfound);
+				if(e == 5) {
+					connected.shutdownOutput();
+					int i = 6;
+					while(i < readcount) {
+						if(buf[i] == ' ') break;
+						++i;
+					}
+					i-=6;
+					byte[] bytes = new byte[i];
+					System.arraycopy(buf, 6, bytes, 0, i);
+					String name = parseName(bytes);
+					int split = indexOf(buf, headerend, i, buf.length);
+					if(split != -1) {
+						int pi = i, cl = -1;
+						while((i = indexOf(buf, headersplit, i, split)) != -1) {
+							int length = i - pi;
+							if(length > 16 && length < 26) { //27
+								byte k = 16;
+								int l = pi + k;
+								while(--k > -1) {
+									if(clidentifier[k] != buf[--l]) {
+										break;
+									}
+								}
+								if(k == -1) {
+									length -= 16;
+									bytes = new byte[length];
+									System.arraycopy(buf, pi + 16, bytes, 0, length);
+									String cls = new String(bytes, StandardCharsets.US_ASCII);
+									try {
+										cl = Integer.parseInt(cls);
+									} catch (NumberFormatException ex) {
+									}
+								}
+							}
+							i += headersplit.length;
+							pi = i;
+						}
+						if(cl != -1) {
+							split += 4;
+							bytes = new byte[cl];
+							readcount-=split;
+							System.arraycopy(buf, split, bytes, 0, readcount);
+							
+							int pos = readcount;
+							while((readcount = cis.read(buf)) != -1) {
+								System.arraycopy(buf, 0, bytes, pos, readcount);
+								pos+=readcount;
+							}
+							
+							if((i = name.lastIndexOf('.')) != -1) {
+								name = name.substring(0, i);
+							}
+							final File debugfile = new File("./plugins/AMusic/" + name + ".ogg");
+							final FileOutputStream fos = new FileOutputStream(debugfile, false);
+							try {
+								fos.write(bytes, 0, bytes.length);
+							} catch (IOException ex) {
+							} finally {
+								try {
+									fos.close();
+								} catch (IOException ex) {
+								}
+							}
+						}
+					}
 				} else {
-					cos.write(web[e], 0, web[e].length);
+					connected.shutdownInput();
+					connected.getOutputStream().write(e == -1 ? notfound : web[e]);
+					connected.shutdownOutput();
 				}
-				cos.flush();
 			} catch (IOException e) {
 			} finally {
 				try {
@@ -161,6 +229,51 @@ public final class UploaderServer extends Thread {
 			}
 
 		}
+		
+		public static int indexOf(byte[] outerArray, byte[] smallerArray, int from, int to) {
+		    for(int i = from; i < to - smallerArray.length+1; ++i) {
+		        boolean found = true;
+		        int j = smallerArray.length;
+		        while(--j > -1) {
+		        	if (outerArray[i+j] != smallerArray[j]) {
+			               found = false;
+			               break;
+			           }
+		        }
+		        if (found) return i;
+		     }
+		   return -1;  
+		}  
+		
+		private static String parseName(byte[] nameb) {
+			try {
+				Decoder base64decoder = Base64.getDecoder();
+				nameb = base64decoder.decode(nameb);
+				int finalcount = 0;
+				int i = nameb.length;
+				while(--i > -1) {
+					byte c = nameb[i];
+					if(c == '/' || c == '\\' || c == ':' || c == '<' || c == '>' || c == '*' || c == '?' || c == '|' || c == '\"' || c == '\0' || (c > 0 && c < 32)) {
+						nameb[i] = '\0';
+					} else {
+						++finalcount;
+					}
+				}
+				byte[] filtered = new byte[finalcount];
+				int j = 0;
+				while(++i < nameb.length && j < finalcount) {
+					byte c = nameb[i];
+					if(c != '\0') {
+						filtered[j] = c;
+						++j;
+					}
+				}
+				return new String(filtered, StandardCharsets.UTF_8);
+			} catch (IllegalArgumentException e) {
+				return null;
+			}
+		}
+		
 	}
 
 }

@@ -26,7 +26,7 @@ public final class UploadmusicCommand implements CommandExecutor {
 			sender.sendMessage("No permission!");
 			return true;
 		}
-		if(args.length == 0) {
+		if(args.length < 2) {
 			sender.sendMessage("Usage: /uploadmusic <start/finish> <playlist/token>");
 			return true;
 		}

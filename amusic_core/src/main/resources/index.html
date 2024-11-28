@@ -29,14 +29,14 @@
     <div class="main">
     <div class="wrapper">
     <div class="content">
-      <audio id="output-audio" controls autoplay></audio><br/>
+      <audio id="output-audio" controls></audio><br/>
       <input type="file" accept="audio/*, video/*" id="uploader" disabled multiple>
       <p id="message"></p>
     </div>
     </div>
     </div>
     <script>
-      
+      const token = window.location.pathname.substring(1);
       const { fetchFile } = FFmpegUtil;
       const { FFmpeg } = FFmpegWASM;
       let ffmpeg = null;
@@ -58,12 +58,12 @@
       }
       
       async function send(name, buffer) {
+        
         let binaryString = '';
   		new TextEncoder().encode(name).forEach((byte) => {
     		binaryString += String.fromCharCode(byte);
   		});
-		const response = await fetch("./" + window.btoa(binaryString), {method : "POST", body: buffer});
-      	//const response = await fetch("./" + new TextEncoder().encode(name).toBase64(), {method : "POST", body: buffer});
+		const response = await fetch("./" + window.btoa(binaryString), {method : "PUT", headers: {"UUID": token}, body: buffer});
       }
 
       const transcode = async ({ target: { files } }) => {
@@ -83,7 +83,7 @@
           message.innerHTML = 'Complete transcoding';
           const data = await ffmpeg.readFile('output.ogg');
           send(name, data.buffer);
-          //audio.src = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/ogg' }));
+          audio.src = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/ogg' }));
         }
       }
 

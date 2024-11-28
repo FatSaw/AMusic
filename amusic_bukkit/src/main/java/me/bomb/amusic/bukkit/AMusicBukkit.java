@@ -24,6 +24,7 @@ import me.bomb.amusic.bukkit.command.PlaymusicTabComplete;
 import me.bomb.amusic.bukkit.command.RepeatCommand;
 import me.bomb.amusic.bukkit.command.RepeatTabComplete;
 import me.bomb.amusic.bukkit.command.SelectorProcessor;
+import me.bomb.amusic.bukkit.command.UploadmusicCommand;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_10_R1;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_8_R3;
@@ -117,6 +118,8 @@ public final class AMusicBukkit extends JavaPlugin {
 		PluginCommand repeatcommand = getCommand("repeat");
 		repeatcommand.setExecutor(new RepeatCommand(server, positiontracker, selectorprocessor));
 		repeatcommand.setTabCompleter(new RepeatTabComplete(server));
+		PluginCommand uploadmusiccommand = getCommand("uploadmusic");
+		uploadmusiccommand.setExecutor(new UploadmusicCommand(amusic.uploadermanager));
 		if(playerips != null) {
 			playerips.clear();
 			for(Player player : Bukkit.getOnlinePlayers()) {

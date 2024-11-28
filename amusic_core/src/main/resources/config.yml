@@ -1,10 +1,13 @@
 uploaderserver:
  use: false
+ host: http://127.0.0.1:25532/
  #ip: 127.0.0.1
  port: 25532
  backlog: 50
+ timeout: 600000
+ limit: 262144000
 server:
- host: 127.0.0.1:25530
+ host: http://127.0.0.1:25530/
  #ip: 127.0.0.1
  port: 25530
  backlog: 50

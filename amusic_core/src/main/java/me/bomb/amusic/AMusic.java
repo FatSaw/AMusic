@@ -15,6 +15,7 @@ import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.uploader.UploaderServer;
 
 public final class AMusic {
@@ -26,6 +27,7 @@ public final class AMusic {
 	public final ResourceServer resourceserver;
 	public final ResourceDispatcher dispatcher;
 	public final DataStorage datamanager;
+	public final UploadManager uploadermanager;
 	public final UploaderServer uploader;
 	
 	public AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
@@ -33,9 +35,10 @@ public final class AMusic {
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache ? configoptions.tokensalt : null, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
-		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, "http://".concat(configoptions.host).concat("/"));
+		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, configoptions.host);
 		this.datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
-		this.uploader = configoptions.useuploader ? new UploaderServer(playerips, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : null;
+		this.uploadermanager = configoptions.useuploader ? new UploadManager(configoptions.uploadertimeout, configoptions.uploaderlimit, configoptions.musicdir, configoptions.uploaderhost) : null;
+		this.uploader = configoptions.useuploader ? new UploaderServer(this.uploadermanager, playerips, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : null;
 	}
 	
 	/**

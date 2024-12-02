@@ -4,92 +4,73 @@
     <title>Convert to OGG</title>
     <link rel="icon" href="data:,">
     <script src="./index.js"></script>
-      <style>
-        html, body {
-          height: 100%;
-        }
-        .main {
-          height: 100%;
-          width: 100%;
-          display: table;
-        }
-        .wrapper {
-          display: table-cell;
-          height: 100%;
-          vertical-align: middle;
-        }
-        .content {
-          max-width: 500px;
-          margin: auto;
-          vertical-align: middle;
-        }
-      </style>
   </head>
-  <body>
-    <div class="main">
-    <div class="wrapper">
-    <div class="content">
-      <audio id="output-audio" controls></audio><br/>
-      <input type="file" accept="audio/*, video/*" id="uploader" disabled multiple>
-      <p id="message"></p>
-    </div>
-    </div>
-    </div>
+  <body style="padding:30%">
+    <input type="file" accept="audio/*, video/*" id="uploader" disabled multiple>
+    <audio id="output-audio" controls></audio><br/>
+    <p id="message"></p>
     <script>
-      const token = window.location.pathname.substring(1);
-      const { fetchFile } = FFmpegUtil;
-      const { FFmpeg } = FFmpegWASM;
-      let ffmpeg = null;
-      const uploader = document.getElementById('uploader');
-      const initffmpeg = async () => {
-      if (ffmpeg === null) {
-          ffmpeg = new FFmpeg();
-          ffmpeg.on("log", ({ message }) => {
-            console.log(message);
-          })
-          ffmpeg.on("progress", ({ progress, time }) => {
-            message.innerHTML = `${progress * 100} %, time: ${time / 1000000} s`;
-          });
-          await ffmpeg.load({
-            coreURL: "./ffmpeg-core.js",
-          });
+const token = window.location.pathname.substring(1);
+
+async function sendPut(name, buffer) {
+    let binaryString = '';
+    new TextEncoder().encode(name).forEach((byte) => {
+        binaryString += String.fromCharCode(byte);
+    });
+    const response = await fetch("./" + window.btoa(binaryString), {method: "PUT", headers: {"UUID": token}, body: buffer});
+}
+
+async function sendDelete(name) {
+    let binaryString = '';
+    new TextEncoder().encode(name).forEach((byte) => {
+        binaryString += String.fromCharCode(byte);
+    });
+    const response = await fetch("./" + window.btoa(binaryString), {method: "DELETE", headers: {"UUID": token}});
+}
+
+{
+    const { fetchFile } = FFmpegUtil;
+    const { FFmpeg } = FFmpegWASM;
+    let ffmpeg = null;
+    const uploader = document.getElementById('uploader');
+    const initffmpeg = async () => {
+        if (ffmpeg === null) {
+            ffmpeg = new FFmpeg();
+            ffmpeg.on("log", ({message}) => {
+                console.log(message);
+            })
+            ffmpeg.on("progress", ({progress, time}) => {
+                message.innerHTML = `${progress * 100} %, time: ${time / 1000000} s`;
+            });
+            await ffmpeg.load({coreURL: "./ffmpeg-core.js"});
         }
         uploader.disabled = false;
-      }
-      
-      async function send(name, buffer) {
-        
-        let binaryString = '';
-  		new TextEncoder().encode(name).forEach((byte) => {
-    		binaryString += String.fromCharCode(byte);
-  		});
-		const response = await fetch("./" + window.btoa(binaryString), {method : "PUT", headers: {"UUID": token}, body: buffer});
-      }
-
-      const transcode = async ({ target: { files } }) => {
+    }
+    
+    const transcode = async ({target: { files }}) => {
         if (ffmpeg === null) {
-          return;
+            return;
         }
         const message = document.getElementById('message');
         const audio = document.getElementById('output-audio');
         let i = files.length;
-        while(--i > -1) {
-          const { name } = files[i];
-          await ffmpeg.writeFile(name, await fetchFile(files[i]));
-          message.innerHTML = 'Start transcoding';
-          console.time('exec');
-          await ffmpeg.exec(["-i", name, "-strict", "-2", "-acodec", "vorbis", "-ab", "64000", "-ac", "2", "-ar", "44100", "-f", "ogg", "-vn", "-y", "output.ogg"]);
-          console.timeEnd('exec');
-          message.innerHTML = 'Complete transcoding';
-          const data = await ffmpeg.readFile('output.ogg');
-          send(name, data.buffer);
-          audio.src = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/ogg' }));
+        while (--i > -1) {
+            const { name } = files[i];
+            await ffmpeg.writeFile(name, await fetchFile(files[i]));
+            message.innerHTML = 'Start transcoding';
+            console.time('exec');
+            await ffmpeg.exec(["-i", name, "-strict", "-2", "-acodec", "vorbis", "-ab", "64000", "-ac", "2", "-ar", "44100", "-f", "ogg", "-vn", "-y", "output.ogg"]);
+            console.timeEnd('exec');
+            message.innerHTML = 'Complete transcoding';
+            const data = await ffmpeg.readFile('output.ogg');
+            sendPut(name, data.buffer);
+            audio.src = URL.createObjectURL(new Blob([data.buffer], {type: 'audio/ogg'}));
         }
-      }
-
-      uploader.addEventListener('change', transcode);
-      initffmpeg();
-      
+    }
+    
+    uploader.addEventListener('change', transcode);
+    initffmpeg();
+}
     </script>
   </body>
 </html>

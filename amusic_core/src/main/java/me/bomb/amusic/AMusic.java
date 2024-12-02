@@ -34,11 +34,11 @@ public final class AMusic {
 		this.source = source;
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache ? configoptions.tokensalt : null, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
-		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
+		this.resourceserver = new ResourceServer(configoptions.resourcestrictaccess ? playerips : null, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, configoptions.host);
 		this.datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
 		this.uploadermanager = configoptions.useuploader ? new UploadManager(configoptions.uploadertimeout, configoptions.uploaderlimit, configoptions.musicdir, configoptions.uploaderhost) : null;
-		this.uploader = configoptions.useuploader ? new UploaderServer(this.uploadermanager, playerips, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : null;
+		this.uploader = configoptions.useuploader ? new UploaderServer(this.uploadermanager, configoptions.uploaderstrictaccess ? playerips : null, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : null;
 	}
 	
 	/**

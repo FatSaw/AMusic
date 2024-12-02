@@ -221,4 +221,22 @@ public final class AMusic {
 	public void playSound(UUID playeruuid, String name) {
 		positiontracker.playMusic(playeruuid, name);
 	}
+	
+	/**
+	 * Open upload session.
+	 * 
+	 * @return session token.
+	 */
+	public UUID openUploadSession(String playlistname) {
+		return uploadermanager == null ? null : uploadermanager.generateToken(playlistname);
+	}
+	
+	/**
+	 * Close upload session.
+	 * 
+	 * @return true if session closed successfully.
+	 */
+	public boolean closeUploadSession(UUID token) {
+		return uploadermanager == null ? false : uploadermanager.endSession(token);
+	}
 }

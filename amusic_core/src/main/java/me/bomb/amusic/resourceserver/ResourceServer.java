@@ -5,9 +5,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ResourceServer extends Thread {
+	
+	private final static byte[] noaccess = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+	
 	private final ConcurrentHashMap<Object,InetAddress> onlineips;
 	private final InetAddress ip;
 	private final int port, backlog;
@@ -38,16 +42,16 @@ public final class ResourceServer extends Thread {
 				e.printStackTrace();
 				return;
 			}
-			Socket connected = null;
 			while (!server.isClosed()) {
 				try {
 					if (this.onlineips == null) {
 						new ResourceSender(server.accept(), resourcemanager);
 					} else {
-						connected = server.accept();
+						Socket connected = server.accept();
 						if (onlineips.values().contains(connected.getInetAddress())) {
 							new ResourceSender(connected, resourcemanager);
 						} else {
+							connected.getOutputStream().write(noaccess);
 							connected.close();
 						}
 					}

@@ -17,14 +17,14 @@ public final class ConfigOptions {
 	public final InetAddress ip, uploaderip;
 	public final int port, uploaderport, backlog, uploaderbacklog, maxpacksize, maxmusicfilesize, bitrate, samplingrate, uploadertimeout, uploaderlimit;
 	public final byte channels;
-	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, useuploader, encodetracksasynchronly, waitacception;
+	public final boolean processpack, servercache, clientcache, resourcestrictaccess, uploaderstrictaccess, useconverter, useuploader, encodetracksasynchronly, waitacception;
 	public final File ffmpegbinary, musicdir, packeddir;
 	protected final byte[] tokensalt;
 	
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int backlog, int uploaderbacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean useuploader, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
+	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int backlog, int uploaderbacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
 		this.host = host;
 		this.ip = ip;
 		this.uploaderhost = uploaderhost;
@@ -43,7 +43,8 @@ public final class ConfigOptions {
 		this.processpack = processpack;
 		this.servercache = servercache;
 		this.clientcache = clientcache;
-		this.strictdownloaderlist = strictdownloaderlist;
+		this.resourcestrictaccess = strictdownloaderlist;
+		this.uploaderstrictaccess = uploaderstrictdownloaderlist;
 		this.useconverter = useconverter;
 		this.useuploader = useuploader;
 		this.encodetracksasynchronly = encodetracksasynchronly;
@@ -62,7 +63,7 @@ public final class ConfigOptions {
 		if (!configfile.exists()) {
 			InputStream is = ConfigOptions.class.getClassLoader().getResourceAsStream("config.yml");
 			try {
-				bytes = new byte[0x0200];
+				bytes = new byte[0x0400];
 				bytes = Arrays.copyOf(bytes, is.read(bytes));
 			} catch (IOException e) {
 			}
@@ -130,8 +131,8 @@ public final class ConfigOptions {
 		processpack = sc.getBooleanOrDefault("resource\0processpack", true);
 		servercache = sc.getBooleanOrDefault("resource\0cache\0server", true);
 		clientcache = sc.getBooleanOrDefault("resource\0cache\0client", true);
-		strictdownloaderlist = sc.getBooleanOrDefault("server\0strictdownloaderlist", true);
-		
+		resourcestrictaccess = sc.getBooleanOrDefault("server\0strictaccess", true);
+		uploaderstrictaccess = sc.getBooleanOrDefault("uploaderserver\0strictaccess", true);
 		byte[] salt = sc.getBytesBase64OrDefault("server\0tokensalt", new byte[0]);
 		
 		if(salt == null || salt.length < 2) {

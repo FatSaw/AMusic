@@ -1,5 +1,7 @@
 package me.bomb.amusic.uploader;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -10,7 +12,7 @@ import java.util.UUID;
 
 public final class PageSender extends Thread {
 	
-	private static final byte[] notfound, putupdated, nolength, novalidtoken, notoken, headertoolarge, datatoolarge, clidentifier, uidentifier, headerend, headersplit;
+	private static final byte[] notfound, updated, nolength, novalidtoken, notoken, headertoolarge, datatoolarge, clidentifier, uidentifier, headerend, headersplit;
 	private static final byte[][] web;
 	private static final byte[][] identifier;
 
@@ -19,7 +21,7 @@ public final class PageSender extends Thread {
 
 	static {
 		notfound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		putupdated = "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		updated = "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		nolength = "HTTP/1.1 411 Length Required\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		novalidtoken = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		notoken = "HTTP/1.1 410 Gone\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
@@ -39,13 +41,14 @@ public final class PageSender extends Thread {
 		
 		final ClassLoader classloader = UploaderServer.class.getClassLoader();
 		web = new byte[5][];
-		identifier = new byte[6][];
-		loadStaticContent(classloader, (byte)0, 2959, "index.html", "", responseparthtml0, responseclose);
+		identifier = new byte[7][];
+		loadStaticContent(classloader, (byte)0, 2710, "index.html", "", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)4, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm0, responseclose);
 		identifier[5] = "PUT".getBytes(StandardCharsets.US_ASCII);
+		identifier[6] = "DELETE".getBytes(StandardCharsets.US_ASCII);
 	}
 	
 	private static void loadStaticContent(final ClassLoader classloader, final byte id, final int contentsize, final String contentid, final String contentpublicid, byte[] header, byte[] headerclose) {
@@ -84,6 +87,8 @@ public final class PageSender extends Thread {
 		byte[] buf = new byte[2048];
 		
 		try {
+			final InputStream cis = connected.getInputStream();
+			int readcount = cis.read(buf);
 			/*{
 				final File debugfile = new File("./header.txt");
 				final FileOutputStream fos = new FileOutputStream(debugfile, false);
@@ -97,9 +102,7 @@ public final class PageSender extends Thread {
 					}
 				}
 			}*/
-			final InputStream cis = connected.getInputStream();
-			int readcount = cis.read(buf);
-			byte e = 6;
+			byte e = 7;
 			while (--e > -1) {
 				int i = identifier[e].length;
 				boolean b = false;
@@ -128,7 +131,64 @@ public final class PageSender extends Thread {
 					--e;
 				}
 			}
-			if(e == 5) {
+			if(e == 6) {
+				//DELETE REQUEST
+				connected.shutdownInput();
+				int i = 8;
+				while(i < readcount) {
+					if(buf[i] == ' ') break;
+					++i;
+				}
+				int split = indexOf(buf, headerend, i, buf.length);
+				if(split != -1) {
+					byte[] bytes = new byte[i-8];
+					System.arraycopy(buf, 8, bytes, 0, bytes.length);
+					String name = parseName(bytes);
+					int pi = i;
+					UUID token = null;
+					while((i = indexOf(buf, headersplit, i, split)) != -1) {
+						int length = i - pi;
+						if(length == 42) {
+							byte k = 6;
+							int l = pi + k;
+							while(--k > -1) {
+								if(uidentifier[k] != buf[--l]) {
+									break;
+								}
+							}
+							if(k == -1) {
+								length -= 6;
+								try {
+									token = UUID.fromString(new String(buf, pi + 6, length, StandardCharsets.US_ASCII));
+								} catch (IndexOutOfBoundsException | IllegalArgumentException ex) {
+								}
+							}
+						}
+						i += headersplit.length;
+						pi = i;
+					}
+					if(token != null) {
+						final UploadSession session = uploadmanager.getSession(token);
+						if(session != null) {
+							if((i = name.lastIndexOf('.')) != -1) {
+								name = name.substring(0, i);
+							}
+							session.remove(name);
+							connected.getOutputStream().write(updated);
+							connected.shutdownOutput();
+						} else {
+							connected.getOutputStream().write(notoken);
+							connected.shutdownOutput();
+						}
+					} else {
+						connected.getOutputStream().write(novalidtoken);
+						connected.shutdownOutput();
+					}
+				} else {
+					connected.getOutputStream().write(headertoolarge);
+					connected.shutdownOutput();
+				}
+			} else if(e == 5) {
 				//PUT REQUEST
 				int i = 5;
 				while(i < readcount) {
@@ -185,20 +245,20 @@ public final class PageSender extends Thread {
 							if(session != null) {
 								final boolean canput = session.canPut(cl);
 								if(canput) {
-									connected.getOutputStream().write(putupdated);
+									connected.getOutputStream().write(updated);
 									connected.shutdownOutput();
 									split += 4;
 									bytes = new byte[cl];
-									readcount-=split;
-									System.arraycopy(buf, split, bytes, 0, readcount);
-									int pos = readcount;
-									while((readcount = cis.read(buf)) != -1) {
-										System.arraycopy(buf, 0, bytes, pos, readcount);
-										pos+=readcount;
+									if(cl != 0) {
+										readcount-=split;
+										System.arraycopy(buf, split, bytes, 0, readcount);
+										int pos = readcount;
+										while((readcount = cis.read(buf)) != -1) {
+											System.arraycopy(buf, 0, bytes, pos, readcount);
+											pos+=readcount;
+										}
 									}
 									connected.shutdownInput();
-									
-									
 									if((i = name.lastIndexOf('.')) != -1) {
 										name = name.substring(0, i);
 									}

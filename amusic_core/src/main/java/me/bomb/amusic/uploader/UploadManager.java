@@ -61,16 +61,20 @@ public final class UploadManager extends Thread {
 			return false;
 		}
 		File musicdir = new File(this.musicdir, session.targetplaylist);
-		if(musicdir == null || musicdir.exists()) {
-			return false;
+		if(!musicdir.exists()) {
+			musicdir.mkdir();
 		}
-		musicdir.mkdir();
 		for(Entry<String, byte[]> entry : uploadentrys.entrySet()) {
+			byte[] value = entry.getValue();
 			File soundfile = new File(musicdir, entry.getKey().concat(".ogg"));
+			if(value == null || value.length == 0) {
+				soundfile.delete();
+				continue;
+			}
 			FileOutputStream fos = null;
 			try {
 				fos = new FileOutputStream(soundfile, false);
-				fos.write(entry.getValue());
+				fos.write(value);
 			} catch(IOException ex) {
 			} finally {
 				if(fos == null) {

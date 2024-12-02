@@ -51,7 +51,7 @@ public final class UploadmusicCommand implements CommandExecutor {
 				UUID token = UUID.fromString(args[1]);
 				sender.sendMessage(uploadmanager.endSession(token) ? "Token removed" : "Token invalid!");
 			} catch(IllegalArgumentException ex) {
-				sender.sendMessage("Token invalid!");
+				sender.sendMessage("Token format invalid!");
 			}
 			return true;
 		}

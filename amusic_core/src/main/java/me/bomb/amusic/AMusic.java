@@ -2,6 +2,7 @@ package me.bomb.amusic;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -229,6 +230,15 @@ public final class AMusic {
 	 */
 	public UUID openUploadSession(String playlistname) {
 		return uploadermanager == null ? null : uploadermanager.generateToken(playlistname);
+	}
+	
+	/**
+	 * Get upload sessions.
+	 * 
+	 * @return upload sessions.
+	 */
+	public Enumeration<UUID> getUploadSessions() {
+		return uploadermanager == null ? null : uploadermanager.getSessions();
 	}
 	
 	/**

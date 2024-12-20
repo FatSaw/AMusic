@@ -1,11 +1,12 @@
 # AMusic
 Music through resource pack
 ## Features:
-Clientside, serverside caching
-
-Addition to exsisting resourcepack (Place source resourcepack .zip (with same name as playlist) into /AMusic/Music directory)
-
-5 repeat types (repeatone,repeatall,playone,playall,random)
+- Clientside, serverside caching
+- Addition to exsisting resourcepack (Place source resourcepack .zip (with same name as playlist) into /AMusic/Music directory)
+- 5 repeat types (repeatone,repeatall,playone,playall,random)
+- Web sound uploader with clientside convertation
+- Large number of supported versions `1.7.10` - `1.21.1`
+- Position and count selectors (bukkit only)
 
 ## Commands:
 

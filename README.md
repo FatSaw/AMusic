@@ -21,6 +21,8 @@ playmusic - start/stop sound from loaded resourcepack
 
 `/repeat <playername> <repeat type>` - set repeat type
 
+`/uploadmusic <start/finish> <playlist>/[token]` - upload sound
+
 ### Permissions
 `amusic.loadmusic` - load playlist(resourcepack), allows `@s` usage
 
@@ -35,6 +37,10 @@ playmusic - start/stop sound from loaded resourcepack
 `amusic.repeat.other` - set repeat for other players
 
 `amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
+
+`amusic.uploadmusic` - start stop upload session
+
+`amusic.uploadmusic.token` - allows finish session by token
 
 ### Selectors <playername>:
 `@n` - null target
@@ -82,22 +88,31 @@ Description: `Limits player count`
 ## Config:
 
 ```
-server:
- host: 127.0.0.1:25530 #External server ip or hostname
+uploaderserver:
+ use: false
+ host: http://127.0.0.1:25532/
  #ip: 127.0.0.1
- port: 25530 #Resourcepack file server port
- #backlog: 50 #Maximum length of the queue of incoming connections
- strictdownloaderlist: true
- #waitacception: true #ResourcePack Status accepted need to access server (if blocked using recomended value 'true', if 1.7.10 'false')
+ port: 25532
+ backlog: 50
+ strictaccess: true
+ timeout: 600000
+ limit: 262144000
+server:
+ host: http://127.0.0.1:25530/
+ #ip: 127.0.0.1
+ port: 25530
+ backlog: 50
+ strictaccess: true
+ #waitacception: true
  tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
 resource:
- processpack: true #If false, resourcepack packing disabled
+ processpack: true
   cache:
-   server: true #If true resourcepack cached on server
-   client: true #If true resourcepack cached on client (Max 10), resets if host, port, tokensalt, player uuid changed)
+   server: true
+   client: true
  encoder:
   use: false
-  ffmpegbinary: ffmpeg #Path to ffmpeg binary
+  ffmpegbinary: ffmpeg
   bitrate: 64000
   channels: 2
   samplingrate: 44100
@@ -129,8 +144,8 @@ AMusic api = AMusic.API(); //GET DEFAULT INSTANCE
 May be used to add amusic core into other plugin, or create multiple independent AMusic instances
 ```
 AMusic api = new AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips);
-api.enable(); //starts positiontracker and resourceserver threads
-api.disable(); //stops positiontracker and resourceserver threads
+api.enable(); //starts threads
+api.disable(); //stops threads
 ```
 ### For all operating modes
 ```
@@ -147,4 +162,7 @@ api.playSound(UUID playeruuid, String name); //start sound "name" to player with
 api.getPlayingSoundName(UUID playeruuid); //get currently playing sound of player with uuid "playeruuid"
 api.getPlayingSoundSize(UUID playeruuid); //get currently playing sound size of player with uuid "playeruuid"
 api.getPlayingSoundRemain(UUID playeruuid); //get currently playing sound remaining time of player with uuid "playeruuid"
+api.openUploadSession(String playlistname); //open upload session.
+api.getUploadSessions(); //get upload sessions.
+api.closeUploadSession(UUID token); //close upload session
 ```

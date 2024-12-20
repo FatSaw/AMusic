@@ -33,7 +33,7 @@ public enum LangOptions {
 		if (!langfile.exists()) {
 			try {
 				InputStream in = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
-				buf = new byte[0x2000];
+				buf = new byte[0x3000];
 				buf = Arrays.copyOf(buf, in.read(buf));
 				in.close();
 				OutputStream out = new FileOutputStream(langfile);

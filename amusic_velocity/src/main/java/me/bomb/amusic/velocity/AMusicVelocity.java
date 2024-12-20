@@ -34,6 +34,7 @@ import me.bomb.amusic.velocity.command.LangOptions;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
+import me.bomb.amusic.velocity.command.UploadmusicCommand;
 
 @Plugin(id = "amusic", name = "AMusic", dependencies = {@Dependency(id = "protocolize")}, version = "0.14", authors = {"Bomb"})
 public class AMusicVelocity {
@@ -85,13 +86,15 @@ public class AMusicVelocity {
 		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, amusic.datamanager, amusic.dispatcher);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker, true), playmusicuntrackable = new PlaymusicCommand(server, positiontracker, false);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);
+		UploadmusicCommand uploadmusic = new UploadmusicCommand(amusic.uploadermanager);
 		CommandManager cmdmanager = this.server.getCommandManager();
-		CommandMeta loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build(), playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build(), playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build(), repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build();
+		CommandMeta loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build(), playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build(), playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build(), repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build(), uploadmusicmeta = cmdmanager.metaBuilder("uploadmusic").plugin(this).build();
 		cmdmanager.register(loadmusicmeta, loadmusic);
 		cmdmanager.register(playmusicmeta, playmusic);
 		cmdmanager.register(playmusicuntrackablemeta, playmusicuntrackable);
 		cmdmanager.register(repeatmeta, repeat);
-		this.server.getEventManager().register(this, new EventListener(resourcemanager, positiontracker, playerips));
+		cmdmanager.register(uploadmusicmeta, uploadmusic);
+		this.server.getEventManager().register(this, new EventListener(resourcemanager, positiontracker, playerips, uploadmusic));
 		this.amusic.enable();
 	}
 	

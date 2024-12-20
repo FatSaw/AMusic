@@ -5,9 +5,9 @@
     <link rel="icon" href="data:,">
     <script src="./index.js"></script>
   </head>
-  <body style="padding:30%">
+  <body style="display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;">
     <input type="file" accept="audio/*, video/*" id="uploader" disabled multiple>
-    <audio id="output-audio" controls></audio><br/>
+    <audio id="output-audio" controls></audio>
     <p id="message"></p>
     <script>
 const token = window.location.pathname.substring(1);

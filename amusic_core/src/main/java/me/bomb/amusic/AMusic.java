@@ -43,7 +43,7 @@ public final class AMusic {
 	}
 	
 	/**
-	 * Starts {@link AMusic#positiontracker} and {@link AMusic#resourceserver} threads.
+	 * Starts threads.
 	 */
 	public void enable() {
 		positiontracker.start();
@@ -54,7 +54,7 @@ public final class AMusic {
 	}
 	
 	/**
-	 * Stops {@link AMusic#positiontracker} and {@link AMusic#resourceserver} threads.
+	 * Stops threads.
 	 */
 	public void disable() {
 		positiontracker.end();

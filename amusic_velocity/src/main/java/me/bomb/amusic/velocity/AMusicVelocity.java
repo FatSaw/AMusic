@@ -48,7 +48,6 @@ public class AMusicVelocity {
     
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
-		byte ver = 0;
 		File plugindir = dataDirectory.toFile(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
@@ -62,7 +61,7 @@ public class AMusicVelocity {
 		if(!tempdir.exists()) {
 			tempdir.mkdir();
 		}
-		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
+		int maxpacksize = 262144000;
 		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, true);
 		playerips = configoptions.resourcestrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 

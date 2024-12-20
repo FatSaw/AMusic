@@ -13,16 +13,19 @@ import com.velocitypowered.api.proxy.Player;
 
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.velocity.command.UploadmusicCommand;
 
 public final class EventListener {
 	
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips) {
+	private final UploadmusicCommand uploadmusic;
+	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic) {
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
+		this.uploadmusic = uploadmusic;
 	}
 	@Subscribe
 	public void onLoginEvent(LoginEvent event) {
@@ -36,6 +39,7 @@ public final class EventListener {
 		UUID playeruuid = player.getUniqueId();
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
+		uploadmusic.logoutUploader(player);
 		if(playerips == null) return;
 		playerips.remove(player);
 	}

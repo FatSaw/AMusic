@@ -46,6 +46,22 @@ default:
    near: {"color":"red","text":"Selector @p unavilable for this source"}
    random: {"color":"red","text":"Selector @r unavilable for this source"}
    all: {"color":"red","text":"Selector @a unavilable for this source"}
+ uploadmusic:
+  usage: [{"color":"gray","text":"Usage: "},{"color":"gray","italic":true,"text":"Usage: /uploadmusic <start/finish> <playlist>/[token]"}]
+  nopermission: {"color":"red","text":"No permission"}
+  nopermissiontoken: {"color":"red","text":"No permission"}
+  disabled: {"color":"red","text":"Loader disabled"}
+  start:
+   url: [{"color":"green","text":"Upload session started click "},{"color":"yellow","text":"HERE","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"green","text":" to open uploader page"}]
+  finish:
+   player:
+    notplayer: {"color":"red","text":"This command source do not support finish without token"}
+    nosession: {"color":"red","text":"No active upload session"}
+    success: {"color":"green","text":"Session finished"}
+   token:
+    nosession: {"color":"red","text":"No active upload session"}
+    success: {"color":"green","text":"Session finished"}
+    invalid: {"color":"red","text":"Token format invalid!"}
 ru_ru:
  loadmusic:
   usage: [{"color":"gray","text":"Использование: "},{"color":"gray","italic":true,"text":"/loadmusic <player> <playlist>"}]
@@ -82,3 +98,19 @@ ru_ru:
   repeatall: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"повторять всё"}]
   repeatone: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"повторять одну"}]
   random: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"случайный"}]
+ uploadmusic:
+  usage: [{"color":"gray","text":"Использование: "},{"color":"gray","italic":true,"text":"Usage: /uploadmusic <start/finish> <playlist>/[token]"}]
+  nopermission: {"color":"red","text":"Нет прав"}
+  nopermissiontoken: {"color":"red","text":"Нет прав"}
+  disabled: {"color":"red","text":"Загрузчик отключен"}
+  start:
+   url: [{"color":"green","text":"Сессия загрузки начата нажмите "},{"color":"yellow","text":"ТУТ","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"green","text":" чтобы открыть страницу загрузки"}]
+  finish:
+   player:
+    notplayer: {"color":"red","text":"Этот источник команды не поддерживает закрытие сессии без токена"}
+    nosession: {"color":"red","text":"Нет активной сессии загрузки"}
+    success: {"color":"green","text":"Сессия завершена"}
+   token:
+    nosession: {"color":"red","text":"Нет активной сессии загрузки"}
+    success: {"color":"green","text":"Сессия завершена"}
+    invalid: {"color":"red","text":"Неверный формат токена!"}

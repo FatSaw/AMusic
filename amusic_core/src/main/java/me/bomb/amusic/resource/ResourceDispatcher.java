@@ -97,7 +97,7 @@ public final class ResourceDispatcher {
 			byte i = 20;
 			byte[] filesha1 = sha1hash.digest(resource);
 			while(--i > -1) {
-				if(filesha1[i] != filesha1[i]) {
+				if(filesha1[i] != sha1[i]) {
 					return false;
 				}
 			}

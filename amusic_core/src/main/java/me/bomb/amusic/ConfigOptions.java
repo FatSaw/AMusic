@@ -13,22 +13,28 @@ import me.bomb.amusic.util.SimpleConfiguration;
 
 public final class ConfigOptions {
 	
-	public final String host;
-	public final InetAddress ip;
-	public final int port, backlog, maxpacksize, maxmusicfilesize, bitrate, samplingrate;
+	public final String host, uploaderhost;
+	public final InetAddress ip, uploaderip;
+	public final int port, uploaderport, backlog, uploaderbacklog, maxpacksize, maxmusicfilesize, bitrate, samplingrate, uploadertimeout, uploaderlimit;
 	public final byte channels;
-	public final boolean processpack, servercache, clientcache, strictdownloaderlist, useconverter, encodetracksasynchronly, waitacception;
+	public final boolean processpack, servercache, clientcache, resourcestrictaccess, uploaderstrictaccess, useconverter, useuploader, encodetracksasynchronly, waitacception;
 	public final File ffmpegbinary, musicdir, packeddir;
 	protected final byte[] tokensalt;
 	
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, InetAddress ip, int port, int backlog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean useconverter, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
+	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int backlog, int uploaderbacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
 		this.host = host;
 		this.ip = ip;
+		this.uploaderhost = uploaderhost;
+		this.uploaderip = uploaderip;
+		this.uploadertimeout = uploadertimeout;
+		this.uploaderlimit = uploaderlimit;
 		this.port = port;
+		this.uploaderport = uploaderport;
 		this.backlog = backlog;
+		this.uploaderbacklog = uploaderbacklog;
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxmusicfilesize;
 		this.bitrate = bitrate;
@@ -37,8 +43,10 @@ public final class ConfigOptions {
 		this.processpack = processpack;
 		this.servercache = servercache;
 		this.clientcache = clientcache;
-		this.strictdownloaderlist = strictdownloaderlist;
+		this.resourcestrictaccess = strictdownloaderlist;
+		this.uploaderstrictaccess = uploaderstrictdownloaderlist;
 		this.useconverter = useconverter;
+		this.useuploader = useuploader;
 		this.encodetracksasynchronly = encodetracksasynchronly;
 		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
@@ -55,7 +63,7 @@ public final class ConfigOptions {
 		if (!configfile.exists()) {
 			InputStream is = ConfigOptions.class.getClassLoader().getResourceAsStream("config.yml");
 			try {
-				bytes = new byte[0x0200];
+				bytes = new byte[0x0400];
 				bytes = Arrays.copyOf(bytes, is.read(bytes));
 			} catch (IOException e) {
 			}
@@ -88,7 +96,7 @@ public final class ConfigOptions {
 		SimpleConfiguration sc = new SimpleConfiguration(bytes);
 		bytes = null;
 		
-		host = sc.getStringOrDefault("server\0host", "127.0.0.1:25530");
+		host = sc.getStringOrDefault("server\0host", "http://127.0.0.1:25530/");
 		InetAddress ip = null;
 		String ipstr = sc.getStringOrDefault("server\0ip", null);
 		if(ipstr!=null) {
@@ -101,11 +109,30 @@ public final class ConfigOptions {
 		this.ip = ip;
 		port = sc.getIntOrDefault("server\0port", 25530);
 		backlog = sc.getIntOrDefault("server\0backlog", 50);
+		
+		this.useuploader = sc.getBooleanOrDefault("uploaderserver\0use", false);
+
+		uploaderhost = sc.getStringOrDefault("uploaderserver\0host", "http://127.0.0.1:25532/");
+		InetAddress uploaderip = null;
+		String uploaderipstr = sc.getStringOrDefault("uploaderserver\0ip", null);
+		if(uploaderipstr!=null) {
+			try {
+				uploaderip = InetAddress.getByName(uploaderipstr);
+			} catch (UnknownHostException e) {
+			}
+		}
+		
+		this.uploaderip = uploaderip;
+		uploaderport = sc.getIntOrDefault("uploaderserver\0port", 25532);
+		uploaderbacklog = sc.getIntOrDefault("uploaderserver\0backlog", 50);
+		uploadertimeout = sc.getIntOrDefault("uploaderserver\0timeout", 600000);
+		uploaderlimit = sc.getIntOrDefault("uploaderserver\0limit", 262144000);
+		
 		processpack = sc.getBooleanOrDefault("resource\0processpack", true);
 		servercache = sc.getBooleanOrDefault("resource\0cache\0server", true);
 		clientcache = sc.getBooleanOrDefault("resource\0cache\0client", true);
-		strictdownloaderlist = sc.getBooleanOrDefault("server\0strictdownloaderlist", true);
-		
+		resourcestrictaccess = sc.getBooleanOrDefault("server\0strictaccess", true);
+		uploaderstrictaccess = sc.getBooleanOrDefault("uploaderserver\0strictaccess", true);
 		byte[] salt = sc.getBytesBase64OrDefault("server\0tokensalt", new byte[0]);
 		
 		if(salt == null || salt.length < 2) {

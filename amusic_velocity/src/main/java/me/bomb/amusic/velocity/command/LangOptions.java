@@ -20,7 +20,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 
 public enum LangOptions {
-	loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_noconsoleselector, loadmusic_targetoffline, loadmusic_processing, loadmusic_noplaylist, loadmusic_loaderunavilable, loadmusic_success_removed, loadmusic_success_packed, loadmusic_success_dispatched, loadmusic_unavilableselector_near, loadmusic_unavilableselector_random, loadmusic_unavilableselector_all, playmusic_usage, playmusic_nopermission, playmusic_nopermissionother, playmusic_noconsoleselector, playmusic_targetoffline, playmusic_noplaylist, playmusic_missingtrack, playmusic_success, playmusic_stop, playmusic_unavilableselector_near, playmusic_unavilableselector_random, playmusic_unavilableselector_all, repeat_usage, repeat_nopermission, repeat_nopermissionother, repeat_noconsoleselector, repeat_targetoffline, repeat_unknownrepeattype, repeat_repeatall, repeat_repeatone, repeat_playall, repeat_playone, repeat_random, repeat_unavilableselector_near, repeat_unavilableselector_random, repeat_unavilableselector_all;	
+	loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_noconsoleselector, loadmusic_targetoffline, loadmusic_processing, loadmusic_noplaylist, loadmusic_loaderunavilable, loadmusic_success_removed, loadmusic_success_packed, loadmusic_success_dispatched, loadmusic_unavilableselector_near, loadmusic_unavilableselector_random, loadmusic_unavilableselector_all, playmusic_usage, playmusic_nopermission, playmusic_nopermissionother, playmusic_noconsoleselector, playmusic_targetoffline, playmusic_noplaylist, playmusic_missingtrack, playmusic_success, playmusic_stop, playmusic_unavilableselector_near, playmusic_unavilableselector_random, playmusic_unavilableselector_all, repeat_usage, repeat_nopermission, repeat_nopermissionother, repeat_noconsoleselector, repeat_targetoffline, repeat_unknownrepeattype, repeat_repeatall, repeat_repeatone, repeat_playall, repeat_playone, repeat_random, repeat_unavilableselector_near, repeat_unavilableselector_random, repeat_unavilableselector_all, uploadmusic_usage, uploadmusic_nopermission, uploadmusic_nopermissiontoken, uploadmusic_disabled, uploadmusic_start_url_click, uploadmusic_start_url_show, uploadmusic_finish_player_notplayer, uploadmusic_finish_player_nosession, uploadmusic_finish_player_success, uploadmusic_finish_token_nosession, uploadmusic_finish_token_success, uploadmusic_finish_token_invalid;
 	private final Map<String, String> text = new HashMap<>();
 	private static JSONComponentSerializer serializer;
 	
@@ -33,7 +33,7 @@ public enum LangOptions {
 		if (!langfile.exists()) {
 			try {
 				InputStream in = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
-				buf = new byte[0x2000];
+				buf = new byte[0x3000];
 				buf = Arrays.copyOf(buf, in.read(buf));
 				in.close();
 				OutputStream out = new FileOutputStream(langfile);

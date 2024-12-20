@@ -2,6 +2,7 @@ package me.bomb.amusic;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -15,6 +16,8 @@ import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.uploader.UploadManager;
+import me.bomb.amusic.uploader.UploaderServer;
 
 public final class AMusic {
 	
@@ -25,33 +28,39 @@ public final class AMusic {
 	public final ResourceServer resourceserver;
 	public final ResourceDispatcher dispatcher;
 	public final DataStorage datamanager;
+	public final UploadManager uploadermanager;
+	public final UploaderServer uploader;
 	
 	public AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.source = source;
 		this.resourcemanager = new ResourceManager(configoptions.maxpacksize, configoptions.servercache, configoptions.clientcache ? configoptions.tokensalt : null, configoptions.waitacception);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
-		this.resourceserver = new ResourceServer(playerips, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
-		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, "http://".concat(configoptions.host).concat("/"));
+		this.resourceserver = new ResourceServer(configoptions.resourcestrictaccess ? playerips : null, configoptions.ip, configoptions.port, configoptions.backlog, resourcemanager);
+		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, configoptions.host);
 		this.datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
+		this.uploadermanager = configoptions.useuploader ? new UploadManager(configoptions.uploadertimeout, configoptions.uploaderlimit, configoptions.musicdir, configoptions.uploaderhost) : null;
+		this.uploader = configoptions.useuploader ? new UploaderServer(this.uploadermanager, configoptions.uploaderstrictaccess ? playerips : null, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : null;
 	}
 	
 	/**
-	 * Starts {@link AMusic#positiontracker} and {@link AMusic#resourceserver} threads.
+	 * Starts threads.
 	 */
 	public void enable() {
 		positiontracker.start();
 		resourceserver.start();
 		datamanager.start();
+		if(this.uploader != null) uploader.start();
 		datamanager.load();
 	}
 	
 	/**
-	 * Stops {@link AMusic#positiontracker} and {@link AMusic#resourceserver} threads.
+	 * Stops threads.
 	 */
 	public void disable() {
 		positiontracker.end();
 		resourceserver.end();
 		datamanager.end();
+		if(this.uploader != null) uploader.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
 	}
@@ -212,5 +221,32 @@ public final class AMusic {
 	 */
 	public void playSound(UUID playeruuid, String name) {
 		positiontracker.playMusic(playeruuid, name);
+	}
+	
+	/**
+	 * Open upload session.
+	 * 
+	 * @return session token.
+	 */
+	public UUID openUploadSession(String playlistname) {
+		return uploadermanager == null ? null : uploadermanager.generateToken(playlistname);
+	}
+	
+	/**
+	 * Get upload sessions.
+	 * 
+	 * @return upload sessions.
+	 */
+	public Enumeration<UUID> getUploadSessions() {
+		return uploadermanager == null ? null : uploadermanager.getSessions();
+	}
+	
+	/**
+	 * Close upload session.
+	 * 
+	 * @return true if session closed successfully.
+	 */
+	public boolean closeUploadSession(UUID token) {
+		return uploadermanager == null ? false : uploadermanager.endSession(token);
 	}
 }

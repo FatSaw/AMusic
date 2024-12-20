@@ -10,21 +10,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.event.player.PlayerResourcePackStatusEvent.Status;
 
 import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.bukkit.command.UploadmusicCommand;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class EventListener implements Listener {
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips) {
+	private final UploadmusicCommand uploadmusiccmd;
+	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd) {
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
+		this.uploadmusiccmd = uploadmusiccmd;
 	}
 	@EventHandler
 	public void playerJoin(PlayerJoinEvent event) {
@@ -38,6 +39,7 @@ public final class EventListener implements Listener {
 		UUID playeruuid = player.getUniqueId();
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
+		uploadmusiccmd.logoutUploader(player);
 		if(playerips == null) return;
 		playerips.remove(player);
 	}
@@ -48,23 +50,5 @@ public final class EventListener implements Listener {
 	@EventHandler
 	public void playerWorldChange(PlayerChangedWorldEvent event) {
 		positiontracker.stopMusic(event.getPlayer().getUniqueId());
-	}
-	@EventHandler
-	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
-		Player player = event.getPlayer();
-		UUID uuid = player.getUniqueId();
-		Status status = event.getStatus();
-		if(status==Status.ACCEPTED) {
-			resourcemanager.setAccepted(uuid);
-			return;
-		}
-		if(status==Status.DECLINED||status==Status.FAILED_DOWNLOAD) {
-			positiontracker.remove(uuid);
-			resourcemanager.remove(uuid);
-			return;
-		}
-		if(status==Status.SUCCESSFULLY_LOADED) {
-			resourcemanager.remove(uuid); //Removes resource send if pack applied from client cache
-		}
 	}
 }

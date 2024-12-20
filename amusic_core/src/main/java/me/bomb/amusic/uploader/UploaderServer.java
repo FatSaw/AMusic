@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourceserver;
+package me.bomb.amusic.uploader;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -8,29 +8,30 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class ResourceServer extends Thread {
+public final class UploaderServer extends Thread {
 	
 	private final static byte[] noaccess = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 	
-	private final ConcurrentHashMap<Object,InetAddress> onlineips;
+	private final UploadManager uploadmanager;
+	private final ConcurrentHashMap<Object, InetAddress> onlineips;
 	private final InetAddress ip;
 	private final int port, backlog;
 	private boolean run = false;
 	private ServerSocket server;
-	private final ResourceManager resourcemanager;
-	
-	public ResourceServer(ConcurrentHashMap<Object,InetAddress> onlineips, InetAddress ip, int port, int backlog, ResourceManager resourcemanager) {
+
+	public UploaderServer(UploadManager uploadmanager, ConcurrentHashMap<Object, InetAddress> onlineips, InetAddress ip, int port, int backlog) {
+		this.uploadmanager = uploadmanager;
 		this.onlineips = onlineips;
 		this.ip = ip;
 		this.port = port;
 		this.backlog = backlog;
-		this.resourcemanager = resourcemanager;
 	}
-	
+
 	@Override
 	public void start() {
 		run = true;
 		super.start();
+		this.uploadmanager.start();
 	}
 
 	public void run() {
@@ -38,18 +39,18 @@ public final class ResourceServer extends Thread {
 			try {
 				server = new ServerSocket();
 				server.bind(new InetSocketAddress(ip, port), backlog);
-			} catch (IOException|SecurityException|IllegalArgumentException e) {
+			} catch (IOException | SecurityException | IllegalArgumentException e) {
 				e.printStackTrace();
 				return;
 			}
 			while (!server.isClosed()) {
 				try {
 					if (this.onlineips == null) {
-						new ResourceSender(server.accept(), resourcemanager);
+						new PageSender(uploadmanager, server.accept()).start();
 					} else {
 						Socket connected = server.accept();
 						if (onlineips.values().contains(connected.getInetAddress())) {
-							new ResourceSender(connected, resourcemanager);
+							new PageSender(uploadmanager, connected).start();
 						} else {
 							connected.getOutputStream().write(noaccess);
 							connected.close();
@@ -64,13 +65,14 @@ public final class ResourceServer extends Thread {
 			}
 		}
 	}
-	
+
 	public void end() {
 		run = false;
 		try {
 			server.close();
 		} catch (IOException e) {
 		}
+		this.uploadmanager.end();
 	}
 
 }

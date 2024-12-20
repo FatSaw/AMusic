@@ -26,6 +26,9 @@ import me.bomb.amusic.bukkit.command.RepeatCommand;
 import me.bomb.amusic.bukkit.command.RepeatTabComplete;
 import me.bomb.amusic.bukkit.command.SelectorProcessor;
 import me.bomb.amusic.bukkit.command.UploadmusicCommand;
+import me.bomb.amusic.bukkit.command.UploadmusicTabComplete;
+import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_10_R1;
+import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_11_R1;
 import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_9_R2;
@@ -92,7 +95,12 @@ public final class AMusicBukkit extends JavaPlugin {
 		case 10:
 			packsender = new LegacyPackSender_1_10_R1();
 			soundstopper = new BukkitSoundStopper();
-			messagesender = new SpigotMessageSender();
+			messagesender = new LegacyMessageSender_1_10_R1();
+		break;
+		case 11:
+			packsender = new BukkitPackSender();
+			soundstopper = new BukkitSoundStopper();
+			messagesender = new LegacyMessageSender_1_11_R1();
 		break;
 		default:
 			packsender = new BukkitPackSender();
@@ -133,6 +141,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		PluginCommand uploadmusiccommand = getCommand("uploadmusic");
 		UploadmusicCommand uploadmusiccmd = new UploadmusicCommand(amusic.uploadermanager);
 		uploadmusiccommand.setExecutor(uploadmusiccmd);
+		uploadmusiccommand.setTabCompleter(new UploadmusicTabComplete(amusic.uploadermanager));
 		if(playerips != null) {
 			playerips.clear();
 			for(Player player : Bukkit.getOnlinePlayers()) {

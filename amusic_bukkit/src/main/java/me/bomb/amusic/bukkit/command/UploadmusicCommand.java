@@ -3,7 +3,6 @@ package me.bomb.amusic.bukkit.command;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -44,7 +43,6 @@ public final class UploadmusicCommand implements CommandExecutor {
 				return true;
 			}
 			LangOptions.uploadmusic_finish_player_success.sendMsg(sender);
-			Bukkit.getLogger().info("Player " + player.getName() + " upload session ended");
 			return true;
 		}
 		if(args.length < 2) {
@@ -65,12 +63,11 @@ public final class UploadmusicCommand implements CommandExecutor {
 			}
 			final UUID token = uploadmanager.generateToken(args[1]);
 			String url = uploadmanager.uploaderhost.concat(token.toString());
-			LangOptions.uploadmusic_start_url.sendMsg(sender, new Placeholders("%url%", url));
+			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholders("%url%", url));
 			if(!(sender instanceof Player)) {
 				return true;
 			}
 			Player player = (Player)sender;
-			Bukkit.getLogger().info("Player " + player.getName() + " started sound upload session: " + url);
 			uploaders.put(player, token);
 			return true;
 		}

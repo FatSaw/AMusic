@@ -42,7 +42,7 @@ public final class PageSender extends Thread {
 		final ClassLoader classloader = UploaderServer.class.getClassLoader();
 		web = new byte[5][];
 		identifier = new byte[7][];
-		loadStaticContent(classloader, (byte)0, 2710, "index.html", "", responseparthtml0, responseclose);
+		loadStaticContent(classloader, (byte)0, 2787, "index.html", "", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);

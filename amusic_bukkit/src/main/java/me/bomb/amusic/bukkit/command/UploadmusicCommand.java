@@ -1,16 +1,21 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
+import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.uploader.UploadManager;
 
 public final class UploadmusicCommand implements CommandExecutor {
 	
 	private final UploadManager uploadmanager;
+	private final ConcurrentHashMap<Player, UUID> uploaders = new ConcurrentHashMap<Player, UUID>();
 	
 	public UploadmusicCommand(UploadManager uploadmanager) {
 		this.uploadmanager = uploadmanager;
@@ -19,15 +24,31 @@ public final class UploadmusicCommand implements CommandExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(uploadmanager == null) {
-			sender.sendMessage("Loader disabled");
+			LangOptions.uploadmusic_disabled.sendMsg(sender);
 			return true;
 		}
 		if(!sender.hasPermission("amusic.uploadmusic")) {
-			sender.sendMessage("No permission!");
+			LangOptions.uploadmusic_nopermission.sendMsg(sender);
+			return true;
+		}
+		if(args.length == 1 && "finish".equals(args[0])) {
+			args[0] = args[0].toLowerCase();
+			if(!(sender instanceof Player)) {
+				LangOptions.uploadmusic_finish_player_notplayer.sendMsg(sender);
+				return true;
+			}
+			Player player = (Player)sender;
+			final UUID token = uploaders.remove(player);
+			if(token == null || !uploadmanager.endSession(token)) {
+				LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
+				return true;
+			}
+			LangOptions.uploadmusic_finish_player_success.sendMsg(sender);
+			Bukkit.getLogger().info("Player " + player.getName() + " upload session ended");
 			return true;
 		}
 		if(args.length < 2) {
-			sender.sendMessage("Usage: /uploadmusic <start/finish> <playlist/token>");
+			LangOptions.uploadmusic_usage.sendMsg(sender);
 			return true;
 		}
 		args[0] = args[0].toLowerCase();
@@ -42,21 +63,39 @@ public final class UploadmusicCommand implements CommandExecutor {
 					args[1] = sb.toString();
 				}
 			}
-			String url = uploadmanager.uploaderhost.concat(uploadmanager.generateToken(args[1]).toString());
-			sender.sendMessage("URL: " + url);
+			final UUID token = uploadmanager.generateToken(args[1]);
+			String url = uploadmanager.uploaderhost.concat(token.toString());
+			LangOptions.uploadmusic_start_url.sendMsg(sender, new Placeholders("%url%", url));
+			if(!(sender instanceof Player)) {
+				return true;
+			}
+			Player player = (Player)sender;
+			Bukkit.getLogger().info("Player " + player.getName() + " started sound upload session: " + url);
+			uploaders.put(player, token);
 			return true;
 		}
 		if("finish".equals(args[0])) {
+			if(!sender.hasPermission("amusic.uploadmusic.token")) {
+				LangOptions.uploadmusic_nopermissiontoken.sendMsg(sender);
+			}
 			try {
-				UUID token = UUID.fromString(args[1]);
-				sender.sendMessage(uploadmanager.endSession(token) ? "Token removed" : "Token invalid!");
+				final UUID token = UUID.fromString(args[1]);
+				(uploadmanager.endSession(token) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
 			} catch(IllegalArgumentException ex) {
-				sender.sendMessage("Token format invalid!");
+				LangOptions.uploadmusic_finish_token_invalid.sendMsg(sender);
 			}
 			return true;
 		}
-		sender.sendMessage("Usage: /uploadmusic <start/finish> <playlist/token>");
+		LangOptions.uploadmusic_usage.sendMsg(sender);
 		return true;
+	}
+	
+	public void logoutUploader(Player uploader) {
+		final UUID token = uploaders.remove(uploader);
+		if(token == null) {
+			return;
+		}
+		uploadmanager.endSession(token);
 	}
 	
 }

@@ -3,6 +3,7 @@ package me.bomb.amusic.uploader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,6 +53,10 @@ public final class UploadManager extends Thread {
 	
 	public UploadSession getSession(UUID token) {
 		return sessions.get(token);
+	}
+	
+	public Enumeration<UUID> getSessions() {
+		return sessions.keys();
 	}
 	
 	public boolean endSession(UUID token) {

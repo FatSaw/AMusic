@@ -9,54 +9,34 @@ Music through resource pack
 - Position and count selectors (bukkit only)
 
 ## Commands:
-
-### How it works
-loadmusic - convert(if enabled),pack,send playlist(resourcepack) to target player (if target @n not sends, update flag force true)
-
-playmusic - start/stop sound from loaded resourcepack
-
-
-`/loadmusic <playername> <playlistname>` - loads playlist(resourcepack) to player, update flag true if playlist not loaded before or used null target `@n`
-
-`/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
-
-`/repeat <playername> <repeat type>` - set repeat type
-
-`/uploadmusic <start/finish> <playlist>/[token]` - upload sound
+- `/loadmusic @n <playlistname>` - update playlist
+- `/loadmusic <playername> <playlistname>` - loads playlist(resourcepack) to player, update flag true if playlist not loaded before or used null target `@n`
+- `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
+- `/repeat <playername> <repeat type>` - set repeat type
+- `/uploadmusic <start/finish> <playlist>/[token]` - upload sound
 
 ### Permissions
-`amusic.loadmusic` - load playlist(resourcepack), allows `@s` usage
-
-`amusic.playmusic` - start/stop sound, allows `@s` usage
-
-`amusic.repeat` - set repeat, allows `@s` usage
-
-`amusic.loadmusic.other` - load playlist(resourcepack) for other players
-
-`amusic.playmusic.other` - start/stop sound for other players
-
-`amusic.repeat.other` - set repeat for other players
-
-`amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
-
-`amusic.uploadmusic` - start stop upload session
-
-`amusic.uploadmusic.token` - allows finish session by token
+- `amusic.loadmusic` - load playlist(resourcepack), allows `@s` usage
+- `amusic.playmusic` - start/stop sound, allows `@s` usage
+- `amusic.repeat` - set repeat, allows `@s` usage
+- `amusic.loadmusic.other` - load playlist(resourcepack) for other players
+- `amusic.playmusic.other` - start/stop sound for other players
+- `amusic.repeat.other` - set repeat for other players
+- `amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
+- `amusic.uploadmusic` - start stop upload session
+- `amusic.uploadmusic.token` - allows finish session by token
 
 ### Selectors <playername>:
-`@n` - null target
-`@s` - self
+- `@n` - update playlist
+- `@s` - self
 
 Argument format (`@p`, `@r`, `@a`): `[arg1,arg2,arg3,...]`
-
 - `loadmusic` `@s`, `@p`, `@r`, `@a`, `@n`
-
 - `playmusic` `@s`, `@p`, `@r`, `@a`
-
 - `repeat` `@s`, `@p`, `@r`, `@a`
 
 #### Selector `@p`, `@r`, `@a` arguments
-##### Distance and position
+##### distance and position
 Args:
 - `dist`
 - `x`
@@ -64,21 +44,18 @@ Args:
 - `z`
 
 Format: `<arg><operation><double_value>`
-
 Avilable operations: `<=`, `<`, `>=`, `>`
-
 Description: `Distance and postition`
 
 #### Selector `@a` arguments
-##### Closer, further, random
+##### closer, further, random
 Args:
 - `closer`
 - `further`
 - `random`
+
 Format: `<arg><operation><int_value>`
-
 Avilable operations: `=`
-
 Description: `Limits player count`
 
 ### Commands for console without tab complete:
@@ -87,7 +64,6 @@ Description: `Limits player count`
 `playmusic @l <playername>` - get loaded to player soundnames, currently playing sound name and time
 
 ## Config:
-
 ```
 uploaderserver:
  use: false

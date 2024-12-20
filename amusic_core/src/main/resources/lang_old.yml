@@ -52,7 +52,9 @@ default:
   nopermissiontoken: {"color":"red","text":"No permission"}
   disabled: {"color":"red","text":"Loader disabled"}
   start:
-   url: [{"color":"green","text":"Upload session started click "},{"color":"yellow","text":"HERE","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"green","text":" to open uploader page"}]
+   url:
+    click: [{"color":"green","text":"Upload session started click "},{"color":"yellow","text":"HERE","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"green","text":" to open uploader page"}]
+    show: [{"color":"green","text":"Upload session started: "},{"color":"yellow","text":"%url%","clickEvent":{"action":"open_url","value":"%url%"}}]
   finish:
    player:
     notplayer: {"color":"red","text":"This command source do not support finish without token"}
@@ -104,7 +106,9 @@ ru_ru:
   nopermissiontoken: {"color":"red","text":"Нет прав"}
   disabled: {"color":"red","text":"Загрузчик отключен"}
   start:
-   url: [{"color":"green","text":"Сессия загрузки начата нажмите "},{"color":"yellow","text":"ТУТ","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"green","text":" чтобы открыть страницу загрузки"}]
+   url:
+    click: [{"color":"green","text":"Сессия загрузки начата нажмите "},{"color":"yellow","text":"ТУТ","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"green","text":" чтобы открыть страницу загрузки"}]
+    show: [{"color":"green","text":"Сессия загрузки начата: "},{"color":"yellow","text":"%url%","clickEvent":{"action":"open_url","value":"%url%"}}}]
   finish:
    player:
     notplayer: {"color":"red","text":"Этот источник команды не поддерживает закрытие сессии без токена"}

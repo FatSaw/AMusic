@@ -178,7 +178,6 @@ public final class ResourcePacker implements Runnable {
 		if(resourcefile == null) {
 			return;
 		}
-		//resourcemanager.removeCache(this.id); //maybe not need
 		FileOutputStream fos;
 		try {
 			fos = new FileOutputStream(resourcefile, false);

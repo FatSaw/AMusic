@@ -8,8 +8,9 @@ import java.util.UUID;
 
 import me.bomb.amusic.packedinfo.DataEntry;
 import me.bomb.amusic.packedinfo.DataStorage;
-import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.source.SoundSource;
+
+import static me.bomb.amusic.util.NameFilter.filterName;
 
 public final class ResourceFactory extends Thread {
 	
@@ -45,7 +46,7 @@ public final class ResourceFactory extends Thread {
 		
 		DataEntry dataentry = datamanager.getPlaylist(this.id);
 		if(update) {
-			final String name = dataentry == null ? Data.filterName(this.id) : dataentry.name;
+			final String name = dataentry == null ? filterName(this.id) : dataentry.name;
 			Object f = source.getSource();
 			File sourcearchive = f instanceof File ? new File((File) f, name.concat(".zip")) : null;
 			ResourcePacker resourcepacker = null;

@@ -58,7 +58,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		try {
 			String nmsversion = Bukkit.getServer().getClass().getPackage().getName().substring(23);
 			ver = Byte.valueOf(nmsversion.split("_", 3)[1]);
-		} catch (StringIndexOutOfBoundsException e) {
+		} catch (StringIndexOutOfBoundsException | NumberFormatException e) {
 		}
 		
 		File plugindir = this.getDataFolder(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed");

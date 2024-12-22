@@ -21,6 +21,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import dev.simplix.protocolize.api.PacketDirection;
 import dev.simplix.protocolize.api.Protocol;
 import dev.simplix.protocolize.api.Protocolize;
+import dev.simplix.protocolize.api.providers.ProtocolRegistrationProvider;
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.PackSender;
@@ -36,8 +37,8 @@ import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
 import me.bomb.amusic.velocity.command.UploadmusicCommand;
 
-@Plugin(id = "amusic", name = "AMusic", dependencies = {@Dependency(id = "protocolize")}, version = "0.14", authors = {"Bomb"})
-public class AMusicVelocity {
+@Plugin(id = "amusic", name = "AMusic", dependencies = {@Dependency(id = "protocolize")}, version = "0.15", authors = {"Bomb"})
+public final class AMusicVelocity {
 	
 	private final ProxyServer server;
     //private final Logger logger;
@@ -69,7 +70,7 @@ public class AMusicVelocity {
         
 		Runtime runtime = Runtime.getRuntime();
 		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		this.amusic = new AMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(), playerips);
+		this.amusic = new AMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server), playerips);
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		this.server = server;
@@ -80,8 +81,9 @@ public class AMusicVelocity {
 	
 	@Subscribe
 	public void onProxyInitialization(ProxyInitializeEvent event) {
-		Protocolize.protocolRegistration().registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
-		Protocolize.protocolRegistration().registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
+		ProtocolRegistrationProvider protocolregistration = Protocolize.protocolRegistration();
+		protocolregistration.registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
+		protocolregistration.registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
 		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic.source, amusic.datamanager, amusic.dispatcher);
 		PlaymusicCommand playmusic = new PlaymusicCommand(server, positiontracker, true), playmusicuntrackable = new PlaymusicCommand(server, positiontracker, false);
 		RepeatCommand repeat = new RepeatCommand(server, positiontracker);

@@ -23,6 +23,11 @@ public final class PositionTracker extends Thread {
 		loadedplaylistnames.put(playeruuid, playlistname);
 	}
 	
+	public void removePlaylistInfo(UUID playeruuid) {
+		playlistinfo.remove(playeruuid);
+		loadedplaylistnames.remove(playeruuid);
+	}
+	
 	public HashSet<UUID> getPlayersLoaded(String playlistname) {
 		HashSet<UUID> playersloaded = new HashSet<UUID>();
 		for(UUID playeruuid : loadedplaylistnames.keySet(playlistname)) {
@@ -250,18 +255,6 @@ public final class PositionTracker extends Thread {
 			}
 			soundstopper.stopSound(uuid, playing.currenttrack);
 		} catch (NoSuchMethodError e) {
-		}
-	}
-	
-	/**
-	 * Removes players from {@link PositionTracker#trackers}, {@link PositionTracker#playlistinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
-	 */
-	public void removeAll(UUID[] uuids) {
-		for(UUID uuid : uuids) {
-			trackers.remove(uuid);
-			playlistinfo.remove(uuid);
-			repeaters.remove(uuid);
-			loadedplaylistnames.remove(uuid);
 		}
 	}
 	

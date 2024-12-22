@@ -5,15 +5,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 final class UploadSession {
 	
-	private final int limit;
+	private final int limitsize, limitcount;
 	protected final String targetplaylist;
 	private final ConcurrentHashMap<String, byte[]> uploadentrys;
 	private final AtomicInteger size = new AtomicInteger(0);
 	private boolean end;
 	private long lastaccesstime;
 	
-	protected UploadSession(int limit, String targetplaylist) {
-		this.limit = limit;
+	protected UploadSession(int limitsize, int limitcount, String targetplaylist) {
+		this.limitsize = limitsize;
+		this.limitcount = limitcount;
 		this.targetplaylist = targetplaylist;
 		this.uploadentrys = new ConcurrentHashMap<>();
 		resetTime();
@@ -32,11 +33,11 @@ final class UploadSession {
 			return false;
 		}
 		resetTime();
-		return this.size.get() + size < this.limit;
+		return uploadentrys.size() < limitcount && this.size.get() + size < this.limitsize;
 	}
 	
 	protected void put(String soundname, byte[] sound) {
-		if(end || soundname == null || sound == null || size.get() + sound.length>limit) {
+		if(end || soundname == null || sound == null || size.get() + sound.length>limitsize) {
 			return;
 		}
 		resetTime();

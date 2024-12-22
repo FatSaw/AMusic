@@ -19,6 +19,7 @@ public final class PositionTracker extends Thread {
 	private final SoundStopper soundstopper;
 	
 	public void setPlaylistInfo(UUID playeruuid, String playlistname, SoundInfo[] soundinfo) {
+		this.remove(playeruuid);
 		playlistinfo.put(playeruuid, soundinfo);
 		loadedplaylistnames.put(playeruuid, playlistname);
 	}

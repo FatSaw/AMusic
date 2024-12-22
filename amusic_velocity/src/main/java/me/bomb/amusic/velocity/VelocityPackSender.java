@@ -8,7 +8,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.PackSender;
 
-public class VelocityPackSender implements PackSender {
+public final class VelocityPackSender implements PackSender {
 
 	private final ProxyServer server;
 	

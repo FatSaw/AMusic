@@ -10,7 +10,7 @@ import me.bomb.amusic.SoundStarter;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 
-public class VelocitySoundStarter implements SoundStarter {
+public final class VelocitySoundStarter implements SoundStarter {
 	
 	private final ProxyServer server;
 

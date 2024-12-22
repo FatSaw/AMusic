@@ -151,7 +151,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		PluginManager pluginmanager = server.getPluginManager();
 		pluginmanager.registerEvents(new EventListener(resourcemanager, positiontracker, playerips, uploadmusiccmd), this);
 		if(waitacception) {
-			pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager, positiontracker), this);
+			pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
 		}
 		this.amusic.enable();
 	}

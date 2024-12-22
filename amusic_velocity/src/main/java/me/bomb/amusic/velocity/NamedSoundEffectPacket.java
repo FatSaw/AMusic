@@ -9,10 +9,41 @@ import dev.simplix.protocolize.api.mapping.ProtocolIdMapping;
 import dev.simplix.protocolize.api.packet.AbstractPacket;
 import io.netty.buffer.ByteBuf;
 
-import static dev.simplix.protocolize.api.util.ProtocolUtil.*;
-import static dev.simplix.protocolize.api.util.ProtocolVersions.*;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_8;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_9;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_10;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_12_2;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_13;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_13_2;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_14;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_14_4;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_15;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_15_2;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_16;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_16_1;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_16_2;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_16_5;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_17;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_18_2;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_19;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_19_1;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_19_2;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_19_3;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_19_4;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_20_1;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_20_2;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_20_3;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_20_5;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_20_6;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_21;
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_21_3;
 
-public class NamedSoundEffectPacket extends AbstractPacket {
+import static dev.simplix.protocolize.api.util.ProtocolUtil.readString;
+import static dev.simplix.protocolize.api.util.ProtocolUtil.readVarInt;
+import static dev.simplix.protocolize.api.util.ProtocolUtil.writeVarInt;
+import static dev.simplix.protocolize.api.util.ProtocolUtil.writeString;
+
+public final class NamedSoundEffectPacket extends AbstractPacket {
 
     public static final List<ProtocolIdMapping> MAPPINGS = Arrays.asList(
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_8, MINECRAFT_1_8, 0x29),
@@ -29,7 +60,8 @@ public class NamedSoundEffectPacket extends AbstractPacket {
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_19_4, MINECRAFT_1_20_1, 0x62),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_2, MINECRAFT_1_20_2, 0x64),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_3, MINECRAFT_1_20_5, 0x66),
-        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_6, MINECRAFT_1_21, 0x68)
+        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_6, MINECRAFT_1_20_6, 0x68),
+        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21, MINECRAFT_1_21_3, 0x6F)
     );
     protected int soundid = 0;
     protected String sound;

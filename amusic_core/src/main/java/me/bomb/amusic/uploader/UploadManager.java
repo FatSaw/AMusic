@@ -8,17 +8,19 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static me.bomb.amusic.util.NameFilter.filterName;
+
 public final class UploadManager extends Thread {
 	
-	private final int expiretime, limit;
+	private final int expiretime, limitsize;
 	private final File musicdir;
 	public final String uploaderhost;
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
 	private boolean run;
 	
-	public UploadManager(int expiretime, int limit, File musicdir, String uploaderhost) {
+	public UploadManager(int expiretime, int limitsize, File musicdir, String uploaderhost) {
 		this.expiretime = expiretime;
-		this.limit = limit;
+		this.limitsize = limitsize;
 		this.musicdir = musicdir;
 		this.uploaderhost = uploaderhost;
 		sessions = new ConcurrentHashMap<>();
@@ -47,7 +49,11 @@ public final class UploadManager extends Thread {
 	
 	public UUID generateToken(String targetplaylist) {
 		final UUID token = UUID.randomUUID();
-		sessions.put(token, new UploadSession(limit, filterName(targetplaylist)));
+		targetplaylist = filterName(targetplaylist);
+		if(targetplaylist == null) {
+			targetplaylist = "";
+		}
+		sessions.put(token, new UploadSession(limitsize, 65535, targetplaylist));
 		return token;
 	}
 	
@@ -101,31 +107,6 @@ public final class UploadManager extends Thread {
 		}
 		session.endSession();
 		return true;
-	}
-	
-	private static String filterName(String name) {
-		char[] chars = name.toCharArray();
-		int finalcount = 0;
-		int i = chars.length;
-		while(--i > -1) {
-			char c = chars[i];
-			//if(c == '/' || c == '\\' || c == ':' || c == '<' || c == '>' || c == '*' || c == '?' || c == '|' || c == '\"' || c == '\0' || (c > 0 && c < 32)) { // who use windows for servers
-			if(c == '/' || c == '\0') { //unix
-				chars[i] = '\0';
-			} else {
-				++finalcount;
-			}
-		}
-		char[] filtered = new char[finalcount];
-		int j = 0;
-		while(++i < chars.length && j < finalcount) {
-			char c = chars[i];
-			if(c != '\0') {
-				filtered[j] = c;
-				++j;
-			}
-		}
-		return new String(filtered);
 	}
 	
 }

@@ -20,7 +20,8 @@ import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
 
-public class LoadmusicCommand implements SimpleCommand {
+public final class LoadmusicCommand implements SimpleCommand {
+	
 	private final ProxyServer server;
 	private final SoundSource<?> source;
 	private final DataStorage datamanager;

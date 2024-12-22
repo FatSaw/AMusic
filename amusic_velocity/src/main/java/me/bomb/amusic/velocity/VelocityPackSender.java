@@ -23,7 +23,11 @@ public final class VelocityPackSender implements PackSender {
 			return;
 		}
 		Player player = oplayer.get();
-		player.sendResourcePack(url, sha1);
+		
+		try {
+			player.sendResourcePack(url, sha1);
+		} catch (IllegalStateException e) {
+		}
 	}
 
 }

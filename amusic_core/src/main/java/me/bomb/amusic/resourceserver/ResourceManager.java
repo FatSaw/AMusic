@@ -151,24 +151,6 @@ public final class ResourceManager {
 	}
 	
 	/**
-	 * Loads fileresource into memory or takes it from cache (if enabled)
-	 */
-	/*public UUID[] addD(File fileresource, UUID... targetplayers) {
-		byte[] resource = null;
-		Path path = fileresource.toPath();
-		resource = getCached(id);
-		if (resources.containsKey(path)) {
-			resource = resources.get(path);
-		} else if (this.servercache) {
-			//resource = readResource(fileresource);
-			//resources.put(id, resource);
-		} else {
-			resource = readResource(fileresource);
-		}
-		return this.generateTokens(resource, targetplayers);
-	}*/
-	
-	/**
 	 * Set accept status by targetplayer uuid
 	 */
 	public void setAccepted(UUID targetplayer) {

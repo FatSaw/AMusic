@@ -53,7 +53,6 @@ public final class EventListener {
 			return;
 		}
 		if(status==Status.DECLINED||status==Status.FAILED_DOWNLOAD) {
-			positiontracker.remove(uuid);
 			resourcemanager.remove(uuid);
 			return;
 		}

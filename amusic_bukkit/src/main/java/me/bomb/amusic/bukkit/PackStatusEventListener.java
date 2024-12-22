@@ -8,17 +8,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent.Status;
 
-import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class PackStatusEventListener implements Listener  {
 
 	private final ResourceManager resourcemanager;
-	private final PositionTracker positiontracker;
 	
-	protected PackStatusEventListener(ResourceManager resourcemanager, PositionTracker positiontracker) {
+	protected PackStatusEventListener(ResourceManager resourcemanager) {
 		this.resourcemanager = resourcemanager;
-		this.positiontracker = positiontracker;
 	}
 	
 	@EventHandler
@@ -31,7 +28,6 @@ public final class PackStatusEventListener implements Listener  {
 			return;
 		}
 		if(status==Status.DECLINED||status==Status.FAILED_DOWNLOAD) {
-			positiontracker.remove(uuid);
 			resourcemanager.remove(uuid);
 			return;
 		}

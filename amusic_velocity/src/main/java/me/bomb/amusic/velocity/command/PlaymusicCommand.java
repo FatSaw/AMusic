@@ -15,7 +15,7 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
 
-public class PlaymusicCommand implements SimpleCommand  {
+public final class PlaymusicCommand implements SimpleCommand  {
 
 	private final ProxyServer server;
 	private final PositionTracker positiontracker;

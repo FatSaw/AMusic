@@ -7,6 +7,8 @@ import java.util.Set;
 
 import me.bomb.amusic.resource.ResourcePacker;
 
+import static me.bomb.amusic.util.NameFilter.filterName;
+
 public abstract class Data {
 	protected final Map<String, DataEntry> options = new HashMap<String, DataEntry>();
 	private final boolean lockwrite;
@@ -109,31 +111,6 @@ public abstract class Data {
 
 	public final Set<String> getPlaylists() {
 		return options == null ? null : options.keySet();
-	}
-	
-	public static String filterName(String name) {
-		char[] chars = name.toCharArray();
-		int finalcount = 0;
-		int i = chars.length;
-		while(--i > -1) {
-			char c = chars[i];
-			//if(c == '/' || c == '\\' || c == ':' || c == '<' || c == '>' || c == '*' || c == '?' || c == '|' || c == '\"' || c == '\0' || (c > 0 && c < 32)) { // who use windows for servers
-			if(c == '/' || c == '\0') { //unix
-				chars[i] = '\0';
-			} else {
-				++finalcount;
-			}
-		}
-		char[] filtered = new char[finalcount];
-		int j = 0;
-		while(++i < chars.length && j < finalcount) {
-			char c = chars[i];
-			if(c != '\0') {
-				filtered[j] = c;
-				++j;
-			}
-		}
-		return new String(filtered);
 	}
 	
 }

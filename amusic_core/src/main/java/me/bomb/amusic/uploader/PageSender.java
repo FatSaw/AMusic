@@ -1,7 +1,5 @@
 package me.bomb.amusic.uploader;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -9,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.UUID;
+
+import static me.bomb.amusic.util.NameFilter.filterName;
 
 public final class PageSender extends Thread {
 	
@@ -144,6 +144,9 @@ public final class PageSender extends Thread {
 					byte[] bytes = new byte[i-8];
 					System.arraycopy(buf, 8, bytes, 0, bytes.length);
 					String name = parseName(bytes);
+					if(name == null) {
+						name = "";
+					}
 					int pi = i;
 					UUID token = null;
 					while((i = indexOf(buf, headersplit, i, split)) != -1) {
@@ -200,6 +203,9 @@ public final class PageSender extends Thread {
 					byte[] bytes = new byte[i-5];
 					System.arraycopy(buf, 5, bytes, 0, bytes.length);
 					String name = parseName(bytes);
+					if(name == null) {
+						name = "";
+					}
 					int pi = i, cl = -1;
 					UUID token = null;
 					while((i = indexOf(buf, headersplit, i, split)) != -1) {
@@ -325,26 +331,7 @@ public final class PageSender extends Thread {
 		try {
 			Decoder base64decoder = Base64.getDecoder();
 			nameb = base64decoder.decode(nameb);
-			int finalcount = 0;
-			int i = nameb.length;
-			while(--i > -1) {
-				byte c = nameb[i];
-				if(c == '/' || c == '\\' || c == ':' || c == '<' || c == '>' || c == '*' || c == '?' || c == '|' || c == '\"' || c == '\0' || (c > 0 && c < 32)) {
-					nameb[i] = '\0';
-				} else {
-					++finalcount;
-				}
-			}
-			byte[] filtered = new byte[finalcount];
-			int j = 0;
-			while(++i < nameb.length && j < finalcount) {
-				byte c = nameb[i];
-				if(c != '\0') {
-					filtered[j] = c;
-					++j;
-				}
-			}
-			return new String(filtered, StandardCharsets.UTF_8);
+			return filterName(new String(nameb, StandardCharsets.UTF_8));
 		} catch (IllegalArgumentException e) {
 			return null;
 		}

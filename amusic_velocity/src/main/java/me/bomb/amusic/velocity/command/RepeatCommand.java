@@ -12,9 +12,11 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.RepeatType;
 
-public class RepeatCommand implements SimpleCommand {
+public final class RepeatCommand implements SimpleCommand {
+	
 	private final ProxyServer server;
 	private final PositionTracker positiontracker;
+	
 	public RepeatCommand(ProxyServer server, PositionTracker positiontracker) {
 		this.server = server;
 		this.positiontracker = positiontracker;

@@ -31,17 +31,17 @@ public final class VelocityMessageSender implements MessageSender {
 	@Override
 	public String getLocale(Object target) {
 		if(target instanceof Player) {
-			return null;
+			Locale locale = ((Player)target).getPlayerSettings().getLocale();
+			if(locale==null) {
+				return "default";
+			}
+			StringBuilder sb = new StringBuilder();
+			sb.append(locale.getLanguage());
+			sb.append("_");
+			sb.append(locale.getCountry());
+			return sb.toString().toLowerCase();
 		}
-		Locale locale = ((Player)target).getPlayerSettings().getLocale();
-		if(locale==null) {
-			return "default";
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append(locale.getLanguage());
-		sb.append("_");
-		sb.append(locale.getCountry());
-		return sb.toString().toLowerCase();
+		return null;
 	}
 
 }

@@ -115,7 +115,7 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				SoundInfo[] sounds = new SoundInfo[soundcount];
 				int i = 0;
 				while(i < soundcount) {
-					buf = new byte[namelengths[i]];
+					buf = new byte[0xFF & namelengths[i]];
 					fis.read(buf);
 					sounds[i] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[i]);
 					++i;

@@ -37,11 +37,11 @@ default:
   noconsoleselector: {"color":"red","text":"This selector unavilable from console"}
   targetoffline: {"color":"red","text":"Target player offline"}
   unknownrepeattype: {"color":"red","text":"Unknown repeat mode"}
-  playall: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"play all","hoverEvent":{"action":"show_text","value":"playall"}}]
-  playone: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"play one","hoverEvent":{"action":"show_text","value":"playone"}}]
-  repeatall: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"repeat all","hoverEvent":{"action":"show_text","value":"repeatall"}}]
-  repeatone: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"repeat one","hoverEvent":{"action":"show_text","value":"repeatone"}}]
-  random: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"random","hoverEvent":{"action":"show_text","value":"random"}}]
+  playall: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"play all","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"playall"}}}]
+  playone: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"play one","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"playone"}}}]
+  repeatall: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"repeat all","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"repeatall"}}}]
+  repeatone: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"repeat one","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"repeatone"}}}]
+  random: [{"color":"green","text":"Repeat mode set to: "},{"color":"yellow","text":"random","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"random"}}}]
   unavilableselector:
    near: {"color":"red","text":"Selector @p unavilable for this source"}
    random: {"color":"red","text":"Selector @r unavilable for this source"}
@@ -95,11 +95,11 @@ ru_ru:
   noconsoleselector: {"color":"red","text":"Этот селектор недоступен из консоли"}
   targetoffline: {"color":"red","text":"Целевой игрок не в сети"}
   unknownrepeattype: {"color":"red","text":"Неизвестный режим повтора"}
-  playall: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"воспроизвести всё","hoverEvent":{"action":"show_text","value":"playall"}}]
-  playone: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"воспроизвести одну","hoverEvent":{"action":"show_text","value":"playone"}}]
-  repeatall: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"повторять всё","hoverEvent":{"action":"show_text","value":"repeatall"}}]
-  repeatone: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"повторять одну","hoverEvent":{"action":"show_text","value":"repeatone"}}]
-  random: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"случайный","hoverEvent":{"action":"show_text","value":"random"}}]
+  playall: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"воспроизвести всё","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"playall"}}}]
+  playone: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"воспроизвести одну","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"playone"}}}]
+  repeatall: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"повторять всё","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"repeatall"}}}]
+  repeatone: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"повторять одну","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"repeatone"}}}]
+  random: [{"color":"green","text":"Режим повтора установлен на: "},{"color":"yellow","text":"случайный","hoverEvent":{"action":"show_text","value":{"color":"yellow","text":"random"}}}]
  uploadmusic:
   usage: [{"color":"gray","text":"Использование: "},{"color":"gray","italic":true,"text":"Usage: /uploadmusic <start/finish> <playlist>/[token]"}]
   nopermission: {"color":"red","text":"Нет прав"}

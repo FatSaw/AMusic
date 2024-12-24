@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.RepeatType;
+import me.bomb.amusic.util.LangOptions;
 
 public final class RepeatCommand implements SimpleCommand {
 	

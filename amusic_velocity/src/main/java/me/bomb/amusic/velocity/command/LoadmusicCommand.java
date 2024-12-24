@@ -18,7 +18,8 @@ import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.SoundSource;
-import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
+import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class LoadmusicCommand implements SimpleCommand {
 	
@@ -75,7 +76,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 			}
 			String name = args[1];
 			
-			Placeholders placeholder = new Placeholders("%playlistname%", name);
+			Placeholder placeholder = new Placeholder("%playlistname%", name);
 			StatusReport statusreport = new StatusReport() {
 				@Override
 				public void onStatusResponse(EnumStatus status) {

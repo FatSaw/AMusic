@@ -4,7 +4,6 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -81,13 +80,15 @@ public final class AMusicBukkit extends JavaPlugin {
 		switch (ver) {
 		case 7:
 			packsender = new LegacyPackSender_1_7_R4();
-			soundstopper = new LegacySoundStopper_1_7_R4();
+			//soundstopper = new LegacySoundStopper_1_7_R4();
+			soundstopper = new BukkitSoundSilenceLockStopper();
 			messagesender = new LegacyMessageSender_1_7_R4();
 			waitacception = false;
 		break;
 		case 8:
 			packsender = new LegacyPackSender_1_8_R3();
-			soundstopper = new LegacySoundStopper_1_8_R3();
+			//soundstopper = new LegacySoundStopper_1_8_R3();
+			soundstopper = new BukkitSoundSilenceLockStopper();
 			messagesender = new LegacyMessageSender_1_8_R3();
 		break;
 		case 9:

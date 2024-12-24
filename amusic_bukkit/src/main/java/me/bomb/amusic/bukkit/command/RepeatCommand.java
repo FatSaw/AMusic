@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.RepeatType;
+import me.bomb.amusic.util.LangOptions;
 
 public final class RepeatCommand implements CommandExecutor {
 	private final Server server;

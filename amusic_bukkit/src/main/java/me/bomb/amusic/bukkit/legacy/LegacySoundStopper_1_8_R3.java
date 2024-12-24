@@ -58,5 +58,10 @@ public final class LegacySoundStopper_1_8_R3 implements SoundStopper {
         connection.sendPacket(new PacketPlayOutHeldItemSlot(entityplayer.inventory.itemInHandIndex));
         entityplayer.updateInventory(entityplayer.defaultContainer);
 	}
+	
+	@Override
+	public boolean isStopAll() {
+		return true;
+	}
 
 }

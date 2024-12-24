@@ -8,8 +8,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.uploader.UploadManager;
+import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class UploadmusicCommand implements CommandExecutor {
 	
@@ -63,7 +64,7 @@ public final class UploadmusicCommand implements CommandExecutor {
 			}
 			final UUID token = uploadmanager.generateToken(args[1]);
 			String url = uploadmanager.uploaderhost.concat(token.toString());
-			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholders("%url%", url));
+			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
 			if(!(sender instanceof Player)) {
 				return true;
 			}

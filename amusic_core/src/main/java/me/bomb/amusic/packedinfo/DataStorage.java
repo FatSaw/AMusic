@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map.Entry;
 
@@ -230,7 +229,9 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 						int packednamelength = packednamebytes.length;
 						if(packednamelength > 0xFF) {
 							packednamelength = 0xFF;
-							packednamebytes = Arrays.copyOf(packednamebytes, packednamelength);
+							byte[] npackednamebytes = new byte[0xFF];
+							System.arraycopy(packednamebytes, 0, npackednamebytes, 0, packednamelength);
+							packednamebytes = npackednamebytes;
 						}
 						fos.write((byte) packednamelength); //PACKED FILE PATH
 						fos.write(packednamebytes); //PACKED FILE PATH
@@ -248,9 +249,11 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 							int soundnamelength = soundnamebytes.length;
 							if(soundnamelength > 0xFF) {
 								soundnamelength = 0xFF;
-								soundnamebytes = Arrays.copyOf(soundnamebytes, soundnamelength);
+								byte[] nsoundnamebytes = new byte[0xFF];
+								System.arraycopy(soundnamebytes, 0, nsoundnamebytes, 0, soundnamelength);
+								soundnamebytes = nsoundnamebytes;
 							}
-							totalsoundnamelength += (byte) soundnamelength;
+							totalsoundnamelength += soundnamelength;
 							anames[i] = soundnamebytes;
 							namelengths[i] = (byte) soundnamelength;
 							short length = dataentry.sounds[i].length;
@@ -267,18 +270,13 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 						while(i < soundcount) {
 							byte[] soundnamebytes = anames[i];
 							int soundnamelength = soundnamebytes.length;
-							short k = 0;
-							while(k < soundnamelength) {
-								names[namesi] = soundnamebytes[k];
-								++namesi;
-								++k;
-							}
+							System.arraycopy(soundnamebytes, 0, names, namesi, soundnamelength);
+							namesi+=soundnamelength;
 							++i;
 						}
 						fos.write(namelengths); //NAME LENGTHS  ENTRY 0-255
 						fos.write(lengths); //SOUND LENGTHS  ENTRY 0-65535
-						fos.write(names);
-						//fos.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
+						fos.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
 						
 						fos.close();
 						dataentry.saved = true;

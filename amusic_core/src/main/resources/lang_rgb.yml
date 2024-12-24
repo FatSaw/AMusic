@@ -37,11 +37,11 @@ default:
   noconsoleselector: {"color":"#ee2222","text":"This selector unavilable from console"}
   targetoffline: {"color":"#ee2222","text":"Target player offline"}
   unknownrepeattype: {"color":"#ee2222","text":"Unknown repeat mode"}
-  playall: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"play all"}]
-  playone: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"play one"}]
-  repeatall: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"repeat all"}]
-  repeatone: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"repeat one"}]
-  random: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"random"}]
+  playall: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"play all","hoverEvent":{"action":"show_text","value":"playall"}}]
+  playone: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"play one","hoverEvent":{"action":"show_text","value":"playone"}}]
+  repeatall: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"repeat all","hoverEvent":{"action":"show_text","value":"repeatall"}}]
+  repeatone: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"repeat one","hoverEvent":{"action":"show_text","value":"repeatone"}}]
+  random: [{"color":"#22ee22","text":"Repeat mode set to: "},{"color":"#eeee22","text":"random","hoverEvent":{"action":"show_text","value":"random"}}]
   unavilableselector:
    near: {"color":"#ee2222","text":"Selector @p unavilable for this source"}
    random: {"color":"#ee2222","text":"Selector @r unavilable for this source"}
@@ -95,11 +95,11 @@ ru_ru:
   noconsoleselector: {"color":"#ee2222","text":"Этот селектор недоступен из консоли"}
   targetoffline: {"color":"#ee2222","text":"Целевой игрок не в сети"}
   unknownrepeattype: {"color":"#ee2222","text":"Неизвестный режим повтора"}
-  playall: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"воспроизвести всё"}]
-  playone: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"воспроизвести одну"}]
-  repeatall: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"повторять всё"}]
-  repeatone: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"повторять одну"}]
-  random: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"случайный"}]
+  playall: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"воспроизвести всё","hoverEvent":{"action":"show_text","value":"playall"}}]
+  playone: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"воспроизвести одну","hoverEvent":{"action":"show_text","value":"playone"}}]
+  repeatall: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"повторять всё","hoverEvent":{"action":"show_text","value":"repeatall"}}]
+  repeatone: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"повторять одну","hoverEvent":{"action":"show_text","value":"repeatone"}}]
+  random: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"случайный","hoverEvent":{"action":"show_text","value":"random"}}]
  uploadmusic:
   usage: [{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"Usage: /uploadmusic <start/finish> <playlist>/[token]"}]
   nopermission: {"color":"#ee2222","text":"Нет прав"}

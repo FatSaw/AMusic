@@ -13,7 +13,7 @@ import me.bomb.amusic.util.SimpleConfiguration;
 
 public final class ConfigOptions {
 	
-	public final String host, uploaderhost;
+	public final String loaderrors, host, uploaderhost;
 	public final InetAddress ip, uploaderip;
 	public final int port, uploaderport, backlog, uploaderbacklog, maxpacksize, maxmusicfilesize, bitrate, samplingrate, uploadertimeout, uploaderlimit;
 	public final byte channels;
@@ -53,6 +53,7 @@ public final class ConfigOptions {
 		this.packeddir = packeddir;
 		this.tokensalt = tokensalt;
 		this.waitacception = waitacception;
+		this.loaderrors = "";
 	}
 	
 	/**
@@ -95,8 +96,8 @@ public final class ConfigOptions {
 		}
 		SimpleConfiguration sc = new SimpleConfiguration(bytes);
 		bytes = null;
-		
-		host = sc.getStringOrDefault("server\0host", "http://127.0.0.1:25530/");
+		StringBuilder errors = new StringBuilder();
+		host = sc.getStringOrError("server\0host", errors);
 		InetAddress ip = null;
 		String ipstr = sc.getStringOrDefault("server\0ip", null);
 		if(ipstr!=null) {
@@ -107,12 +108,12 @@ public final class ConfigOptions {
 		}
 		
 		this.ip = ip;
-		port = sc.getIntOrDefault("server\0port", 25530);
-		backlog = sc.getIntOrDefault("server\0backlog", 50);
+		port = sc.getIntOrError("server\0port", errors);
+		backlog = sc.getIntOrError("server\0backlog", errors);
 		
-		this.useuploader = sc.getBooleanOrDefault("uploaderserver\0use", false);
+		this.useuploader = sc.getBooleanOrError("uploaderserver\0use", errors);
 
-		uploaderhost = sc.getStringOrDefault("uploaderserver\0host", "http://127.0.0.1:25532/");
+		uploaderhost = sc.getStringOrError("uploaderserver\0host", errors);
 		InetAddress uploaderip = null;
 		String uploaderipstr = sc.getStringOrDefault("uploaderserver\0ip", null);
 		if(uploaderipstr!=null) {
@@ -123,35 +124,36 @@ public final class ConfigOptions {
 		}
 		
 		this.uploaderip = uploaderip;
-		uploaderport = sc.getIntOrDefault("uploaderserver\0port", 25532);
-		uploaderbacklog = sc.getIntOrDefault("uploaderserver\0backlog", 50);
-		uploadertimeout = sc.getIntOrDefault("uploaderserver\0timeout", 600000);
-		uploaderlimit = sc.getIntOrDefault("uploaderserver\0limit", 262144000);
+		uploaderport = sc.getIntOrError("uploaderserver\0port", errors);
+		uploaderbacklog = sc.getIntOrError("uploaderserver\0backlog", errors);
+		uploadertimeout = sc.getIntOrError("uploaderserver\0timeout", errors);
+		uploaderlimit = sc.getIntOrError("uploaderserver\0limit", errors);
 		
-		processpack = sc.getBooleanOrDefault("resource\0processpack", true);
-		servercache = sc.getBooleanOrDefault("resource\0cache\0server", true);
-		clientcache = sc.getBooleanOrDefault("resource\0cache\0client", true);
-		resourcestrictaccess = sc.getBooleanOrDefault("server\0strictaccess", true);
-		uploaderstrictaccess = sc.getBooleanOrDefault("uploaderserver\0strictaccess", true);
-		byte[] salt = sc.getBytesBase64OrDefault("server\0tokensalt", new byte[0]);
+		processpack = sc.getBooleanOrError("resource\0processpack", errors);
+		servercache = sc.getBooleanOrError("resource\0cache\0server", errors);
+		clientcache = sc.getBooleanOrError("resource\0cache\0client", errors);
+		resourcestrictaccess = sc.getBooleanOrError("server\0strictaccess", errors);
+		uploaderstrictaccess = sc.getBooleanOrError("uploaderserver\0strictaccess", errors);
+		byte[] salt = sc.getBytesBase64OrError("server\0tokensalt", errors);
 		
 		if(salt == null || salt.length < 2) {
 			tokensalt = null;
 		} else {
 			tokensalt = salt;
 		}
-		useconverter = sc.getBooleanOrDefault("resource\0encoder\0use", false);
+		useconverter = sc.getBooleanOrError("resource\0encoder\0use", errors);
 		String ffmpegbinartypath = sc.getStringOrDefault("resource\0encoder\0ffmpegbinary", null);
 		ffmpegbinary = ffmpegbinartypath == null ? null : new File(ffmpegbinartypath);
-		bitrate = sc.getIntOrDefault("resource\0encoder\0bitrate", 65000);
-		channels = (byte) sc.getIntOrDefault("resource\0encoder\0channels", 2);
-		samplingrate = sc.getIntOrDefault("resource\0encoder\0samplingrate", 44100);
-		encodetracksasynchronly = sc.getBooleanOrDefault("resource\0encoder\0async", true);
+		bitrate = sc.getIntOrError("resource\0encoder\0bitrate", errors);
+		channels = (byte) sc.getIntOrError("resource\0encoder\0channels", errors);
+		samplingrate = sc.getIntOrError("resource\0encoder\0samplingrate", errors);
+		encodetracksasynchronly = sc.getBooleanOrError("resource\0encoder\0async", errors);
 		waitacception = sc.getBooleanOrDefault("server\0waitacception", waitacception);
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxpacksize;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
 		this.waitacception = waitacception;
+		this.loaderrors = errors.toString();
 	}
 }

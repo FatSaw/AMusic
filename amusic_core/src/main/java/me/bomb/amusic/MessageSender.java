@@ -1,10 +1,15 @@
 package me.bomb.amusic;
 
-public interface MessageSender<T> {
+public interface MessageSender {
 
 	/**
 	 * Sends message to player.
 	 */
-	public void send(T target, String message);
+	public void send(Object target, String message);
+	
+	/**
+	 * Get player language.
+	 */
+	public String getLocale(Object target);
 	
 }

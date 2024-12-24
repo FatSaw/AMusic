@@ -31,7 +31,7 @@ import me.bomb.amusic.source.LocalConvertedSource;
 import me.bomb.amusic.source.LocalUnconvertedParallelSource;
 import me.bomb.amusic.source.LocalUnconvertedSource;
 import me.bomb.amusic.source.SoundSource;
-import me.bomb.amusic.velocity.command.LangOptions;
+import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
@@ -41,11 +41,12 @@ import me.bomb.amusic.velocity.command.UploadmusicCommand;
 public final class AMusicVelocity {
 	
 	private final ProxyServer server;
-    //private final Logger logger;
+    private final Logger logger;
 	private final AMusic amusic;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PositionTracker positiontracker;
+	private final String configerrors;
     
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -64,7 +65,8 @@ public final class AMusicVelocity {
 		}
 		int maxpacksize = 262144000;
 		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, true);
-		playerips = configoptions.resourcestrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+		this.configerrors = configoptions.loaderrors;
+		playerips = configoptions.resourcestrictaccess || configoptions.uploaderstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 
 		PackSender packsender = new VelocityPackSender(server);
         
@@ -74,13 +76,17 @@ public final class AMusicVelocity {
 		this.resourcemanager = amusic.resourcemanager;
 		this.positiontracker = amusic.positiontracker;
 		this.server = server;
-        //this.logger = logger;
-		LangOptions.loadLang(langfile, false);
+        this.logger = logger;
+		LangOptions.loadLang(new VelocityMessageSender(), langfile, false);
         amusic.setAPI();
     }
 	
 	@Subscribe
 	public void onProxyInitialization(ProxyInitializeEvent event) {
+		if(!this.configerrors.isEmpty()) {
+			logger.error("AMusic filed to load config options: \n".concat(configerrors));
+			return;
+		}
 		ProtocolRegistrationProvider protocolregistration = Protocolize.protocolRegistration();
 		protocolregistration.registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		protocolregistration.registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);

@@ -20,10 +20,14 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 	
 	private final ProxyServer server;
 	private final ChannelIdentifier identifier;
+	private final NamedSoundEffectPacket legacystopsound;
+	private final boolean legacysupport;
 	
-	protected ProtocoliseSoundStopper(ProxyServer server) {
+	protected ProtocoliseSoundStopper(ProxyServer server, boolean legacysupport) {
 		this.server = server;
 		this.identifier = new LegacyChannelIdentifier("MC|StopSound");
+		this.legacystopsound = legacysupport ? new NamedSoundEffectPacket("amusic.silence", 0, 0, Integer.MIN_VALUE, 0, 1.0E9f, 1.0f) : null;
+		this.legacysupport = legacysupport;
 	}
 
 	@Override
@@ -33,10 +37,18 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 			return;
 		}
 		final int version = player.protocolVersion();
-		if(version < 110) {
+		if(legacysupport && version < 110) {
 			//There is no sound stop packet below protocol version 110, it still can be stopped by world rejoin or more than 4 sounds playing on the same time.
 			//Do nothing since proxy server don't have world instance.
 			//TODO: Research how sound can be stopped without minimal side effects (maybe 4+ zero volume sounds or 4+ silence sounds)
+			byte i = 5;
+			while(--i > -1) {
+				player.sendPacket(legacystopsound);
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+				}
+			}
 			return;
 		}
 		final String soundid = "amusic.music".concat(Short.toString(id));
@@ -50,6 +62,11 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 			return;
 		}
 		oplayer.get().sendPluginMessage(identifier, new StopSoundMessageEncoder(soundid));
+	}
+	
+	@Override
+	public boolean isLock() {
+		return legacysupport;
 	}
 	
 	public final static class StopSoundMessageEncoder implements PluginMessageEncoder {

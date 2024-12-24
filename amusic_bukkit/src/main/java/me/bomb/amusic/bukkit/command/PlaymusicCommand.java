@@ -11,8 +11,9 @@ import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class PlaymusicCommand implements CommandExecutor {
 	private final Server server;
@@ -175,8 +176,8 @@ public final class PlaymusicCommand implements CommandExecutor {
 					}
 					String name = args[1];
 
-					Placeholders[] placeholders = new Placeholders[1];
-					placeholders[0] = new Placeholders("%soundname%",args[1]);
+					Placeholder[] placeholders = new Placeholder[1];
+					placeholders[0] = new Placeholder("%soundname%",args[1]);
 					this.executeCommand(name, targetarray);
 					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return true;
@@ -202,8 +203,8 @@ public final class PlaymusicCommand implements CommandExecutor {
 				}
 				args[1] = sb.toString();
 			}
-			Placeholders[] placeholders = new Placeholders[1];
-			placeholders[0] = new Placeholders("%soundname%",args[1]);
+			Placeholder[] placeholders = new Placeholder[1];
+			placeholders[0] = new Placeholder("%soundname%",args[1]);
 			for(SoundInfo soundinfo : soundsinfo) {
 				if(soundinfo.name.equals(args[1])) {
 					executeCommand(args[1], target.getUniqueId());

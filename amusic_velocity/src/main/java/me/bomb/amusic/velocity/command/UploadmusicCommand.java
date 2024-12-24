@@ -11,7 +11,8 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 
 import me.bomb.amusic.uploader.UploadManager;
-import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
+import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class UploadmusicCommand implements SimpleCommand {
 
@@ -67,7 +68,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			final UUID token = uploadmanager.generateToken(args[1]);
 			String url = uploadmanager.uploaderhost.concat(token.toString());
-			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholders("%url%", url));
+			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
 			if(!(sender instanceof Player)) {
 				return;
 			}

@@ -13,7 +13,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.packedinfo.SoundInfo;
-import me.bomb.amusic.velocity.command.LangOptions.Placeholders;
+import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class PlaymusicCommand implements SimpleCommand  {
 
@@ -123,8 +124,8 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				}
 				args[1] = sb.toString();
 			}
-			Placeholders[] placeholders = new Placeholders[1];
-			placeholders[0] = new Placeholders("%soundname%",args[1]);
+			Placeholder[] placeholders = new Placeholder[1];
+			placeholders[0] = new Placeholder("%soundname%",args[1]);
 			for(SoundInfo soundinfo : soundsinfo) {
 				if(soundinfo.name.equals(args[1])) {
 					if(trackable) {

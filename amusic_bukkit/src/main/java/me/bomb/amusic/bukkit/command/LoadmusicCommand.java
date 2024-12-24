@@ -10,13 +10,14 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.bukkit.command.LangOptions.Placeholders;
 import me.bomb.amusic.packedinfo.DataStorage;
 import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class LoadmusicCommand implements CommandExecutor {
 	private final Server server;
@@ -26,7 +27,6 @@ public final class LoadmusicCommand implements CommandExecutor {
 	private final SelectorProcessor selectorprocessor;
 
 	public LoadmusicCommand(Server server, SoundSource<?> source, DataStorage datamanager, ResourceDispatcher dispatcher, SelectorProcessor selectorprocessor) {
-		LangOptions.values();
 		this.server = server;
 		this.source = source;
 		this.datamanager = datamanager;
@@ -126,7 +126,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 	}
 	
 	private void executeCommand(CommandSender sender, String playlistname, UUID[] targetuuids) {
-		Placeholders placeholder = new Placeholders("%playlistname%", playlistname);
+		Placeholder placeholder = new Placeholder("%playlistname%", playlistname);
 		StatusReport statusreport = new StatusReport() {
 			@Override
 			public void onStatusResponse(EnumStatus status) {

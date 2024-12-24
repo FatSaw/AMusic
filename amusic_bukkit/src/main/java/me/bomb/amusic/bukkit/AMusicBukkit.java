@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.InetAddress;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -14,10 +15,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.MessageSender;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundStopper;
-import me.bomb.amusic.bukkit.command.LangOptions;
+import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
 import me.bomb.amusic.bukkit.command.LoadmusicTabComplete;
 import me.bomb.amusic.bukkit.command.PlaymusicCommand;
@@ -52,6 +54,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PositionTracker positiontracker;
 	private final boolean waitacception;
+	private final String configerrors;
 
 	public AMusicBukkit() {
 		byte ver = 127;
@@ -110,6 +113,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
 		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, waitacception);
+		this.configerrors = configoptions.loaderrors;
 		this.waitacception = configoptions.waitacception;
 		playerips = configoptions.resourcestrictaccess || configoptions.uploaderstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		Runtime runtime = Runtime.getRuntime();
@@ -124,6 +128,10 @@ public final class AMusicBukkit extends JavaPlugin {
 	//PLUGIN INIT START
 	public void onEnable() {
 		Server server = Bukkit.getServer();
+		if(!this.configerrors.isEmpty()) {
+			server.getLogger().severe("AMusic filed to load config options: \n".concat(configerrors));
+			return;
+		}
 		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
 		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic.source, amusic.datamanager, amusic.dispatcher, selectorprocessor));

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -21,6 +22,8 @@ import me.bomb.amusic.source.SourceEntry;
 
 public final class ResourcePacker implements Runnable {
 	
+	private final static byte[] silencesound, silincesoundname;
+	
 	public SoundInfo[] sounds;
 	public byte[] sha1,resourcepack = null;
 
@@ -31,6 +34,21 @@ public final class ResourcePacker implements Runnable {
 	private final ResourceManager resourcemanager;
 	private final MessageDigest sha1hash; 
 	
+	static {
+		byte[] buf = new byte[2983];
+		InputStream in = ResourcePacker.class.getClassLoader().getResourceAsStream("silence.ogg");
+		try {
+			in.read(buf);
+		} catch (IOException e) {
+		} finally {
+			try {
+				in.close();
+			} catch (IOException e) {
+			}
+		}
+		silencesound = buf;
+		silincesoundname = "\t\"amusic.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n".getBytes(StandardCharsets.US_ASCII);
+	}
 	
 	protected ResourcePacker(SoundSource<?> source, String id, File resourcefile, File sourcearchive, ResourceManager resourcemanager) {
 		this.source = source;
@@ -62,15 +80,16 @@ public final class ResourcePacker implements Runnable {
 		String soundslist;
 		{
 			StringBuffer sounds = new StringBuffer("\n");
-			int lastmusicfileindex = musicfilessize;
-			--lastmusicfileindex;
+			//int lastmusicfileindex = musicfilessize;
+			//--lastmusicfileindex;
 			for (int i = 0; i < musicfilessize; ++i) {
 				sounds.append("\t\"amusic.music");
 				sounds.append(i);
 				sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
 				sounds.append(i);
 				sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
-				sounds.append(i==lastmusicfileindex ? "\t}\n" : "\t},\n");
+				sounds.append("\t},\n");
+				//sounds.append(i==lastmusicfileindex ? "\t}\n" : "\t},\n");
 			}
 			soundslist = sounds.toString();
 		}
@@ -106,6 +125,8 @@ public final class ResourcePacker implements Runnable {
 							}
 							sb.insert(close, ',');
 							sb.insert(++close, soundslist);
+							close+=soundslist.length();
+							sb.insert(close, silincesoundname);
 							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
 							zos.closeEntry();
@@ -128,6 +149,7 @@ public final class ResourcePacker implements Runnable {
 					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 					zos.write("{".getBytes());
 					zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
+					zos.write(silincesoundname);
 					zos.write("}".getBytes());
 					zos.closeEntry();
 				}
@@ -154,6 +176,9 @@ public final class ResourcePacker implements Runnable {
 		            zos.write(topack[i]);
 		            zos.closeEntry();
 				}
+				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/silence.ogg"));
+				zos.write(silencesound);
+	            zos.closeEntry();
 			} catch (IOException e) {
 				return;
 			} finally {

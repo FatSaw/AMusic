@@ -106,8 +106,33 @@ public final class SimpleConfiguration {
 		this.kv = kv;
 	}
 	
+	private static void appendKey(String key, StringBuilder sb) {
+		key = key.replace('\0', '_');
+		sb.append(key);
+		sb.append('\n');
+	}
+	
 	public boolean hasKey(String key) {
 		return kv.containsKey(key);
+	}
+	
+	public String getStringOrDefault(String key, String defaultvalue) {
+		String value = kv.get(key);
+		if(value==null) return defaultvalue;
+		return value;
+	}
+	public String getString(String key) throws NullPointerException {
+		String value = kv.get(key);
+		if(value==null) throw new NullPointerException();
+		return value;
+	}
+	public String getStringOrError(String key, StringBuilder sb) {
+		String value = kv.get(key);
+		if(value==null) {
+			appendKey(key, sb);
+			return null;
+		}
+		return value;
 	}
 	
 	public boolean getBooleanOrDefault(String key, boolean defaultvalue) {
@@ -120,6 +145,31 @@ public final class SimpleConfiguration {
 		}
 		return defaultvalue;
 	}
+	public boolean getBoolean(String key) throws NullPointerException, IllegalArgumentException {
+		String value = kv.get(key);
+		if(value==null) throw new NullPointerException();
+		if(value.equals("true")) {
+			return true;
+		} else if(value.equals("false")) {
+			return false;
+		}
+		throw new IllegalArgumentException();
+	}
+	public boolean getBooleanOrError(String key, StringBuilder sb) {
+		String value = kv.get(key);
+		if(value==null) {
+			appendKey(key, sb);
+			return false;
+		}
+		if(value.equals("true")) {
+			return true;
+		} else if(value.equals("false")) {
+			return false;
+		}
+		appendKey(key, sb);
+		return false;
+	}
+	
 	public int getIntOrDefault(String key, int defaultvalue) {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;
@@ -129,21 +179,53 @@ public final class SimpleConfiguration {
 			return defaultvalue;
 		}
 	}
-	public String getStringOrDefault(String key, String defaultvalue) {
+	public int getInt(String key) throws NullPointerException, NumberFormatException {
 		String value = kv.get(key);
-		if(value==null) return defaultvalue;
-		return value;
+		if(value==null) throw new NullPointerException();
+		return Integer.parseInt(value);
 	}
+	public int getIntOrError(String key, StringBuilder sb) {
+		String value = kv.get(key);
+		if(value==null) {
+			appendKey(key, sb);
+			return 0;
+		}
+		try {
+			return Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			appendKey(key, sb);
+			return 0;
+		}
+	}
+	
 	public byte[] getBytesBase64OrDefault(String key, byte[] defaultvalue) {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;
 		try {
 			return base64decoder.decode(value);
 		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
 			return defaultvalue;
 		}
 	}
+	public byte[] getBytesBase64(String key) throws NullPointerException, IllegalArgumentException {
+		String value = kv.get(key);
+		if(value==null) throw new NullPointerException();
+		return base64decoder.decode(value);
+	}
+	public byte[] getBytesBase64OrError(String key, StringBuilder sb) {
+		String value = kv.get(key);
+		if(value==null) {
+			appendKey(key, sb);
+			return null;
+		}
+		try {
+			return base64decoder.decode(value);
+		} catch (IllegalArgumentException e) {
+			appendKey(key, sb);
+			return null;
+		}
+	}
+	
 	public String[] getSubKeys(String parentsection) {
 		HashSet<String> keys = new HashSet<>();
 		int parentsectionlength = parentsection.length();

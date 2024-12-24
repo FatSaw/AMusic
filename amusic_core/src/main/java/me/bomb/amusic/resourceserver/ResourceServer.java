@@ -67,6 +67,7 @@ public final class ResourceServer extends Thread {
 	
 	public void end() {
 		run = false;
+		if(server==null) return;
 		try {
 			server.close();
 		} catch (IOException e) {

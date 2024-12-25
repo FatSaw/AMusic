@@ -45,10 +45,10 @@ import static dev.simplix.protocolize.api.util.ProtocolUtil.writeString;
 
 public final class NamedSoundEffectPacket extends AbstractPacket {
 	
-	private final static int MINECRAFT_1_21_4 = 769;
+	private final static int MINECRAFT_1_7_10 = 5, MINECRAFT_1_21_4 = 769;
 
     public static final List<ProtocolIdMapping> MAPPINGS = Arrays.asList(
-        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_8, MINECRAFT_1_8, 0x29),
+        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_7_10, MINECRAFT_1_8, 0x29),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_9, MINECRAFT_1_12_2, 0x19),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_13, MINECRAFT_1_13_2, 0x1A),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_14, MINECRAFT_1_14_4, 0x19),

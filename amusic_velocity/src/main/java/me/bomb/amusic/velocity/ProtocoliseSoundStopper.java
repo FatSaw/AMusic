@@ -3,14 +3,10 @@ package me.bomb.amusic.velocity;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.jetbrains.annotations.NotNull;
-
-import com.google.common.io.ByteArrayDataOutput;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.PluginMessageEncoder;
 
 import dev.simplix.protocolize.api.Protocolize;
 import dev.simplix.protocolize.api.player.ProtocolizePlayer;
@@ -39,8 +35,7 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 		final int version = player.protocolVersion();
 		if(legacysupport && version < 110) {
 			//There is no sound stop packet below protocol version 110, it still can be stopped by world rejoin or more than 4 sounds playing on the same time.
-			//Do nothing since proxy server don't have world instance.
-			//TODO: Research how sound can be stopped without minimal side effects (maybe 4+ zero volume sounds or 4+ silence sounds)
+			//4 silence sounds should be processed by client in different ticks
 			byte i = 5;
 			while(--i > -1) {
 				player.sendPacket(legacystopsound);
@@ -61,23 +56,12 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 		if(oplayer.isEmpty()) {
 			return;
 		}
-		oplayer.get().sendPluginMessage(identifier, new StopSoundMessageEncoder(soundid));
+		oplayer.get().sendPluginMessage(identifier, new StringPluginMessageEncoder(soundid));
 	}
 	
 	@Override
 	public boolean isLock() {
 		return legacysupport;
-	}
-	
-	public final static class StopSoundMessageEncoder implements PluginMessageEncoder {
-		private final String soundid;
-		protected StopSoundMessageEncoder(String soundid) {
-			this.soundid = soundid;
-		}
-		@Override
-		public void encode(@NotNull ByteArrayDataOutput output) {
-			output.writeUTF(soundid);
-		}
 	}
 
 }

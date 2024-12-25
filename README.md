@@ -84,9 +84,9 @@ server:
  tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
 resource:
  processpack: true
-  cache:
-   server: true
-   client: true
+ cache:
+  server: true
+  client: true
  encoder:
   use: false
   ffmpegbinary: ffmpeg

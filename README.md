@@ -103,7 +103,7 @@ resource:
 ### Bukkit
 `...`
 ### Velocity
-`Protocolise`
+`Protocolize`
 
 ## BUILD:
 

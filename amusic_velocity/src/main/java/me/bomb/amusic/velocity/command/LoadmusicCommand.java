@@ -12,27 +12,20 @@ import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
-import me.bomb.amusic.packedinfo.DataStorage;
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.resource.EnumStatus;
-import me.bomb.amusic.resource.ResourceDispatcher;
-import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
-import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class LoadmusicCommand implements SimpleCommand {
 	
 	private final ProxyServer server;
-	private final SoundSource<?> source;
-	private final DataStorage datamanager;
-	private final ResourceDispatcher dispatcher;
+	private final AMusic amusic;
 	
-	public LoadmusicCommand(ProxyServer server, SoundSource<?> source, DataStorage datamanager, ResourceDispatcher dispatcher) {
+	public LoadmusicCommand(ProxyServer server, AMusic amusic) {
 		this.server = server;
-		this.source = source;
-		this.datamanager = datamanager;
-		this.dispatcher = dispatcher;
+		this.amusic = amusic;
 	}
 
 	@Override
@@ -87,10 +80,11 @@ public final class LoadmusicCommand implements SimpleCommand {
 				}
 			};
 			LangOptions.loadmusic_processing.sendMsg(sender, placeholder);
-			new ResourceFactory(name, targetuuid == null ? null : new UUID[] {targetuuid}, datamanager, dispatcher, source, targetuuid == null, statusreport);
+			amusic.loadPack(new UUID[] {targetuuid}, name, targetuuid == null, statusreport);
+			//new ResourceFactory(name, targetuuid == null ? null : new UUID[] {targetuuid}, datamanager, dispatcher, source, targetuuid == null, statusreport);
 		} else if(args.length == 1 && args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : datamanager.getPlaylists()) {
+			for(String playlistname : amusic.getPlaylists()) {
 				sb.append(playlistname);
 				sb.append(' ');
 			}
@@ -125,7 +119,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 		}
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			Set<String> playlists = datamanager.getPlaylists();
+			Set<String> playlists = amusic.getPlaylists();
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {

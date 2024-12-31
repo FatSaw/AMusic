@@ -14,9 +14,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.MessageSender;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.RemoteAMusic;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
@@ -49,11 +51,11 @@ import me.bomb.amusic.source.SoundSource;
 
 public final class AMusicBukkit extends JavaPlugin {
 	private final AMusic amusic;
-	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	private final PositionTracker positiontracker;
 	private final boolean waitacception;
-	private final String configerrors;
+	private final String configerrors, uploaderhost;
+	private final ResourceManager resourcemanager;
+	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
 		byte ver = 127;
@@ -116,14 +118,26 @@ public final class AMusicBukkit extends JavaPlugin {
 		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, waitacception);
 		this.configerrors = configoptions.loaderrors;
 		this.waitacception = configoptions.waitacception;
+		this.uploaderhost = configoptions.useuploader ? configoptions.uploaderhost : null;
 		playerips = configoptions.resourcestrictaccess || configoptions.uploaderstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		Runtime runtime = Runtime.getRuntime();
 		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		this.amusic = new AMusic(configoptions, source, packsender, new BukkitSoundStarter(), soundstopper, playerips);
-		this.resourcemanager = amusic.resourcemanager;
-		this.positiontracker = amusic.positiontracker;
+		final boolean localapi = true;
+		if(localapi) {
+			LocalAMusic amusic = new LocalAMusic(configoptions, source, packsender, new BukkitSoundStarter(), soundstopper, playerips);
+			this.resourcemanager = amusic.resourcemanager;
+			this.positiontracker = amusic.positiontracker;
+			this.amusic = amusic;
+			amusic.setAPI();
+		} else {
+			RemoteAMusic amusic = new RemoteAMusic();
+			this.resourcemanager = null;
+			this.positiontracker = null;
+			this.amusic = amusic;
+		}
+		
 		LangOptions.loadLang(messagesender, langfile, ver > 15);
-		amusic.setAPI();
+		
 	}
 
 	//PLUGIN INIT START
@@ -135,22 +149,22 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic.source, amusic.datamanager, amusic.dispatcher, selectorprocessor));
-		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, amusic.datamanager));
-		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, positiontracker);
+		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic, selectorprocessor));
+		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, amusic));
+		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, amusic);
 		PluginCommand playmusiccommand = getCommand("playmusic");
-		playmusiccommand.setExecutor(new PlaymusicCommand(server, positiontracker, selectorprocessor, true));
+		playmusiccommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, true));
 		playmusiccommand.setTabCompleter(pmtc);
 		PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
-		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(server, positiontracker, selectorprocessor, false));
+		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, false));
 		playmusicntrackablecommand.setTabCompleter(pmtc);
 		PluginCommand repeatcommand = getCommand("repeat");
-		repeatcommand.setExecutor(new RepeatCommand(server, positiontracker, selectorprocessor));
+		repeatcommand.setExecutor(new RepeatCommand(server, amusic, selectorprocessor));
 		repeatcommand.setTabCompleter(new RepeatTabComplete(server));
 		PluginCommand uploadmusiccommand = getCommand("uploadmusic");
-		UploadmusicCommand uploadmusiccmd = new UploadmusicCommand(amusic.uploadermanager);
+		UploadmusicCommand uploadmusiccmd = new UploadmusicCommand(amusic, uploaderhost);
 		uploadmusiccommand.setExecutor(uploadmusiccmd);
-		uploadmusiccommand.setTabCompleter(new UploadmusicTabComplete(amusic.uploadermanager));
+		uploadmusiccommand.setTabCompleter(new UploadmusicTabComplete(amusic));
 		if(playerips != null) {
 			playerips.clear();
 			for(Player player : Bukkit.getOnlinePlayers()) {
@@ -158,10 +172,13 @@ public final class AMusicBukkit extends JavaPlugin {
 			}
 		}
 		PluginManager pluginmanager = server.getPluginManager();
-		pluginmanager.registerEvents(new EventListener(resourcemanager, positiontracker, playerips, uploadmusiccmd), this);
-		if(waitacception) {
-			pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
+		if(this.resourcemanager != null) {
+			pluginmanager.registerEvents(new EventListener(resourcemanager, positiontracker, playerips, uploadmusiccmd), this);
+			if(waitacception) {
+				pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
+			}
 		}
+		
 		this.amusic.enable();
 	}
 

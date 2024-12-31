@@ -10,15 +10,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.packedinfo.DataStorage;
+import me.bomb.amusic.AMusic;
 
 public final class LoadmusicTabComplete implements TabCompleter {
 	private final Server server;
-	private final DataStorage datamanager;
+	private final AMusic amusic;
 
-	public LoadmusicTabComplete(Server server, DataStorage datamanager) {
+	public LoadmusicTabComplete(Server server, AMusic amusic) {
 		this.server = server;
-		this.datamanager = datamanager;
+		this.amusic = amusic;
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public final class LoadmusicTabComplete implements TabCompleter {
 		
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			Set<String> playlists = datamanager.getPlaylists();
+			Set<String> playlists = amusic.getPlaylists();
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {

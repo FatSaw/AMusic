@@ -8,17 +8,17 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.RepeatType;
 import me.bomb.amusic.util.LangOptions;
 
 public final class RepeatCommand implements CommandExecutor {
 	private final Server server;
-	private final PositionTracker positiontracker;
+	private final AMusic amusic;
 	private final SelectorProcessor selectorprocessor;
-	public RepeatCommand(Server server, PositionTracker positiontracker, SelectorProcessor selectorprocessor) {
+	public RepeatCommand(Server server, AMusic amusic, SelectorProcessor selectorprocessor) {
 		this.server = server;
-		this.positiontracker = positiontracker;
+		this.amusic = amusic;
 		this.selectorprocessor = selectorprocessor;
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -88,7 +88,7 @@ public final class RepeatCommand implements CommandExecutor {
 					LangOptions.repeat_targetoffline.sendMsg(sender);
 					return;
 				}
-				positiontracker.setRepeater(target, null);
+				amusic.setRepeatMode(target, null);
 			}
 			LangOptions.repeat_playone.sendMsg(sender);
 			return;
@@ -98,7 +98,7 @@ public final class RepeatCommand implements CommandExecutor {
 					LangOptions.repeat_targetoffline.sendMsg(sender);
 					return;
 				}
-				positiontracker.setRepeater(target, RepeatType.REPEATONE);
+				amusic.setRepeatMode(target, RepeatType.REPEATONE);
 			}
 			LangOptions.repeat_repeatone.sendMsg(sender);
 			return;
@@ -108,7 +108,7 @@ public final class RepeatCommand implements CommandExecutor {
 					LangOptions.repeat_targetoffline.sendMsg(sender);
 					return;
 				}
-				positiontracker.setRepeater(target, RepeatType.REPEATALL);
+				amusic.setRepeatMode(target, RepeatType.REPEATALL);
 			}
 			LangOptions.repeat_repeatall.sendMsg(sender);
 			return;
@@ -118,7 +118,7 @@ public final class RepeatCommand implements CommandExecutor {
 					LangOptions.repeat_targetoffline.sendMsg(sender);
 					return;
 				}
-				positiontracker.setRepeater(target, RepeatType.PLAYALL);
+				amusic.setRepeatMode(target, RepeatType.PLAYALL);
 			}
 			
 			LangOptions.repeat_playall.sendMsg(sender);
@@ -129,7 +129,7 @@ public final class RepeatCommand implements CommandExecutor {
 					LangOptions.repeat_targetoffline.sendMsg(sender);
 					return;
 				}
-				positiontracker.setRepeater(target, RepeatType.RANDOM);
+				amusic.setRepeatMode(target, RepeatType.RANDOM);
 			}
 			LangOptions.repeat_random.sendMsg(sender);
 			return;

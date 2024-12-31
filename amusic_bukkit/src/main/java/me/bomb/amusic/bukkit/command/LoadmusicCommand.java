@@ -10,27 +10,20 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.packedinfo.DataStorage;
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.resource.EnumStatus;
-import me.bomb.amusic.resource.ResourceDispatcher;
-import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
-import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class LoadmusicCommand implements CommandExecutor {
 	private final Server server;
-	private final SoundSource<?> source;
-	private final DataStorage datamanager;
-	private final ResourceDispatcher dispatcher;
+	private final AMusic amusic;
 	private final SelectorProcessor selectorprocessor;
 
-	public LoadmusicCommand(Server server, SoundSource<?> source, DataStorage datamanager, ResourceDispatcher dispatcher, SelectorProcessor selectorprocessor) {
+	public LoadmusicCommand(Server server, AMusic amusic, SelectorProcessor selectorprocessor) {
 		this.server = server;
-		this.source = source;
-		this.datamanager = datamanager;
-		this.dispatcher = dispatcher;
+		this.amusic = amusic;
 		this.selectorprocessor = selectorprocessor;
 	}
 
@@ -114,7 +107,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 			executeCommand(sender, name, new UUID[]{targetuuid});
 		} else if(args.length == 1 && args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : datamanager.getPlaylists()) {
+			for(String playlistname : amusic.getPlaylists()) {
 				sb.append(playlistname);
 				sb.append(' ');
 			}
@@ -137,7 +130,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 			}
 		};
 		LangOptions.loadmusic_processing.sendMsg(sender, placeholder);
-		new ResourceFactory(playlistname, targetuuids, datamanager, dispatcher, source, targetuuids == null, statusreport);
+		amusic.loadPack(targetuuids, playlistname, targetuuids == null, statusreport);
 	}
 	
 }

@@ -9,14 +9,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
-import me.bomb.amusic.uploader.UploadManager;
+import me.bomb.amusic.AMusic;
 
 public final class UploadmusicTabComplete implements TabCompleter {
 	
-	private final UploadManager uploadmanager;
+	private final AMusic amusic;
 	
-	public UploadmusicTabComplete(UploadManager uploadmanager) {
-		this.uploadmanager = uploadmanager;
+	public UploadmusicTabComplete(AMusic amusic) {
+		this.amusic = amusic;
 	}
 	
 	@Override
@@ -37,7 +37,7 @@ public final class UploadmusicTabComplete implements TabCompleter {
 		if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0)) {
-				Enumeration<UUID> sessions = uploadmanager.getSessions();
+				Enumeration<UUID> sessions = amusic.getUploadSessions();
 				String arg1 = args[1].toUpperCase();
 				while(sessions.hasMoreElements()) {
 					String token = sessions.nextElement().toString();

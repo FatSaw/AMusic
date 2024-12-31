@@ -10,23 +10,26 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class UploadmusicCommand implements SimpleCommand {
 
-	private final UploadManager uploadmanager;
+	private final AMusic amusic;
+	private final String uploaderhost;
 	private final ConcurrentHashMap<Player, UUID> uploaders = new ConcurrentHashMap<Player, UUID>();
 	
-	public UploadmusicCommand(UploadManager uploadmanager) {
-		this.uploadmanager = uploadmanager;
+	public UploadmusicCommand(AMusic amusic, String uploaderhost) {
+		this.amusic = amusic;
+		this.uploaderhost = uploaderhost;
 	}
 	
 	@Override
 	public void execute(Invocation invocation) {
 		CommandSource sender = invocation.source();
-		if(uploadmanager == null) {
+		if(uploaderhost == null) {
 			LangOptions.uploadmusic_disabled.sendMsg(sender);
 			return;
 		}
@@ -43,7 +46,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			Player player = (Player)sender;
 			final UUID token = uploaders.remove(player);
-			if(token == null || !uploadmanager.endSession(token)) {
+			if(token == null || !amusic.closeUploadSession(token)) {
 				LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
 				return;
 			}
@@ -66,8 +69,8 @@ public final class UploadmusicCommand implements SimpleCommand {
 					args[1] = sb.toString();
 				}
 			}
-			final UUID token = uploadmanager.generateToken(args[1]);
-			String url = uploadmanager.uploaderhost.concat(token.toString());
+			final UUID token = amusic.openUploadSession(args[1]);
+			String url = uploaderhost.concat(token.toString());
 			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
 			if(!(sender instanceof Player)) {
 				return;
@@ -82,7 +85,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				(uploadmanager.endSession(token) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+				(amusic.closeUploadSession(token) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
 			} catch(IllegalArgumentException ex) {
 				LangOptions.uploadmusic_finish_token_invalid.sendMsg(sender);
 			}
@@ -112,7 +115,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 		if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0)) {
-				Enumeration<UUID> sessions = uploadmanager.getSessions();
+				Enumeration<UUID> sessions = amusic.getUploadSessions();
 				String arg1 = args[1].toUpperCase();
 				while(sessions.hasMoreElements()) {
 					String token = sessions.nextElement().toString();
@@ -130,7 +133,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 		if(token == null) {
 			return;
 		}
-		uploadmanager.endSession(token);
+		amusic.closeUploadSession(token);
 	}
 	
 }

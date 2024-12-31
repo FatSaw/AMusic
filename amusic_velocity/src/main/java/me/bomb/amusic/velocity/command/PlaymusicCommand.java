@@ -11,20 +11,19 @@ import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
-import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class PlaymusicCommand implements SimpleCommand  {
 
 	private final ProxyServer server;
-	private final PositionTracker positiontracker;
+	private final AMusic amusic;
 	private final boolean trackable;
 	
-	public PlaymusicCommand(ProxyServer server, PositionTracker positiontracker, boolean trackable) {
+	public PlaymusicCommand(ProxyServer server, AMusic amusic, boolean trackable) {
 		this.server = server;
-		this.positiontracker = positiontracker;
+		this.amusic = amusic;
 		this.trackable = trackable;
 	}
 	
@@ -55,9 +54,9 @@ public final class PlaymusicCommand implements SimpleCommand  {
 			}
 			Player target = otarget.get();
 			if(trackable) {
-				positiontracker.stopMusic(target.getUniqueId());
+				amusic.stopSound(target.getUniqueId());
 			} else {
-				positiontracker.stopMusicUntrackable(target.getUniqueId());
+				amusic.stopSoundUntrackable(target.getUniqueId());
 			}
 			LangOptions.playmusic_stop.sendMsg(sender);
 		} else if(args.length>1) {
@@ -76,13 +75,13 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				}
 				Player target = otarget.get();
 				UUID targetuuid = target.getUniqueId();
-				SoundInfo[] soundsinfo = positiontracker.getSoundInfo(targetuuid);
-				if(soundsinfo==null) {
+				List<String> soundnames = amusic.getPlaylistSoundnames(targetuuid);
+				if(soundnames==null) {
 					LangOptions.playmusic_noplaylist.sendMsg(sender);
 					return;
 				}
-				String playing = positiontracker.getPlaying(targetuuid);
-				short playingsize = positiontracker.getPlayingSize(targetuuid), playingstate = positiontracker.getPlayingRemain(targetuuid);;
+				String playing = amusic.getPlayingSoundName(targetuuid);
+				short playingsize = amusic.getPlayingSoundSize(targetuuid), playingstate = amusic.getPlayingSoundRemain(targetuuid);;
 				
 				StringBuilder sb = new StringBuilder();
 				if(playing!=null) {
@@ -98,8 +97,8 @@ public final class PlaymusicCommand implements SimpleCommand  {
 					sb.append(' ');
 				}
 				sb.append("Sounds: ");
-				for(SoundInfo soundinfo : soundsinfo) {
-					sb.append(soundinfo.name);
+				for(String soundname : soundnames) {
+					sb.append(soundname);
 					sb.append(' ');
 				}
 				sender.sendPlainMessage(sb.toString());
@@ -111,8 +110,8 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				return;
 			}
 			Player target = otarget.get();
-			SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
-			if(soundsinfo==null) {
+			List<String> soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
+			if(soundnames==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return;
 			}
@@ -126,12 +125,12 @@ public final class PlaymusicCommand implements SimpleCommand  {
 			}
 			Placeholder[] placeholders = new Placeholder[1];
 			placeholders[0] = new Placeholder("%soundname%",args[1]);
-			for(SoundInfo soundinfo : soundsinfo) {
-				if(soundinfo.name.equals(args[1])) {
+			for(String soundname : soundnames) {
+				if(soundname.equals(args[1])) {
 					if(trackable) {
-						positiontracker.playMusic(target.getUniqueId(),args[1]);
+						amusic.playSound(target.getUniqueId(),args[1]);
 					} else {
-						positiontracker.playMusicUntrackable(target.getUniqueId(),args[1]);
+						amusic.playSoundUntrackable(target.getUniqueId(),args[1]);
 					}
 					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return;
@@ -178,8 +177,8 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				if(otarget.isEmpty()) {
 					return null;
 				}
-				SoundInfo[] soundsinfo = positiontracker.getSoundInfo(otarget.get().getUniqueId());
-				if (soundsinfo != null) {
+				List<String> soundnames = amusic.getPlaylistSoundnames(otarget.get().getUniqueId());
+				if (soundnames != null) {
 					int lastspace = -1;
 					if(args.length > 2) {
 						StringBuilder sb = new StringBuilder(args[1]);
@@ -193,15 +192,13 @@ public final class PlaymusicCommand implements SimpleCommand  {
 					++lastspace;
 					
 					if(lastspace == 0) {
-						for (SoundInfo soundinfo : soundsinfo) {
-							String soundname = soundinfo.name;
+						for (String soundname : soundnames) {
 							if (soundname.startsWith(args[1])) {
 								tabcomplete.add(soundname);
 							}
 						}
 					} else {
-						for (SoundInfo soundinfo : soundsinfo) {
-							String soundname = soundinfo.name;
+						for (String soundname : soundnames) {
 							if (lastspace < soundname.length() && soundname.startsWith(args[1])) {
 								soundname = soundname.substring(lastspace);
 								tabcomplete.add(soundname);

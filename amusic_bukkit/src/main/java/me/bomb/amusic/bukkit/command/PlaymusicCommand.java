@@ -1,5 +1,6 @@
 package me.bomb.amusic.bukkit.command;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Server;
@@ -10,19 +11,18 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
-import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.util.LangOptions.Placeholder;
 
 public final class PlaymusicCommand implements CommandExecutor {
 	private final Server server;
-	private final PositionTracker positiontracker;
+	private final AMusic amusic;
 	private final SelectorProcessor selectorprocessor;
 	private final boolean trackable;
-	public PlaymusicCommand(Server server, PositionTracker positiontracker, SelectorProcessor selectorprocessor, boolean trackable) {
+	public PlaymusicCommand(Server server, AMusic amusic, SelectorProcessor selectorprocessor, boolean trackable) {
 		this.server = server;
-		this.positiontracker = positiontracker;
+		this.amusic = amusic;
 		this.selectorprocessor = selectorprocessor;
 		this.trackable = trackable;
 	}
@@ -70,11 +70,11 @@ public final class PlaymusicCommand implements CommandExecutor {
 					}
 					if(trackable) {
 						for(int i = targetarray.length; --i > -1;) {
-							positiontracker.stopMusic(targetarray[i]);
+							amusic.stopSound(targetarray[i]);
 						}
 					} else {
 						for(int i = targetarray.length; --i > -1;) {
-							positiontracker.stopMusicUntrackable(targetarray[i]);
+							amusic.stopSoundUntrackable(targetarray[i]);
 						}
 					}
 					LangOptions.playmusic_stop.sendMsg(sender);
@@ -89,9 +89,9 @@ public final class PlaymusicCommand implements CommandExecutor {
 				return true;
 			}
 			if(trackable) {
-				positiontracker.stopMusic(target.getUniqueId());
+				amusic.stopSound(target.getUniqueId());
 			} else {
-				positiontracker.stopMusicUntrackable(target.getUniqueId());
+				amusic.stopSoundUntrackable(target.getUniqueId());
 			}
 			
 			LangOptions.playmusic_stop.sendMsg(sender);
@@ -110,13 +110,14 @@ public final class PlaymusicCommand implements CommandExecutor {
 					return true;
 				}
 				UUID targetuuid = target.getUniqueId();
-				SoundInfo[] soundsinfo = positiontracker.getSoundInfo(targetuuid);
-				if(soundsinfo==null) {
+				List<String> soundnames = amusic.getPlaylistSoundnames(targetuuid);
+				if(soundnames==null) {
 					LangOptions.playmusic_noplaylist.sendMsg(sender);
 					return true;
 				}
-				String playing = positiontracker.getPlaying(targetuuid);
-				short playingsize = positiontracker.getPlayingSize(targetuuid), playingstate = positiontracker.getPlayingRemain(targetuuid);;
+				
+				String playing = amusic.getPlayingSoundName(targetuuid);
+				short playingsize = amusic.getPlayingSoundSize(targetuuid), playingstate = amusic.getPlayingSoundRemain(targetuuid);;
 				
 				StringBuilder sb = new StringBuilder();
 				if(playing!=null) {
@@ -132,8 +133,8 @@ public final class PlaymusicCommand implements CommandExecutor {
 					sb.append(' ');
 				}
 				sb.append("Sounds: ");
-				for(SoundInfo soundinfo : soundsinfo) {
-					sb.append(soundinfo.name);
+				for(String soundname : soundnames) {
+					sb.append(soundname);
 					sb.append(' ');
 				}
 				sender.sendMessage(sb.toString());
@@ -190,8 +191,8 @@ public final class PlaymusicCommand implements CommandExecutor {
 				LangOptions.playmusic_targetoffline.sendMsg(sender);
 				return true;
 			}
-			SoundInfo[] soundsinfo = positiontracker.getSoundInfo(target.getUniqueId());
-			if(soundsinfo==null) {
+			List<String> soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
+			if(soundnames==null) {
 				LangOptions.playmusic_noplaylist.sendMsg(sender);
 				return true;
 			}
@@ -205,8 +206,8 @@ public final class PlaymusicCommand implements CommandExecutor {
 			}
 			Placeholder[] placeholders = new Placeholder[1];
 			placeholders[0] = new Placeholder("%soundname%",args[1]);
-			for(SoundInfo soundinfo : soundsinfo) {
-				if(soundinfo.name.equals(args[1])) {
+			for(String soundname : soundnames) {
+				if(soundname.equals(args[1])) {
 					executeCommand(args[1], target.getUniqueId());
 					LangOptions.playmusic_success.sendMsg(sender,placeholders);
 					return true;
@@ -223,11 +224,11 @@ public final class PlaymusicCommand implements CommandExecutor {
 	private void executeCommand(String soundname, UUID... targetuuids) {
 		if(trackable) {
 			for(UUID targetuuid : targetuuids) {
-				positiontracker.playMusic(targetuuid,soundname);
+				amusic.playSound(targetuuid,soundname);
 			}
 		} else {
 			for(UUID targetuuid : targetuuids) {
-				positiontracker.playMusicUntrackable(targetuuid,soundname);
+				amusic.playSoundUntrackable(targetuuid,soundname);
 			}
 		}
 		

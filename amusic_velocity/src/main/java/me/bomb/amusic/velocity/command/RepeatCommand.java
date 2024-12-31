@@ -9,18 +9,18 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
-import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.RepeatType;
 import me.bomb.amusic.util.LangOptions;
 
 public final class RepeatCommand implements SimpleCommand {
 	
 	private final ProxyServer server;
-	private final PositionTracker positiontracker;
+	private final AMusic amusic;
 	
-	public RepeatCommand(ProxyServer server, PositionTracker positiontracker) {
+	public RepeatCommand(ProxyServer server, AMusic amusic) {
 		this.server = server;
-		this.positiontracker = positiontracker;
+		this.amusic = amusic;
 	}
 
 	@Override
@@ -51,23 +51,23 @@ public final class RepeatCommand implements SimpleCommand {
 			Player target = otarget.get();
 			switch (args[1].toLowerCase()) {
 			case "playone":
-				positiontracker.setRepeater(target.getUniqueId(), null);
+				amusic.setRepeatMode(target.getUniqueId(), null);
 				LangOptions.repeat_playone.sendMsg(sender);
 				return;
 			case "repeatone":
-				positiontracker.setRepeater(target.getUniqueId(), RepeatType.REPEATONE);
+				amusic.setRepeatMode(target.getUniqueId(), RepeatType.REPEATONE);
 				LangOptions.repeat_repeatone.sendMsg(sender);
 				return;
 			case "repeatall":
-				positiontracker.setRepeater(target.getUniqueId(), RepeatType.REPEATALL);
+				amusic.setRepeatMode(target.getUniqueId(), RepeatType.REPEATALL);
 				LangOptions.repeat_repeatall.sendMsg(sender);
 				return;
 			case "playall":
-				positiontracker.setRepeater(target.getUniqueId(), RepeatType.PLAYALL);
+				amusic.setRepeatMode(target.getUniqueId(), RepeatType.PLAYALL);
 				LangOptions.repeat_playall.sendMsg(sender);
 				return;
 			case "random":
-				positiontracker.setRepeater(target.getUniqueId(), RepeatType.RANDOM);
+				amusic.setRepeatMode(target.getUniqueId(), RepeatType.RANDOM);
 				LangOptions.repeat_random.sendMsg(sender);
 				return;
 			default:

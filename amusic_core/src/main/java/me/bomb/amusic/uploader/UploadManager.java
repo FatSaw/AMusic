@@ -14,15 +14,13 @@ public final class UploadManager extends Thread {
 	
 	private final int expiretime, limitsize;
 	private final File musicdir;
-	public final String uploaderhost;
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
 	private boolean run;
 	
-	public UploadManager(int expiretime, int limitsize, File musicdir, String uploaderhost) {
+	public UploadManager(int expiretime, int limitsize, File musicdir) {
 		this.expiretime = expiretime;
 		this.limitsize = limitsize;
 		this.musicdir = musicdir;
-		this.uploaderhost = uploaderhost;
 		sessions = new ConcurrentHashMap<>();
 	}
 	

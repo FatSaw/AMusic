@@ -14,27 +14,31 @@ import me.bomb.amusic.util.SimpleConfiguration;
 public final class ConfigOptions {
 	
 	public final String loaderrors, host, uploaderhost;
-	public final InetAddress ip, uploaderip;
-	public final int port, uploaderport, backlog, uploaderbacklog, maxpacksize, maxmusicfilesize, bitrate, samplingrate, uploadertimeout, uploaderlimit;
+	public final InetAddress ip, uploaderip, remotelocalip, remoteip;
+	public final int port, uploaderport, remoteport, backlog, uploaderbacklog, remotebacklog, maxpacksize, maxmusicfilesize, bitrate, samplingrate, uploadertimeout, uploaderlimit;
 	public final byte channels;
-	public final boolean processpack, servercache, clientcache, resourcestrictaccess, uploaderstrictaccess, useconverter, useuploader, encodetracksasynchronly, waitacception;
+	public final boolean processpack, servercache, clientcache, resourcestrictaccess, uploaderstrictaccess, useconverter, useuploader, useremote, encodetracksasynchronly, waitacception;
 	public final File ffmpegbinary, musicdir, packeddir;
 	protected final byte[] tokensalt;
 	
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int backlog, int uploaderbacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
+	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, InetAddress remotelocalip, InetAddress remoteip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int remoteport, int backlog, int uploaderbacklog, int remotebacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean useremote, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
 		this.host = host;
 		this.ip = ip;
 		this.uploaderhost = uploaderhost;
 		this.uploaderip = uploaderip;
+		this.remotelocalip = remotelocalip;
+		this.remoteip = remoteip;
 		this.uploadertimeout = uploadertimeout;
 		this.uploaderlimit = uploaderlimit;
 		this.port = port;
 		this.uploaderport = uploaderport;
+		this.remoteport = remoteport;
 		this.backlog = backlog;
 		this.uploaderbacklog = uploaderbacklog;
+		this.remotebacklog = remotebacklog;
 		this.maxpacksize = maxpacksize;
 		this.maxmusicfilesize = maxmusicfilesize;
 		this.bitrate = bitrate;
@@ -47,6 +51,7 @@ public final class ConfigOptions {
 		this.uploaderstrictaccess = uploaderstrictdownloaderlist;
 		this.useconverter = useconverter;
 		this.useuploader = useuploader;
+		this.useremote = useremote;
 		this.encodetracksasynchronly = encodetracksasynchronly;
 		this.ffmpegbinary = ffmpegbinary;
 		this.musicdir = musicdir;
@@ -126,6 +131,31 @@ public final class ConfigOptions {
 		this.uploaderip = uploaderip;
 		uploaderport = sc.getIntOrError("uploaderserver\0port", errors);
 		uploaderbacklog = sc.getIntOrError("uploaderserver\0backlog", errors);
+		
+
+		this.useremote = sc.getBooleanOrError("remote\0use", errors);
+		InetAddress remotelocalip = null;
+		String remotelocalipstr = sc.getStringOrDefault("remote\0localip", null);
+		if(remotelocalipstr!=null) {
+			try {
+				remotelocalip = InetAddress.getByName(remotelocalipstr);
+			} catch (UnknownHostException e) {
+			}
+		}
+		this.remotelocalip = remotelocalip;
+		InetAddress remoteip = null;
+		String remoteipstr = sc.getStringOrError("remote\0ip", errors);
+		if(remoteipstr!=null) {
+			try {
+				remoteip = InetAddress.getByName(remoteipstr);
+			} catch (UnknownHostException e) {
+			}
+		}
+		this.remoteip = remoteip;
+		remoteport = sc.getIntOrError("remote\0port", errors);
+		remotebacklog = sc.getIntOrError("remote\0backlog", errors);
+		
+		
 		uploadertimeout = sc.getIntOrError("uploaderserver\0timeout", errors);
 		uploaderlimit = sc.getIntOrError("uploaderserver\0limit", errors);
 		

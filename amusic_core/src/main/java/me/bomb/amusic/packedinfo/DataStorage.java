@@ -6,8 +6,10 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Map.Entry;
+
+import static me.bomb.amusic.util.Base64Utils.toBase64Url;
+import static me.bomb.amusic.util.Base64Utils.fromBase64Url;
 
 public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 	private static final String FORMAT = ".ampi";
@@ -38,7 +40,7 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		for(File file : datadirectory.listFiles(AMPIFILTER)) {
 			String name = file.getName();
 			name = name.substring(0, name.length() - FORMAT.length());
-			name = fromBase64(name);
+			name = fromBase64Url(name);
 			if(!options.containsKey(name)) {
 				file.delete();
 			}
@@ -74,7 +76,7 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		for(File file : files) {
 			String id = file.getName();
 			id = id.substring(0, id.length() - FORMAT.length());
-			id = fromBase64(id);
+			id = fromBase64Url(id);
 			try {
 				FileInputStream fis = new FileInputStream(file);
 				byte[] buf = new byte[8];
@@ -144,14 +146,6 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 	}
 	
-	public static String toBase64(String name) {
-		return new String(Base64.getUrlEncoder().encode(name.getBytes(StandardCharsets.UTF_8)), StandardCharsets.US_ASCII);
-	}
-	
-	public static String fromBase64(String name) {
-		return new String(Base64.getUrlDecoder().decode(name.getBytes(StandardCharsets.US_ASCII)), StandardCharsets.UTF_8);
-	}
-	
 	protected final class DataSaveThread extends Thread {
 		
 		private final File datadirectory;
@@ -192,7 +186,7 @@ public class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				while(start < end) {
 					Entry<String, DataEntry> entry = list[start];
 					String id = entry.getKey();
-					id = toBase64(id);
+					id = toBase64Url(id);
 					DataEntry dataentry = entry.getValue();
 					File amusicpackedinfo = new File(datadirectory, id.concat(FORMAT));
 					int soundcount = dataentry.sounds.length;

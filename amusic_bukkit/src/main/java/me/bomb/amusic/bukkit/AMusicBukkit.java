@@ -18,7 +18,9 @@ import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.MessageSender;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.RemoteAMusic;
+import me.bomb.amusic.ServerAMusic;
+import me.bomb.amusic.ServerConnection;
+import me.bomb.amusic.ClientAMusic;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
@@ -128,9 +130,8 @@ public final class AMusicBukkit extends JavaPlugin {
 			this.resourcemanager = amusic.resourcemanager;
 			this.positiontracker = amusic.positiontracker;
 			this.amusic = amusic;
-			amusic.setAPI();
 		} else {
-			RemoteAMusic amusic = new RemoteAMusic();
+			ClientAMusic amusic = new ClientAMusic(configoptions.remoteip, configoptions.remoteport);
 			this.resourcemanager = null;
 			this.positiontracker = null;
 			this.amusic = amusic;

@@ -77,18 +77,17 @@ public final class AMusicVelocity {
         
 		Runtime runtime = Runtime.getRuntime();
 		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		final boolean localapi = true;
-		if(localapi) {
-			LocalAMusic amusic = new LocalAMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
-			this.resourcemanager = amusic.resourcemanager;
-			this.positiontracker = amusic.positiontracker;
-			this.serverconnection = null;
-			this.amusic = amusic;
-		} else {
+		if(configoptions.useremote) {
 			ServerAMusic amusic = new ServerAMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
 			this.resourcemanager = amusic.resourcemanager;
 			this.positiontracker = amusic.positiontracker;
 			this.serverconnection = new ServerConnection(amusic, configoptions.remotelocalip, configoptions.remoteip, configoptions.remoteport, configoptions.remotebacklog);
+			this.amusic = amusic;
+		} else {
+			LocalAMusic amusic = new LocalAMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
+			this.resourcemanager = amusic.resourcemanager;
+			this.positiontracker = amusic.positiontracker;
+			this.serverconnection = null;
 			this.amusic = amusic;
 		}
 		this.server = server;

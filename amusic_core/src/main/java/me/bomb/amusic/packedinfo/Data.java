@@ -2,6 +2,7 @@ package me.bomb.amusic.packedinfo;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -75,6 +76,11 @@ public abstract class Data {
 		if(this.lockwrite || id == null) {
 			return false;
 		}
+		if(sounds == null) {
+			removePlaylist(id);
+			save();
+			return true;
+		}
 		if (containsPlaylist(id)) {
 			DataEntry options = getPlaylist(id);
 			options.sha1 = sha1;
@@ -109,8 +115,14 @@ public abstract class Data {
 		options.remove(playlistname);
 	}
 
-	public final Set<String> getPlaylists() {
-		return options == null ? null : options.keySet();
+	public final String[] getPlaylists() {
+		int i = options.size();
+		String[] playlists = new String[i];
+		Iterator<String> iterator = options.keySet().iterator();
+		while(iterator.hasNext() && --i > -1) {
+			playlists[i] = iterator.next();
+		}
+		return playlists;
 	}
 	
 }

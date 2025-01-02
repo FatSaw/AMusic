@@ -9,6 +9,7 @@ import java.util.Base64.Decoder;
 import java.util.UUID;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
+import static me.bomb.amusic.util.Base64Utils.fromBase64;
 
 public final class PageSender extends Thread {
 	

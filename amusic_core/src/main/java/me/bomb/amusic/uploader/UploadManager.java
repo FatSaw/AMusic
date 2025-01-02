@@ -59,8 +59,16 @@ public final class UploadManager extends Thread {
 		return sessions.get(token);
 	}
 	
-	public Enumeration<UUID> getSessions() {
-		return sessions.keys();
+	public UUID[] getSessions() {
+		synchronized (sessions) {
+			int i = sessions.size();
+			UUID[] tokens = new UUID[i];
+			Enumeration<UUID> keys = sessions.keys();
+			while(keys.hasMoreElements() && --i > -1) {
+				tokens[i] = keys.nextElement();
+			}
+			return tokens;
+		}
 	}
 	
 	public boolean endSession(UUID token) {

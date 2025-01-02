@@ -7,6 +7,12 @@ uploaderserver:
  strictaccess: true
  timeout: 600000
  limit: 262144000
+remote:
+ use: false
+ #localip: 127.0.0.1
+ ip: 127.0.0.1
+ port: 25534
+ backlog: 50
 server:
  host: http://127.0.0.1:25530/
  #ip: 127.0.0.1

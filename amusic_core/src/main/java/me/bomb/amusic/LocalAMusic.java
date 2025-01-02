@@ -1,10 +1,6 @@
 package me.bomb.amusic;
 
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,8 +15,7 @@ import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.uploader.UploaderServer;
 
-public final class LocalAMusic implements AMusic {
-	private static AMusic instance;
+public class LocalAMusic implements AMusic {
 	public final SoundSource<?> source;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
@@ -65,16 +60,13 @@ public final class LocalAMusic implements AMusic {
 	}
 	
 	/**
-	 * Set main AMusic instance {@link AMusic#instance}.
-	 * Should be used only during AMusic plugin initialization;
+	 * Get player uuids that loaded specific playlistname.
+	 *
+	 * @return player uuids that loaded specific playlistname.
 	 */
-	public void setAPI() throws ExceptionInInitializerError {
-		if(LocalAMusic.instance!=null) throw new ExceptionInInitializerError("AMusic API already initialized!");
-		LocalAMusic.instance = this;
-	}
-	
-	public static AMusic API() {
-		return LocalAMusic.instance;
+	@Override
+	public final UUID[] getPlayersLoaded(String playlistname) {
+		return positiontracker.getPlayersLoaded(playlistname);
 	}
 	
 	/**
@@ -82,7 +74,7 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of playlists that were loaded at least once.
 	 */
-	public Set<String> getPlaylists() {
+	public final String[] getPlaylists() {
 		return datamanager.getPlaylists();
 	}
 
@@ -91,15 +83,15 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of sounds in playlist.
 	 */
-	public List<String> getPlaylistSoundnames(String playlistname) {
+	public final String[] getPlaylistSoundnames(String playlistname) {
 		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
 		if(soundinfos==null) {
 			return null;
 		}
-		int infossize = soundinfos.length;
-		List<String> soundnames = new ArrayList<String>(infossize);
-		for(int i = 0;i<infossize;++i) {
-			soundnames.add(soundinfos[i].name);
+		int i = soundinfos.length;
+		String[] soundnames = new String[i];
+		while(--i > -1) {
+			soundnames[i] = soundinfos[i].name;
 		}
 		return soundnames;
 	}
@@ -109,15 +101,15 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
-	public List<String> getPlaylistSoundnames(UUID playeruuid) {
+	public final String[] getPlaylistSoundnames(UUID playeruuid) {
 		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
 		if(soundinfos==null) {
 			return null;
 		}
-		int infossize = soundinfos.length;
-		List<String> soundnames = new ArrayList<String>(infossize);
-		for(int i = 0;i<infossize;++i) {
-			soundnames.add(soundinfos[i].name);
+		int i = soundinfos.length;
+		String[] soundnames = new String[i];
+		while(--i > -1) {
+			soundnames[i] = soundinfos[i].name;
 		}
 		return soundnames;
 	}
@@ -127,15 +119,15 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return the lenghs of sounds in playlist.
 	 */
-	public List<Short> getPlaylistSoundlengths(String playlistname) {
+	public final short[] getPlaylistSoundlengths(String playlistname) {
 		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
 		if(soundinfos==null) {
 			return null;
 		}
-		int infossize = soundinfos.length;
-		List<Short> soundlengths = new ArrayList<Short>(infossize);
-		for(int i = 0;i<infossize;++i) {
-			soundlengths.add(soundinfos[i].length);
+		int i = soundinfos.length;
+		short[] soundlengths = new short[i];
+		while(--i > -1) {
+			soundlengths[i] = soundinfos[i].length;
 		}
 		return soundlengths;
 	}
@@ -145,15 +137,15 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
-	public List<Short> getPlaylistSoundlengths(UUID playeruuid) {
+	public final short[] getPlaylistSoundlengths(UUID playeruuid) {
 		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
 		if(soundinfos==null) {
 			return null;
 		}
-		int infossize = soundinfos.length;
-		List<Short> soundlengths = new ArrayList<Short>(infossize);
-		for(int i = 0;i<infossize;++i) {
-			soundlengths.add(soundinfos[i].length);
+		int i = soundinfos.length;
+		short[] soundlengths = new short[i];
+		while(--i > -1) {
+			soundlengths[i] = soundinfos[i].length;
 		}
 		return soundlengths;
 	}
@@ -161,7 +153,7 @@ public final class LocalAMusic implements AMusic {
 	/**
 	 * Set sound repeat mode, null to not repeat.
 	 */
-	public void setRepeatMode(UUID playeruuid, RepeatType repeattype) {
+	public final void setRepeatMode(UUID playeruuid, RepeatType repeattype) {
 		positiontracker.setRepeater(playeruuid, repeattype);
 	}
 
@@ -170,7 +162,7 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return playing sound name.
 	 */
-	public String getPlayingSoundName(UUID playeruuid) {
+	public final String getPlayingSoundName(UUID playeruuid) {
 		return positiontracker.getPlaying(playeruuid);
 	}
 
@@ -179,7 +171,7 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return playing sound size in seconds.
 	 */
-	public short getPlayingSoundSize(UUID playeruuid) {
+	public final short getPlayingSoundSize(UUID playeruuid) {
 		return positiontracker.getPlayingSize(playeruuid);
 	}
 
@@ -188,14 +180,14 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return playing sound remaining seconds.
 	 */
-	public short getPlayingSoundRemain(UUID playeruuid) {
+	public final short getPlayingSoundRemain(UUID playeruuid) {
 		return positiontracker.getPlayingRemain(playeruuid);
 	}
 
 	/**
 	 * Loads resource pack to player.
 	 */
-	public void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
+	public final void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
 		new ResourceFactory(name, playeruuid, datamanager, dispatcher, source, update, statusreport);
 	}
 
@@ -204,35 +196,35 @@ public final class LocalAMusic implements AMusic {
 	 *
 	 * @return loaded pack name.
 	 */
-	public String getPackName(UUID playeruuid) {
+	public final String getPackName(UUID playeruuid) {
 		return positiontracker.getPlaylistName(playeruuid);
 	}
 
 	/**
 	 * Stop sound from loaded pack.
 	 */
-	public void stopSound(UUID playeruuid) {
+	public final void stopSound(UUID playeruuid) {
 		positiontracker.stopMusic(playeruuid);
 	}
 	
 	/**
 	 * Stop sound from loaded pack.
 	 */
-	public void stopSoundUntrackable(UUID playeruuid) {
+	public final void stopSoundUntrackable(UUID playeruuid) {
 		positiontracker.stopMusicUntrackable(playeruuid);
 	}
 
 	/**
 	 * Play sound from loaded pack.
 	 */
-	public void playSound(UUID playeruuid, String name) {
+	public final void playSound(UUID playeruuid, String name) {
 		positiontracker.playMusic(playeruuid, name);
 	}
 	
 	/**
 	 * Play sound from loaded pack.
 	 */
-	public void playSoundUntrackable(UUID playeruuid, String name) {
+	public final void playSoundUntrackable(UUID playeruuid, String name) {
 		positiontracker.playMusicUntrackable(playeruuid, name);
 	}
 	
@@ -241,7 +233,7 @@ public final class LocalAMusic implements AMusic {
 	 * 
 	 * @return session token.
 	 */
-	public UUID openUploadSession(String playlistname) {
+	public final UUID openUploadSession(String playlistname) {
 		return uploadermanager == null ? null : uploadermanager.generateToken(playlistname);
 	}
 	
@@ -250,7 +242,7 @@ public final class LocalAMusic implements AMusic {
 	 * 
 	 * @return upload sessions.
 	 */
-	public Enumeration<UUID> getUploadSessions() {
+	public final UUID[] getUploadSessions() {
 		return uploadermanager == null ? null : uploadermanager.getSessions();
 	}
 	
@@ -259,7 +251,7 @@ public final class LocalAMusic implements AMusic {
 	 * 
 	 * @return true if session closed successfully.
 	 */
-	public boolean closeUploadSession(UUID token) {
+	public final boolean closeUploadSession(UUID token) {
 		return uploadermanager == null ? false : uploadermanager.endSession(token);
 	}
 	

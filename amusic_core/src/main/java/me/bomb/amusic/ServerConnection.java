@@ -28,7 +28,6 @@ public final class ServerConnection extends Thread {
 	public void start() {
 		this.run = true;
 		super.start();
-		serveramusic.enable();
 	}
 	
 	@Override
@@ -68,7 +67,6 @@ public final class ServerConnection extends Thread {
 			server.close();
 		} catch (IOException e) {
 		}
-		this.serveramusic.disable();
 	}
 	
 	private final void processConnection(Socket connected) throws IOException {

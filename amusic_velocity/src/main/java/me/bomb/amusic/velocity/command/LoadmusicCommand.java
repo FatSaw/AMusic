@@ -119,7 +119,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 		}
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			Set<String> playlists = amusic.getPlaylists();
+			String[] playlists = amusic.getPlaylists();
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {

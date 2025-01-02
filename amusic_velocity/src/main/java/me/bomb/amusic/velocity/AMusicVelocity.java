@@ -27,6 +27,8 @@ import me.bomb.amusic.ConfigOptions;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.ServerAMusic;
+import me.bomb.amusic.ServerConnection;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
 import me.bomb.amusic.source.LocalUnconvertedParallelSource;
@@ -48,6 +50,7 @@ public final class AMusicVelocity {
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final PositionTracker positiontracker;
 	private final String configerrors, uploaderhost;
+	private final ServerConnection serverconnection;
     
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -76,16 +79,18 @@ public final class AMusicVelocity {
 		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
 		final boolean localapi = true;
 		if(localapi) {
-			LocalAMusic amusic =  new LocalAMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
+			LocalAMusic amusic = new LocalAMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
 			this.resourcemanager = amusic.resourcemanager;
 			this.positiontracker = amusic.positiontracker;
-			amusic.setAPI();
+			this.serverconnection = null;
 			this.amusic = amusic;
 		} else {
-			this.resourcemanager = null;
-			this.positiontracker = null;
+			ServerAMusic amusic = new ServerAMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
+			this.resourcemanager = amusic.resourcemanager;
+			this.positiontracker = amusic.positiontracker;
+			this.serverconnection = new ServerConnection(amusic, configoptions.remotelocalip, configoptions.remoteip, configoptions.remoteport, configoptions.remotebacklog);
+			this.amusic = amusic;
 		}
-		
 		this.server = server;
         this.logger = logger;
 		LangOptions.loadLang(new VelocityMessageSender(), langfile, false);
@@ -116,11 +121,17 @@ public final class AMusicVelocity {
 			this.server.getEventManager().register(this, new EventListener(resourcemanager, positiontracker, playerips, uploadmusic));
 		}
 		this.amusic.enable();
+		if(serverconnection != null) {
+			serverconnection.start();
+		}
 	}
 	
 	@Subscribe
 	public void onProxyShutdown(ProxyShutdownEvent event) {
 		this.amusic.disable();
+		if(serverconnection != null) {
+			serverconnection.end();
+		}
 	}
 	
 }

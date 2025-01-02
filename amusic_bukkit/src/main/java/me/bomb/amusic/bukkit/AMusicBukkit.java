@@ -124,16 +124,15 @@ public final class AMusicBukkit extends JavaPlugin {
 		playerips = configoptions.resourcestrictaccess || configoptions.uploaderstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		Runtime runtime = Runtime.getRuntime();
 		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		final boolean localapi = true;
-		if(localapi) {
-			LocalAMusic amusic = new LocalAMusic(configoptions, source, packsender, new BukkitSoundStarter(), soundstopper, playerips);
-			this.resourcemanager = amusic.resourcemanager;
-			this.positiontracker = amusic.positiontracker;
-			this.amusic = amusic;
-		} else {
+		if(configoptions.useremote) {
 			ClientAMusic amusic = new ClientAMusic(configoptions.remoteip, configoptions.remoteport);
 			this.resourcemanager = null;
 			this.positiontracker = null;
+			this.amusic = amusic;
+		} else {
+			LocalAMusic amusic = new LocalAMusic(configoptions, source, packsender, new BukkitSoundStarter(), soundstopper, playerips);
+			this.resourcemanager = amusic.resourcemanager;
+			this.positiontracker = amusic.positiontracker;
 			this.amusic = amusic;
 		}
 		

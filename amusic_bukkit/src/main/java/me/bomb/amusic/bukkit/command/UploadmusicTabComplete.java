@@ -37,12 +37,12 @@ public final class UploadmusicTabComplete implements TabCompleter {
 		if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0)) {
-				Enumeration<UUID> sessions = amusic.getUploadSessions();
+				UUID[] sessions = amusic.getUploadSessions();
 				String arg1 = args[1].toUpperCase();
-				while(sessions.hasMoreElements()) {
-					String token = sessions.nextElement().toString();
-					if(token.startsWith(arg1)) {
-						tabcomplete.add(token);
+				for(UUID token : sessions) {
+					String tokenstr = token.toString();
+					if(tokenstr.startsWith(arg1)) {
+						tabcomplete.add(tokenstr);
 					}
 				}
 			}

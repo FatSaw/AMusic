@@ -144,7 +144,7 @@ public final class ConfigOptions {
 		}
 		this.remotelocalip = remotelocalip;
 		InetAddress remoteip = null;
-		String remoteipstr = sc.getStringOrError("remote\0ip", errors);
+		String remoteipstr = sc.getStringOrDefault("remote\0ip", null);
 		if(remoteipstr!=null) {
 			try {
 				remoteip = InetAddress.getByName(remoteipstr);

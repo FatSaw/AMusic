@@ -83,7 +83,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			this.waitacception = false;
 			this.playerips = null;
 			this.uploaderhost = null;
-			ClientAMusic amusic = new ClientAMusic(configoptions.remoteip, configoptions.remoteport);
+			ClientAMusic amusic = new ClientAMusic(configoptions.remotelocalip, configoptions.remoteip, configoptions.remoteport);
 			this.resourcemanager = null;
 			this.positiontracker = null;
 			this.amusic = amusic;

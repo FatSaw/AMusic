@@ -10,7 +10,7 @@ import me.bomb.amusic.source.SoundSource;
 import static me.bomb.amusic.util.NameFilter.filterName;
 import static me.bomb.amusic.util.Base64Utils.toBase64Url;
 
-public final class ResourceFactory extends Thread {
+public final class ResourceFactory implements Runnable {
 	
 	private final String id;
 	private final UUID[] targets;
@@ -20,7 +20,7 @@ public final class ResourceFactory extends Thread {
 	private final boolean update;
 	private final StatusReport statusreport;
 	
-	public ResourceFactory(String id, UUID[] targets, DataStorage datamanager, ResourceDispatcher dispatcher, SoundSource<?> source, boolean update, StatusReport statusreport) {
+	public ResourceFactory(String id, UUID[] targets, DataStorage datamanager, ResourceDispatcher dispatcher, SoundSource<?> source, boolean update, StatusReport statusreport, boolean async) {
 		this.id = id;
 		this.targets = targets;
 		this.datamanager = datamanager;
@@ -28,7 +28,11 @@ public final class ResourceFactory extends Thread {
 		this.source = source;
 		this.update = update;
 		this.statusreport = statusreport;
-		start();
+		if(async) {
+			new Thread(this).start();
+		} else {
+			run();
+		}
 	}
 
 	@Override

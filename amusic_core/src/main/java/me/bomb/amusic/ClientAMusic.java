@@ -13,11 +13,12 @@ import me.bomb.amusic.resource.StatusReport;
 
 public final class ClientAMusic implements AMusic {
 	
-	private final InetAddress ip;
+	private final InetAddress hostip, remoteip;
 	private final int port;
 	
-	public ClientAMusic(InetAddress ip, int port) {
-		this.ip = ip;
+	public ClientAMusic(InetAddress hostip, InetAddress remoteip, int port) {
+		this.hostip = hostip;
+		this.remoteip = remoteip;
 		this.port = port;
 	}
 	
@@ -48,9 +49,8 @@ public final class ClientAMusic implements AMusic {
 				baos.write(buf);
 				buf = null;
 			}
-			socket = new Socket(ip, port);
+			socket = hostip == null ? new Socket(remoteip, port) : new Socket(remoteip, port, hostip, 0);
 			baos.writeTo(socket.getOutputStream());
-			//bos.flush();
 			socket.shutdownOutput();
 
 			InputStream is = socket.getInputStream();

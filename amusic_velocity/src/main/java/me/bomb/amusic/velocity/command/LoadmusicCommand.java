@@ -80,8 +80,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 				}
 			};
 			LangOptions.loadmusic_processing.sendMsg(sender, placeholder);
-			amusic.loadPack(new UUID[] {targetuuid}, name, targetuuid == null, statusreport);
-			//new ResourceFactory(name, targetuuid == null ? null : new UUID[] {targetuuid}, datamanager, dispatcher, source, targetuuid == null, statusreport);
+			amusic.loadPack(targetuuid == null ? null : new UUID[] {targetuuid}, name, targetuuid == null, statusreport);
 		} else if(args.length == 1 && args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
 			for(String playlistname : amusic.getPlaylists()) {

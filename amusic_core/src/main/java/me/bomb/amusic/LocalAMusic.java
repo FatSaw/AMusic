@@ -188,7 +188,7 @@ public class LocalAMusic implements AMusic {
 	 * Loads resource pack to player.
 	 */
 	public final void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
-		new ResourceFactory(name, playeruuid, datamanager, dispatcher, source, update, statusreport);
+		new ResourceFactory(name, playeruuid, datamanager, dispatcher, source, update, statusreport, true);
 	}
 
 	/**

@@ -24,7 +24,7 @@ public final class ConfigOptions {
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, InetAddress remotelocalip, InetAddress remoteip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int remoteport, int backlog, int uploaderbacklog, int remotebacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean useremote, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, File tempdir, byte[] tokensalt, boolean waitacception) {
+	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, InetAddress remotelocalip, InetAddress remoteip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int remoteport, int backlog, int uploaderbacklog, int remotebacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean useremote, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, byte[] tokensalt, boolean waitacception) {
 		this.host = host;
 		this.ip = ip;
 		this.uploaderhost = uploaderhost;

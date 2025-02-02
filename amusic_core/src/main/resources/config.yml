@@ -1,6 +1,9 @@
 uploaderserver:
  use: false
  host: http://127.0.0.1:25532/
+ cert:
+  #path: uploadercert.p12
+  #password: passwordkey
  #ip: 127.0.0.1
  port: 25532
  backlog: 50

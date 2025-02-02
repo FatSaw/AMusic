@@ -19,7 +19,7 @@ import me.bomb.amusic.source.SoundSource;
 
 public final class ServerAMusic extends LocalAMusic implements Runnable {
 	
-	private final ServerAMusic serveramusic = this;
+	//private final ServerAMusic serveramusic = this;
 	private final InetAddress hostip, remoteip;
 	private final int port, backlog;
 	private boolean run;
@@ -988,7 +988,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		int size = 0;
 		switch(packetid) {
 		case 0x01:
-			obuf = serveramusic.getPlayersLoadedBytes(ibuf);
+			obuf = this.getPlayersLoadedBytes(ibuf);
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1000,7 +1000,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x02:
-			obuf = serveramusic.getPlaylistsBytes();
+			obuf = this.getPlaylistsBytes();
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1012,7 +1012,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x03:
-			obuf = serveramusic.getPlaylistSoundnamesPlaylistnameBytes(ibuf);
+			obuf = this.getPlaylistSoundnamesPlaylistnameBytes(ibuf);
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1024,7 +1024,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x04:
-			obuf = serveramusic.getPlaylistSoundnamesPlayeruuidBytes(ibuf);
+			obuf = this.getPlaylistSoundnamesPlayeruuidBytes(ibuf);
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1036,7 +1036,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x05:
-			obuf = serveramusic.getPlaylistSoundlengthsPlaylistnameBytes(ibuf);
+			obuf = this.getPlaylistSoundlengthsPlaylistnameBytes(ibuf);
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1048,7 +1048,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x06:
-			obuf = serveramusic.getPlaylistSoundlengthsPlayeruuidBytes(ibuf);
+			obuf = this.getPlaylistSoundlengthsPlayeruuidBytes(ibuf);
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1060,10 +1060,10 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x07:
-			serveramusic.setRepeatModeBytes(ibuf);
+			this.setRepeatModeBytes(ibuf);
 		break;
 		case 0x08:
-			obuf = serveramusic.getPlayingSoundNameBytes(ibuf);
+			obuf = this.getPlayingSoundNameBytes(ibuf);
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1075,16 +1075,16 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x09:
-			baos.write(serveramusic.getPlayingSoundSizeBytes(ibuf));
+			baos.write(this.getPlayingSoundSizeBytes(ibuf));
 		break;
 		case 0x0A:
-			baos.write(serveramusic.getPlayingSoundRemainBytes(ibuf));
+			baos.write(this.getPlayingSoundRemainBytes(ibuf));
 		break;
 		case 0x0B:
-			baos.write(serveramusic.loadPackBytes(ibuf));
+			baos.write(this.loadPackBytes(ibuf));
 		break;
 		case 0x0C:
-			obuf = serveramusic.getPackName(ibuf);
+			obuf = this.getPackName(ibuf);
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1096,22 +1096,22 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x0D:
-			serveramusic.stopSoundBytes(ibuf);
+			this.stopSoundBytes(ibuf);
 		break;
 		case 0x0E:
-			serveramusic.stopSoundUntrackableBytes(ibuf);
+			this.stopSoundUntrackableBytes(ibuf);
 		break;
 		case 0x0F:
-			serveramusic.playSoundBytes(ibuf);
+			this.playSoundBytes(ibuf);
 		break;
 		case 0x10:
-			serveramusic.playSoundUntrackableBytes(ibuf);
+			this.playSoundUntrackableBytes(ibuf);
 		break;
 		case 0x11:
-			baos.write(serveramusic.openUploadSessionBytes(ibuf));
+			baos.write(this.openUploadSessionBytes(ibuf));
 		break;
 		case 0x12:
-			obuf = serveramusic.getUploadSessionsBytes();
+			obuf = this.getUploadSessionsBytes();
 			size = obuf.length;
 			baos.write((byte)size);
 			size>>=8;
@@ -1123,7 +1123,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x13:
-			baos.write(serveramusic.closeUploadSessionBytes(ibuf));
+			baos.write(this.closeUploadSessionBytes(ibuf));
 		break;
 		}
 		baos.writeTo(connected.getOutputStream());

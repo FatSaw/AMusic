@@ -18,13 +18,14 @@ public final class ConfigOptions {
 	public final int port, uploaderport, remoteport, backlog, uploaderbacklog, remotebacklog, maxpacksize, maxmusicfilesize, bitrate, samplingrate, uploadertimeout, uploaderlimit;
 	public final byte channels;
 	public final boolean processpack, servercache, clientcache, resourcestrictaccess, uploaderstrictaccess, useconverter, useuploader, useremote, encodetracksasynchronly, waitacception;
-	public final File ffmpegbinary, musicdir, packeddir;
+	public final File ffmpegbinary, uploadercertfile, musicdir, packeddir;
 	protected final byte[] tokensalt;
+	protected final String uploadercertpassword;
 	
 	/**
 	 * Custom configuration storage.
 	 */
-	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, InetAddress remotelocalip, InetAddress remoteip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int remoteport, int backlog, int uploaderbacklog, int remotebacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean useremote, boolean encodetracksasynchronly, File ffmpegbinary, File musicdir, File packeddir, byte[] tokensalt, boolean waitacception) {
+	public ConfigOptions(String host, InetAddress ip, String uploaderhost, InetAddress uploaderip, InetAddress remotelocalip, InetAddress remoteip, int uploadertimeout, int uploaderlimit, int port, int uploaderport, int remoteport, int backlog, int uploaderbacklog, int remotebacklog, int maxpacksize, int maxmusicfilesize, int bitrate, int samplingrate, byte channels, boolean processpack, boolean servercache, boolean clientcache, boolean strictdownloaderlist, boolean uploaderstrictdownloaderlist, boolean useconverter, boolean useuploader, boolean useremote, boolean encodetracksasynchronly, File ffmpegbinary, File uploadercertfile, String uploadercertpassword, File musicdir, File packeddir, byte[] tokensalt, boolean waitacception) {
 		this.host = host;
 		this.ip = ip;
 		this.uploaderhost = uploaderhost;
@@ -54,6 +55,8 @@ public final class ConfigOptions {
 		this.useremote = useremote;
 		this.encodetracksasynchronly = encodetracksasynchronly;
 		this.ffmpegbinary = ffmpegbinary;
+		this.uploadercertfile = uploadercertfile;
+		this.uploadercertpassword = uploadercertpassword;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
 		this.tokensalt = tokensalt;
@@ -174,6 +177,9 @@ public final class ConfigOptions {
 		useconverter = sc.getBooleanOrError("resource\0encoder\0use", errors);
 		String ffmpegbinartypath = sc.getStringOrDefault("resource\0encoder\0ffmpegbinary", null);
 		ffmpegbinary = ffmpegbinartypath == null ? null : new File(ffmpegbinartypath);
+		String uploadercertpath = sc.getStringOrDefault("uploaderserver\0cert\0path", null);
+		uploadercertfile = uploadercertpath == null ? null : new File(uploadercertpath);
+		uploadercertpassword = uploadercertfile == null ? null : sc.getStringOrDefault("uploaderserver\0cert\0password", null);
 		bitrate = sc.getIntOrError("resource\0encoder\0bitrate", errors);
 		channels = (byte) sc.getIntOrError("resource\0encoder\0channels", errors);
 		samplingrate = sc.getIntOrError("resource\0encoder\0samplingrate", errors);

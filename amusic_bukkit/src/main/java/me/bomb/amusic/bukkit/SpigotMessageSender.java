@@ -1,5 +1,7 @@
 package me.bomb.amusic.bukkit;
 
+import org.bukkit.block.CommandBlock;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -14,7 +16,9 @@ public final class SpigotMessageSender implements MessageSender {
 
 	@Override
 	public final void send(Object target, String message) {
-		if(target instanceof CommandSender) {
+		if(target instanceof BlockCommandSender) {
+			
+		} else if(target instanceof CommandSender) {
 			BaseComponent[] bcmessage = ComponentSerializer.parse(message);
 			((CommandSender)target).spigot().sendMessage(bcmessage);
 		}

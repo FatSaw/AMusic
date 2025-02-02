@@ -12,7 +12,9 @@ import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.uploader.SslUploaderServer;
 import me.bomb.amusic.uploader.UploadManager;
+import me.bomb.amusic.uploader.Uploader;
 import me.bomb.amusic.uploader.UploaderServer;
 
 public class LocalAMusic implements AMusic {
@@ -23,7 +25,7 @@ public class LocalAMusic implements AMusic {
 	public final ResourceDispatcher dispatcher;
 	public final DataStorage datamanager;
 	public final UploadManager uploadermanager;
-	public final UploaderServer uploader;
+	public final Uploader uploader;
 	
 	public LocalAMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.source = source;
@@ -33,7 +35,7 @@ public class LocalAMusic implements AMusic {
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, configoptions.host);
 		this.datamanager = new DataStorage(configoptions.packeddir, !configoptions.processpack, (byte)2);
 		this.uploadermanager = configoptions.useuploader ? new UploadManager(configoptions.uploadertimeout, configoptions.uploaderlimit, configoptions.musicdir) : null;
-		this.uploader = configoptions.useuploader ? new UploaderServer(this.uploadermanager, configoptions.uploaderstrictaccess ? playerips : null, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : null;
+		this.uploader = configoptions.useuploader ? configoptions.uploadercertfile == null ? new UploaderServer(this.uploadermanager, configoptions.uploaderstrictaccess ? playerips : null, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog) : new SslUploaderServer(this.uploadermanager, configoptions.uploaderstrictaccess ? playerips : null, configoptions.uploaderip, configoptions.uploaderport, configoptions.uploaderbacklog, configoptions.uploadercertfile, configoptions.uploadercertpassword) : null;
 	}
 	
 	/**

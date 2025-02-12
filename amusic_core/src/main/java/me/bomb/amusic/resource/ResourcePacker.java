@@ -22,7 +22,7 @@ import me.bomb.amusic.source.SourceEntry;
 
 public final class ResourcePacker implements Runnable {
 	
-	private final static byte[] silencesound, silincesoundname;
+	private final static byte[] silencesound;
 	
 	public SoundInfo[] sounds;
 	public byte[] sha1,resourcepack = null;
@@ -47,7 +47,6 @@ public final class ResourcePacker implements Runnable {
 			}
 		}
 		silencesound = buf;
-		silincesoundname = "\t\"amusic.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n".getBytes(StandardCharsets.US_ASCII);
 	}
 	
 	protected ResourcePacker(SoundSource<?> source, String id, File resourcefile, File sourcearchive, ResourceManager resourcemanager) {
@@ -80,17 +79,15 @@ public final class ResourcePacker implements Runnable {
 		String soundslist;
 		{
 			StringBuffer sounds = new StringBuffer("\n");
-			//int lastmusicfileindex = musicfilessize;
-			//--lastmusicfileindex;
 			for (int i = 0; i < musicfilessize; ++i) {
 				sounds.append("\t\"amusic.music");
 				sounds.append(i);
-				sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
+				//sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\":\"amusic/music");
+				sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/music");
 				sounds.append(i);
-				sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n");
-				sounds.append("\t},\n");
-				//sounds.append(i==lastmusicfileindex ? "\t}\n" : "\t},\n");
+				sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
 			}
+			sounds.append("\t\"amusic.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n");
 			soundslist = sounds.toString();
 		}
 		
@@ -125,8 +122,6 @@ public final class ResourcePacker implements Runnable {
 							}
 							sb.insert(close, ',');
 							sb.insert(++close, soundslist);
-							close+=soundslist.length();
-							sb.insert(close, silincesoundname);
 							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
 							zos.closeEntry();
@@ -149,7 +144,6 @@ public final class ResourcePacker implements Runnable {
 					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 					zos.write("{".getBytes());
 					zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
-					zos.write(silincesoundname);
 					zos.write("}".getBytes());
 					zos.closeEntry();
 				}
@@ -160,7 +154,12 @@ public final class ResourcePacker implements Runnable {
 				}
 			} catch (IOException e) {
 			}
-			
+			try {
+				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/silence.ogg"));
+				zos.write(silencesound);
+				zos.closeEntry();
+			} catch (IOException e) {
+			}
 			byte sleepcount = 0;
 			while(!sourceentry.finished() && --sleepcount != 0) {
 				try {
@@ -176,9 +175,6 @@ public final class ResourcePacker implements Runnable {
 		            zos.write(topack[i]);
 		            zos.closeEntry();
 				}
-				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/silence.ogg"));
-				zos.write(silencesound);
-	            zos.closeEntry();
 			} catch (IOException e) {
 				return;
 			} finally {

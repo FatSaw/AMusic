@@ -1,11 +1,11 @@
 package me.bomb.amusic;
 
 import java.util.ConcurrentModificationException;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
 
@@ -28,12 +28,17 @@ public final class PositionTracker extends Thread {
 		loadedplaylistnames.remove(playeruuid);
 	}
 	
-	public HashSet<UUID> getPlayersLoaded(String playlistname) {
-		HashSet<UUID> playersloaded = new HashSet<UUID>();
-		for(UUID playeruuid : loadedplaylistnames.keySet(playlistname)) {
-			playersloaded.add(playeruuid);
+	public UUID[] getPlayersLoaded(String playlistname) {
+		KeySetView<UUID, String> ksview = loadedplaylistnames.keySet(playlistname);
+		int i = ksview.size();
+		UUID[] players = new UUID[i];
+		if(i > 0) {
+			Iterator<UUID> iterator = ksview.iterator();
+			while(iterator.hasNext() && --i > -1) {
+				players[i] = iterator.next();
+			}
 		}
-		return playersloaded;
+		return players;
 	}
 
 	public String getPlaylistName(UUID playeruuid) {

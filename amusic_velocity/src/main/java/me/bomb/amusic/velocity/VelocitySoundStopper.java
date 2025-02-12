@@ -25,7 +25,8 @@ public final class VelocitySoundStopper implements SoundStopper {
 			return;
 		}
 		Player player = oplayer.get();
-		Sound sound = Sound.sound(Key.key("amusic.music".concat(Short.toString(id))), Sound.Source.MASTER, 1.0E9f, 1.0f);
+		final int version = player.getProtocolVersion().getProtocol();
+		Sound sound = Sound.sound(Key.key("amusic.music".concat(Short.toString(id))), version < 107 ? Sound.Source.MASTER : Sound.Source.VOICE, 1.0E9f, 1.0f);
 		player.stopSound(sound); //Velocity stopSound not implemented
 		
 	}

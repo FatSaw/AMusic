@@ -52,7 +52,7 @@ public final class AMusicVelocity {
     
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
-		File plugindir = dataDirectory.toFile(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed"), tempdir = new File(plugindir, "Temp");
+		File plugindir = dataDirectory.toFile(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed");
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
 		}
@@ -61,9 +61,6 @@ public final class AMusicVelocity {
 		}
 		if(!packeddir.exists()) {
 			packeddir.mkdir();
-		}
-		if(!tempdir.exists()) {
-			tempdir.mkdir();
 		}
 		Configuration config = new Configuration(configfile, musicdir, packeddir, true, false);
 		if(config.use) {

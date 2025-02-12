@@ -16,6 +16,7 @@ public final class EntityPlayer extends Entity {
 	public PlayerInventory inventory;
 	public World world;
 	public PlayerInteractManager playerInteractManager;
+	public String locale;
 
 	public WorldServer r() {
 		return null;

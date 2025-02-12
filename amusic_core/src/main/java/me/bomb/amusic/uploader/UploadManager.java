@@ -12,14 +12,15 @@ import static me.bomb.amusic.util.NameFilter.filterName;
 
 public final class UploadManager extends Thread {
 	
-	private final int expiretime, limitsize;
+	private final int expiretime, limitsize, limitcount;
 	private final File musicdir;
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
 	private boolean run;
 	
-	public UploadManager(int expiretime, int limitsize, File musicdir) {
+	public UploadManager(int expiretime, int limitsize, int limitcount, File musicdir) {
 		this.expiretime = expiretime;
 		this.limitsize = limitsize;
+		this.limitcount = limitcount;
 		this.musicdir = musicdir;
 		sessions = new ConcurrentHashMap<>();
 	}
@@ -51,7 +52,7 @@ public final class UploadManager extends Thread {
 		if(targetplaylist == null) {
 			targetplaylist = "";
 		}
-		sessions.put(token, new UploadSession(limitsize, 65535, targetplaylist));
+		sessions.put(token, new UploadSession(limitsize, limitcount, targetplaylist));
 		return token;
 	}
 	
@@ -59,8 +60,16 @@ public final class UploadManager extends Thread {
 		return sessions.get(token);
 	}
 	
-	public Enumeration<UUID> getSessions() {
-		return sessions.keys();
+	public UUID[] getSessions() {
+		synchronized (sessions) {
+			int i = sessions.size();
+			UUID[] tokens = new UUID[i];
+			Enumeration<UUID> keys = sessions.keys();
+			while(keys.hasMoreElements() && --i > -1) {
+				tokens[i] = keys.nextElement();
+			}
+			return tokens;
+		}
 	}
 	
 	public boolean endSession(UUID token) {

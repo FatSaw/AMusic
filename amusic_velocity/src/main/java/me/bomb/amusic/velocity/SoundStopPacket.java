@@ -64,8 +64,8 @@ public final class SoundStopPacket extends AbstractPacket {
 	public SoundStopPacket() {
 	}
 	
-	public SoundStopPacket(String sound) {
-		flags = (byte) (sound == null ? 0x02 : 0x01); 
+	public SoundStopPacket(int category, String sound) {
+		flags = (byte) (sound == null ? 0x01 : 0x02); 
 		this.sound = sound;
 	}
 

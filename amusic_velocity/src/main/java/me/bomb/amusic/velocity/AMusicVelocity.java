@@ -23,10 +23,11 @@ import dev.simplix.protocolize.api.Protocol;
 import dev.simplix.protocolize.api.Protocolize;
 import dev.simplix.protocolize.api.providers.ProtocolRegistrationProvider;
 import me.bomb.amusic.AMusic;
-import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Configuration;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.ServerAMusic;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
 import me.bomb.amusic.source.LocalUnconvertedParallelSource;
@@ -64,36 +65,47 @@ public final class AMusicVelocity {
 		if(!tempdir.exists()) {
 			tempdir.mkdir();
 		}
-		int maxpacksize = 262144000;
-		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, true);
-		this.configerrors = configoptions.loaderrors;
-		this.uploaderhost = configoptions.useuploader ? configoptions.uploaderhost : null;
-		playerips = configoptions.resourcestrictaccess || configoptions.uploaderstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+		Configuration config = new Configuration(configfile, musicdir, packeddir, true, false);
+		if(config.use) {
+			this.configerrors = config.errors;
+			this.uploaderhost = config.uploadhost;
+			playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 
-		PackSender packsender = new VelocityPackSender(server);
-        
-		Runtime runtime = Runtime.getRuntime();
-		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		final boolean localapi = true;
-		if(localapi) {
-			LocalAMusic amusic =  new LocalAMusic(configoptions, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
-			this.resourcemanager = amusic.resourcemanager;
-			this.positiontracker = amusic.positiontracker;
-			amusic.setAPI();
-			this.amusic = amusic;
+			PackSender packsender = new VelocityPackSender(server);
+	        
+			Runtime runtime = Runtime.getRuntime();
+			SoundSource<?> source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedParallelSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalConvertedSource(config.musicdir, config.packsizelimit);
+			if(config.connectuse) {
+				ServerAMusic amusic = new ServerAMusic(config, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
+				this.resourcemanager = amusic.resourcemanager;
+				this.positiontracker = amusic.positiontracker;
+				this.amusic = amusic;
+			} else {
+				LocalAMusic amusic = new LocalAMusic(config, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
+				this.resourcemanager = amusic.resourcemanager;
+				this.positiontracker = amusic.positiontracker;
+				this.amusic = amusic;
+			}
+			this.server = server;
+	        this.logger = logger;
+			LangOptions.loadLang(new VelocityMessageSender(), langfile, false);
 		} else {
+			this.configerrors = null;
+			this.playerips = null;
+			this.uploaderhost = null;
 			this.resourcemanager = null;
 			this.positiontracker = null;
+			this.server = null;
+	        this.logger = null;
+			this.amusic = null;
 		}
-		
-		this.server = server;
-        this.logger = logger;
-		LangOptions.loadLang(new VelocityMessageSender(), langfile, false);
-        
     }
 	
 	@Subscribe
 	public void onProxyInitialization(ProxyInitializeEvent event) {
+		if(this.amusic == null) {
+			return;
+		}
 		if(!this.configerrors.isEmpty()) {
 			logger.error("AMusic filed to load config options: \n".concat(configerrors));
 			return;
@@ -120,6 +132,9 @@ public final class AMusicVelocity {
 	
 	@Subscribe
 	public void onProxyShutdown(ProxyShutdownEvent event) {
+		if(this.amusic == null) {
+			return;
+		}
 		this.amusic.disable();
 	}
 	

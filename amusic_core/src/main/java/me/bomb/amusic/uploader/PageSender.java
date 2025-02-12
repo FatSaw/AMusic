@@ -89,19 +89,6 @@ public final class PageSender extends Thread {
 		try {
 			final InputStream cis = connected.getInputStream();
 			int readcount = cis.read(buf);
-			/*{
-				final File debugfile = new File("./header.txt");
-				final FileOutputStream fos = new FileOutputStream(debugfile, false);
-				try {
-					fos.write(buf, 0, buf.length);
-				} catch (IOException ex) {
-				} finally {
-					try {
-						fos.close();
-					} catch (IOException ex) {
-					}
-				}
-			}*/
 			byte e = 7;
 			while (--e > -1) {
 				int i = identifier[e].length;
@@ -147,6 +134,7 @@ public final class PageSender extends Thread {
 					if(name == null) {
 						name = "";
 					}
+					name = name.replace(' ', '_');
 					int pi = i;
 					UUID token = null;
 					while((i = indexOf(buf, headersplit, i, split)) != -1) {
@@ -206,6 +194,7 @@ public final class PageSender extends Thread {
 					if(name == null) {
 						name = "";
 					}
+					name = name.replace(' ', '_');
 					int pi = i, cl = -1;
 					UUID token = null;
 					while((i = indexOf(buf, headersplit, i, split)) != -1) {

@@ -6,6 +6,8 @@ import dev.simplix.protocolize.api.Protocolize;
 import dev.simplix.protocolize.api.player.ProtocolizePlayer;
 import me.bomb.amusic.SoundStarter;
 
+import static dev.simplix.protocolize.api.util.ProtocolVersions.MINECRAFT_1_13;
+
 public final class ProtocoliseSoundStarter implements SoundStarter {
 	
 	protected ProtocoliseSoundStarter() {
@@ -17,7 +19,9 @@ public final class ProtocoliseSoundStarter implements SoundStarter {
 		if(player==null) {
 			return;
 		}
-		NamedSoundEffectPacket customsound = new NamedSoundEffectPacket("amusic.music".concat(Short.toString(id)), 0, 0, Integer.MIN_VALUE, 0, 1.0E9f, 1.0f);
+		final int version = player.protocolVersion();
+		
+		NamedSoundEffectPacket customsound = new NamedSoundEffectPacket("amusic.music".concat(Short.toString(id)), 9, 0, Integer.MIN_VALUE, 0, version < MINECRAFT_1_13 ? 1.0E9f : 1.0f, 1.0f);
 		player.sendPacket(customsound);
 	}
 

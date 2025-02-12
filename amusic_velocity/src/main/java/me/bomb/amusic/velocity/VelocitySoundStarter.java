@@ -25,7 +25,8 @@ public final class VelocitySoundStarter implements SoundStarter {
 			return;
 		}
 		Player player = oplayer.get();
-		Sound sound = Sound.sound(Key.key("amusic.music".concat(Short.toString(id))), Sound.Source.MASTER, 1.0E9f, 1.0f);
+		final int version = player.getProtocolVersion().getProtocol();
+		Sound sound = Sound.sound(Key.key("amusic.music".concat(Short.toString(id))), Sound.Source.VOICE, version < 393 ? 1.0E9f : 1.0f, 1.0f);
 		player.playSound(sound); //Velocity playSound not implemented
 		
 	}

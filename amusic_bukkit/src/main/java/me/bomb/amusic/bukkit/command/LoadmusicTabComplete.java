@@ -43,7 +43,7 @@ public final class LoadmusicTabComplete implements TabCompleter {
 		
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			Set<String> playlists = amusic.getPlaylists();
+			String[] playlists = amusic.getPlaylists();
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {
@@ -58,13 +58,13 @@ public final class LoadmusicTabComplete implements TabCompleter {
 				++lastspace;
 				if(lastspace == 0) {
 					for (String playlist : playlists) {
-						if (playlist.startsWith(args[1])) {
+						if (playlist.startsWith(args[1]) && playlist.indexOf('§') == -1) {
 							tabcomplete.add(playlist);
 						}
 					}
 				} else {
 					for (String playlist : playlists) {
-						if (lastspace < playlist.length() && playlist.startsWith(args[1])) {
+						if (lastspace < playlist.length() && playlist.startsWith(args[1]) && playlist.indexOf('§') == -1) {
 							playlist = playlist.substring(lastspace);
 							tabcomplete.add(playlist);
 						}

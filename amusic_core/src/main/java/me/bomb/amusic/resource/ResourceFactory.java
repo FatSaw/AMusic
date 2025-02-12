@@ -1,9 +1,6 @@
 package me.bomb.amusic.resource;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Base64.Encoder;
 import java.util.UUID;
 
 import me.bomb.amusic.packedinfo.DataEntry;
@@ -11,8 +8,9 @@ import me.bomb.amusic.packedinfo.DataStorage;
 import me.bomb.amusic.source.SoundSource;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
+import static me.bomb.amusic.util.Base64Utils.toBase64Url;
 
-public final class ResourceFactory extends Thread {
+public final class ResourceFactory implements Runnable {
 	
 	private final String id;
 	private final UUID[] targets;
@@ -20,10 +18,9 @@ public final class ResourceFactory extends Thread {
 	private final ResourceDispatcher dispatcher;
 	private final SoundSource<?> source;
 	private final boolean update;
-	private final Encoder base64encoder;
 	private final StatusReport statusreport;
 	
-	public ResourceFactory(String id, UUID[] targets, DataStorage datamanager, ResourceDispatcher dispatcher, SoundSource<?> source, boolean update, StatusReport statusreport) {
+	public ResourceFactory(String id, UUID[] targets, DataStorage datamanager, ResourceDispatcher dispatcher, SoundSource<?> source, boolean update, StatusReport statusreport, boolean async) {
 		this.id = id;
 		this.targets = targets;
 		this.datamanager = datamanager;
@@ -31,17 +28,16 @@ public final class ResourceFactory extends Thread {
 		this.source = source;
 		this.update = update;
 		this.statusreport = statusreport;
-		this.base64encoder = Base64.getUrlEncoder();
-		start();
-	}
-	
-	private String toBase64(String name) {
-		return new String(base64encoder.encode(name.getBytes(StandardCharsets.UTF_8)), StandardCharsets.US_ASCII);
+		if(async) {
+			new Thread(this).start();
+		} else {
+			run();
+		}
 	}
 
 	@Override
 	public void run() {
-		String id = toBase64(this.id);
+		String id = toBase64Url(this.id);
 		File resourcefile = new File(datamanager.datadirectory, id.concat(".zip"));
 		
 		DataEntry dataentry = datamanager.getPlaylist(this.id);

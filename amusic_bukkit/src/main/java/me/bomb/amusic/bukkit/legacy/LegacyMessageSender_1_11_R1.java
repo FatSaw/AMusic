@@ -27,11 +27,7 @@ public class LegacyMessageSender_1_11_R1 implements MessageSender {
 	public final String getLocale(Object target) {
 		if(target instanceof CraftPlayer) {
 			CraftPlayer player = (CraftPlayer)target;
-			try {
-				return player.getLocale().toLowerCase();
-			} catch (NoSuchMethodError e) {
-				return player.spigot().getLocale().toLowerCase();
-			}
+			return player.getHandle().locale;
 		}
 		return null;
 	}

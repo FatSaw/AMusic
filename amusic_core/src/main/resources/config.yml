@@ -1,28 +1,74 @@
-uploaderserver:
- use: false
- host: http://127.0.0.1:25532/
- #ip: 127.0.0.1
- port: 25532
- backlog: 50
- strictaccess: true
- timeout: 600000
- limit: 262144000
-server:
- host: http://127.0.0.1:25530/
- #ip: 127.0.0.1
- port: 25530
- backlog: 50
- strictaccess: true
- #waitacception: true
- tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
-resource:
- processpack: true
- cache:
-  server: true
-  client: true
+amusic:
+ #Use - set it to false if api mode used
+ use: true
+ server:
+  #Sound upload server - load and convert sound clientside (ffmpeg wasm)
+  upload:
+   use: false
+   #Host - '<protocol>://<ip or hostname>:<port>/' if https used need to replace protocol value from 'http' to 'https'
+   host: http://127.0.0.1:25532/
+   https:
+    use: false
+    path: uploadcert.p12
+    password: passwordkey
+   #Interface ip
+   ip: 0.0.0.0
+   #Port - should be opened
+   port: 25532
+   backlog: 0
+   #Allow connection only from ips that connected to MC server (may not work if proxy server used)
+   strictaccess: true
+   #Session timeout, session ends without save if no activity (in ms)
+   timeout: 600000
+   limit:
+    #Limit upload size in bytes (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 52428800, 1.16-1.17.1 104857600, 1.18+ 262144000
+    size: 262144000
+    #Limit upload count
+    count: 65535
+  sendpack:
+   #Host - '<protocol>://<ip or hostname>:<port>/'
+   host: http://127.0.0.1:25530/
+   #Interface ip
+   ip: 0.0.0.0
+   port: 25530
+   backlog: 0
+   #Allow connection only from ips that connected to MC server (may not work if proxy server used)
+   strictaccess: true
+   #Wait acception - true resourcepack download start only after resourcepack status accepted recieved, false - resourcepack status ignored, blocked - auto
+   #waitacception: true
+   #Token salt - recomended to replace this by random generated if clientside caching used
+   tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
+  #Connect api to other amusic instance
+  connect:
+   use: false
+   #Interface ip
+   ip: 0.0.0.0
+   #Client used on bukkit by default
+   client:
+    #Remote server ip
+    serverip: 0.0.0.0
+    port: 25534
+   #Server used on velocity by default
+   server:
+    #Remote client ip
+    clientip: 0.0.0.0
+    port: 25534
+    backlog: 0
+ resourcepack:
+  #Processpack - if false resourcepack modification not allowed
+  processpack: true
+  #Size limit - max packed resourcepack size recomended values for specific versions (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 '52428800', 1.16-1.17.1 '104857600', 1.18+ '262144000'
+  sizelimit: 262144000
+  cache:
+   #Serverside caching - store all packed resourcepacks in ram
+   server: true
+   #Clientside caching - store up to 10 resourcepacks clientside
+   client: true
+ #Serverside encoder, not recommended to use since web uploader with clientside convertation exists
  encoder:
   use: false
-  ffmpegbinary: ffmpeg
+  #Path - ffmpeg binary path
+  path: ffmpeg
   bitrate: 64000
   channels: 2
   samplingrate: 44100

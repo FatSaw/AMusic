@@ -48,7 +48,7 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 		}
 		final String soundid = "amusic.music".concat(Short.toString(id));
 		if(version > 388) {
-			SoundStopPacket packet = new SoundStopPacket(soundid);
+			SoundStopPacket packet = new SoundStopPacket(9, soundid);
 			player.sendPacket(packet);
 			return;
 		}

@@ -6,6 +6,7 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.HashMap;
 import java.util.HashSet;
+
 /*
  * Read only configuration
  */
@@ -108,6 +109,7 @@ public final class SimpleConfiguration {
 	
 	private static void appendKey(String key, StringBuilder sb) {
 		key = key.replace('\0', '_');
+		sb.append("Missing config option: ");
 		sb.append(key);
 		sb.append('\n');
 	}

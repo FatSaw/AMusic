@@ -13,12 +13,13 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
-import me.bomb.amusic.ConfigOptions;
+import me.bomb.amusic.Configuration;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.MessageSender;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.RemoteAMusic;
+import me.bomb.amusic.SoundStarter;
+import me.bomb.amusic.ClientAMusic;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
@@ -39,6 +40,8 @@ import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_10_R1;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_9_R2;
+import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_10_R1;
+import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_9_R2;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
@@ -50,6 +53,7 @@ import me.bomb.amusic.source.SoundSource;
 
 
 public final class AMusicBukkit extends JavaPlugin {
+	
 	private final AMusic amusic;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final boolean waitacception;
@@ -75,73 +79,106 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(!packeddir.exists()) {
 			packeddir.mkdir();
 		}
-		boolean waitacception = true;
-		PackSender packsender;
-		SoundStopper soundstopper;
-		MessageSender messagesender;
-		switch (ver) {
-		case 7:
-			packsender = new LegacyPackSender_1_7_R4();
-			//soundstopper = new LegacySoundStopper_1_7_R4();
-			soundstopper = new BukkitSoundSilenceLockStopper();
-			messagesender = new LegacyMessageSender_1_7_R4();
-			waitacception = false;
-		break;
-		case 8:
-			packsender = new LegacyPackSender_1_8_R3();
-			//soundstopper = new LegacySoundStopper_1_8_R3();
-			soundstopper = new BukkitSoundSilenceLockStopper();
-			messagesender = new LegacyMessageSender_1_8_R3();
-		break;
-		case 9:
-			packsender = new LegacyPackSender_1_9_R2();
-			soundstopper = new LegacySoundStopper_1_9_R2();
-			messagesender = new LegacyMessageSender_1_9_R2();
-		break;
-		case 10:
-			packsender = new LegacyPackSender_1_10_R1();
-			soundstopper = new BukkitSoundStopper();
-			messagesender = new LegacyMessageSender_1_10_R1();
-		break;
-		case 11:
-			packsender = new BukkitPackSender();
-			soundstopper = new BukkitSoundStopper();
-			messagesender = new LegacyMessageSender_1_11_R1();
-		break;
-		default:
-			packsender = new BukkitPackSender();
-			soundstopper = new BukkitSoundStopper();
-			messagesender = new SpigotMessageSender();
-		break;
-		}
-		int maxpacksize = ver < 15 ? 52428800 : ver < 18 ? 104857600 : 262144000;
-		ConfigOptions configoptions = new ConfigOptions(configfile, maxpacksize, musicdir, packeddir, waitacception);
-		this.configerrors = configoptions.loaderrors;
-		this.waitacception = configoptions.waitacception;
-		this.uploaderhost = configoptions.useuploader ? configoptions.uploaderhost : null;
-		playerips = configoptions.resourcestrictaccess || configoptions.uploaderstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-		Runtime runtime = Runtime.getRuntime();
-		SoundSource<?> source = configoptions.useconverter ? configoptions.encodetracksasynchronly ? new LocalUnconvertedParallelSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalUnconvertedSource(runtime, configoptions.musicdir, configoptions.maxmusicfilesize, configoptions.ffmpegbinary, configoptions.bitrate, configoptions.channels, configoptions.samplingrate) : new LocalConvertedSource(configoptions.musicdir, configoptions.maxmusicfilesize);
-		final boolean localapi = true;
-		if(localapi) {
-			LocalAMusic amusic = new LocalAMusic(configoptions, source, packsender, new BukkitSoundStarter(), soundstopper, playerips);
-			this.resourcemanager = amusic.resourcemanager;
-			this.positiontracker = amusic.positiontracker;
-			this.amusic = amusic;
-			amusic.setAPI();
+		boolean waitacception = ver == 7 ? false : true;
+		Configuration config = new Configuration(configfile, musicdir, packeddir, waitacception, true);
+		if(config.use) {
+			this.configerrors = config.errors;
+			if(config.connectuse) {
+				this.waitacception = false;
+				this.playerips = null;
+				this.uploaderhost = null;
+				ClientAMusic amusic = new ClientAMusic(config.connectifip, config.connectremoteip, config.connectport);
+				this.resourcemanager = null;
+				this.positiontracker = null;
+				this.amusic = amusic;
+			} else {
+				PackSender packsender;
+				SoundStarter soundstarter;
+				SoundStopper soundstopper;
+				switch (ver) {
+				case 7:
+					packsender = new LegacyPackSender_1_7_R4();
+					soundstarter = new BukkitLegacySoundStarter();
+					//soundstopper = new LegacySoundStopper_1_7_R4();
+					soundstopper = new BukkitSoundSilenceLockStopper();
+				break;
+				case 8:
+					packsender = new LegacyPackSender_1_8_R3();
+					soundstarter = new BukkitLegacySoundStarter();
+					//soundstopper = new LegacySoundStopper_1_8_R3();
+					soundstopper = new BukkitSoundSilenceLockStopper();
+				break;
+				case 9:
+					packsender = new LegacyPackSender_1_9_R2();
+					//soundstarter = new LegacySoundStarter_1_9_R2();
+					soundstarter = new BukkitLegacySoundStarter();
+					soundstopper = new LegacySoundStopper_1_9_R2();
+				break;
+				case 10:
+					packsender = new LegacyPackSender_1_10_R1();
+					//soundstarter = new LegacySoundStarter_1_10_R1();
+					soundstarter = new BukkitLegacySoundStarter();
+					soundstopper = new BukkitSoundStopper();
+				break;
+				case 11: case 12:
+					packsender = new BukkitPackSender();
+					soundstarter = new BukkitLegacySoundStarter();
+					soundstopper = new BukkitSoundStopper();
+				break;
+				default:
+					packsender = new BukkitPackSender();
+					soundstarter = new BukkitSoundStarter();
+					soundstopper = new BukkitSoundStopper();
+				break;
+				}
+				this.waitacception = config.waitacception;
+				this.uploaderhost = config.uploadhost;
+				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+				Runtime runtime = Runtime.getRuntime();
+				SoundSource<?> source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedParallelSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalConvertedSource(config.musicdir, config.packsizelimit);
+				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips);
+				this.resourcemanager = amusic.resourcemanager;
+				this.positiontracker = amusic.positiontracker;
+				this.amusic = amusic;
+			}
+			MessageSender messagesender;
+			switch (ver) {
+			case 7:
+				messagesender = new LegacyMessageSender_1_7_R4();
+			break;
+			case 8:
+				messagesender = new LegacyMessageSender_1_8_R3();
+			break;
+			case 9:
+				messagesender = new LegacyMessageSender_1_9_R2();
+			break;
+			case 10:
+				messagesender = new LegacyMessageSender_1_10_R1();
+			break;
+			case 11:
+				messagesender = new LegacyMessageSender_1_11_R1();
+			break;
+			default:
+				messagesender = new SpigotMessageSender();
+			break;
+			}
+			LangOptions.loadLang(messagesender, langfile, ver > 15);
 		} else {
-			RemoteAMusic amusic = new RemoteAMusic();
+			this.configerrors = null;
+			this.waitacception = false;
+			this.playerips = null;
+			this.uploaderhost = null;
 			this.resourcemanager = null;
 			this.positiontracker = null;
-			this.amusic = amusic;
+			this.amusic = null;
 		}
-		
-		LangOptions.loadLang(messagesender, langfile, ver > 15);
-		
 	}
 
 	//PLUGIN INIT START
 	public void onEnable() {
+		if(this.amusic == null) {
+			return;
+		}
 		Server server = Bukkit.getServer();
 		if(!this.configerrors.isEmpty()) {
 			server.getLogger().severe("AMusic filed to load config options: \n".concat(configerrors));
@@ -183,6 +220,9 @@ public final class AMusicBukkit extends JavaPlugin {
 	}
 
 	public void onDisable() {
+		if(this.amusic == null) {
+			return;
+		}
 		this.amusic.disable();
 	}
 	//PLUGIN INIT END

@@ -47,7 +47,7 @@ public final class PlaymusicTabComplete implements TabCompleter {
 			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
 				Player target = server.getPlayerExact(args[0]);
 				if (target != null) {
-					List<String> soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
+					String[] soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
 					if (soundnames != null) {
 						int lastspace = -1;
 						if(args.length > 2) {
@@ -63,13 +63,13 @@ public final class PlaymusicTabComplete implements TabCompleter {
 						
 						if(lastspace == 0) {
 							for (String soundname : soundnames) {
-								if (soundname.startsWith(args[1])) {
+								if (soundname.startsWith(args[1]) && soundname.indexOf('§') == -1) {
 									tabcomplete.add(soundname);
 								}
 							}
 						} else {
 							for (String soundname : soundnames) {
-								if (lastspace < soundname.length() && soundname.startsWith(args[1])) {
+								if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf('§') == -1) {
 									soundname = soundname.substring(lastspace);
 									tabcomplete.add(soundname);
 								}

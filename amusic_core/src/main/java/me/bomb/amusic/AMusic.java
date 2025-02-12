@@ -1,14 +1,10 @@
 package me.bomb.amusic;
 
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import me.bomb.amusic.resource.StatusReport;
 
 public interface AMusic {
-	
 	
 	/**
 	 * Starts threads.
@@ -21,52 +17,46 @@ public interface AMusic {
 	public void disable();
 	
 	/**
-	 * Set main AMusic instance {@link AMusic#instance}.
-	 * Should be used only during AMusic plugin initialization;
+	 * Get player uuids that loaded specific playlistname.
+	 *
+	 * @return player uuids that loaded specific playlistname.
 	 */
-	/*public void setAPI() throws ExceptionInInitializerError {
-		if(AMusic.instance!=null) throw new ExceptionInInitializerError("AMusic API already initialized!");
-		AMusic.instance = this;
-	}
-	
-	public static AMusic API() {
-		return AMusic.instance;
-	}*/
+	public UUID[] getPlayersLoaded(String playlistname);
 	
 	/**
 	 * Get the names of playlists that were loaded at least once.
 	 *
 	 * @return the names of playlists that were loaded at least once.
 	 */
-	public Set<String> getPlaylists();
+	public String[] getPlaylists();
 
 	/**
 	 * Get the names of sounds in playlist.
 	 *
 	 * @return the names of sounds in playlist.
 	 */
-	public List<String> getPlaylistSoundnames(String playlistname);
+	public String[] getPlaylistSoundnames(String playlistname);
 
 	/**
 	 * Get the names of sounds in playlist that loaded to player.
 	 *
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
-	public List<String> getPlaylistSoundnames(UUID playeruuid);
+	public String[] getPlaylistSoundnames(UUID playeruuid);
 
 	/**
 	 * Get the lenghs of sounds in playlist.
 	 *
 	 * @return the lenghs of sounds in playlist.
 	 */
-	public List<Short> getPlaylistSoundlengths(String playlistname);
+	public short[] getPlaylistSoundlengths(String playlistname);
 
 	/**
 	 * Get the lenghs of sounds in playlist that loaded to player.
 	 *
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
-	public List<Short> getPlaylistSoundlengths(UUID playeruuid);
+	public short[] getPlaylistSoundlengths(UUID playeruuid);
 
 	/**
 	 * Set sound repeat mode, null to not repeat.
@@ -138,7 +128,7 @@ public interface AMusic {
 	 * 
 	 * @return upload sessions.
 	 */
-	public Enumeration<UUID> getUploadSessions();
+	public UUID[] getUploadSessions();
 	
 	/**
 	 * Close upload session.

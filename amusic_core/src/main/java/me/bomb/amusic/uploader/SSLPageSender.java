@@ -32,11 +32,11 @@ public final class SSLPageSender extends Thread {
 		uidentifier = "UUID: ".getBytes(StandardCharsets.US_ASCII);
 		headerend = new byte[] {'\r','\n','\r','\n'};
 		headersplit = new byte[] {'\r','\n'};
-		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: text/html\r\nContent-Length: "
+		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic sound upload server\r\nCache-Control: no-store\r\nContent-Type: text/html\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 				.getBytes(StandardCharsets.US_ASCII),
-				responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: text/javascript\r\nContent-Length: "
+				responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: AMusic sound upload server\r\nCache-Control: max-age=86400\r\nContent-Type: text/javascript\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 						.getBytes(StandardCharsets.US_ASCII),
-				responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: HTTP server\r\nContent-Type: application/wasm\r\nContent-Length: "
+				responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: AMusic sound upload server\r\nCache-Control: max-age=86400\r\nContent-Type: application/wasm\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 						.getBytes(StandardCharsets.US_ASCII),
 				responseclose = "\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		

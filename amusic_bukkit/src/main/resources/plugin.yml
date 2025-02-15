@@ -3,6 +3,7 @@ main: me.bomb.amusic.bukkit.AMusicBukkit
 version: ${version}
 api-version: 1.13
 author: Bomb
+folia-supported: true
 commands:
   uploadmusic:
   loadmusic:

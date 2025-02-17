@@ -26,10 +26,13 @@ import me.bomb.amusic.util.LangOptions.Placeholder;
 public final class LoadmusicCommand implements CommandCallable {
 	private final Server server;
 	private final AMusic amusic;
+	
+	private final ArrayList<String> emptytab;
 
 	public LoadmusicCommand(Server server, AMusic amusic) {
 		this.server = server;
 		this.amusic = amusic;
+		emptytab = new ArrayList<String>(0);
 	}
 	
 	private void executeCommand(CommandSource source, String playlistname, UUID[] targetuuids) {
@@ -107,10 +110,10 @@ public final class LoadmusicCommand implements CommandCallable {
 	@Override
 	public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition) throws CommandException {
 		if (!source.hasPermission("amusic.loadmusic")) {
-			return null;
+			return emptytab;
 		}
-		String[] args = arguments.split(" ", 127);
 		List<String> tabcomplete = new ArrayList<String>();
+		String[] args = arguments.split(" ", 127);
 		if (args.length <= 1) {
 			if (source instanceof Player) {
 				tabcomplete.add("@s");

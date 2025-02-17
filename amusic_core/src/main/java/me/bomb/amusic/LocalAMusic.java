@@ -12,10 +12,7 @@ import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
-import me.bomb.amusic.uploader.SslUploaderServer;
 import me.bomb.amusic.uploader.UploadManager;
-import me.bomb.amusic.uploader.Uploader;
-import me.bomb.amusic.uploader.UploaderServer;
 
 public class LocalAMusic implements AMusic {
 	public final SoundSource<?> source;
@@ -25,7 +22,6 @@ public class LocalAMusic implements AMusic {
 	public final ResourceDispatcher dispatcher;
 	public final DataStorage datamanager;
 	public final UploadManager uploadermanager;
-	public final Uploader uploader;
 	
 	public LocalAMusic(Configuration config, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.source = source;
@@ -34,8 +30,7 @@ public class LocalAMusic implements AMusic {
 		this.resourceserver = new ResourceServer(config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, config.sendpackhost);
 		this.datamanager = new DataStorage(config.packeddir, !config.processpack, (byte)2);
-		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadtimeout, config.uploadlimitsize, config.uploadlimitcount, config.musicdir) : null;
-		this.uploader = config.uploaduse ? config.uploadhttps ? new SslUploaderServer(this.uploadermanager, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.sslserverfactory) : new UploaderServer(this.uploadermanager, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog) : null;
+		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadtimeout, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.serverfactory) : null;
 	}
 	
 	/**
@@ -45,7 +40,7 @@ public class LocalAMusic implements AMusic {
 		positiontracker.start();
 		resourceserver.start();
 		datamanager.start();
-		if(this.uploader != null) uploader.start();
+		if(this.uploadermanager != null) uploadermanager.start();
 		datamanager.load();
 	}
 	
@@ -56,7 +51,7 @@ public class LocalAMusic implements AMusic {
 		positiontracker.end();
 		resourceserver.end();
 		datamanager.end();
-		if(this.uploader != null) uploader.end();
+		if(this.uploadermanager != null) uploadermanager.end();
 		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
 		}
 	}
@@ -236,7 +231,7 @@ public class LocalAMusic implements AMusic {
 	 * @return session token.
 	 */
 	public final UUID openUploadSession(String playlistname) {
-		return uploadermanager == null ? null : uploadermanager.generateToken(playlistname);
+		return uploadermanager == null ? null : uploadermanager.startSession(playlistname);
 	}
 	
 	/**
@@ -253,8 +248,8 @@ public class LocalAMusic implements AMusic {
 	 * 
 	 * @return true if session closed successfully.
 	 */
-	public final boolean closeUploadSession(UUID token) {
-		return uploadermanager == null ? false : uploadermanager.endSession(token);
+	public final boolean closeUploadSession(UUID token, boolean save) {
+		return uploadermanager == null ? false : uploadermanager.endSession(token, save);
 	}
 	
 }

@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
-public final class PageSender extends Thread {
+final class PageSender extends Thread {
 	
 	private static final byte[] notfound, updated, nolength, novalidtoken, notoken, headertoolarge, datatoolarge, clidentifier, uidentifier, headerend, headersplit;
 	private static final byte[][] web;
@@ -39,7 +39,7 @@ public final class PageSender extends Thread {
 						.getBytes(StandardCharsets.US_ASCII),
 				responseclose = "\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		
-		final ClassLoader classloader = UploaderServer.class.getClassLoader();
+		final ClassLoader classloader = PageSender.class.getClassLoader();
 		web = new byte[5][];
 		identifier = new byte[7][];
 		loadStaticContent(classloader, (byte)0, 2787, "index.html", "", responseparthtml0, responseclose);
@@ -120,7 +120,6 @@ public final class PageSender extends Thread {
 			}
 			if(e == 6) {
 				//DELETE REQUEST
-				connected.shutdownInput();
 				int i = 8;
 				while(i < readcount) {
 					if(buf[i] == ' ') break;
@@ -166,18 +165,14 @@ public final class PageSender extends Thread {
 							}
 							session.remove(name);
 							connected.getOutputStream().write(updated);
-							connected.shutdownOutput();
 						} else {
 							connected.getOutputStream().write(notoken);
-							connected.shutdownOutput();
 						}
 					} else {
 						connected.getOutputStream().write(novalidtoken);
-						connected.shutdownOutput();
 					}
 				} else {
 					connected.getOutputStream().write(headertoolarge);
-					connected.shutdownOutput();
 				}
 			} else if(e == 5) {
 				//PUT REQUEST
@@ -241,7 +236,6 @@ public final class PageSender extends Thread {
 								final boolean canput = session.canPut(cl);
 								if(canput) {
 									connected.getOutputStream().write(updated);
-									connected.shutdownOutput();
 									split += 4;
 									bytes = new byte[cl];
 									if(cl != 0) {
@@ -253,40 +247,27 @@ public final class PageSender extends Thread {
 											pos+=readcount;
 										}
 									}
-									connected.shutdownInput();
 									if((i = name.lastIndexOf('.')) != -1) {
 										name = name.substring(0, i);
 									}
 									session.put(name, bytes); //PUT
 								} else {
-									connected.shutdownInput();
 									connected.getOutputStream().write(datatoolarge);
-									connected.shutdownOutput();
 								}
 							} else {
-								connected.shutdownInput();
 								connected.getOutputStream().write(notoken);
-								connected.shutdownOutput();
 							}
 						} else {
-							connected.shutdownInput();
 							connected.getOutputStream().write(nolength);
-							connected.shutdownOutput();
 						}
 					} else {
-						connected.shutdownInput();
 						connected.getOutputStream().write(novalidtoken);
-						connected.shutdownOutput();
 					}
 				} else {
-					connected.shutdownInput();
 					connected.getOutputStream().write(headertoolarge);
-					connected.shutdownOutput();
 				}
 			} else {
-				connected.shutdownInput();
 				connected.getOutputStream().write(e == -1 ? notfound : web[e]);
-				connected.shutdownOutput();
 			}
 		} catch (IOException e) {
 		} finally {

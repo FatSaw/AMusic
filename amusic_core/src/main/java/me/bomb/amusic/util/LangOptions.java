@@ -17,6 +17,8 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 	
 	private static MessageSender messagesender;
 	
+	private final static String defaultlang = new String();
+	
 	public static void loadLang(MessageSender messagesender, File langfile, boolean rgb) {
 		LangOptions.messagesender = messagesender;
 		byte[] buf = null;
@@ -52,16 +54,34 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			}
 		}
 		SimpleConfiguration sc = new SimpleConfiguration(buf);
-		String[] locales = sc.getSubKeys("");
-		int i = locales.length;
+		String replacelangkey = "replacelang\0", localisationkey = "localisation\0", localisation = "default", localisation0 = localisationkey.concat(localisation).concat("\0");
+		for (LangOptions lang : values()) {
+			lang.text.clear();
+			String langname = lang.name();
+			String msg = sc.getStringOrDefault(localisation0.concat(langname.replace("_", "\0")), langname);
+			msg = msg.replace("\\n", "\n");
+			lang.text.put(defaultlang, msg);
+		}
+		String[] localisationkeys = sc.getSubKeys(localisationkey);
+		int i = localisationkeys.length;
 		while(--i > -1) {
-			String locale = locales[i], locale0 = locale.concat("\0");
+			localisation = localisationkeys[i];
+			if(localisation.equals("default")) continue;
+			localisation0 = localisationkey.concat(localisation).concat("\0");
 			for (LangOptions lang : values()) {
-				String optionpath = locale0.concat(lang.name().replace("_", "\0"));
-				String msg = sc.getStringOrDefault(optionpath, optionpath);
+				String msg = sc.getStringOrDefault(localisation0.concat(lang.name().replace("_", "\0")), null);
 				if(msg==null) continue;
 				msg = msg.replace("\\n", "\n");
-				lang.text.put(locale, msg);
+				lang.text.put(localisation, msg);
+			}
+		}
+		String[] replacelangkeys = sc.getSubKeys(replacelangkey);
+		i = replacelangkeys.length;
+		while(--i > -1) {
+			String to = replacelangkeys[i], replacekey0 = replacelangkey.concat(to);
+			String from = sc.getStringOrDefault(replacekey0, to);
+			for(LangOptions lang : values()) {
+				lang.text.put(to, lang.text.get(from));
 			}
 		}
 	}
@@ -74,7 +94,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			msg = text.get(locale);
 		}
 		if(msg==null) {
-			msg = text.get("default");
+			msg = text.get(defaultlang);
 		}
 		if (msg==null || msg.isEmpty()) {
 			return;

@@ -24,10 +24,12 @@ public final class UploadmusicCommand implements CommandCallable {
 	private final AMusic amusic;
 	private final String uploaderhost;
 	private final ConcurrentHashMap<Player, UUID> uploaders = new ConcurrentHashMap<Player, UUID>();
+	private final ArrayList<String> emptytab;
 	
 	public UploadmusicCommand(AMusic amusic, String uploaderhost) {
 		this.amusic = amusic;
 		this.uploaderhost = uploaderhost;
+		emptytab = new ArrayList<String>(0);
 	}
 	
 	public void logoutUploader(Player uploader) {
@@ -40,7 +42,6 @@ public final class UploadmusicCommand implements CommandCallable {
 
 	@Override
 	public CommandResult process(CommandSource source, String arguments) throws CommandException {
-		String[] args = arguments.split(" ", 127);
 		if(uploaderhost == null) {
 			LangOptions.uploadmusic_disabled.sendMsg(source);
 			return CommandResult.success();
@@ -49,6 +50,7 @@ public final class UploadmusicCommand implements CommandCallable {
 			LangOptions.uploadmusic_nopermission.sendMsg(source);
 			return CommandResult.success();
 		}
+		String[] args = arguments.split(" ", 127);
 		if(args.length == 1 && "finish".equals(args[0])) {
 			args[0] = args[0].toLowerCase();
 			if(!(source instanceof Player)) {
@@ -108,10 +110,10 @@ public final class UploadmusicCommand implements CommandCallable {
 
 	@Override
 	public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition) throws CommandException {
-		String[] args = arguments.split(" ", 127);
 		if (!source.hasPermission("amusic.uploadmusic")) {
-			return null;
+			return emptytab;
 		}
+		String[] args = arguments.split(" ", 127);
 		ArrayList<String> tabcomplete = new ArrayList<String>();
 		if (args.length == 1) {
 			String arg0 = args[0].toLowerCase();

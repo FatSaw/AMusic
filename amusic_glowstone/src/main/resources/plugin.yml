@@ -1,0 +1,11 @@
+name: AMusic
+main: me.bomb.amusic.glowstone.AMusicGlowstone
+version: ${version}
+api-version: 1.13
+author: Bomb
+commands:
+  uploadmusic:
+  loadmusic:
+  playmusic:
+  playmusicuntrackable:
+  repeat:

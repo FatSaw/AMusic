@@ -27,6 +27,13 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.spongepowered</groupId>
+			<artifactId>spongecommon</artifactId>
+			<version>1.12.2-7.4.7</version>
+			<scope>provided</scope>
+			<classifier>dev</classifier>
+		</dependency>
+		<dependency>
 			<groupId>me.bomb</groupId>
 			<artifactId>amusic_core</artifactId>
 			<version>0.16</version>

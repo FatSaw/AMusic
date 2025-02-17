@@ -42,6 +42,8 @@ import me.bomb.amusic.velocity.command.UploadmusicCommand;
 @Plugin(id = "amusic", name = "AMusic", dependencies = {@Dependency(id = "protocolize")}, version = "0.16", authors = {"Bomb"})
 public final class AMusicVelocity {
 	
+	private static AMusic instance = null;
+	
 	private final ProxyServer server;
     private final Logger logger;
 	private final AMusic amusic;
@@ -56,15 +58,15 @@ public final class AMusicVelocity {
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
 		}
-		if(!musicdir.exists()) {
-			musicdir.mkdir();
-		}
-		if(!packeddir.exists()) {
-			packeddir.mkdir();
-		}
 		Configuration config = new Configuration(configfile, musicdir, packeddir, true, false);
+		this.configerrors = config.errors;
 		if(config.use) {
-			this.configerrors = config.errors;
+			if(!musicdir.exists()) {
+				musicdir.mkdir();
+			}
+			if(!packeddir.exists()) {
+				packeddir.mkdir();
+			}
 			this.uploaderhost = config.uploadhost;
 			playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 
@@ -86,8 +88,10 @@ public final class AMusicVelocity {
 			this.server = server;
 	        this.logger = logger;
 			LangOptions.loadLang(new VelocityMessageSender(), langfile, false);
+			if(AMusicVelocity.instance == null) {
+				AMusicVelocity.instance = this.amusic;
+			}
 		} else {
-			this.configerrors = null;
 			this.playerips = null;
 			this.uploaderhost = null;
 			this.resourcemanager = null;
@@ -98,13 +102,17 @@ public final class AMusicVelocity {
 		}
     }
 	
+	public final static AMusic API() {
+		return instance;
+	}
+	
 	@Subscribe
 	public void onProxyInitialization(ProxyInitializeEvent event) {
-		if(this.amusic == null) {
+		if(!this.configerrors.isEmpty()) {
+			logger.error("AMusic config initialization errors: \n".concat(configerrors));
 			return;
 		}
-		if(!this.configerrors.isEmpty()) {
-			logger.error("AMusic filed to load config options: \n".concat(configerrors));
+		if(this.amusic == null) {
 			return;
 		}
 		ProtocolRegistrationProvider protocolregistration = Protocolize.protocolRegistration();

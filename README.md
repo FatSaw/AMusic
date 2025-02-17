@@ -183,5 +183,5 @@ api.getPlayingSoundSize(UUID playeruuid); //get currently playing sound size of 
 api.getPlayingSoundRemain(UUID playeruuid); //get currently playing sound remaining time of player with uuid "playeruuid"
 api.openUploadSession(String playlistname); //open upload session.
 api.getUploadSessions(); //get upload sessions.
-api.closeUploadSession(UUID token); //close upload session
+api.closeUploadSession(UUID token, boolean save); //close upload session
 ```

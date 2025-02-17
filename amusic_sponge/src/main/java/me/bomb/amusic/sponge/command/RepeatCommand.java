@@ -22,9 +22,11 @@ import me.bomb.amusic.util.LangOptions;
 public final class RepeatCommand implements CommandCallable {
 	private final Server server;
 	private final AMusic amusic;
+	private final ArrayList<String> emptytab;
 	public RepeatCommand(Server server, AMusic amusic) {
 		this.server = server;
 		this.amusic = amusic;
+		emptytab = new ArrayList<String>(0);
 	}
 	
 	private void executeCommand(CommandSource source, String repeattype, UUID... targets) {
@@ -121,7 +123,7 @@ public final class RepeatCommand implements CommandCallable {
 	@Override
 	public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition) throws CommandException {
 		if (!source.hasPermission("amusic.repeat")) {
-			return null;
+			return emptytab;
 		}
 		String[] args = arguments.split(" ", 127);
 		ArrayList<String> tabcomplete = new ArrayList<String>();

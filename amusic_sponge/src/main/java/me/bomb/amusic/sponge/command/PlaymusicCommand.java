@@ -46,11 +46,11 @@ public final class PlaymusicCommand implements CommandCallable {
 	
 	@Override
 	public CommandResult process(CommandSource source, String arguments) throws CommandException {
-		String[] args = arguments.split(" ", 127);
 		if(!source.hasPermission("amusic.playmusic")) {
 			LangOptions.playmusic_nopermission.sendMsg(source);
 			return CommandResult.success();
 		}
+		String[] args = arguments.split(" ", 127);
 		if(args.length==1) {
 			if(args[0].equals("@s")) {
 				if(source instanceof Player) {
@@ -164,11 +164,11 @@ public final class PlaymusicCommand implements CommandCallable {
 	}
 	@Override
 	public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition) throws CommandException {
-		String[] args = arguments.split(" ", 127);
 		ArrayList<String> tabcomplete = new ArrayList<String>();
 		if (!source.hasPermission("amusic.playmusic")) {
 			return null;
 		}
+		String[] args = arguments.split(" ", 127);
 		if (args.length == 1) {
 			if (source instanceof Player) {
 				tabcomplete.add("@s");
@@ -229,7 +229,7 @@ public final class PlaymusicCommand implements CommandCallable {
 	}
 	@Override
 	public boolean testPermission(CommandSource source) {
-		return false;
+		return true;
 	}
 	@Override
 	public Optional<Text> getShortDescription(CommandSource source) {

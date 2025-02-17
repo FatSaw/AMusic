@@ -11,5 +11,6 @@
 		<module>amusic_core</module>
 		<module>amusic_velocity</module>
 		<module>amusic_bukkit</module>
+		<module>amusic_glowstone</module>
 	</modules>
 </project>

@@ -55,6 +55,8 @@ import me.bomb.amusic.source.SoundSource;
 
 public final class AMusicBukkit extends JavaPlugin {
 	
+	private static AMusic instance = null;
+	
 	private final AMusic amusic;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final boolean waitacception;
@@ -74,16 +76,16 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(!plugindir.exists()) {
 			plugindir.mkdirs();
 		}
-		if(!musicdir.exists()) {
-			musicdir.mkdir();
-		}
-		if(!packeddir.exists()) {
-			packeddir.mkdir();
-		}
 		boolean waitacception = ver == 7 ? false : true;
 		Configuration config = new Configuration(configfile, musicdir, packeddir, waitacception, true);
+		this.configerrors = config.errors;
 		if(config.use) {
-			this.configerrors = config.errors;
+			if(!musicdir.exists()) {
+				musicdir.mkdir();
+			}
+			if(!packeddir.exists()) {
+				packeddir.mkdir();
+			}
 			if(config.connectuse) {
 				this.waitacception = false;
 				this.playerips = null;
@@ -164,8 +166,10 @@ public final class AMusicBukkit extends JavaPlugin {
 			break;
 			}
 			LangOptions.loadLang(messagesender, langfile, ver > 15);
+			if(AMusicBukkit.instance == null) {
+				AMusicBukkit.instance = this.amusic;
+			}
 		} else {
-			this.configerrors = null;
 			this.waitacception = false;
 			this.playerips = null;
 			this.uploaderhost = null;
@@ -174,15 +178,19 @@ public final class AMusicBukkit extends JavaPlugin {
 			this.amusic = null;
 		}
 	}
+	
+	public final static AMusic API() {
+		return instance;
+	}
 
 	//PLUGIN INIT START
 	public void onEnable() {
-		if(this.amusic == null) {
-			return;
-		}
 		Server server = Bukkit.getServer();
 		if(!this.configerrors.isEmpty()) {
-			server.getLogger().severe("AMusic filed to load config options: \n".concat(configerrors));
+			server.getLogger().severe("AMusic config initialization errors: \n".concat(configerrors));
+			return;
+		}
+		if(this.amusic == null) {
 			return;
 		}
 		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());

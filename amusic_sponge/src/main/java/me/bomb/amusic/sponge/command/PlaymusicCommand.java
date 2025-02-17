@@ -25,10 +25,12 @@ public final class PlaymusicCommand implements CommandCallable {
 	private final Server server;
 	private final AMusic amusic;
 	private final boolean trackable;
+	private final ArrayList<String> emptytab;
 	public PlaymusicCommand(Server server, AMusic amusic, boolean trackable) {
 		this.server = server;
 		this.amusic = amusic;
 		this.trackable = trackable;
+		emptytab = new ArrayList<String>(0);
 	}
 	
 	private void executeCommand(String soundname, UUID... targetuuids) {
@@ -166,7 +168,7 @@ public final class PlaymusicCommand implements CommandCallable {
 	public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition) throws CommandException {
 		ArrayList<String> tabcomplete = new ArrayList<String>();
 		if (!source.hasPermission("amusic.playmusic")) {
-			return null;
+			return emptytab;
 		}
 		String[] args = arguments.split(" ", 127);
 		if (args.length == 1) {

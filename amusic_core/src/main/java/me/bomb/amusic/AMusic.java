@@ -135,5 +135,5 @@ public interface AMusic {
 	 * 
 	 * @return true if session closed successfully.
 	 */
-	public boolean closeUploadSession(UUID token);
+	public boolean closeUploadSession(UUID token, boolean save);
 }

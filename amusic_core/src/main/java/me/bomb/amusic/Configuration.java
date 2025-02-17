@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -17,6 +18,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 
+import javax.net.ServerSocketFactory;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -50,10 +52,10 @@ public final class Configuration {
 	public final boolean encodetracksasync;
 	
 	protected final byte[] tokensalt;
-	protected final SSLServerSocketFactory sslserverfactory;
+	protected final ServerSocketFactory serverfactory;
 	
-	public Configuration(File musicdir, File packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, boolean uploadstrictaccess, boolean sendpackstrictaccess, File encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadtimeout, int uploadlimitsize, int uploadlimitcount, int packsizelimit, byte encoderchannels, int encoderbitrate, int encodersamplingrate, boolean encodetracksasync, byte[] tokensalt, SSLServerSocketFactory sslserverfactory) {
-		this.errors = null;
+	public Configuration(File musicdir, File packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, boolean uploadstrictaccess, boolean sendpackstrictaccess, File encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadtimeout, int uploadlimitsize, int uploadlimitcount, int packsizelimit, byte encoderchannels, int encoderbitrate, int encodersamplingrate, boolean encodetracksasync, byte[] tokensalt, ServerSocketFactory serverfactory) {
+		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
@@ -89,31 +91,35 @@ public final class Configuration {
 		this.encodersamplingrate = encodersamplingrate;
 		this.encodetracksasync = encodetracksasync;
 		this.tokensalt = tokensalt;
-		this.sslserverfactory = sslserverfactory;
+		this.serverfactory = serverfactory;
 	}
 	
 	public Configuration(final File configfile, final File musicdir, final File packeddir, final boolean defaultwaitacception, final boolean defaultremoteclient) {
 		byte[] bytes = null;
+		final StringBuilder errors = new StringBuilder();
 		if (!configfile.exists()) {
-			InputStream is = Configuration.class.getClassLoader().getResourceAsStream("config.yml");
+			InputStream is = null;
 			try {
+				is = Configuration.class.getClassLoader().getResourceAsStream("config.yml");
 				bytes = new byte[0x1000];
 				bytes = Arrays.copyOf(bytes, is.read(bytes));
-			} catch (IOException e) {
-			}
-			try {
-				is.close();
-			} catch (IOException e) {
-			}
-			try {
 				FileOutputStream fos = new FileOutputStream(configfile, false);
 				fos.write(bytes);
 				fos.close();
 			} catch (IOException e) {
+				appendError("Filed to load default config", errors);
+			} finally {
+				if(is != null) {
+					try {
+						is.close();
+					} catch (IOException e) {
+					}
+				}
 			}
 		} else {
+			InputStream is = null;
 			try {
-				InputStream is = new FileInputStream(configfile);
+				is = new FileInputStream(configfile);;
 				long filesize = configfile.length();
 				if(filesize > 0x00010000) {
 					filesize = 0x00010000;
@@ -125,13 +131,19 @@ public final class Configuration {
 				}
 				is.close();
 			} catch (IOException e) {
+				appendError("Filed to load default config", errors);
+			} finally {
+				if(is != null) {
+					try {
+						is.close();
+					} catch (IOException e) {
+					}
+				}
 			}
 		}
-		SimpleConfiguration sc = new SimpleConfiguration(bytes);
-		bytes = null;
-		final StringBuilder errors = new StringBuilder();
-		this.use = sc.getBooleanOrError("amusic\0use", errors);
-		if(this.use) {
+		SimpleConfiguration sc;
+		if(bytes != null && (sc = new SimpleConfiguration(bytes)).getBooleanOrError("amusic\0use", errors)) {
+			this.use = true;
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
@@ -181,9 +193,29 @@ public final class Configuration {
 							sslserverfactory = null;
 						}
 					}
-					this.sslserverfactory = sslserverfactory;
+					this.serverfactory = sslserverfactory;
 				} else {
-					this.sslserverfactory = null;
+					this.serverfactory = new ServerSocketFactory() {
+						@Override
+						public ServerSocket createServerSocket() throws IOException {
+							return new ServerSocket();
+						}
+						
+						@Override
+						public ServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) throws IOException {
+							return new ServerSocket(port, backlog, ifAddress);
+						}
+						
+						@Override
+						public ServerSocket createServerSocket(int port, int backlog) throws IOException {
+							return new ServerSocket(port, backlog);
+						}
+						
+						@Override
+						public ServerSocket createServerSocket(int port) throws IOException {
+							return new ServerSocket(port);
+						}
+					};
 				}
 				
 				InetAddress uploadifip = null;
@@ -205,7 +237,7 @@ public final class Configuration {
 			} else {
 				this.uploadhost = null;
 				this.uploadhttps = false;
-				this.sslserverfactory = null;
+				this.serverfactory = null;
 				this.uploadifip = null;
 				this.uploadport = 0;
 				this.uploadbacklog = 0;
@@ -298,6 +330,7 @@ public final class Configuration {
 			this.clientcache = sc.getBooleanOrError("amusic\0resourcepack\0cache\0client", errors);
 			
 		} else {
+			this.use = false;
 			this.musicdir = null;
 			this.packeddir = null;
 			this.uploaduse = false;
@@ -305,7 +338,7 @@ public final class Configuration {
 			this.encoderuse = false;
 			this.uploadhost = null;
 			this.uploadhttps = false;
-			this.sslserverfactory = null;
+			this.serverfactory = null;
 			this.uploadifip = null;
 			this.uploadport = 0;
 			this.uploadbacklog = 0;

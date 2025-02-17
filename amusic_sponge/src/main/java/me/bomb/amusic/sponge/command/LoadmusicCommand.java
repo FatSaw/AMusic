@@ -49,11 +49,11 @@ public final class LoadmusicCommand implements CommandCallable {
 
 	@Override
 	public CommandResult process(CommandSource source, String arguments) throws CommandException {
-		String[] args = arguments.split(" ", 127);
 		if (!source.hasPermission("amusic.loadmusic")) {
 			LangOptions.loadmusic_nopermission.sendMsg(source);
 			return CommandResult.success();
 		}
+		String[] args = arguments.split(" ", 127);
 		if (args.length > 1) {
 			UUID targetuuid = null;
 			if (!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update")) {
@@ -106,12 +106,12 @@ public final class LoadmusicCommand implements CommandCallable {
 
 	@Override
 	public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition) throws CommandException {
-		String[] args = arguments.split(" ", 127);
 		if (!source.hasPermission("amusic.loadmusic")) {
 			return null;
 		}
-		ArrayList<String> tabcomplete = new ArrayList<String>();
-		if (args.length == 1) {
+		String[] args = arguments.split(" ", 127);
+		List<String> tabcomplete = new ArrayList<String>();
+		if (args.length <= 1) {
 			if (source instanceof Player) {
 				tabcomplete.add("@s");
 			}
@@ -124,7 +124,6 @@ public final class LoadmusicCommand implements CommandCallable {
 			}
 			return tabcomplete;
 		}
-		
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
 			String[] playlists = amusic.getPlaylists();
@@ -161,7 +160,7 @@ public final class LoadmusicCommand implements CommandCallable {
 
 	@Override
 	public boolean testPermission(CommandSource source) {
-		return false;
+		return true;
 	}
 
 	@Override

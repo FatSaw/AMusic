@@ -3,10 +3,13 @@ package me.bomb.amusic.uploader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.net.ServerSocketFactory;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
@@ -15,24 +18,28 @@ public final class UploadManager extends Thread {
 	private final int expiretime, limitsize, limitcount;
 	private final File musicdir;
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
+	private final UploaderServer server;
 	private boolean run;
 	
-	public UploadManager(int expiretime, int limitsize, int limitcount, File musicdir) {
+	public UploadManager(int expiretime, int limitsize, int limitcount, File musicdir, final ConcurrentHashMap<Object, InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final ServerSocketFactory serverfactory) {
 		this.expiretime = expiretime;
 		this.limitsize = limitsize;
 		this.limitcount = limitcount;
 		this.musicdir = musicdir;
-		sessions = new ConcurrentHashMap<>();
+		this.sessions = new ConcurrentHashMap<>();
+		this.server = new UploaderServer(this, onlineips, ip, port, backlog, serverfactory);
 	}
 	
 	@Override
 	public void start() {
 		run = true;
 		super.start();
+		server.start();
 	}
 
 	public void end() {
 		run = false;
+		server.end();
 	}
 	
 	@Override
@@ -46,7 +53,7 @@ public final class UploadManager extends Thread {
 		}
 	}
 	
-	public UUID generateToken(String targetplaylist) {
+	public UUID startSession(String targetplaylist) {
 		final UUID token = UUID.randomUUID();
 		targetplaylist = filterName(targetplaylist);
 		if(targetplaylist == null) {
@@ -72,11 +79,14 @@ public final class UploadManager extends Thread {
 		}
 	}
 	
-	public boolean endSession(UUID token) {
+	public boolean endSession(UUID token, boolean save) {
 		UploadSession session;
 		ConcurrentHashMap<String, byte[]> uploadentrys;
 		if(token == null || (session = sessions.remove(token)) == null || (uploadentrys = session.endSession()) == null) {
 			return false;
+		}
+		if(!save) {
+			return true;
 		}
 		File musicdir = new File(this.musicdir, session.targetplaylist);
 		if(!musicdir.exists()) {
@@ -104,15 +114,6 @@ public final class UploadManager extends Thread {
 				}
 			}
 		}
-		return true;
-	}
-	
-	public boolean remove(UUID token) {
-		UploadSession session = sessions.remove(token);
-		if(session == null) {
-			return false;
-		}
-		session.endSession();
 		return true;
 	}
 	

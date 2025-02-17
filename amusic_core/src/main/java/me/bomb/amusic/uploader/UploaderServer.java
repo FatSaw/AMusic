@@ -2,16 +2,17 @@ package me.bomb.amusic.uploader;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class UploaderServer extends Thread implements Uploader {
-	
+import javax.net.ServerSocketFactory;
+
+final class UploaderServer extends Thread {
+
 	private final static byte[] noaccess = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-	
+	private final ServerSocketFactory serverfactory;
 	private final UploadManager uploadmanager;
 	private final ConcurrentHashMap<Object, InetAddress> onlineips;
 	private final InetAddress ip;
@@ -19,7 +20,8 @@ public final class UploaderServer extends Thread implements Uploader {
 	private boolean run = false;
 	private ServerSocket server;
 
-	public UploaderServer(UploadManager uploadmanager, ConcurrentHashMap<Object, InetAddress> onlineips, InetAddress ip, int port, int backlog) {
+	protected UploaderServer(final UploadManager uploadmanager, final ConcurrentHashMap<Object, InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final ServerSocketFactory serverfactory) {
+		this.serverfactory = serverfactory;
 		this.uploadmanager = uploadmanager;
 		this.onlineips = onlineips;
 		this.ip = ip;
@@ -31,24 +33,22 @@ public final class UploaderServer extends Thread implements Uploader {
 	public void start() {
 		run = true;
 		super.start();
-		this.uploadmanager.start();
 	}
 
 	public void run() {
 		while (run) {
 			try {
-				server = new ServerSocket();
-				server.bind(new InetSocketAddress(ip, port), backlog);
-			} catch (IOException | SecurityException | IllegalArgumentException e) {
+				server = serverfactory.createServerSocket(port, backlog, ip);
+			} catch (IOException | SecurityException | IllegalArgumentException | NullPointerException e) {
 				e.printStackTrace();
 				return;
 			}
 			while (!server.isClosed()) {
 				try {
+					Socket connected = server.accept();
 					if (this.onlineips == null) {
-						new PageSender(uploadmanager, server.accept()).start();
+						new PageSender(uploadmanager, connected).start();
 					} else {
-						Socket connected = server.accept();
 						if (onlineips.values().contains(connected.getInetAddress())) {
 							new PageSender(uploadmanager, connected).start();
 						} else {
@@ -56,6 +56,7 @@ public final class UploaderServer extends Thread implements Uploader {
 							connected.close();
 						}
 					}
+					
 				} catch (IOException e) {
 				}
 			}
@@ -68,12 +69,12 @@ public final class UploaderServer extends Thread implements Uploader {
 
 	public void end() {
 		run = false;
-		if(server==null) return;
+		if (server == null)
+			return;
 		try {
 			server.close();
 		} catch (IOException e) {
 		}
-		this.uploadmanager.end();
 	}
 
 }

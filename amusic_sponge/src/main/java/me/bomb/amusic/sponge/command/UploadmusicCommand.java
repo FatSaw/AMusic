@@ -140,7 +140,7 @@ public final class UploadmusicCommand implements CommandCallable {
 
 	@Override
 	public boolean testPermission(CommandSource source) {
-		return false;
+		return true;
 	}
 
 	@Override

@@ -847,9 +847,9 @@ public final class ClientAMusic implements AMusic {
 	}
 
 	@Override
-	public boolean closeUploadSession(UUID token) {
+	public boolean closeUploadSession(UUID token, boolean save) {
 		long msb = token.getMostSignificantBits(), lsb = token.getLeastSignificantBits();
-		byte[] buf = new byte[0x10];
+		byte[] buf = new byte[0x11];
 		buf[0x00] = (byte) msb;
 		msb>>=8;
 		buf[0x01] = (byte) msb;
@@ -880,6 +880,7 @@ public final class ClientAMusic implements AMusic {
 		buf[0x0E] = (byte) lsb;
 		lsb>>=8;
 		buf[0x0F] = (byte) lsb;
+		buf[0x10] = (byte) (save ? 1 : 0);
 		buf = this.sendPacket((byte)0x13, buf, false, 1, false);
 		return buf[0] == 1;
 	}

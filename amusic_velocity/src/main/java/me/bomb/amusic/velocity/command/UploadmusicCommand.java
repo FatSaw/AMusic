@@ -46,7 +46,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			Player player = (Player)sender;
 			final UUID token = uploaders.remove(player);
-			if(token == null || !amusic.closeUploadSession(token)) {
+			if(token == null || !amusic.closeUploadSession(token, true)) {
 				LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
 				return;
 			}
@@ -85,7 +85,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				(amusic.closeUploadSession(token) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+				(amusic.closeUploadSession(token, true) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
 			} catch(IllegalArgumentException ex) {
 				LangOptions.uploadmusic_finish_token_invalid.sendMsg(sender);
 			}
@@ -133,7 +133,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 		if(token == null) {
 			return;
 		}
-		amusic.closeUploadSession(token);
+		amusic.closeUploadSession(token, false);
 	}
 	
 }

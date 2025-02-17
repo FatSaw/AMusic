@@ -16,7 +16,6 @@ public class LegacyMessageSender_1_11_R1 implements MessageSender {
 		IChatBaseComponent chatbasecomponent = ChatSerializer.a(message);
 		if(target instanceof CraftPlayer) {
 			PlayerConnection playerconnection = ((CraftPlayer)target).getHandle().playerConnection;
-
 			playerconnection.sendPacket(new PacketPlayOutChat(chatbasecomponent,(byte) 0));
 			return;
 		}

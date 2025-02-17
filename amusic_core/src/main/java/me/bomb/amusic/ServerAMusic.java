@@ -792,7 +792,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			return new byte[0];
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
-		UUID token = uploadermanager.generateToken(playlistname);
+		UUID token = uploadermanager.startSession(playlistname);
 		long msb = token.getMostSignificantBits(), lsb = token.getLeastSignificantBits();
 		byte[] response = new byte[0x10];
 		response[0x00] = (byte) msb;
@@ -876,43 +876,44 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		return response;
 	}
 	
-	public final byte[] closeUploadSessionBytes(byte[] tokenb) {
-		if(uploadermanager == null || tokenb.length != 16) {
+	public final byte[] closeUploadSessionBytes(byte[] tokensaveb) {
+		if(uploadermanager == null || tokensaveb.length != 17) {
 			return new byte[0];
 		}
+		boolean save = tokensaveb[0x10] == 1;
 		long lsb = 0L, msb = 0L;
-		lsb = tokenb[0x0F] & 0xFF;
+		lsb = tokensaveb[0x0F] & 0xFF;
 		lsb<<=8;
-		lsb |= tokenb[0x0E] & 0xFF;
+		lsb |= tokensaveb[0x0E] & 0xFF;
 		lsb<<=8;
-		lsb |= tokenb[0x0D] & 0xFF;
+		lsb |= tokensaveb[0x0D] & 0xFF;
 		lsb<<=8;
-		lsb |= tokenb[0x0C] & 0xFF;
+		lsb |= tokensaveb[0x0C] & 0xFF;
 		lsb<<=8;
-		lsb |= tokenb[0x0B] & 0xFF;
+		lsb |= tokensaveb[0x0B] & 0xFF;
 		lsb<<=8;
-		lsb |= tokenb[0x0A] & 0xFF;
+		lsb |= tokensaveb[0x0A] & 0xFF;
 		lsb<<=8;
-		lsb |= tokenb[0x09] & 0xFF;
+		lsb |= tokensaveb[0x09] & 0xFF;
 		lsb<<=8;
-		lsb |= tokenb[0x08] & 0xFF;
-		msb = tokenb[0x07] & 0xFF;
+		lsb |= tokensaveb[0x08] & 0xFF;
+		msb = tokensaveb[0x07] & 0xFF;
 		msb<<=8;
-		msb |= tokenb[0x06] & 0xFF;
+		msb |= tokensaveb[0x06] & 0xFF;
 		msb<<=8;
-		msb |= tokenb[0x05] & 0xFF;
+		msb |= tokensaveb[0x05] & 0xFF;
 		msb<<=8;
-		msb |= tokenb[0x04] & 0xFF;
+		msb |= tokensaveb[0x04] & 0xFF;
 		msb<<=8;
-		msb |= tokenb[0x03] & 0xFF;
+		msb |= tokensaveb[0x03] & 0xFF;
 		msb<<=8;
-		msb |= tokenb[0x02] & 0xFF;
+		msb |= tokensaveb[0x02] & 0xFF;
 		msb<<=8;
-		msb |= tokenb[0x01] & 0xFF;
+		msb |= tokensaveb[0x01] & 0xFF;
 		msb<<=8;
-		msb |= tokenb[0x00] & 0xFF;
+		msb |= tokensaveb[0x00] & 0xFF;
 		final UUID token = new UUID(msb, lsb);
-		return new byte[] {uploadermanager.endSession(token) ? (byte) 1 : (byte) 0};
+		return new byte[] {uploadermanager.endSession(token, save) ? (byte) 1 : (byte) 0};
 	}
 	
 	@Override
@@ -965,7 +966,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		}
 		ibuf = null;
 		
-		if(packetid == 0x07) {
+		if(packetid == 0x07 || packetid == 0x13) {
 			ibuf = new byte[0x11];
 			is.read(ibuf);
 		} else if(packetid == 0x04 || packetid == 0x06 || packetid == 0x08 || packetid == 0x09 || packetid == 0x0A || packetid == 0x0C || packetid == 0x0D || packetid == 0x0E) {

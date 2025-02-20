@@ -63,13 +63,13 @@ public final class PlaymusicTabComplete implements TabCompleter {
 						
 						if(lastspace == 0) {
 							for (String soundname : soundnames) {
-								if (soundname.startsWith(args[1]) && soundname.indexOf('§') == -1) {
+								if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
 									tabcomplete.add(soundname);
 								}
 							}
 						} else {
 							for (String soundname : soundnames) {
-								if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf('§') == -1) {
+								if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
 									soundname = soundname.substring(lastspace);
 									tabcomplete.add(soundname);
 								}

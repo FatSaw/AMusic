@@ -132,13 +132,13 @@ public final class LoadmusicCommand implements SimpleCommand {
 				++lastspace;
 				if(lastspace == 0) {
 					for (String playlist : playlists) {
-						if (playlist.startsWith(args[1]) && playlist.indexOf('§') == -1) {
+						if (playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
 							tabcomplete.add(playlist);
 						}
 					}
 				} else {
 					for (String playlist : playlists) {
-						if (lastspace < playlist.length() && playlist.startsWith(args[1]) && playlist.indexOf('§') == -1) {
+						if (lastspace < playlist.length() && playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
 							playlist = playlist.substring(lastspace);
 							tabcomplete.add(playlist);
 						}

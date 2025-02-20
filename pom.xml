@@ -5,7 +5,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.bomb</groupId>
 	<artifactId>amusic</artifactId>
-	<version>0.16</version>
+	<properties>
+		<project.build.sourceEncoding>ASCII</project.build.sourceEncoding>
+    	<project.reporting.outputEncoding>ASCII</project.reporting.outputEncoding>
+    	<revision>0.17</revision>
+  	</properties>
+	<version>${revision}</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>amusic_core</module>

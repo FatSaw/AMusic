@@ -1,6 +1,6 @@
 name: AMusic
 main: me.bomb.amusic.bukkit.AMusicBukkit
-version: ${version}
+version: ${revision}
 api-version: 1.13
 author: Bomb
 folia-supported: true

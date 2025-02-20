@@ -1,0 +1,14 @@
+[
+    {
+        "modid": "amusic",
+        "name": "AMusic",
+        "version": "${revision}",
+        "description": "Music through resourcepack",
+        "dependencies": [
+            "spongeapi@7.4.0"
+        ],
+        "requiredMods": [
+            "spongeapi@7.4.0"
+        ]
+    }
+]

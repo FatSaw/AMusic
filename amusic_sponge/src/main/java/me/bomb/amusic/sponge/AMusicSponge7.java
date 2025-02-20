@@ -35,11 +35,9 @@ import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppedServerEvent;
-import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.Player;
 
-@Plugin(id = "amusic", name = "AMusic", version = "0.16", description = "Music through resourcepack")
 public final class AMusicSponge7 {
 	
 	private static AMusic instance = null;

@@ -19,7 +19,7 @@ public final class UploadManager extends Thread {
 	private final File musicdir;
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
 	private final UploaderServer server;
-	private boolean run;
+	private volatile boolean run;
 	
 	public UploadManager(int expiretime, int limitsize, int limitcount, File musicdir, final ConcurrentHashMap<Object, InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final ServerSocketFactory serverfactory) {
 		this.expiretime = expiretime;

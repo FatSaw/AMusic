@@ -17,7 +17,7 @@ final class UploaderServer extends Thread {
 	private final ConcurrentHashMap<Object, InetAddress> onlineips;
 	private final InetAddress ip;
 	private final int port, backlog;
-	private boolean run = false;
+	private volatile boolean run = false;
 	private ServerSocket server;
 
 	protected UploaderServer(final UploadManager uploadmanager, final ConcurrentHashMap<Object, InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final ServerSocketFactory serverfactory) {

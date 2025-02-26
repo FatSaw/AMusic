@@ -4,9 +4,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
-public final class LocalUnconvertedSource extends SoundSource<File> {
+public final class LocalUnconvertedSource extends SoundSource {
 	
 	private final Runtime runtime;
 	private final File musicdir, fmpegbinary;
@@ -99,8 +100,8 @@ public final class LocalUnconvertedSource extends SoundSource<File> {
 	}
 	
 	@Override
-	public File getSource() {
-		return this.musicdir;
+	public Path getSource() {
+		return this.musicdir.toPath();
 	}
 
 }

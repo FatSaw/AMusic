@@ -85,7 +85,7 @@ public final class ResourceFactory implements Runnable {
 			statusreport.onStatusResponse(EnumStatus.PACKED);
 			return;
 		}
-		if(dispatcher.dispatch(this.id, this.targets, dataentry.sounds, dataentry.datapath, dataentry.sha1)) {
+		if(dispatcher.dispatch(dataentry, this.targets)) {
 			if(statusreport == null) {
 				return;
 			}

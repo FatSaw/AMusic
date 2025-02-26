@@ -49,7 +49,7 @@ public final class PositionTracker extends Thread {
 		return playeruuid == null ? null : playlistinfo.get(playeruuid);
 	}
 
-	private boolean run = false;
+	private volatile boolean run = false;
 
 	protected PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper) {
 		this.soundstarter = soundstarter;
@@ -92,8 +92,7 @@ public final class PositionTracker extends Thread {
 						Playing playing = entry.getValue();
 						if (--playing.remaining < 0) {
 							entrysiterator.remove();
-							RepeatType repeattype;
-							repeattype = repeaters.get(uuid);
+							RepeatType repeattype = repeaters.get(uuid);
 							if (repeattype != null) {
 								playMusic(uuid, repeattype.next(playing.currenttrack, playing.maxid));
 							}

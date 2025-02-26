@@ -4,11 +4,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class LocalUnconvertedParallelSource extends SoundSource<File> {
+public final class LocalUnconvertedParallelSource extends SoundSource {
 	
 	private final Runtime runtime;
 	private final File musicdir, fmpegbinary;
@@ -130,10 +131,10 @@ public final class LocalUnconvertedParallelSource extends SoundSource<File> {
 		}
 		return false;
 	}
-	
+
 	@Override
-	public File getSource() {
-		return this.musicdir;
+	public Path getSource() {
+		return this.musicdir.toPath();
 	}
 
 }

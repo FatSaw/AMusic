@@ -9,8 +9,8 @@ final class UploadSession {
 	protected final String targetplaylist;
 	private final ConcurrentHashMap<String, byte[]> uploadentrys;
 	private final AtomicInteger size = new AtomicInteger(0);
-	private boolean end;
-	private long lastaccesstime;
+	private volatile boolean end;
+	private volatile long lastaccesstime;
 	
 	protected UploadSession(int limitsize, int limitcount, String targetplaylist) {
 		this.limitsize = limitsize;

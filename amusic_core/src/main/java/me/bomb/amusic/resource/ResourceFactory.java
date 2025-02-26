@@ -1,26 +1,24 @@
 package me.bomb.amusic.resource;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.UUID;
 
+import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.DataEntry;
-import me.bomb.amusic.packedinfo.DataStorage;
 import me.bomb.amusic.source.SoundSource;
-
-import static me.bomb.amusic.util.NameFilter.filterName;
-import static me.bomb.amusic.util.Base64Utils.toBase64Url;
 
 public final class ResourceFactory implements Runnable {
 	
 	private final String id;
 	private final UUID[] targets;
-	private final DataStorage datamanager;
+	private final Data datamanager;
 	private final ResourceDispatcher dispatcher;
-	private final SoundSource<?> source;
+	private final SoundSource source;
 	private final boolean update;
 	private final StatusReport statusreport;
 	
-	public ResourceFactory(String id, UUID[] targets, DataStorage datamanager, ResourceDispatcher dispatcher, SoundSource<?> source, boolean update, StatusReport statusreport, boolean async) {
+	public ResourceFactory(String id, UUID[] targets, Data datamanager, ResourceDispatcher dispatcher, SoundSource source, boolean update, StatusReport statusreport, boolean async) {
 		this.id = id;
 		this.targets = targets;
 		this.datamanager = datamanager;
@@ -37,34 +35,27 @@ public final class ResourceFactory implements Runnable {
 
 	@Override
 	public void run() {
-		String id = toBase64Url(this.id);
-		File resourcefile = new File(datamanager.datadirectory, id.concat(".zip"));
-		
 		DataEntry dataentry = datamanager.getPlaylist(this.id);
 		if(update) {
-			final String name = dataentry == null ? filterName(this.id) : dataentry.name;
-			Object f = source.getSource();
-			File sourcearchive = f instanceof File ? new File((File) f, name.concat(".zip")) : null;
-			ResourcePacker resourcepacker = null;
-			if(!datamanager.update(this.id, source.exists(this.id) ? resourcepacker = new ResourcePacker(source, this.id, resourcefile, sourcearchive, dispatcher.resourcemanager) : null)) {
+			if(datamanager.lockwrite) {
 				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
 				return;
 			}
+			ResourcePacker resourcepacker = datamanager.createPacker(this.id, source);
+			final boolean changed = datamanager.update(this.id, resourcepacker);
+			
 			dataentry = datamanager.getPlaylist(this.id);
 			if(dataentry == null) {
-				if(resourcefile.exists()) {
-					resourcefile.delete();
-					if(statusreport == null) {
-						return;
-					}
-					statusreport.onStatusResponse(EnumStatus.REMOVED);
-					return;
+				FileSystemProvider fs = resourcepacker.resourcefile.getFileSystem().provider();
+				try {
+					EnumStatus status = fs.deleteIfExists(resourcepacker.resourcefile) ? EnumStatus.REMOVED : EnumStatus.NOTEXSIST;
+					statusreport.onStatusResponse(status);
+				} catch (IOException e) {
 				}
-				if(statusreport == null) {
-					return;
-				}
-				statusreport.onStatusResponse(EnumStatus.NOTEXSIST);
 				return;
+			}
+			if(changed) {
+				dispatcher.resourcemanager.putCache(this.id, resourcepacker.resourcepack);
 			}
 			if(targets == null) {
 				if(statusreport == null) {
@@ -94,7 +85,7 @@ public final class ResourceFactory implements Runnable {
 			statusreport.onStatusResponse(EnumStatus.PACKED);
 			return;
 		}
-		if(dispatcher.dispatch(this.id, this.targets, dataentry.sounds, resourcefile, dataentry.sha1)) {
+		if(dispatcher.dispatch(this.id, this.targets, dataentry.sounds, dataentry.datapath, dataentry.sha1)) {
 			if(statusreport == null) {
 				return;
 			}

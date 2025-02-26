@@ -1,13 +1,13 @@
 package me.bomb.amusic.resource;
 
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
+import me.bomb.amusic.packedinfo.DataEntry;
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
@@ -75,36 +75,22 @@ public final class ResourceDispatcher {
 		this.dispatch(id, targets, sounds, resource, sha1);
 		return true;
 	}
-
+	
 	/**
 	 * Dispatch resourcepack file to targets
 	 * File may be cached
 	 */
-	public final boolean dispatch(final String id, final UUID[] targets, final SoundInfo[] sounds, final Path resourcefile, final byte[] sha1) {
+	public final boolean dispatch(final DataEntry dataentry, final UUID[] targets) {
 		byte[] resource;
 		final boolean notcached;
-		if(notcached = (resource = resourcemanager.getCached(id)) == null && (resource = resourcemanager.readResource(resourcefile)) == null) {
+		if(notcached = (resource = resourcemanager.getCached(dataentry.name)) == null && (resource = dataentry.getPack()) == null) {
 			//no valid resource found
 			return false;
 		}
 		if(notcached) {
-			//check loaded resource hash
-			final MessageDigest sha1hash;
-			try {
-				sha1hash = MessageDigest.getInstance("SHA-1");
-			} catch (NoSuchAlgorithmException e) {
-				return false;
-			}
-			byte i = 20;
-			byte[] filesha1 = sha1hash.digest(resource);
-			while(--i > -1) {
-				if(filesha1[i] != sha1[i]) {
-					return false;
-				}
-			}
-			resourcemanager.putCache(id, resource);
+			resourcemanager.putCache(dataentry.name, resource);
 		}
-		this.dispatch(id, targets, sounds, resource, sha1);
+		this.dispatch(dataentry.name, targets, dataentry.sounds, resource, dataentry.sha1);
 		return true;
 	}
 

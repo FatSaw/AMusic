@@ -1,11 +1,12 @@
 package me.bomb.amusic.resourceserver;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.spi.FileSystemProvider;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -28,24 +29,38 @@ public final class ResourceManager {
 		accepted = waitacception ? new ConcurrentSkipListSet<UUID>() : null;
 	}
 	
-	public byte[] readResource(File fileresource) {
-		if(fileresource == null || !fileresource.isFile()) {
+	public byte[] readResource(Path fileresource) {
+		if(fileresource == null) {
 			return null;
 		}
-		long filesize = fileresource.length();
+		FileSystemProvider fs = fileresource.getFileSystem().provider();
+		BasicFileAttributes attributes;
+		try {
+			attributes = fs.readAttributes(fileresource, BasicFileAttributes.class);
+		} catch (IOException e) {
+			return null;
+		}
+		if(attributes.isDirectory()) {
+			return null;
+		}
+		long filesize = attributes.size();
 		if(filesize > maxbuffersize) {
 			filesize = maxbuffersize;
 		}
 		byte[] resource = new byte[(int) filesize];
+		InputStream is = null;
 		try {
-			FileInputStream streamresource = new FileInputStream(fileresource);
-			final int size = streamresource.read(resource);
-			streamresource.close();
-			if(size < filesize) {
-				resource = Arrays.copyOf(resource, size);
-			}
+			is = fs.newInputStream(fileresource);
+			is.read(resource);
 		} catch (IOException e) {
-			return null;
+			resource = null;
+		} finally {
+			if(is != null) {
+				try {
+					is.close();
+				} catch (IOException e) {
+				}
+			}
 		}
 		return resource;
 	}

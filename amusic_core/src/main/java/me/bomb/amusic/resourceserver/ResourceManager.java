@@ -1,10 +1,5 @@
 package me.bomb.amusic.resourceserver;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.spi.FileSystemProvider;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -27,42 +22,6 @@ public final class ResourceManager {
 		resources = servercache ? new ConcurrentHashMap<String, byte[]>() : null;
 		this.salt = salt;
 		accepted = waitacception ? new ConcurrentSkipListSet<UUID>() : null;
-	}
-	
-	public byte[] readResource(Path fileresource) {
-		if(fileresource == null) {
-			return null;
-		}
-		FileSystemProvider fs = fileresource.getFileSystem().provider();
-		BasicFileAttributes attributes;
-		try {
-			attributes = fs.readAttributes(fileresource, BasicFileAttributes.class);
-		} catch (IOException e) {
-			return null;
-		}
-		if(attributes.isDirectory()) {
-			return null;
-		}
-		long filesize = attributes.size();
-		if(filesize > maxbuffersize) {
-			filesize = maxbuffersize;
-		}
-		byte[] resource = new byte[(int) filesize];
-		InputStream is = null;
-		try {
-			is = fs.newInputStream(fileresource);
-			is.read(resource);
-		} catch (IOException e) {
-			resource = null;
-		} finally {
-			if(is != null) {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-			}
-		}
-		return resource;
 	}
 	
 	/**

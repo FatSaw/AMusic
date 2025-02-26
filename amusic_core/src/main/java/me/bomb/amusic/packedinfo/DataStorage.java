@@ -319,20 +319,14 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			return true;
 		}
 		packer.run();
-		DataEntry data = getPlaylist(id);
-		if (data != null) {
-			data.sha1 = packer.sha1;
-			data.size = packer.resourcepack.length;
-			data.sounds = packer.sounds;
-			data.saved = false;
-			save();
-			return true;
+		final byte[] resourcepack;
+		if((resourcepack = packer.resourcepack) == null) {
+			return false;
 		}
-		
 		OutputStream os = null;
 		try {
 			os = fs.newOutputStream(resourcefile);
-			os.write(packer.resourcepack);
+			os.write(resourcepack);
 			os.close();
 		} catch (IOException e) {
 		} finally {
@@ -344,7 +338,17 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			}
 		}
 		
-		options.put(id, new DataEntry(resourcefile, packer.resourcepack.length, filterName(id), packer.sounds, packer.sha1));
+		DataEntry data = getPlaylist(id);
+		if (data != null) {
+			data.size = resourcepack.length;
+			data.sounds = packer.sounds;
+			data.sha1 = packer.sha1;
+			data.saved = false;
+			save();
+			return true;
+		}
+		
+		options.put(id, new DataEntry(resourcefile, resourcepack.length, filterName(id), packer.sounds, packer.sha1));
 		save();
 		return true;
 	}

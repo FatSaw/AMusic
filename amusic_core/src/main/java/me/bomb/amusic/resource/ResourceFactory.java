@@ -1,7 +1,5 @@
 package me.bomb.amusic.resource;
 
-import java.io.IOException;
-import java.nio.file.spi.FileSystemProvider;
 import java.util.UUID;
 
 import me.bomb.amusic.packedinfo.Data;
@@ -42,9 +40,16 @@ public final class ResourceFactory implements Runnable {
 				return;
 			}
 			ResourcePacker resourcepacker = datamanager.createPacker(this.id, source);
-			final boolean changed = datamanager.update(this.id, resourcepacker);
 			
-			dataentry = datamanager.getPlaylist(this.id);
+			final boolean updated = datamanager.update(this.id, resourcepacker);
+			if(resourcepacker == null) {
+				if(statusreport == null) {
+					return;
+				}
+				statusreport.onStatusResponse(updated ? EnumStatus.REMOVED : EnumStatus.NOTEXSIST);
+				return;
+			}
+			/*dataentry = datamanager.getPlaylist(this.id);
 			if(dataentry == null) {
 				FileSystemProvider fs = resourcepacker.resourcefile.getFileSystem().provider();
 				try {
@@ -53,10 +58,8 @@ public final class ResourceFactory implements Runnable {
 				} catch (IOException e) {
 				}
 				return;
-			}
-			if(changed) {
-				dispatcher.resourcemanager.putCache(this.id, resourcepacker.resourcepack);
-			}
+			}*/
+			dispatcher.resourcemanager.putCache(this.id, resourcepacker.resourcepack);
 			if(targets == null) {
 				if(statusreport == null) {
 					return;

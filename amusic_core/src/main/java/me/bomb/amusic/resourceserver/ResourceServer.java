@@ -15,7 +15,7 @@ public final class ResourceServer extends Thread {
 	private final ConcurrentHashMap<Object,InetAddress> onlineips;
 	private final InetAddress ip;
 	private final int port, backlog;
-	private boolean run = false;
+	private volatile boolean run = false;
 	private ServerSocket server;
 	private final ResourceManager resourcemanager;
 	

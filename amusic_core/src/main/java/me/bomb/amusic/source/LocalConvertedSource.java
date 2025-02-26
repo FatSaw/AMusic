@@ -3,10 +3,11 @@ package me.bomb.amusic.source;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public final class LocalConvertedSource extends SoundSource<File> {
+public final class LocalConvertedSource extends SoundSource {
 	
 	private final File musicdir;
 	private final int maxsoundsize;
@@ -70,8 +71,8 @@ public final class LocalConvertedSource extends SoundSource<File> {
 	}
 
 	@Override
-	public File getSource() {
-		return this.musicdir;
+	public Path getSource() {
+		return this.musicdir.toPath();
 	}
 
 }

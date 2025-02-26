@@ -299,7 +299,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 	}
 	
 	public ResourcePacker createPacker(final String id, final SoundSource source) {
-		if(this.lockwrite || id == null || source == null) {
+		if(this.lockwrite || id == null || source == null || !source.exists(id)) {
 			return null;
 		}
 		final String filteredid = filterName(id);
@@ -314,9 +314,18 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 		}
 		final Path resourcefile;
 		if(packer == null || (resourcefile = packer.resourcefile) == null) {
-			options.remove(id);
+			final boolean deleted;
+			DataEntry data = options.remove(id);
+			if(data == null) {
+				return false;
+			}
+			try {
+				deleted = fs.deleteIfExists(data.datapath);
+			} catch (IOException e) {
+				return false;
+			}
 			save();
-			return true;
+			return deleted;
 		}
 		packer.run();
 		final byte[] resourcepack;

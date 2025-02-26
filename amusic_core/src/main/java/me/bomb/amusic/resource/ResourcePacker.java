@@ -1,13 +1,11 @@
 package me.bomb.amusic.resource;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -16,7 +14,6 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
-import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
 
@@ -27,11 +24,10 @@ public final class ResourcePacker implements Runnable {
 	public SoundInfo[] sounds;
 	public byte[] sha1,resourcepack = null;
 
-	private final SoundSource<?> source;
+	private final SoundSource source;
 	private final String id;
-	public final File resourcefile;
-	private final File sourcearchive;
-	private final ResourceManager resourcemanager;
+	public final Path resourcefile;
+	private final Path sourcearchive;
 	private final MessageDigest sha1hash; 
 	
 	static {
@@ -49,12 +45,11 @@ public final class ResourcePacker implements Runnable {
 		silencesound = buf;
 	}
 	
-	protected ResourcePacker(SoundSource<?> source, String id, File resourcefile, File sourcearchive, ResourceManager resourcemanager) {
+	public ResourcePacker(SoundSource source, String id, Path resourcefile, Path sourcearchive) {
 		this.source = source;
 		this.id = id;
 		this.resourcefile = resourcefile;
 		this.sourcearchive = sourcearchive;
-		this.resourcemanager = resourcemanager;
 		MessageDigest md = null;
 		try {
 			md = MessageDigest.getInstance("SHA-1");
@@ -94,15 +89,15 @@ public final class ResourcePacker implements Runnable {
 		{
 			ByteArrayOutputStream baos;
 			ZipOutputStream zos;
-			baos = new ByteArrayOutputStream(resourcemanager.maxbuffersize);
+			baos = new ByteArrayOutputStream(262144000);
 			zos = new ZipOutputStream(baos, Charset.defaultCharset());
 			zos.setMethod(8);
 			zos.setLevel(5);
 			boolean packmcmetafound = false, soundsjsonappended = false;
 			try {
-				if(sourcearchive!=null && sourcearchive.exists()) {
+				if(sourcearchive!=null) {
 					ZipInputStream zis;
-					zis = new ZipInputStream(new FileInputStream(sourcearchive), Charset.defaultCharset());
+					zis = new ZipInputStream(sourcearchive.getFileSystem().provider().newInputStream(sourcearchive), Charset.defaultCharset());
 					ZipEntry entry;
 					int len;
 					byte[] buf = new byte[0x2000];
@@ -149,7 +144,7 @@ public final class ResourcePacker implements Runnable {
 				}
 				if(!packmcmetafound) {
 					zos.putNextEntry(new ZipEntry("pack.mcmeta"));
-					zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"§4§lＡＭｕｓｉｃ\"\n\t}\n}".getBytes());
+					zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"AMusic resourcepack\"\n\t}\n}".getBytes());
 					zos.closeEntry();
 				}
 			} catch (IOException e) {
@@ -195,19 +190,6 @@ public final class ResourcePacker implements Runnable {
 		for(int i=0;i<soundssize;++i) {
 			this.sounds[i] = new SoundInfo(soundnames[i], soundlengths[i]);
 		}
-		
-		if(resourcefile == null) {
-			return;
-		}
-		FileOutputStream fos;
-		try {
-			fos = new FileOutputStream(resourcefile, false);
-			fos.write(this.resourcepack);
-			fos.close();
-		} catch (IOException e) {
-			return;
-		}
-		resourcemanager.putCache(this.id, this.resourcepack);
 	}
 
 }

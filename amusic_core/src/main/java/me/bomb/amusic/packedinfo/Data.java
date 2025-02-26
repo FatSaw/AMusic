@@ -1,20 +1,31 @@
 package me.bomb.amusic.packedinfo;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 import me.bomb.amusic.resource.ResourcePacker;
+import me.bomb.amusic.source.SoundSource;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
 public abstract class Data {
+	
 	protected final Map<String, DataEntry> options = new HashMap<String, DataEntry>();
-	private final boolean lockwrite;
+	public final boolean lockwrite;
+	
 	protected Data(boolean lockwrite) {
 		this.lockwrite = lockwrite;
 	}
+
+	/**
+	 * Save {@link Data#options} to storage.
+	 */
+	public static Data getDefault(Path datadirectory, boolean lockwrite) {
+		return new DataStorage(datadirectory, lockwrite);
+	}
+	
 	/**
 	 * Save {@link Data#options} to storage.
 	 */
@@ -32,51 +43,31 @@ public abstract class Data {
 	/**
 	 * Update packed info
 	 * @param id
+	 * @param source
+	 * @return ResourcePacker if write allowed
+	 */
+	public abstract ResourcePacker createPacker(final String id, final SoundSource source);
+	
+	/**
+	 * Update packed info
+	 * @param id
 	 * @param packer
 	 * @return true if something changed
 	 */
-	public boolean update(final String id, final ResourcePacker packer) {
-		if(this.lockwrite || id == null) {
-			return false;
-		}
-		final File resourcefile;
-		if(packer == null || (resourcefile = packer.resourcefile) == null) {
-			removePlaylist(id);
-			save();
-			return true;
-		}
-		packer.run();
-		if (containsPlaylist(id)) {
-			DataEntry options = getPlaylist(id);
-			options.sha1 = packer.sha1;
-			options.size = packer.resourcepack.length;
-			options.sounds = packer.sounds;
-			options.saved = false;
-			save();
-			return true;
-		}
-		if(resourcefile.exists()) {
-			setPlaylist(id, packer.sounds, (int)resourcefile.length(), filterName(id), packer.sha1);
-			save();
-			return true;
-		}
-		
-		removePlaylist(id);
-		save();
-		return true;
-	}
+	public abstract boolean update(final String id, final ResourcePacker packer);
+	
 	
 	/**
 	 * Update or create new packed info
 	 * @param id
 	 * @return true if something changed
 	 */
-	public boolean update(final String id,final int size,final byte[] sha1,final SoundInfo[] sounds) {
+	public boolean update(final Path datapath, final String id,final int size,final byte[] sha1,final SoundInfo[] sounds) {
 		if(this.lockwrite || id == null) {
 			return false;
 		}
 		if(sounds == null) {
-			removePlaylist(id);
+			options.remove(id);
 			save();
 			return true;
 		}
@@ -89,17 +80,13 @@ public abstract class Data {
 			save();
 			return true;
 		}
-		setPlaylist(id, sounds, size, filterName(id), sha1);
-		save();
-		return true;
-	}
-	
-	protected final void setPlaylist(String playlistname, SoundInfo[] sounds, int resourcesize, String resourcename, byte[] sha1) {
 		try {
-			options.put(playlistname, new DataEntry(resourcesize, resourcename, sounds, sha1));
+			options.put(id, new DataEntry(datapath, size, filterName(id), sounds, sha1));
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
+		save();
+		return true;
 	}
 
 	public final DataEntry getPlaylist(String playlistname) {
@@ -108,10 +95,6 @@ public abstract class Data {
 
 	public final boolean containsPlaylist(String playlistname) {
 		return options.containsKey(playlistname);
-	}
-
-	protected final void removePlaylist(String playlistname) {
-		options.remove(playlistname);
 	}
 
 	public final String[] getPlaylists() {

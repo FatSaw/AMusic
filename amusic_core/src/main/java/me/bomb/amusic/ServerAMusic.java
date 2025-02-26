@@ -20,10 +20,10 @@ import me.bomb.amusic.source.SoundSource;
 public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
 	private final int port, backlog;
-	private boolean run;
+	private volatile boolean run;
 	private ServerSocket server;
 
-	public ServerAMusic(Configuration config, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object, InetAddress> playerips) {
+	public ServerAMusic(Configuration config, SoundSource source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object, InetAddress> playerips) {
 		super(config, source, packsender, soundstarter, soundstopper, playerips);
 		this.hostip = config.connectifip;
 		this.remoteip = config.connectremoteip;

@@ -1,7 +1,7 @@
 package me.bomb.amusic.resource;
 
-import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -80,7 +80,7 @@ public final class ResourceDispatcher {
 	 * Dispatch resourcepack file to targets
 	 * File may be cached
 	 */
-	public final boolean dispatch(final String id, final UUID[] targets, final SoundInfo[] sounds, final File resourcefile, final byte[] sha1) {
+	public final boolean dispatch(final String id, final UUID[] targets, final SoundInfo[] sounds, final Path resourcefile, final byte[] sha1) {
 		byte[] resource;
 		final boolean notcached;
 		if(notcached = (resource = resourcemanager.getCached(id)) == null && (resource = resourcemanager.readResource(resourcefile)) == null) {

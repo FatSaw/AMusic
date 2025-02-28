@@ -116,7 +116,9 @@ public final class LocalConvertedSource extends SoundSource {
 		if(usemt) {
 			int filecount = files.length;
 			int threadcount = (int) (threadcoefficient * filecount);
-			++threadcount;
+			if(threadcount == 0) {
+				++threadcount;
+			}
 			if(threadcount > threadcountlimit) {
 				threadcount = threadcountlimit;
 			}

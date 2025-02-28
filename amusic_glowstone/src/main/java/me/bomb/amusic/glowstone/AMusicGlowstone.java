@@ -89,7 +89,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 				case 340:
 					packsender = new GlowstonePackSender();
 					soundstarter = new GlowstoneLegacySoundStarter();
-					soundstopper = new GlowstoneSoundStopper();
+					soundstopper = new GlowstoneLegacySoundStopper();
 				break;
 				default:
 					packsender = new GlowstonePackSender();

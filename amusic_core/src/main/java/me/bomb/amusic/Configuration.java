@@ -125,11 +125,23 @@ public final class Configuration {
 				is = Configuration.class.getClassLoader().getResourceAsStream("config.yml");
 				bytes = new byte[0x1000];
 				bytes = Arrays.copyOf(bytes, is.read(bytes));
-				OutputStream os = fsp.newOutputStream(configfile);
-				os.write(bytes);
-				os.close();
+				is.close();
+				OutputStream os = null;
+				try {
+					os = fsp.newOutputStream(configfile);
+					os.write(bytes);
+					os.close();
+				} catch (IOException e3) {
+					appendError("Filed to write default config", errors);
+					if(os != null) {
+						try {
+							os.close();
+						} catch (IOException e4) {
+						}
+					}
+				}
 			} catch (IOException e3) {
-				appendError("Filed to load default config", errors);
+				appendError("Filed to read default config", errors);
 				if(is != null) {
 					try {
 						is.close();
@@ -165,7 +177,13 @@ public final class Configuration {
 						is = null;
 						try {
 							is = fs.provider().newInputStream(certfile);
-						} catch (SecurityException e) {
+						} catch (SecurityException e1) {
+							if(is != null) {
+								try {
+									is.close();
+								} catch (IOException e2) {
+								}
+							}
 							appendError("Filed to read upload https certificate file (no permission)", errors);
 						} catch (IOException e) {
 							appendError("Filed to read upload https certificate file (not found)", errors);

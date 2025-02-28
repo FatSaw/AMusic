@@ -1,6 +1,5 @@
 package me.bomb.amusic.resource;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -16,18 +15,22 @@ import java.util.zip.ZipOutputStream;
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
+import me.bomb.amusic.util.ByteArraysOutputStream;
+
+import static java.lang.System.currentTimeMillis;
 
 public final class ResourcePacker implements Runnable {
 	
 	private final static byte[] silencesound;
 	
 	public SoundInfo[] sounds;
-	public byte[] sha1,resourcepack = null;
+	public byte[] sha1, resourcepack = null;
 
 	private final SoundSource source;
 	private final String id;
 	public final Path resourcefile;
 	private final Path sourcearchive;
+	private int time = -1;
 	
 	static {
 		byte[] buf = new byte[2983];
@@ -54,6 +57,7 @@ public final class ResourcePacker implements Runnable {
 	}
 	
 	public void run() {
+		final long timestart = currentTimeMillis();
 		SourceEntry sourceentry = source.get(this.id);
 		if(sourceentry == null) {
 			return;
@@ -88,9 +92,11 @@ public final class ResourcePacker implements Runnable {
 		}
 		
 		{
-			ByteArrayOutputStream baos;
+			ByteArraysOutputStream baos;
 			ZipOutputStream zos;
-			baos = new ByteArrayOutputStream(262144000);
+			//262144000 >> 9
+			baos = new ByteArraysOutputStream(512000);
+			//baos = new ByteArrayOutputStream(262144000);
 			zos = new ZipOutputStream(baos, Charset.defaultCharset());
 			zos.setMethod(8);
 			zos.setLevel(5);
@@ -170,7 +176,11 @@ public final class ResourcePacker implements Runnable {
 				processing = false;
 				int i = musiccount;
 				while(--i > -1) {
-					if(processed[i] || (processing = !sourceentry.finished(i))) {
+					if(processed[i]) {
+						continue;
+					}
+					if(!sourceentry.finished(i)) {
+						processing = true;
 						continue;
 					}
 					try {
@@ -179,11 +189,13 @@ public final class ResourcePacker implements Runnable {
 			            zos.closeEntry();
 					} catch (IOException e) {
 					}
+					topack[i] = null;
+					sleepcount = 0; //reset inactivity timer
 					processed[i] = true;
 				}
 				if(processing) {
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(250);
 					} catch (InterruptedException e) {
 					}
 				}
@@ -194,7 +206,6 @@ public final class ResourcePacker implements Runnable {
 			}
 			this.resourcepack = baos.toByteArray();
 		}
-		
 		this.sha1 = sha1hash.digest(this.resourcepack);
 		short[] soundlengths = sourceentry.lengths;
 		int i = musiccount;
@@ -202,6 +213,16 @@ public final class ResourcePacker implements Runnable {
 		while(--i > -1) {
 			this.sounds[i] = new SoundInfo(soundnames[i], soundlengths[i]);
 		}
+
+		long timeelapsed = currentTimeMillis() - timestart;
+		if(timeelapsed > 0x7FFFFFFF) {
+			timeelapsed = 0x7FFFFFFF;
+		}
+		this.time = (int) timeelapsed;
+	}
+	
+	public int getElapsedTime() {
+		return this.time;
 	}
 
 }

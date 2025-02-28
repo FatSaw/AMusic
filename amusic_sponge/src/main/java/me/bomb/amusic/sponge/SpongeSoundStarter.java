@@ -39,7 +39,7 @@ public final class SpongeSoundStarter implements SoundStarter {
 				}
 			};
 			
-			player.playSound(sound, SoundCategories.VOICE, Vector3d.ZERO, 1.0f, 1.0f);
+			player.playSound(sound, Vector3d.ZERO, 1.0f, 1.0f);
 		}
 	}
 

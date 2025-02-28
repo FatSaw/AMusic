@@ -37,7 +37,7 @@ public final class SpongeSoundStopper implements SoundStopper {
 					return "amusic.music".concat(Short.toString(id));
 				}
 			};
-			player.stopSounds(sound, SoundCategories.VOICE);
+			player.stopSounds(sound);
 		}
 		
 	}

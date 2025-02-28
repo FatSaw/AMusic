@@ -20,7 +20,9 @@ public abstract class Data {
 	}
 
 	/**
-	 * Save {@link Data#options} to storage.
+	 * Get default data storage
+	 * @param id
+	 * @return default data storage
 	 */
 	public static Data getDefault(Path datadirectory, boolean lockwrite) {
 		return new DataStorage(datadirectory, lockwrite);

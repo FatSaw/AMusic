@@ -42,12 +42,12 @@ public final class DataEntry {
 		try {
 			is = fs.newInputStream(datapath);
 			is.read(buf, 0, buf.length);
-		} catch (IOException e) {
-		} finally {
+			is.close();
+		} catch (IOException e1) {
 			if(is != null) {
 				try {
 					is.close();
-				} catch (IOException e) {
+				} catch (IOException e2) {
 				}
 			}
 		}

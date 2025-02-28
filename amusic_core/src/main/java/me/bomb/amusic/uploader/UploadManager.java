@@ -1,9 +1,10 @@
 package me.bomb.amusic.uploader;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.nio.file.Path;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.Enumeration;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -16,15 +17,17 @@ import static me.bomb.amusic.util.NameFilter.filterName;
 public final class UploadManager extends Thread {
 	
 	private final int expiretime, limitsize, limitcount;
-	private final File musicdir;
+	private final FileSystemProvider fs;
+	private final Path musicdir;
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
 	private final UploaderServer server;
 	private volatile boolean run;
 	
-	public UploadManager(int expiretime, int limitsize, int limitcount, File musicdir, final ConcurrentHashMap<Object, InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final ServerSocketFactory serverfactory) {
+	public UploadManager(int expiretime, int limitsize, int limitcount, Path musicdir, final ConcurrentHashMap<Object, InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final ServerSocketFactory serverfactory) {
 		this.expiretime = expiretime;
 		this.limitsize = limitsize;
 		this.limitcount = limitcount;
+		this.fs = musicdir.getFileSystem().provider();
 		this.musicdir = musicdir;
 		this.sessions = new ConcurrentHashMap<>();
 		this.server = new UploaderServer(this, onlineips, ip, port, backlog, serverfactory);
@@ -88,29 +91,30 @@ public final class UploadManager extends Thread {
 		if(!save) {
 			return true;
 		}
-		File musicdir = new File(this.musicdir, session.targetplaylist);
-		if(!musicdir.exists()) {
-			musicdir.mkdir();
+		Path musicdir = this.musicdir.resolve(session.targetplaylist);
+		try {
+			fs.createDirectory(musicdir);
+		} catch (IOException e) {
 		}
 		for(Entry<String, byte[]> entry : uploadentrys.entrySet()) {
 			byte[] value = entry.getValue();
-			File soundfile = new File(musicdir, entry.getKey().concat(".ogg"));
+			Path soundfile = musicdir.resolve(entry.getKey().concat(".ogg"));
 			if(value == null || value.length == 0) {
-				soundfile.delete();
+				try {
+					fs.delete(soundfile);
+				} catch (IOException e) {
+				}
 				continue;
 			}
-			FileOutputStream fos = null;
+			OutputStream os = null;
 			try {
-				fos = new FileOutputStream(soundfile, false);
-				fos.write(value);
-			} catch(IOException ex) {
-			} finally {
-				if(fos == null) {
-					continue;
-				}
+				os = fs.newOutputStream(musicdir);
+				os.write(value);
+				os.close();
+			} catch(IOException e1) {
 				try {
-					fos.close();
-				}  catch(IOException ex) {
+					os.close();
+				} catch(IOException e2) {
 				}
 			}
 		}

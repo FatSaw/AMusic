@@ -133,7 +133,7 @@ public final class AMusicBukkit extends JavaPlugin {
 				case 11: case 12:
 					packsender = new BukkitPackSender();
 					soundstarter = new BukkitLegacySoundStarter();
-					soundstopper = new BukkitSoundStopper();
+					soundstopper = new BukkitLegacySoundStopper();
 				break;
 				default:
 					packsender = new BukkitPackSender();

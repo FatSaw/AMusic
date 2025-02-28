@@ -28,7 +28,6 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ServerAMusic;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
-import me.bomb.amusic.source.LocalUnconvertedParallelSource;
 import me.bomb.amusic.source.LocalUnconvertedSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.util.LangOptions;
@@ -70,8 +69,7 @@ public final class AMusicVelocity {
 			PackSender packsender = new VelocityPackSender(server);
 	        
 			Runtime runtime = Runtime.getRuntime();
-			SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedParallelSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalConvertedSource(config.musicdir, config.packsizelimit);
-			if(config.connectuse) {
+			SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedSource(runtime, config.musicdir.toPath(), config.packsizelimit, config.encoderbinary.toPath(), config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 1.0f, (short)255) : new LocalUnconvertedSource(runtime, config.musicdir.toPath(), config.packsizelimit, config.encoderbinary.toPath(), config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 0.0f, (short)0) : new LocalConvertedSource(config.musicdir.toPath(), config.packsizelimit, 0.0f, (short)0);			if(config.connectuse) {
 				ServerAMusic amusic = new ServerAMusic(config, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;

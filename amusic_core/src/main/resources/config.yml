@@ -59,6 +59,11 @@ amusic:
   processpack: true
   #Size limit - max packed resourcepack size recomended values for specific versions (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 '52428800', 1.16-1.17.1 '104857600', 1.18+ '262144000'
   sizelimit: 262144000
+  packthread:
+   #Limit count - limit maximal thread count per packer, 0 - do not use
+   limitcount: 0
+   #Coefficient - allowed value range 0.0 - 1.0, calculates thread count, works if limitcount greater than 1
+   coefficient: 0.5
   cache:
    #Serverside caching - store all packed resourcepacks in ram
    server: true
@@ -72,4 +77,3 @@ amusic:
   bitrate: 64000
   channels: 2
   samplingrate: 44100
-  async: true

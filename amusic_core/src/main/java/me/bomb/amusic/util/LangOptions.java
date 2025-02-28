@@ -48,9 +48,20 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 				is = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
 				buf = new byte[0x3000];
 				buf = Arrays.copyOf(buf, is.read(buf));
-				OutputStream os = fs.newOutputStream(langfile);
-				os.write(buf);
-				os.close();
+				is.close();
+				OutputStream os = null;
+				try {
+					os = fs.newOutputStream(langfile);
+					os.write(buf);
+					os.close();
+				} catch (IOException e3) {
+					if(os != null) {
+						try {
+							os.close();
+						} catch (IOException e4) {
+						}
+					}
+				}
 			} catch (IOException e3) {
 				if(is != null) {
 					try {

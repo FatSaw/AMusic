@@ -122,21 +122,23 @@ public final class LocalConvertedSource extends SoundSource {
 			if(threadcount > threadcountlimit) {
 				threadcount = threadcountlimit;
 			}
-			int savecount = 0;
+			int savecount;
 			try {
 				savecount = filecount/threadcount;
 			} catch(ArithmeticException e) {
 				return null;
 			}
-			++savecount;
+			int remain = filecount - savecount * threadcount;
 			int nums = 0;
 			while(--threadcount > -1) {
 				final int pnums = nums;
-				new Thread(new ReadSound(maxsoundsize, sizes, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? filecount : nums)).start();
+				if(--remain > -1) {
+					++nums;
+				}
+				new Thread(new ReadSound(maxsoundsize, sizes, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
 			}
 		} else {
-			final int start = 0, end = files.length;
-			ReadSound sr = new ReadSound(maxsoundsize, sizes, files, data, lengths, finished, success, start, end);
+			ReadSound sr = new ReadSound(maxsoundsize, sizes, files, data, lengths, finished, success, 0, files.length);
 			sr.run();
 		}
 		return source;
@@ -145,6 +147,9 @@ public final class LocalConvertedSource extends SoundSource {
 	@Override
 	public boolean exists(String entrykey) {
 		Path musicdir = this.musicdir.resolve(entrykey);
+		if(musicdir == null) {
+			return false;
+		}
 		DirectoryStream<Path> ds = null;
 		try {
 			ds = fs.newDirectoryStream(musicdir, oggfilter);
@@ -163,11 +168,13 @@ public final class LocalConvertedSource extends SoundSource {
 					continue;
 				}
 			}
-		} catch(IOException e) {
-		} finally {
-			try {
-				ds.close();
-			} catch(IOException e) {
+			ds.close();
+		} catch(IOException e1) {
+			if(ds != null) {
+				try {
+					ds.close();
+				} catch(IOException e2) {
+				}
 			}
 		}
 		return false;

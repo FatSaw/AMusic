@@ -28,7 +28,6 @@ public final class ResourcePacker implements Runnable {
 	private final String id;
 	public final Path resourcefile;
 	private final Path sourcearchive;
-	private final MessageDigest sha1hash; 
 	
 	static {
 		byte[] buf = new byte[2983];
@@ -52,12 +51,6 @@ public final class ResourcePacker implements Runnable {
 		this.id = id;
 		this.resourcefile = resourcefile;
 		this.sourcearchive = sourcearchive;
-		MessageDigest md = null;
-		try {
-			md = MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-		}
-		sha1hash = md;
 	}
 	
 	public void run() {
@@ -66,17 +59,24 @@ public final class ResourcePacker implements Runnable {
 			return;
 		}
 		String[] soundnames = sourceentry.names;
-		int musicfilessize = soundnames.length;
-		if(musicfilessize < 1) {
+		int musiccount = soundnames.length;
+		if(musiccount < 1) {
 			return;
 		}
-		if(musicfilessize > 65536) {
-			musicfilessize = 65536;
+		if(musiccount > 65536) {
+			musiccount = 65536;
+		}
+		final MessageDigest sha1hash;
+		try {
+			sha1hash = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			return;
 		}
 		String soundslist;
 		{
 			StringBuffer sounds = new StringBuffer("\n");
-			for (int i = 0; i < musicfilessize; ++i) {
+			int i = musiccount;
+			while(--i > -1) {
 				sounds.append("\t\"amusic.music");
 				sounds.append(i);
 				sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/music");
@@ -163,38 +163,43 @@ public final class ResourcePacker implements Runnable {
 			} catch (IOException e) {
 			}
 			byte sleepcount = 0;
-			while(!sourceentry.finished() && --sleepcount != 0) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
+			boolean processing = true;
+			byte[][] topack = sourceentry.data;
+			boolean[] success = sourceentry.success, processed = new boolean[musiccount];
+			while(processing && --sleepcount != 0) {
+				processing = false;
+				int i = musiccount;
+				while(--i > -1) {
+					if(processed[i] || (processing = !sourceentry.finished(i))) {
+						continue;
+					}
+					try {
+						zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
+			            zos.write(success[i] ? topack[i] : silencesound);
+			            zos.closeEntry();
+					} catch (IOException e) {
+					}
+					processed[i] = true;
+				}
+				if(processing) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+					}
 				}
 			}
-			
-			byte[][] topack = sourceentry.data;
 			try {
-				for(int i = musicfilessize; --i>-1;) {
-					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
-		            zos.write(topack[i]);
-		            zos.closeEntry();
-				}
 				zos.close();
-			} catch (IOException e1) {
-				try {
-					zos.close();
-				} catch (IOException e2) {
-				}
-				return;
+			} catch (IOException e) {
 			}
 			this.resourcepack = baos.toByteArray();
 		}
 		
 		this.sha1 = sha1hash.digest(this.resourcepack);
-		
-		int soundssize = soundnames.length;
 		short[] soundlengths = sourceentry.lengths;
-		
-		this.sounds = new SoundInfo[soundssize];
-		for(int i=0;i<soundssize;++i) {
+		int i = musiccount;
+		this.sounds = new SoundInfo[i];
+		while(--i > -1) {
 			this.sounds[i] = new SoundInfo(soundnames[i], soundlengths[i]);
 		}
 	}

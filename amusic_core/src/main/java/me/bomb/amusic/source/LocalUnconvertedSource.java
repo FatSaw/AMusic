@@ -120,11 +120,14 @@ public final class LocalUnconvertedSource extends SoundSource {
 			} catch(ArithmeticException e) {
 				return null;
 			}
-			++savecount;
+			int remain = filecount - savecount * threadcount;
 			int nums = 0;
 			while(--threadcount > -1) {
 				final int pnums = nums;
-				new Thread(new ConvertSound(runtime, args, maxsoundsize, null, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? filecount : nums)).start();
+				if(--remain > -1) {
+					++nums;
+				}
+				new Thread(new ConvertSound(runtime, args, maxsoundsize, null, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
 			}
 		} else {
 			new ConvertSound(runtime, args, maxsoundsize, null, files, data, lengths, finished, success, 0, files.length).run();
@@ -135,17 +138,21 @@ public final class LocalUnconvertedSource extends SoundSource {
 	@Override
 	public boolean exists(String entrykey) {
 		Path musicdir = this.musicdir.resolve(entrykey);
+		if(musicdir == null) {
+			return false;
+		}
 		DirectoryStream<Path> ds = null;
 		try {
 			ds = fs.newDirectoryStream(musicdir, filefilter);
 			final boolean exists = ds.iterator().hasNext();
 			ds.close();
 			return exists;
-		} catch(IOException e) {
-		} finally {
-			try {
-				ds.close();
-			} catch(IOException e) {
+		} catch(IOException e1) {
+			if(ds != null) {
+				try {
+					ds.close();
+				} catch(IOException e2) {
+				}
 			}
 		}
 		return false;

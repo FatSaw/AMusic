@@ -32,14 +32,16 @@ public final class ResourcePacker implements Runnable {
 	
 	static {
 		byte[] buf = new byte[2983];
-		InputStream in = ResourcePacker.class.getClassLoader().getResourceAsStream("silence.ogg");
+		InputStream is = ResourcePacker.class.getClassLoader().getResourceAsStream("silence.ogg");
 		try {
-			in.read(buf);
-		} catch (IOException e) {
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
+			is.read(buf);
+			is.close();
+		} catch (IOException e1) {
+			if(is != null) {
+				try {
+					is.close();
+				} catch (IOException e2) {
+				}
 			}
 		}
 		silencesound = buf;
@@ -93,9 +95,9 @@ public final class ResourcePacker implements Runnable {
 			zos.setMethod(8);
 			zos.setLevel(5);
 			boolean packmcmetafound = false, soundsjsonappended = false;
-			try {
-				if(sourcearchive!=null) {
-					ZipInputStream zis;
+			if(sourcearchive!=null) {
+				ZipInputStream zis = null;
+				try {
 					zis = new ZipInputStream(sourcearchive.getFileSystem().provider().newInputStream(sourcearchive), Charset.defaultCharset());
 					ZipEntry entry;
 					int len;
@@ -130,8 +132,14 @@ public final class ResourcePacker implements Runnable {
 		                zos.closeEntry();
 					}
 					zis.close();
+				} catch (IOException e1) {
+					if(zis != null) {
+						try {
+							zis.close();
+						} catch (IOException e2) {
+						}
+					}
 				}
-			} catch (IOException e) {
 			}
 			try {
 				if(!soundsjsonappended) {
@@ -169,13 +177,13 @@ public final class ResourcePacker implements Runnable {
 		            zos.write(topack[i]);
 		            zos.closeEntry();
 				}
-			} catch (IOException e) {
-				return;
-			} finally {
+				zos.close();
+			} catch (IOException e1) {
 				try {
 					zos.close();
-				} catch (IOException e) {
+				} catch (IOException e2) {
 				}
+				return;
 			}
 			this.resourcepack = baos.toByteArray();
 		}

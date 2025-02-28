@@ -1,6 +1,5 @@
 package me.bomb.amusic.source;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -8,6 +7,8 @@ import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import me.bomb.amusic.util.ByteArraysOutputStream;
 
 public class ReadSound implements Runnable {
 
@@ -44,13 +45,19 @@ public class ReadSound implements Runnable {
 				if(sizesknown) {
 					is.read(buf, 0, buf.length);
 				} else {
-					ByteArrayOutputStream baos = new ByteArrayOutputStream(maxsoundsize);
-					baos.write(i);
+					ByteArraysOutputStream baos = new ByteArraysOutputStream(maxsoundsize >> 14);
+					byte[] buff;
 					int b;
-					while((b = is.read()) != -1) {
-						baos.write(b);
+					while((b = is.read(buff = new byte[16384])) != -1) {
+						if(b < 16384) {
+							byte[] nbuff = new byte[b];
+							System.arraycopy(buff, 0, nbuff, 0, b);
+							buff = nbuff;
+						}
+						baos.write(buff);
 					}
 					buf = baos.toByteArray();
+					baos.close();
 				}
 				data[i] = buf;
 				lengths[i] = calculateDuration(buf);

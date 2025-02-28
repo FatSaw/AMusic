@@ -77,7 +77,7 @@ public final class AMusicVelocity {
 			PackSender packsender = new VelocityPackSender(server);
 	        
 			Runtime runtime = Runtime.getRuntime();
-			SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 1.0f, (short)255) : new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 0.0f, (short)0) : new LocalConvertedSource(config.musicdir, config.packsizelimit, 0.0f, (short)0);
+			SoundSource source = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 			if(config.connectuse) {
 				ServerAMusic amusic = new ServerAMusic(config, source, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips);
 				this.resourcemanager = amusic.resourcemanager;

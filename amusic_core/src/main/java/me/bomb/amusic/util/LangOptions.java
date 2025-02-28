@@ -1,11 +1,11 @@
 package me.bomb.amusic.util;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,38 +19,45 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 	
 	private final static String defaultlang = new String();
 	
-	public static void loadLang(MessageSender messagesender, File langfile, boolean rgb) {
+	public static void loadLang(MessageSender messagesender, Path langfile, boolean rgb) {
 		LangOptions.messagesender = messagesender;
 		byte[] buf = null;
-		if (!langfile.exists()) {
+		InputStream is = null;
+		FileSystemProvider fs = langfile.getFileSystem().provider();
+		try {
+			BasicFileAttributes attributes = fs.readAttributes(langfile, BasicFileAttributes.class);
+			is = fs.newInputStream(langfile);
+			long filesize = attributes.size();
+			if(filesize > 0x7FFFFFFD) {
+				filesize = 0x7FFFFFFD;
+			}
+			buf = new byte[(int)filesize];
+			int size = is.read(buf);
+			if(size < filesize) {
+				buf = Arrays.copyOf(buf, size);
+			}
+			is.close();
+		} catch (IOException e1) {
+			if(is != null) {
+				try {
+					is.close();
+				} catch (IOException e2) {
+				}
+			}
 			try {
+				is = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
 				buf = new byte[0x3000];
-				InputStream in = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
-				if (in != null) {
-					buf = Arrays.copyOf(buf, in.read(buf));
-					in.close();
-					OutputStream out = new FileOutputStream(langfile);
-					if (out != null) {
-						out.write(buf);
-						out.close();
+				buf = Arrays.copyOf(buf, is.read(buf));
+				OutputStream os = fs.newOutputStream(langfile);
+				os.write(buf);
+				os.close();
+			} catch (IOException e3) {
+				if(is != null) {
+					try {
+						is.close();
+					} catch (IOException e4) {
 					}
 				}
-			} catch (IOException e) {
-			}
-		} else {
-			try {
-				long filesize = langfile.length();
-				if(filesize > 0x7FFFFFFD) {
-					filesize = 0x7FFFFFFD;
-				}
-				FileInputStream in = new FileInputStream(langfile);
-				buf = new byte[(int) filesize];
-				int size = in.read(buf);
-				if(size < filesize) {
-					buf = Arrays.copyOf(buf, size);
-				}
-				in.close();
-			} catch (IOException e) {
 			}
 		}
 		SimpleConfiguration sc = new SimpleConfiguration(buf);

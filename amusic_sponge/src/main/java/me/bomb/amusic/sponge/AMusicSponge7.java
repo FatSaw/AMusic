@@ -1,8 +1,10 @@
 package me.bomb.amusic.sponge;
 
-import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
@@ -66,20 +68,25 @@ public final class AMusicSponge7 {
 	//PLUGIN INIT START
 	@Listener
     public void onServerStart(GameStartedServerEvent event) {
-		File plugindir = privateConfigDir.toFile(), configfile = new File(plugindir, "config.yml"), langfile = new File(plugindir, "lang.yml"), musicdir = new File(plugindir, "Music"), packeddir = new File(plugindir, "Packed");
-		if(!plugindir.exists()) {
-			plugindir.mkdirs();
+		Path plugindir = privateConfigDir, configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
+		FileSystem fs = plugindir.getFileSystem();
+		FileSystemProvider fsp = fs.provider();
+		try {
+			fsp.createDirectory(plugindir);
+		} catch (IOException e) {
 		}
 		boolean waitacception = true;
-		Configuration config = new Configuration(configfile, musicdir, packeddir, waitacception, true);
+		Configuration config = new Configuration(plugindir.getFileSystem(), configfile, musicdir, packeddir, waitacception, true);
 		this.configerrors = config.errors;
 		Server server = Sponge.getServer();
 		if(config.use) {
-			if(!musicdir.exists()) {
-				musicdir.mkdir();
+			try {
+				fsp.createDirectory(musicdir);
+			} catch (IOException e) {
 			}
-			if(!packeddir.exists()) {
-				packeddir.mkdir();
+			try {
+				fsp.createDirectory(packeddir);
+			} catch (IOException e) {
 			}
 			if(config.connectuse) {
 				this.waitacception = false;
@@ -98,7 +105,8 @@ public final class AMusicSponge7 {
 				this.uploaderhost = config.uploadhost;
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				Runtime runtime = Runtime.getRuntime();
-				SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedSource(runtime, config.musicdir.toPath(), config.packsizelimit, config.encoderbinary.toPath(), config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 1.0f, (short)255) : new LocalUnconvertedSource(runtime, config.musicdir.toPath(), config.packsizelimit, config.encoderbinary.toPath(), config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 0.0f, (short)0) : new LocalConvertedSource(config.musicdir.toPath(), config.packsizelimit, 0.0f, (short)0);				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips);
+				SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 1.0f, (short)255) : new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 0.0f, (short)0) : new LocalConvertedSource(config.musicdir, config.packsizelimit, 0.0f, (short)0);
+				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips);
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

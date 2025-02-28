@@ -36,7 +36,6 @@ public final class LocalUnconvertedSource extends SoundSource {
 		this.samplingrate = samplingrate;
 		this.channels = channels;
 		if(threadcountlimit < 0) {
-			threadcoefficient = Float.NaN;
 			threadcountlimit = 0;
 		}
 		if(threadcoefficient != Float.NaN) {
@@ -57,7 +56,7 @@ public final class LocalUnconvertedSource extends SoundSource {
 		Path musicdir = this.musicdir.resolve(entrykey);
 		if(musicdir == null) return null;
 		DirectoryStream<Path> ds = null;
-		final boolean usemt = threadcoefficient != Float.NaN;
+		final boolean usemt = threadcountlimit > 0 && threadcoefficient != Float.NaN;
 		int i;
 		final Path[] files;
 		final String[] names;
@@ -113,7 +112,12 @@ public final class LocalUnconvertedSource extends SoundSource {
 			if(threadcount > threadcountlimit) {
 				threadcount = threadcountlimit;
 			}
-			int savecount = filecount/threadcount;
+			int savecount = 0;
+			try {
+				savecount = filecount/threadcount;
+			} catch(ArithmeticException e) {
+				return null;
+			}
 			++savecount;
 			int nums = 0;
 			while(--threadcount > -1) {

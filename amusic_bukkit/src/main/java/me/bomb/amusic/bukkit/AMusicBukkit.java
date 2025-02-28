@@ -48,7 +48,6 @@ import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
-import me.bomb.amusic.source.LocalUnconvertedParallelSource;
 import me.bomb.amusic.source.LocalUnconvertedSource;
 import me.bomb.amusic.source.SoundSource;
 
@@ -138,7 +137,7 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.uploaderhost = config.uploadhost;
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				Runtime runtime = Runtime.getRuntime();
-				SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedParallelSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate) : new LocalConvertedSource(config.musicdir, config.packsizelimit);
+				SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedSource(runtime, config.musicdir.toPath(), config.packsizelimit, config.encoderbinary.toPath(), config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 1.0f, (short)255) : new LocalUnconvertedSource(runtime, config.musicdir.toPath(), config.packsizelimit, config.encoderbinary.toPath(), config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 0.0f, (short)0) : new LocalConvertedSource(config.musicdir.toPath(), config.packsizelimit, 0.0f, (short)0);
 				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips);
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;

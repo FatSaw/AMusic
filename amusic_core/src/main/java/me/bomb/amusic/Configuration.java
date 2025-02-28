@@ -1,14 +1,16 @@
 package me.bomb.amusic;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.nio.file.FileSystem;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.spi.FileSystemProvider;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -31,7 +33,7 @@ import me.bomb.amusic.util.SimpleConfiguration;
 public final class Configuration {
 	
 	public final String errors;
-	public final File musicdir, packeddir;
+	public final Path musicdir, packeddir;
 	
 	public final boolean use, uploaduse, connectuse, encoderuse, uploadhttps;
 	
@@ -42,7 +44,7 @@ public final class Configuration {
 	
 	public final boolean uploadstrictaccess, sendpackstrictaccess;
 	
-	public final File encoderbinary;
+	public final Path encoderbinary;
 	
 	public final boolean processpack, servercache, clientcache, waitacception;
 	public final int uploadtimeout, uploadlimitsize, uploadlimitcount, packsizelimit;
@@ -54,7 +56,7 @@ public final class Configuration {
 	protected final byte[] tokensalt;
 	protected final ServerSocketFactory serverfactory;
 	
-	public Configuration(File musicdir, File packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, boolean uploadstrictaccess, boolean sendpackstrictaccess, File encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadtimeout, int uploadlimitsize, int uploadlimitcount, int packsizelimit, byte encoderchannels, int encoderbitrate, int encodersamplingrate, boolean encodetracksasync, byte[] tokensalt, ServerSocketFactory serverfactory) {
+	public Configuration(Path musicdir, Path packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadtimeout, int uploadlimitsize, int uploadlimitcount, int packsizelimit, byte encoderchannels, int encoderbitrate, int encodersamplingrate, boolean encodetracksasync, byte[] tokensalt, ServerSocketFactory serverfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -94,49 +96,44 @@ public final class Configuration {
 		this.serverfactory = serverfactory;
 	}
 	
-	public Configuration(final File configfile, final File musicdir, final File packeddir, final boolean defaultwaitacception, final boolean defaultremoteclient) {
+	public Configuration(FileSystem fs, final Path configfile, final Path musicdir, final Path packeddir, final boolean defaultwaitacception, final boolean defaultremoteclient) {
 		byte[] bytes = null;
 		final StringBuilder errors = new StringBuilder();
-		if (!configfile.exists()) {
-			InputStream is = null;
+		InputStream is = null;
+		FileSystemProvider fsp = fs.provider();
+		try {
+			BasicFileAttributes attributes = fsp.readAttributes(configfile, BasicFileAttributes.class);
+			is = fsp.newInputStream(configfile);
+			long filesize = attributes.size();
+			if(filesize > 0x00010000) {
+				filesize = 0x00010000;
+			}
+			bytes = new byte[(int)filesize];
+			int size = is.read(bytes);
+			if(size < filesize) {
+				bytes = Arrays.copyOf(bytes, size);
+			}
+			is.close();
+		} catch (IOException e1) {
+			if(is != null) {
+				try {
+					is.close();
+				} catch (IOException e2) {
+				}
+			}
 			try {
 				is = Configuration.class.getClassLoader().getResourceAsStream("config.yml");
 				bytes = new byte[0x1000];
 				bytes = Arrays.copyOf(bytes, is.read(bytes));
-				FileOutputStream fos = new FileOutputStream(configfile, false);
-				fos.write(bytes);
-				fos.close();
-			} catch (IOException e) {
+				OutputStream os = fsp.newOutputStream(configfile);
+				os.write(bytes);
+				os.close();
+			} catch (IOException e3) {
 				appendError("Filed to load default config", errors);
-			} finally {
 				if(is != null) {
 					try {
 						is.close();
-					} catch (IOException e) {
-					}
-				}
-			}
-		} else {
-			InputStream is = null;
-			try {
-				is = new FileInputStream(configfile);;
-				long filesize = configfile.length();
-				if(filesize > 0x00010000) {
-					filesize = 0x00010000;
-				}
-				bytes = new byte[(int) filesize];
-				int size = is.read(bytes);
-				if(size < filesize) {
-					bytes = Arrays.copyOf(bytes, size);
-				}
-				is.close();
-			} catch (IOException e) {
-				appendError("Filed to load default config", errors);
-			} finally {
-				if(is != null) {
-					try {
-						is.close();
-					} catch (IOException e) {
+					} catch (IOException e4) {
 					}
 				}
 			}
@@ -156,15 +153,21 @@ public final class Configuration {
 					KeyStore keystore = null;
 					SSLServerSocketFactory sslserverfactory = null;
 					final String uploadercertpath = sc.getStringOrError("amusic\0server\0upload\0https\0path", errors);
-					final File certfile = uploadercertpath == null ? null : new File(uploadercertpath);
+					Path certfile = null;
+					try {
+						certfile = fs.getPath(uploadercertpath);
+					} catch (InvalidPathException e) {
+						appendError("Filed to read upload https certificate file (path invalid)", errors);
+					}
+					
 					final String certpassword;
 					if(certfile != null && (certpassword = sc.getStringOrError("amusic\0server\0upload\0https\0password", errors)) != null) {
-						FileInputStream fis = null;
+						is = null;
 						try {
-							fis = new FileInputStream(certfile);
+							is = fs.provider().newInputStream(certfile);
 						} catch (SecurityException e) {
 							appendError("Filed to read upload https certificate file (no permission)", errors);
-						} catch (FileNotFoundException e) {
+						} catch (IOException e) {
 							appendError("Filed to read upload https certificate file (not found)", errors);
 						}
 						try {
@@ -174,7 +177,7 @@ public final class Configuration {
 							appendError("Filed to initialize upload https certificate (filed to get PKCS12 instance)", errors);
 						}
 						try {
-							keystore.load(fis, certpassword.toCharArray());
+							keystore.load(is, certpassword.toCharArray());
 						} catch (CertificateException | NoSuchAlgorithmException | IOException e) {
 							keystore = null;
 							appendError("Filed to initialize upload https certificate", errors);
@@ -309,7 +312,12 @@ public final class Configuration {
 			}
 			if(this.encoderuse) {
 				final String ffmpegpath = sc.getStringOrError("amusic\0encoder\0path", errors);
-				final File ffmpegfile = ffmpegpath == null ? null : new File(ffmpegpath);
+				Path ffmpegfile = null;
+				try {
+					ffmpegfile = fs.getPath(ffmpegpath);
+				} catch (InvalidPathException e) {
+					appendError("FFmpeg binary path invalid", errors);
+				}
 				this.encoderbinary = ffmpegfile;
 				this.encoderbitrate = sc.getIntOrError("amusic\0encoder\0bitrate", errors);
 				int channels = sc.getIntOrError("amusic\0encoder\0channels", errors);

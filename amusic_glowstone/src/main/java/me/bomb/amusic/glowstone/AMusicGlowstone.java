@@ -101,7 +101,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 				this.uploaderhost = config.uploadhost;
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				Runtime runtime = Runtime.getRuntime();
-				SoundSource source = config.encoderuse ? config.encodetracksasync ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 1.0f, (short)255) : new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, 0.0f, (short)0) : new LocalConvertedSource(config.musicdir, config.packsizelimit, 0.0f, (short)0);
+				SoundSource source = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips);
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;

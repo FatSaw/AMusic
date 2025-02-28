@@ -29,7 +29,7 @@ public class LocalAMusic implements AMusic {
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.resourceserver = new ResourceServer(config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, config.sendpackhost);
-		this.datamanager = Data.getDefault(config.packeddir.toPath(), !config.processpack);
+		this.datamanager = Data.getDefault(config.packeddir, !config.processpack);
 		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadtimeout, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.serverfactory) : null;
 	}
 	

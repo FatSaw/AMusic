@@ -122,15 +122,14 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 					DataEntry dataentry = new DataEntry(datapath, packedsize, packedname, sounds, sha1);
 					dataentry.saved = true;
 					options.put(id, dataentry);
-				} catch (IOException e) {
-					continue;
-				} finally {
+				} catch (IOException e1) {
 					if (is != null) {
 						try {
 							is.close();
-						} catch (IOException e) {
+						} catch (IOException e2) {
 						}
 					}
+					continue;
 				}
 			}
 		} catch (IOException e) {
@@ -272,12 +271,11 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 					
 					os.close();
 					dataentry.saved = true;
-				} catch (IOException e) {
-				} finally {
+				} catch (IOException e1) {
 					if(os != null) {
 						try {
 							os.close();
-						} catch (IOException e) {
+						} catch (IOException e2) {
 						}
 					}
 				}
@@ -335,12 +333,11 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			os = fs.newOutputStream(resourcefile);
 			os.write(resourcepack);
 			os.close();
-		} catch (IOException e) {
-		} finally {
+		} catch (IOException e1) {
 			if(os != null) {
 				try {
 					os.close();
-				} catch (IOException e) {
+				} catch (IOException e2) {
 				}
 			}
 		}

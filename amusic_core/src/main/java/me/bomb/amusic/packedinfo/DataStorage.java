@@ -1,6 +1,5 @@
 package me.bomb.amusic.packedinfo;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -191,8 +190,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 				if(dataentry.saved || dataentry.size < 0 || dataentry.name == null || dataentry.sounds == null || dataentry.sha1 == null || dataentry.sha1.length != 20) {
 					continue;
 				}
-				File fampifile = new File(datadirectory.toFile(), id.concat(FORMAT));
-				Path ampifile = fampifile.toPath();
+				Path ampifile = datadirectory.resolve(id.concat(FORMAT));
 				OutputStream os = null;
 				try {
 					int soundcount = dataentry.sounds.length;

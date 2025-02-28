@@ -49,16 +49,6 @@ public final class ResourceFactory implements Runnable {
 				statusreport.onStatusResponse(updated ? EnumStatus.REMOVED : EnumStatus.NOTEXSIST);
 				return;
 			}
-			/*dataentry = datamanager.getPlaylist(this.id);
-			if(dataentry == null) {
-				FileSystemProvider fs = resourcepacker.resourcefile.getFileSystem().provider();
-				try {
-					EnumStatus status = fs.deleteIfExists(resourcepacker.resourcefile) ? EnumStatus.REMOVED : EnumStatus.NOTEXSIST;
-					statusreport.onStatusResponse(status);
-				} catch (IOException e) {
-				}
-				return;
-			}*/
 			dispatcher.resourcemanager.putCache(this.id, resourcepacker.resourcepack);
 			if(targets == null) {
 				if(statusreport == null) {

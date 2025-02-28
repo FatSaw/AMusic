@@ -112,9 +112,11 @@ public final class UploadManager extends Thread {
 				os.write(value);
 				os.close();
 			} catch(IOException e1) {
-				try {
-					os.close();
-				} catch(IOException e2) {
+				if(os != null) {
+					try {
+						os.close();
+					} catch(IOException e2) {
+					}
 				}
 			}
 		}

@@ -52,8 +52,9 @@ final class PageSender extends Thread {
 	}
 	
 	private static void loadStaticContent(final ClassLoader classloader, final byte id, final int contentsize, final String contentid, final String contentpublicid, byte[] header, byte[] headerclose) {
-		InputStream in = classloader.getResourceAsStream(contentid);
+		InputStream is = null;
 		try {
+			is = classloader.getResourceAsStream(contentid);
 			byte[] contentsizebytes = Integer.toString(contentsize).getBytes(StandardCharsets.US_ASCII);
 			int pos = header.length;
 			byte[] buf = new byte[contentsize + contentsizebytes.length + pos + headerclose.length], bufb = new byte[8192];
@@ -63,17 +64,19 @@ final class PageSender extends Thread {
 			System.arraycopy(headerclose, 0, buf, pos, headerclose.length);
 			pos+=headerclose.length;
 			int i;
-			while ((i = in.read(bufb)) != -1) {
+			while ((i = is.read(bufb)) != -1) {
 				System.arraycopy(bufb, 0, buf, pos, i);
 				pos += i;
 			}
 			web[id] = buf;
 			identifier[id] = "GET /".concat(contentpublicid).getBytes(StandardCharsets.US_ASCII);
-		} catch (IOException e) {
-		} finally {
-			try {
-				in.close();
-			} catch (IOException e) {
+			is.close();
+		} catch (IOException e1) {
+			if(is != null) {
+				try {
+					is.close();
+				} catch (IOException e2) {
+				}
 			}
 		}
 	}

@@ -48,15 +48,16 @@ public final class Configuration {
 	
 	public final boolean processpack, servercache, clientcache, waitacception;
 	public final int uploadtimeout, uploadlimitsize, uploadlimitcount, packsizelimit;
+	public final short packthreadlimitcount;
+	public final float packthreadcoefficient;
 	
 	public final byte encoderchannels;
 	public final int encoderbitrate, encodersamplingrate;
-	public final boolean encodetracksasync;
 	
 	protected final byte[] tokensalt;
 	protected final ServerSocketFactory serverfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadtimeout, int uploadlimitsize, int uploadlimitcount, int packsizelimit, byte encoderchannels, int encoderbitrate, int encodersamplingrate, boolean encodetracksasync, byte[] tokensalt, ServerSocketFactory serverfactory) {
+	public Configuration(Path musicdir, Path packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadtimeout, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory serverfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -88,10 +89,11 @@ public final class Configuration {
 		this.uploadlimitsize = uploadlimitsize;
 		this.uploadlimitcount = uploadlimitcount;
 		this.packsizelimit = packsizelimit;
+		this.packthreadlimitcount = packthreadlimitcount;
+		this.packthreadcoefficient = packthreadcoefficient;
 		this.encoderchannels = encoderchannels;
 		this.encoderbitrate = encoderbitrate;
 		this.encodersamplingrate = encodersamplingrate;
-		this.encodetracksasync = encodetracksasync;
 		this.tokensalt = tokensalt;
 		this.serverfactory = serverfactory;
 	}
@@ -341,16 +343,20 @@ public final class Configuration {
 				int channels = sc.getIntOrError("amusic\0encoder\0channels", errors);
 				this.encoderchannels = (byte) channels; 
 				this.encodersamplingrate = sc.getIntOrError("amusic\0encoder\0samplingrate", errors);
-				this.encodetracksasync = sc.getBooleanOrError("amusic\0encoder\0async", errors);
 			} else {
 				this.encoderbinary = null;
 				this.encoderbitrate = 0;
 				this.encoderchannels = 0;
 				this.encodersamplingrate = 0;
-				this.encodetracksasync = false;
 			}
 			this.processpack = sc.getBooleanOrError("amusic\0resourcepack\0processpack", errors);
 			this.packsizelimit = sc.getIntOrError("amusic\0resourcepack\0sizelimit", errors);
+			int packthreadlimitcount = sc.getIntOrError("amusic\0resourcepack\0packthread\0limitcount", errors);
+			if(packthreadlimitcount > 32767) {
+				packthreadlimitcount = 32767;
+			}
+			this.packthreadlimitcount = (short) packthreadlimitcount;
+			this.packthreadcoefficient = sc.getFloatOrError("amusic\0resourcepack\0packthread\0coefficient", errors);
 			
 			this.servercache = sc.getBooleanOrError("amusic\0resourcepack\0cache\0server", errors);
 			this.clientcache = sc.getBooleanOrError("amusic\0resourcepack\0cache\0client", errors);
@@ -387,9 +393,10 @@ public final class Configuration {
 			this.encoderbitrate = 0;
 			this.encoderchannels = 0;
 			this.encodersamplingrate = 0;
-			this.encodetracksasync = false;
 			this.processpack = false;
 			this.packsizelimit = 0;
+			this.packthreadlimitcount = 0;
+			this.packthreadcoefficient = 0;
 			this.servercache = false;
 			this.clientcache = false;
 		}

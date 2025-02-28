@@ -200,6 +200,34 @@ public final class SimpleConfiguration {
 		}
 	}
 	
+	public float getFloatOrDefault(String key, float defaultvalue) {
+		String value = kv.get(key);
+		if(value==null) return defaultvalue;
+		try {
+			return Float.parseFloat(value);
+		} catch (NumberFormatException e) {
+			return defaultvalue;
+		}
+	}
+	public float getFloat(String key) throws NullPointerException, NumberFormatException {
+		String value = kv.get(key);
+		if(value==null) throw new NullPointerException();
+		return Float.parseFloat(value);
+	}
+	public float getFloatOrError(String key, StringBuilder sb) {
+		String value = kv.get(key);
+		if(value==null) {
+			appendKey(key, sb);
+			return 0;
+		}
+		try {
+			return Float.parseFloat(value);
+		} catch (NumberFormatException e) {
+			appendKey(key, sb);
+			return 0;
+		}
+	}
+	
 	public byte[] getBytesBase64OrDefault(String key, byte[] defaultvalue) {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;

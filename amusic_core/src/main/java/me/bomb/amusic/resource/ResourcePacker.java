@@ -94,7 +94,7 @@ public final class ResourcePacker implements Runnable {
 		{
 			ByteArraysOutputStream baos;
 			ZipOutputStream zos;
-			int estimatedwritecount = 194 + (musiccount << 5) + (musiccount << 7);
+			int estimatedwritecount = 256 + 194 + (musiccount << 5) + (musiccount << 7);
 			baos = new ByteArraysOutputStream(estimatedwritecount);
 			zos = new ZipOutputStream(baos, Charset.defaultCharset());
 			zos.setMethod(8);
@@ -198,7 +198,7 @@ public final class ResourcePacker implements Runnable {
 						if(cap < 1) {
 							cap = 1;
 						}
-						baos.ensureCapacity(cap);
+						baos.increaseCapacity(cap);
 						zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
 			            zos.write(resource);
 			            zos.closeEntry();

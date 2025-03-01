@@ -94,9 +94,8 @@ public final class ResourcePacker implements Runnable {
 		{
 			ByteArraysOutputStream baos;
 			ZipOutputStream zos;
-			//262144000 >> 9
-			baos = new ByteArraysOutputStream(512000);
-			//baos = new ByteArrayOutputStream(262144000);
+			int estimatedwritecount = 194 + (musiccount << 5) + (musiccount << 7);
+			baos = new ByteArraysOutputStream(estimatedwritecount);
 			zos = new ZipOutputStream(baos, Charset.defaultCharset());
 			zos.setMethod(8);
 			zos.setLevel(5);
@@ -124,12 +123,22 @@ public final class ResourcePacker implements Runnable {
 							}
 							sb.insert(close, ',');
 							sb.insert(++close, soundslist);
+							int cap = (int) (close >> 9);
+							if(cap < 1) {
+								cap = 1;
+							}
+							baos.increaseCapacity(cap);
 							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
 							zos.closeEntry();
 							soundsjsonappended = true;
 							continue;
 						}
+						int cap = (int) (entry.getCompressedSize() >> 9);
+						if(cap < 1) {
+							cap = 1;
+						}
+						baos.increaseCapacity(cap);
 						entry = new ZipEntry(entryname);
 						zos.putNextEntry(entry);
 			            while ((len = zis.read(buf)) != -1) {
@@ -184,8 +193,14 @@ public final class ResourcePacker implements Runnable {
 						continue;
 					}
 					try {
+						byte[] resource = success[i] ? topack[i] : silencesound;
+						int cap = resource.length >> 9;
+						if(cap < 1) {
+							cap = 1;
+						}
+						baos.ensureCapacity(cap);
 						zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
-			            zos.write(success[i] ? topack[i] : silencesound);
+			            zos.write(resource);
 			            zos.closeEntry();
 					} catch (IOException e) {
 					}

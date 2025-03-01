@@ -44,6 +44,24 @@ public class ByteArraysOutputStream extends OutputStream {
     	
     }
     
+    public synchronized void increaseCapacity(int count) {
+    	capacity+=count;
+    	byte[][] bufs = this.bufs;
+    	this.bufs = new byte[capacity][];
+    	arraycopy(bufs, 0, this.bufs, 0, bufs.length);
+    }
+    
+    public synchronized void ensureCapacity(int count) {
+    	int remain = capacity - index;
+    	if(remain > count) {
+    		return;
+    	}
+    	capacity+=count-remain;
+    	byte[][] bufs = this.bufs;
+    	this.bufs = new byte[capacity][];
+    	arraycopy(bufs, 0, this.bufs, 0, bufs.length);
+    }
+    
     @Override
     public synchronized void write(int b) {
     	increaseCapacity();

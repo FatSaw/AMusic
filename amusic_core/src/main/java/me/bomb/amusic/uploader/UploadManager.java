@@ -108,7 +108,7 @@ public final class UploadManager extends Thread {
 			}
 			OutputStream os = null;
 			try {
-				os = fs.newOutputStream(musicdir);
+				os = fs.newOutputStream(soundfile);
 				os.write(value);
 				os.close();
 			} catch(IOException e1) {

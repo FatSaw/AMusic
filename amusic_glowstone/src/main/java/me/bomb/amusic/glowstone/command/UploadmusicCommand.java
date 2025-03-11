@@ -77,6 +77,7 @@ public final class UploadmusicCommand implements CommandExecutor {
 		if("finish".equals(args[0])) {
 			if(!sender.hasPermission("amusic.uploadmusic.token")) {
 				LangOptions.uploadmusic_nopermissiontoken.sendMsg(sender);
+				return true;
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);

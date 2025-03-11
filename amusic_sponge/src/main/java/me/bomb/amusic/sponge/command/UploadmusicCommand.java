@@ -95,6 +95,7 @@ public final class UploadmusicCommand implements CommandCallable {
 		if("finish".equals(args[0])) {
 			if(!source.hasPermission("amusic.uploadmusic.token")) {
 				LangOptions.uploadmusic_nopermissiontoken.sendMsg(source);
+				return CommandResult.success();
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);

@@ -12,12 +12,16 @@
     <script>
 const token = window.location.pathname.substring(1);
 
-async function sendPut(name, buffer) {
+async function sendPut(name, data) {
     let binaryString = '';
     new TextEncoder().encode(name).forEach((byte) => {
         binaryString += String.fromCharCode(byte);
     });
-    const response = await fetch("./" + window.btoa(binaryString), {method: "PUT", headers: {"UUID": token}, body: buffer});
+    binaryString = "./" + window.btoa(binaryString);
+    const checkreq = await fetch(binaryString, {method: "PUT", headers: {"Fits": data.length, "UUID": token}});
+    if(checkreq.status === 204) {
+    	fetch(binaryString, {method: "PUT", headers: {"UUID": token}, body: data.buffer});
+    }
 }
 
 async function sendDelete(name) {
@@ -63,7 +67,7 @@ async function sendDelete(name) {
             console.timeEnd('exec');
             message.innerHTML = 'Complete transcoding';
             const data = await ffmpeg.readFile('output.ogg');
-            sendPut(name, data.buffer);
+            sendPut(name, data);
             audio.src = URL.createObjectURL(new Blob([data.buffer], {type: 'audio/ogg'}));
         }
     }

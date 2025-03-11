@@ -12,7 +12,7 @@ import static me.bomb.amusic.util.NameFilter.filterName;
 
 final class PageSender extends Thread {
 	
-	private static final byte[] notfound, updated, nolength, novalidtoken, notoken, headertoolarge, datatoolarge, clidentifier, uidentifier, headerend, headersplit;
+	private static final byte[] empty, notfound, updated, nolength, novalidtoken, notoken, headertoolarge, datatoolarge, clidentifier, uidentifier, expectidentifier, headerend, headersplit;
 	private static final byte[][] web;
 	private static final byte[][] identifier;
 
@@ -20,6 +20,7 @@ final class PageSender extends Thread {
 	private final Socket connected;
 
 	static {
+		empty = new byte[0];
 		notfound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		updated = "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		nolength = "HTTP/1.1 411 Length Required\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
@@ -29,6 +30,7 @@ final class PageSender extends Thread {
 		datatoolarge = "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		clidentifier = "Content-Length: ".getBytes(StandardCharsets.US_ASCII);
 		uidentifier = "UUID: ".getBytes(StandardCharsets.US_ASCII);
+		expectidentifier = "Fits: ".getBytes(StandardCharsets.US_ASCII);
 		headerend = new byte[] {'\r','\n','\r','\n'};
 		headersplit = new byte[] {'\r','\n'};
 		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic sound upload server\r\nCache-Control: no-store\r\nContent-Type: text/html\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
@@ -42,7 +44,7 @@ final class PageSender extends Thread {
 		final ClassLoader classloader = PageSender.class.getClassLoader();
 		web = new byte[5][];
 		identifier = new byte[7][];
-		loadStaticContent(classloader, (byte)0, 2787, "index.html", "", responseparthtml0, responseclose);
+		loadStaticContent(classloader, (byte)0, 2946 , "index.html", "", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
@@ -193,23 +195,42 @@ final class PageSender extends Thread {
 						name = "";
 					}
 					name = name.replace(' ', '_');
-					int pi = i, cl = -1;
+					int pi = i, cl = -1, fits = -1;
 					UUID token = null;
+					boolean expect = false;
 					while((i = indexOf(buf, headersplit, i, split)) != -1) {
 						int length = i - pi;
-						if(length > 16 && length < 26) { //27
-							byte k = 16;
-							int l = pi + k;
-							while(--k > -1) {
-								if(clidentifier[k] != buf[--l]) {
-									break;
+						if(!expect && length > 6 && length < 26 && length != 16) {
+							if(length < 16) {
+								byte k = 6;
+								int l = pi + k;
+								while(--k > -1) {
+									if(expectidentifier[k] != buf[--l]) {
+										break;
+									}
 								}
-							}
-							if(k == -1) {
-								length -= 16;
-								try {
-									cl = Integer.parseInt(new String(buf, pi + 16, length, StandardCharsets.US_ASCII));
-								} catch (IndexOutOfBoundsException | NumberFormatException ex) {
+								if(k == -1) {
+									expect = true;
+									length -= 6;
+									try {
+										fits = Integer.parseInt(new String(buf, pi + 6, length, StandardCharsets.US_ASCII));
+									} catch (IndexOutOfBoundsException | NumberFormatException ex) {
+									}
+								}
+							} else {
+								byte k = 16;
+								int l = pi + k;
+								while(--k > -1) {
+									if(clidentifier[k] != buf[--l]) {
+										break;
+									}
+								}
+								if(k == -1) {
+									length -= 16;
+									try {
+										cl = Integer.parseInt(new String(buf, pi + 16, length, StandardCharsets.US_ASCII));
+									} catch (IndexOutOfBoundsException | NumberFormatException ex) {
+									}
 								}
 							}
 						}
@@ -232,28 +253,39 @@ final class PageSender extends Thread {
 						i += headersplit.length;
 						pi = i;
 					}
+					if(expect) {
+						cl = fits;
+					}
+					
 					if(token != null) {
 						if(cl != -1) {
 							final UploadSession session = uploadmanager.getSession(token);
 							if(session != null) {
 								final boolean canput = session.canPut(cl);
 								if(canput) {
-									connected.getOutputStream().write(updated);
 									split += 4;
-									bytes = new byte[cl];
+									connected.getOutputStream().write(updated);
 									if(cl != 0) {
-										readcount-=split;
-										System.arraycopy(buf, split, bytes, 0, readcount);
-										int pos = readcount;
-										while((readcount = cis.read(buf)) != -1) {
-											System.arraycopy(buf, 0, bytes, pos, readcount);
-											pos+=readcount;
+										if(!expect) {
+											readcount-=split;
+											bytes = new byte[cl];
+											System.arraycopy(buf, split, bytes, 0, readcount);
+											int pos = readcount;
+											while((readcount = cis.read(buf)) != -1) {
+												System.arraycopy(buf, 0, bytes, pos, readcount);
+												pos+=readcount;
+											}
+											if((i = name.lastIndexOf('.')) != -1) {
+												name = name.substring(0, i);
+											}
+											session.put(name, bytes); //PUT
 										}
+									} else {
+										if((i = name.lastIndexOf('.')) != -1) {
+											name = name.substring(0, i);
+										}
+										session.put(name, empty);
 									}
-									if((i = name.lastIndexOf('.')) != -1) {
-										name = name.substring(0, i);
-									}
-									session.put(name, bytes); //PUT
 								} else {
 									connected.getOutputStream().write(datatoolarge);
 								}

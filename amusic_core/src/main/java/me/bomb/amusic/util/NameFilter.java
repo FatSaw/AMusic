@@ -4,6 +4,9 @@ import static java.io.File.separatorChar;
 
 public final class NameFilter {
 	
+	private NameFilter() {
+	}
+	
 	public static String filterName(String name) {
 		char[] chars = name.toCharArray();
 		int finalcount = 0;

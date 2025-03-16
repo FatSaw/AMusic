@@ -73,7 +73,11 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 		}
 		SimpleConfiguration sc = new SimpleConfiguration(buf);
 		String replacelangkey = "replacelang\0", localisationkey = "localisation\0", localisation = "default", localisation0 = localisationkey.concat(localisation).concat("\0");
-		for (LangOptions lang : values()) {
+		LangOptions[] values = values();
+		final int valuescount = values.length;
+		int i = valuescount;
+		while (--i > -1) {
+			LangOptions lang = values[i];
 			lang.text.clear();
 			String langname = lang.name();
 			String msg = sc.getStringOrDefault(localisation0.concat(langname.replace("_", "\0")), langname);
@@ -81,12 +85,14 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			lang.text.put(defaultlang, msg);
 		}
 		String[] localisationkeys = sc.getSubKeys(localisationkey);
-		int i = localisationkeys.length;
+		i = localisationkeys.length;
 		while(--i > -1) {
 			localisation = localisationkeys[i];
 			if(localisation.equals("default")) continue;
 			localisation0 = localisationkey.concat(localisation).concat("\0");
-			for (LangOptions lang : values()) {
+			int j = valuescount;
+			while (--j > -1) {
+				LangOptions lang = values[j];
 				String msg = sc.getStringOrDefault(localisation0.concat(lang.name().replace("_", "\0")), null);
 				if(msg==null) continue;
 				msg = msg.replace("\\n", "\n");
@@ -98,7 +104,9 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 		while(--i > -1) {
 			String to = replacelangkeys[i], replacekey0 = replacelangkey.concat(to);
 			String from = sc.getStringOrDefault(replacekey0, to);
-			for(LangOptions lang : values()) {
+			int j = valuescount;
+			while (--j > -1) {
+				LangOptions lang = values[j];
 				lang.text.put(to, lang.text.get(from));
 			}
 		}

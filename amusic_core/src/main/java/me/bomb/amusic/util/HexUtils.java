@@ -68,7 +68,7 @@ public final class HexUtils {
 				return (byte) (c + 0x0A);
 			}
 		} else if((0xFFFFFFF8 & c) == 0x30 || (0xFFFFFFFE & c) == 0x38) {
-			return (byte) (c-0x30);
+			return (byte) (c & 0x0F);
 		} else {
 			return -1;
 		}

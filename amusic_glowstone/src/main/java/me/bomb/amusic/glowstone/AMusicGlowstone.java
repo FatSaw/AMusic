@@ -8,7 +8,6 @@ import java.nio.file.spi.FileSystemProvider;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
@@ -129,7 +128,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 
 	//PLUGIN INIT START
 	public void onEnable() {
-		Server server = Bukkit.getServer();
+		final Server server = this.getServer();
 		if(!this.configerrors.isEmpty()) {
 			server.getLogger().severe("AMusic config initialization errors: \n".concat(configerrors));
 			return;
@@ -137,7 +136,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 		if(this.amusic == null) {
 			return;
 		}
-		SelectorProcessor selectorprocessor = new SelectorProcessor(Bukkit.getServer(), new Random());
+		SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
 		PluginCommand loadmusiccommand = getCommand("loadmusic");
 		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic, selectorprocessor));
 		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, amusic));
@@ -157,7 +156,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 		uploadmusiccommand.setTabCompleter(new UploadmusicTabComplete(amusic));
 		if(playerips != null) {
 			playerips.clear();
-			for(Player player : Bukkit.getOnlinePlayers()) {
+			for(Player player : server.getOnlinePlayers()) {
 				playerips.put(player, player.getAddress().getAddress());
 			}
 		}

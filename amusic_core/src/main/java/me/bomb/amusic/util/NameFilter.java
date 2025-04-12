@@ -13,8 +13,7 @@ public final class NameFilter {
 		int i = chars.length;
 		while(--i > -1) {
 			char c = chars[i];
-			//if(c == separatorChar || c == '/' || c == '\\' || c == ':' || c == '<' || c == '>' || c == '*' || c == '?' || c == '|' || c == '\"' || (c > 0 && c < 32)) {
-			if(c == separatorChar || c == '/' || c == '\\') {
+			if(c == separatorChar || c == '/' || c == '\\' || c == '\0') {
 				chars[i] = '\0';
 			} else {
 				++finalcount;

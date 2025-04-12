@@ -1,10 +1,16 @@
 package me.bomb.amusic.resourceserver;
 
+import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+
+import javax.net.ServerSocketFactory;
+
+import me.bomb.amusic.http.ServerManager;
 
 public final class ResourceManager {
 	
@@ -16,12 +22,22 @@ public final class ResourceManager {
 
 	public final int maxbuffersize;
 	private final byte[] salt;
+	private final ServerManager server;
 	
-	public ResourceManager(int maxbuffersize, boolean servercache, byte[] salt, boolean waitacception) {
+	public ResourceManager(int maxbuffersize, boolean servercache, byte[] salt, boolean waitacception, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount) {
 		this.maxbuffersize = maxbuffersize;
 		resources = servercache ? new ConcurrentHashMap<String, byte[]>() : null;
 		this.salt = salt;
 		accepted = waitacception ? new ConcurrentSkipListSet<UUID>() : null;
+		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new ResourceSender(this), connectcount);
+	}
+	
+	public void start() {
+		server.start();
+	}
+	
+	public void end() {
+		server.end();
 	}
 	
 	/**

@@ -1,8 +1,8 @@
 package me.bomb.amusic;
 
 import java.net.InetAddress;
+import java.util.Collection;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.SoundInfo;
@@ -10,7 +10,6 @@ import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.resourceserver.ResourceServer;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.uploader.UploadManager;
 
@@ -18,19 +17,17 @@ public class LocalAMusic implements AMusic {
 	public final SoundSource source;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
-	public final ResourceServer resourceserver;
 	public final ResourceDispatcher dispatcher;
 	public final Data datamanager;
 	public final UploadManager uploadermanager;
 	
-	public LocalAMusic(Configuration config, SoundSource source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips) {
+	public LocalAMusic(Configuration config, SoundSource source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
 		this.source = source;
-		this.resourcemanager = new ResourceManager(config.packsizelimit, config.servercache, config.clientcache ? config.tokensalt : null, config.waitacception);
+		this.resourcemanager = new ResourceManager(config.packsizelimit, config.servercache, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
-		this.resourceserver = new ResourceServer(config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, resourcemanager);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, config.sendpackhost);
 		this.datamanager = Data.getDefault(config.packeddir, !config.processpack);
-		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadtimeout, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.serverfactory) : null;
+		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 	}
 	
 	/**
@@ -38,7 +35,7 @@ public class LocalAMusic implements AMusic {
 	 */
 	public void enable() {
 		positiontracker.start();
-		resourceserver.start();
+		resourcemanager.start();
 		datamanager.start();
 		if(this.uploadermanager != null) uploadermanager.start();
 		datamanager.load();
@@ -49,11 +46,9 @@ public class LocalAMusic implements AMusic {
 	 */
 	public void disable() {
 		positiontracker.end();
-		resourceserver.end();
+		resourcemanager.end();
 		datamanager.end();
 		if(this.uploadermanager != null) uploadermanager.end();
-		while (positiontracker.isAlive() || resourceserver.isAlive()) { //DONT STOP)
-		}
 	}
 	
 	/**

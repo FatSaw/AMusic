@@ -16,10 +16,12 @@ amusic:
    #Port - should be opened
    port: 25532
    backlog: 0
+   #Connect timeout (in ms)
+   timeout: 5000
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
-   #Session timeout, session ends without save if no activity (in ms)
-   timeout: 600000
+   #Session lifetime, session ends without save if no activity (in ms)
+   lifetime: 600000
    limit:
     #Limit upload size in bytes (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 52428800, 1.16-1.17.1 104857600, 1.18+ 262144000
     size: 262144000
@@ -32,6 +34,8 @@ amusic:
    ip: 0.0.0.0
    port: 25530
    backlog: 0
+   #Connect timeout (in ms)
+   timeout: 5000
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
    #Wait acception - true resourcepack download start only after resourcepack status accepted recieved, false - resourcepack status ignored, blocked - auto

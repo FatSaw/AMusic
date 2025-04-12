@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.nio.file.FileSystem;
 import java.nio.file.InvalidPathException;
@@ -28,6 +27,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import me.bomb.amusic.http.SimpleServerSocketFactory;
 import me.bomb.amusic.util.SimpleConfiguration;
 
 public final class Configuration {
@@ -41,13 +41,14 @@ public final class Configuration {
 	public final InetAddress sendpackifip, uploadifip, connectifip, connectremoteip;
 	public final int sendpackport, uploadport, connectport;
 	public final int sendpackbacklog, uploadbacklog, connectbacklog;
+	public final int sendpacktimeout, uploadtimeout;
 	
 	public final boolean uploadstrictaccess, sendpackstrictaccess;
 	
 	public final Path encoderbinary;
 	
 	public final boolean processpack, servercache, clientcache, waitacception;
-	public final int uploadtimeout, uploadlimitsize, uploadlimitcount, packsizelimit;
+	public final int uploadlifetime, uploadlimitsize, uploadlimitcount, packsizelimit;
 	public final short packthreadlimitcount;
 	public final float packthreadcoefficient;
 	
@@ -55,9 +56,9 @@ public final class Configuration {
 	public final int encoderbitrate, encodersamplingrate;
 	
 	protected final byte[] tokensalt;
-	protected final ServerSocketFactory serverfactory;
+	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadtimeout, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory serverfactory) {
+	public Configuration(Path musicdir, Path packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -78,6 +79,8 @@ public final class Configuration {
 		this.sendpackbacklog = sendpackbacklog;
 		this.uploadbacklog = uploadbacklog;
 		this.connectbacklog = connectbacklog;
+		this.sendpacktimeout = sendpacktimeout;
+		this.uploadtimeout = uploadtimeout;
 		this.uploadstrictaccess = uploadstrictaccess;
 		this.sendpackstrictaccess = sendpackstrictaccess;
 		this.encoderbinary = encoderbinary;
@@ -85,7 +88,7 @@ public final class Configuration {
 		this.servercache = servercache;
 		this.clientcache = clientcache;
 		this.waitacception = waitacception;
-		this.uploadtimeout = uploadtimeout;
+		this.uploadlifetime = uploadlifetime;
 		this.uploadlimitsize = uploadlimitsize;
 		this.uploadlimitcount = uploadlimitcount;
 		this.packsizelimit = packsizelimit;
@@ -95,7 +98,8 @@ public final class Configuration {
 		this.encoderbitrate = encoderbitrate;
 		this.encodersamplingrate = encodersamplingrate;
 		this.tokensalt = tokensalt;
-		this.serverfactory = serverfactory;
+		this.sendpackserverfactory = sendpackserverfactory;
+		this.uploadserverfactory = uploadserverfactory;
 	}
 	
 	public Configuration(FileSystem fs, final Path configfile, final Path musicdir, final Path packeddir, final boolean defaultwaitacception, final boolean defaultremoteclient) {
@@ -216,29 +220,9 @@ public final class Configuration {
 							sslserverfactory = null;
 						}
 					}
-					this.serverfactory = sslserverfactory;
+					this.uploadserverfactory = sslserverfactory;
 				} else {
-					this.serverfactory = new ServerSocketFactory() {
-						@Override
-						public ServerSocket createServerSocket() throws IOException {
-							return new ServerSocket();
-						}
-						
-						@Override
-						public ServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) throws IOException {
-							return new ServerSocket(port, backlog, ifAddress);
-						}
-						
-						@Override
-						public ServerSocket createServerSocket(int port, int backlog) throws IOException {
-							return new ServerSocket(port, backlog);
-						}
-						
-						@Override
-						public ServerSocket createServerSocket(int port) throws IOException {
-							return new ServerSocket(port);
-						}
-					};
+					this.uploadserverfactory = new SimpleServerSocketFactory();
 				}
 				
 				InetAddress uploadifip = null;
@@ -254,18 +238,20 @@ public final class Configuration {
 				this.uploadport = sc.getIntOrError("amusic\0server\0upload\0port", errors);
 				this.uploadbacklog = sc.getIntOrError("amusic\0server\0upload\0backlog", errors);
 				this.uploadstrictaccess = sc.getBooleanOrError("amusic\0server\0upload\0strictaccess", errors);
+				this.uploadlifetime = sc.getIntOrError("amusic\0server\0upload\0lifetime", errors);
 				this.uploadtimeout = sc.getIntOrError("amusic\0server\0upload\0timeout", errors);
 				this.uploadlimitsize = sc.getIntOrError("amusic\0server\0upload\0limit\0size", errors);
 				this.uploadlimitcount = sc.getIntOrError("amusic\0server\0upload\0limit\0count", errors);
 			} else {
 				this.uploadhost = null;
 				this.uploadhttps = false;
-				this.serverfactory = null;
+				this.uploadserverfactory = null;
 				this.uploadifip = null;
 				this.uploadport = 0;
 				this.uploadbacklog = 0;
-				this.uploadstrictaccess = false;
 				this.uploadtimeout = 0;
+				this.uploadstrictaccess = false;
+				this.uploadlifetime = 0;
 				this.uploadlimitsize = 0;
 				this.uploadlimitcount = 0;
 			}
@@ -282,9 +268,11 @@ public final class Configuration {
 			this.sendpackifip = sendpackifip;
 			this.sendpackport = sc.getIntOrError("amusic\0server\0sendpack\0port", errors);
 			this.sendpackbacklog = sc.getIntOrError("amusic\0server\0sendpack\0backlog", errors);
+			this.sendpacktimeout = sc.getIntOrError("amusic\0server\0sendpack\0timeout", errors);
 			this.sendpackstrictaccess = sc.getBooleanOrError("amusic\0server\0sendpack\0strictaccess", errors);
 			this.waitacception = sc.getBooleanOrDefault("amusic\0server\0sendpack\0waitacception", defaultwaitacception);
 			this.tokensalt = sc.getBytesBase64OrError("amusic\0server\0sendpack\0tokensalt", errors);
+			this.sendpackserverfactory = new SimpleServerSocketFactory();
 			if(this.connectuse) {
 				InetAddress connectifip = null;
 				String connectipstr = sc.getStringOrError("amusic\0server\0connect\0ip", errors);
@@ -370,18 +358,21 @@ public final class Configuration {
 			this.encoderuse = false;
 			this.uploadhost = null;
 			this.uploadhttps = false;
-			this.serverfactory = null;
+			this.sendpackserverfactory = null;
+			this.uploadserverfactory = null;
 			this.uploadifip = null;
 			this.uploadport = 0;
 			this.uploadbacklog = 0;
-			this.uploadstrictaccess = false;
 			this.uploadtimeout = 0;
+			this.uploadstrictaccess = false;
+			this.uploadlifetime = 0;
 			this.uploadlimitsize = 0;
 			this.uploadlimitcount = 0;
 			this.sendpackhost = null;
 			this.sendpackifip = null;
 			this.sendpackport = 0;
 			this.sendpackbacklog = 0;
+			this.sendpacktimeout = 0;
 			this.sendpackstrictaccess = false;
 			this.waitacception = false;
 			this.tokensalt = null;
@@ -403,13 +394,9 @@ public final class Configuration {
 		this.errors = errors.toString();
 	}
 	
-	
-	
 	private static void appendError(String error, StringBuilder sb) {
 		sb.append(error);
 		sb.append('\n');
 	}
-	
-	
 
 }

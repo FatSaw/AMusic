@@ -5,12 +5,15 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ServerSocketFactory;
+
+import me.bomb.amusic.http.ServerManager;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
@@ -20,17 +23,17 @@ public final class UploadManager extends Thread {
 	private final FileSystemProvider fs;
 	private final Path musicdir;
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
-	private final UploaderServer server;
+	private final ServerManager server;
 	private volatile boolean run;
 	
-	public UploadManager(int expiretime, int limitsize, int limitcount, Path musicdir, final ConcurrentHashMap<Object, InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final ServerSocketFactory serverfactory) {
+	public UploadManager(int expiretime, int limitsize, int limitcount, Path musicdir, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount) {
 		this.expiretime = expiretime;
 		this.limitsize = limitsize;
 		this.limitcount = limitcount;
 		this.fs = musicdir.getFileSystem().provider();
 		this.musicdir = musicdir;
 		this.sessions = new ConcurrentHashMap<>();
-		this.server = new UploaderServer(this, onlineips, ip, port, backlog, serverfactory);
+		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new PageSender(this), connectcount);
 	}
 	
 	@Override

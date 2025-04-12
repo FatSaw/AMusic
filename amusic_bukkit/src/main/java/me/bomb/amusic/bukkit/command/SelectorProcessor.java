@@ -1,7 +1,6 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -106,12 +105,13 @@ public final class SelectorProcessor {
 	}
 	
 	protected UUID[] getAllGlobal() {
-		Collection<? extends Player> players = server.getOnlinePlayers();
-		int i = players.size();
+		Collection<? extends Player> playerscollection = server.getOnlinePlayers();
+		Player[] players = playerscollection.toArray(new Player[playerscollection.size()]);
+		int i = players.length;
 		UUID[] targetarray = new UUID[i];
-		Iterator<? extends Player> playersiterator = players.iterator();
-		while(playersiterator.hasNext()) {
-			targetarray[--i] = playersiterator.next().getUniqueId();
+		
+		while(--i > -1) {
+			targetarray[i] = players[i].getUniqueId();
 		}
 		return targetarray;
 	}

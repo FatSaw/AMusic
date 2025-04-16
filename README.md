@@ -2,12 +2,25 @@
 Music through resource pack
 ## Features:
 - Clientside, serverside caching
-- Addition to exsisting resourcepack (Place source resourcepack .zip (with same name as playlist) into /AMusic/Music directory)
+- Addition to exsisting resourcepack
 - 5 repeat types (repeatone,repeatall,playone,playall,random)
 - Web sound uploader with clientside convertation
-- Large number of supported versions `1.7.10` - `1.21.4`
+- Large number of supported versions `1.7.10` - `1.21.5`
 - Position and count selectors (bukkit only)
 - Volume control option `Voice` only `1.13+`
+
+## Files and directories
+- `./config.yml` - configuration file
+- `./lang.yml` - localisation file
+- `./resourcepack.zip` - default parent resourcepack file
+- `./Music/` - music directory
+- `./Music/<playlist_name>/` - playlist directory
+- `./Music/<playlist_name>/<sound_name>.ogg` - converted sound
+- `./Music/<playlist_name>/<sound_name>.<!ogg>` - not converted sound (Ignored if serverside encoder disabled)
+- `./Music/<playlist_name>.zip` - playlist specific parent resourcepack file
+- `./Packed/` - packed resourcepacks directory
+- `./Packed/<playlist_name_base64url>.zip` - packed resourcepack
+- `./Packed/<playlist_name_base64url>.ampi` - packed resourcepack info
 
 ## Commands:
 - `/loadmusic @n <playlistname>` - update playlist
@@ -84,10 +97,12 @@ amusic:
    #Port - should be opened
    port: 25532
    backlog: 0
+   #Connect timeout (in ms)
+   timeout: 0
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
-   #Session timeout, session ends without save if no activity (in ms)
-   timeout: 600000
+   #Session lifetime, session ends without save if no activity (in ms)
+   lifetime: 600000
    limit:
     #Limit upload size in bytes (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 52428800, 1.16-1.17.1 104857600, 1.18+ 262144000
     size: 262144000
@@ -100,6 +115,8 @@ amusic:
    ip: 0.0.0.0
    port: 25530
    backlog: 0
+   #Connect timeout (in ms)
+   timeout: 0
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
    #Wait acception - true resourcepack download start only after resourcepack status accepted recieved, false - resourcepack status ignored, blocked - auto
@@ -127,6 +144,11 @@ amusic:
   processpack: true
   #Size limit - max packed resourcepack size recomended values for specific versions (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 '52428800', 1.16-1.17.1 '104857600', 1.18+ '262144000'
   sizelimit: 262144000
+  packthread:
+   #Limit count - limit maximal thread count per packer, 0 - do not use
+   limitcount: 0
+   #Coefficient - allowed value range 0.0 - 1.0, calculates thread count, works if limitcount greater than 1
+   coefficient: 0.5
   cache:
    #Serverside caching - store all packed resourcepacks in ram
    server: true
@@ -140,7 +162,7 @@ amusic:
   bitrate: 64000
   channels: 2
   samplingrate: 44100
-  async: true
+
 ```
 ## Dependencies
 

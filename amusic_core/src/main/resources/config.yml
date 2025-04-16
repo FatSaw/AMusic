@@ -17,7 +17,7 @@ amusic:
    port: 25532
    backlog: 0
    #Connect timeout (in ms)
-   timeout: 5000
+   timeout: 0
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
    #Session lifetime, session ends without save if no activity (in ms)
@@ -35,7 +35,7 @@ amusic:
    port: 25530
    backlog: 0
    #Connect timeout (in ms)
-   timeout: 5000
+   timeout: 0
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
    #Wait acception - true resourcepack download start only after resourcepack status accepted recieved, false - resourcepack status ignored, blocked - auto

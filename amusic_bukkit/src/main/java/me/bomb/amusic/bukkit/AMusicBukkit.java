@@ -145,7 +145,7 @@ public final class AMusicBukkit extends JavaPlugin {
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				Runtime runtime = Runtime.getRuntime();
 				SoundSource source = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
-				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips);
+				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

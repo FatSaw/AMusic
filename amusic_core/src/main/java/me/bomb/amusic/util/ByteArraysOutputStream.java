@@ -13,7 +13,7 @@ import static java.lang.System.arraycopy;
  * The data can be retrieved using {@code toByteArray()} and
  * {@code toByteArrays()}.
  * <p>
- * Closing a {@code ByteArrayOutputStream} has no effect. The methods in
+ * Closing a {@code ByteArraysOutputStream} has no effect. The methods in
  * this class can be called after the stream has been closed without
  * generating an {@code IOException}.
  */
@@ -62,6 +62,9 @@ public class ByteArraysOutputStream extends OutputStream {
     	arraycopy(bufs, 0, this.bufs, 0, bufs.length);
     }
     
+    /**
+     * Inefficient, should be avoided
+     */
     @Override
     public synchronized void write(int b) {
     	increaseCapacity();
@@ -70,13 +73,19 @@ public class ByteArraysOutputStream extends OutputStream {
         ++index;
     }
     
+    /**
+     * Buffer should not be reused
+     */
     @Override
     public synchronized void write(byte buf[]) {
     	increaseCapacity();
     	bufs[index] = buf;
         ++index;
     }
-    
+
+    /**
+     * Inefficient, should be avoided
+     */
     @Override
     public synchronized void write(byte b[], int off, int len) {
     	increaseCapacity();
@@ -86,11 +95,13 @@ public class ByteArraysOutputStream extends OutputStream {
         ++index;
     }
 
-    public void writeBytes(byte b[]) {
-        write(b, 0, b.length);
+    public synchronized void writeBytes(byte buf[]) {
+        write(buf, 0, buf.length);
     }
     
     public synchronized void writeTo(OutputStream out) throws IOException {
+    	final byte[][] bufs = this.bufs;
+    	final int index = this.index;
     	for(int i = 0;i < index;++i) {
             out.write(bufs[i], 0, bufs[i].length);
     	}
@@ -101,32 +112,36 @@ public class ByteArraysOutputStream extends OutputStream {
     }
     
     public synchronized byte[][] toByteArrays() {
-    	byte[][] bufs = new byte[index][];
-    	for(int i = 0;i < index;++i) {
+    	int i = this.index;
+    	byte[][] bufs = new byte[i][];
+    	while(--i > -1) {
     		bufs[i] = this.bufs[i];
     	}
         return bufs;
     }
     
     public synchronized byte[] toByteArray() {
-    	int pos = 0;
-    	for(int i = 0;i < index;++i) {
-    		pos += this.bufs[i].length;
+    	final byte[][] bufs = this.bufs;
+    	final int index = this.index;
+    	int i = index,pos = 0;
+    	while(--i > -1) {
+    		pos += bufs[i].length;
     	}
     	byte[] buf = new byte[pos];
-    	pos = 0;
-    	for(int i = 0;i < index;++i) {
-    		byte[] src = this.bufs[i];
+    	i = index;
+    	while(--i > -1) {
+    		byte[] src = bufs[i];
+    		pos-=src.length;
     		arraycopy(src, 0, buf, pos, src.length);
-    		pos+=src.length;
     	}
         return buf;
     }
     
     public synchronized int size() {
-    	int size = 0;
-    	for(int i = 0;i < index;++i) {
-    		size += this.bufs[i].length;
+    	final byte[][] bufs = this.bufs;
+    	int i = this.index, size = 0;
+    	while(--i > -1) {
+    		size += bufs[i].length;
     	}
     	return size;
     }

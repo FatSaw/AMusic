@@ -8,8 +8,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.resource.EnumStatus;
@@ -23,7 +23,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private volatile boolean run;
 	private ServerSocket server;
 
-	public ServerAMusic(Configuration config, SoundSource source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object, InetAddress> playerips) {
+	public ServerAMusic(Configuration config, SoundSource source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
 		super(config, source, packsender, soundstarter, soundstopper, playerips);
 		this.hostip = config.connectifip;
 		this.remoteip = config.connectremoteip;

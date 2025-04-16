@@ -8,16 +8,17 @@ import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.UUID;
 
+import me.bomb.amusic.http.ServerWorker;
+
 import static me.bomb.amusic.util.NameFilter.filterName;
 
-final class PageSender extends Thread {
+final class PageSender implements ServerWorker {
 	
 	private static final byte[] empty, notfound, updated, nolength, novalidtoken, notoken, headertoolarge, datatoolarge, clidentifier, uidentifier, expectidentifier, headerend, headersplit;
 	private static final byte[][] web;
 	private static final byte[][] identifier;
 
 	private final UploadManager uploadmanager;
-	private final Socket connected;
 
 	static {
 		empty = new byte[0];
@@ -83,12 +84,11 @@ final class PageSender extends Thread {
 		}
 	}
 
-	protected PageSender(UploadManager uploadmanager, Socket connected) {
+	protected PageSender(UploadManager uploadmanager) {
 		this.uploadmanager = uploadmanager;
-		this.connected = connected;
 	}
 
-	public void run() {
+	public void processConnection(final Socket connected) throws IOException {
 		byte[] buf = new byte[2048];
 		
 		try {
@@ -307,7 +307,7 @@ final class PageSender extends Thread {
 		} catch (IOException e) {
 		} finally {
 			try {
-				this.connected.close();
+				connected.close();
 			} catch (IOException e) {
 			}
 		}

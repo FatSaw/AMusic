@@ -10,19 +10,22 @@ import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.uploader.UploadManager;
 
 public class LocalAMusic implements AMusic {
-	public final SoundSource source;
+	public final SoundSource soundsource;
+	public final PackSource packsource;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final ResourceDispatcher dispatcher;
 	public final Data datamanager;
 	public final UploadManager uploadermanager;
 	
-	public LocalAMusic(Configuration config, SoundSource source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
-		this.source = source;
+	public LocalAMusic(Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
+		this.soundsource = soundsource;
+		this.packsource = packsource;
 		this.resourcemanager = new ResourceManager(config.packsizelimit, config.servercache, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, config.sendpackhost);
@@ -180,7 +183,7 @@ public class LocalAMusic implements AMusic {
 	 * Loads resource pack to player.
 	 */
 	public final void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
-		new ResourceFactory(name, playeruuid, datamanager, dispatcher, source, update, statusreport, true);
+		new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport, true);
 	}
 
 	/**

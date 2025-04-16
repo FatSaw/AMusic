@@ -6,13 +6,12 @@ import java.util.Iterator;
 import java.util.Map;
 
 import me.bomb.amusic.resource.ResourcePacker;
+import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
-
-import static me.bomb.amusic.util.NameFilter.filterName;
 
 public abstract class Data {
 	
-	protected final Map<String, DataEntry> options = new HashMap<String, DataEntry>();
+	protected final Map<String,DataEntry> options = new HashMap<>();
 	public final boolean lockwrite;
 	
 	protected Data(boolean lockwrite) {
@@ -48,7 +47,7 @@ public abstract class Data {
 	 * @param source
 	 * @return ResourcePacker if write allowed
 	 */
-	public abstract ResourcePacker createPacker(final String id, final SoundSource source);
+	public abstract ResourcePacker createPacker(final String id, final SoundSource source,  final PackSource packsource);
 	
 	/**
 	 * Update packed info
@@ -58,38 +57,6 @@ public abstract class Data {
 	 */
 	public abstract boolean update(final String id, final ResourcePacker packer);
 	
-	
-	/**
-	 * Update or create new packed info
-	 * @param id
-	 * @return true if something changed
-	 */
-	public boolean update(final Path datapath, final String id,final int size,final byte[] sha1,final SoundInfo[] sounds) {
-		if(this.lockwrite || id == null) {
-			return false;
-		}
-		if(sounds == null) {
-			options.remove(id);
-			save();
-			return true;
-		}
-		if (containsPlaylist(id)) {
-			DataEntry options = getPlaylist(id);
-			options.sha1 = sha1;
-			options.size = size;
-			options.sounds = sounds;
-			options.saved = false;
-			save();
-			return true;
-		}
-		try {
-			options.put(id, new DataEntry(datapath, size, filterName(id), sounds, sha1));
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		}
-		save();
-		return true;
-	}
 
 	public final DataEntry getPlaylist(String playlistname) {
 		return options.get(playlistname);

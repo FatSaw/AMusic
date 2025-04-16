@@ -1,5 +1,6 @@
 package me.bomb.amusic.resource;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -13,6 +14,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
 import me.bomb.amusic.util.ByteArraysOutputStream;
@@ -26,10 +28,9 @@ public final class ResourcePacker implements Runnable {
 	public SoundInfo[] sounds;
 	public byte[] sha1, resourcepack = null;
 
-	private final SoundSource source;
+	private final SoundSource soundsource;
 	private final String id;
-	public final Path resourcefile;
-	private final Path sourcearchive;
+	private final PackSource packsource;
 	private int time = -1;
 	
 	static {
@@ -49,16 +50,15 @@ public final class ResourcePacker implements Runnable {
 		silencesound = buf;
 	}
 	
-	public ResourcePacker(SoundSource source, String id, Path resourcefile, Path sourcearchive) {
-		this.source = source;
+	public ResourcePacker(SoundSource source, String id, PackSource packsource) {
+		this.soundsource = source;
 		this.id = id;
-		this.resourcefile = resourcefile;
-		this.sourcearchive = sourcearchive;
+		this.packsource = packsource;
 	}
 	
 	public void run() {
 		final long timestart = currentTimeMillis();
-		SourceEntry sourceentry = source.get(this.id);
+		SourceEntry sourceentry = soundsource.get(this.id);
 		if(sourceentry == null) {
 			return;
 		}
@@ -100,10 +100,11 @@ public final class ResourcePacker implements Runnable {
 			zos.setMethod(8);
 			zos.setLevel(5);
 			boolean packmcmetafound = false, soundsjsonappended = false;
-			if(sourcearchive!=null) {
+			byte[] srcbuf = null;
+			if(packsource != null && (srcbuf = packsource.get(id)) != null) {
 				ZipInputStream zis = null;
 				try {
-					zis = new ZipInputStream(sourcearchive.getFileSystem().provider().newInputStream(sourcearchive), Charset.defaultCharset());
+					zis = new ZipInputStream(new ByteArrayInputStream(srcbuf), Charset.defaultCharset());
 					ZipEntry entry;
 					int len;
 					byte[] buf = new byte[0x2000];

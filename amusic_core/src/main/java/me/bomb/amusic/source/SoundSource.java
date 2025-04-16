@@ -1,7 +1,5 @@
 package me.bomb.amusic.source;
 
-import java.nio.file.Path;
-
 public abstract class SoundSource {
 
 	/**
@@ -14,7 +12,5 @@ public abstract class SoundSource {
 	 * @return true if entry has at least one element
 	 */
 	public abstract boolean exists(String entrykey);
-	
-	public abstract Path getSource();
 	
 }

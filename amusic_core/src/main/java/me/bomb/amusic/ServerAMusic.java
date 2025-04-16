@@ -15,6 +15,7 @@ import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
+import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 
 public final class ServerAMusic extends LocalAMusic implements Runnable {
@@ -23,8 +24,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private volatile boolean run;
 	private ServerSocket server;
 
-	public ServerAMusic(Configuration config, SoundSource source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
-		super(config, source, packsender, soundstarter, soundstopper, playerips);
+	public ServerAMusic(Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
+		super(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips);
 		this.hostip = config.connectifip;
 		this.remoteip = config.connectremoteip;
 		this.port = config.connectport;
@@ -576,11 +577,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 					}
 				}
 			};
-			new ResourceFactory(name, playeruuids, datamanager, dispatcher, source, update, statusreport, false);
+			new ResourceFactory(name, playeruuids, datamanager, dispatcher, soundsource, packsource, update, statusreport, false);
 			
 			return statusb;
 		}
-		new ResourceFactory(name, playeruuids, datamanager, dispatcher, source, update, null, true);
+		new ResourceFactory(name, playeruuids, datamanager, dispatcher, soundsource, packsource, update, null, true);
 		return new byte[0];
 	}
 	

@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.DataEntry;
+import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 
 public final class ResourceFactory implements Runnable {
@@ -12,16 +13,18 @@ public final class ResourceFactory implements Runnable {
 	private final UUID[] targets;
 	private final Data datamanager;
 	private final ResourceDispatcher dispatcher;
-	private final SoundSource source;
+	private final SoundSource soundsource;
+	private final PackSource packsource;
 	private final boolean update;
 	private final StatusReport statusreport;
 	
-	public ResourceFactory(String id, UUID[] targets, Data datamanager, ResourceDispatcher dispatcher, SoundSource source, boolean update, StatusReport statusreport, boolean async) {
+	public ResourceFactory(String id, UUID[] targets, Data datamanager, ResourceDispatcher dispatcher, SoundSource soundsource, PackSource packsource, boolean update, StatusReport statusreport, boolean async) {
 		this.id = id;
 		this.targets = targets;
 		this.datamanager = datamanager;
 		this.dispatcher = dispatcher;
-		this.source = source;
+		this.soundsource = soundsource;
+		this.packsource = packsource;
 		this.update = update;
 		this.statusreport = statusreport;
 		if(async) {
@@ -39,7 +42,7 @@ public final class ResourceFactory implements Runnable {
 				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
 				return;
 			}
-			ResourcePacker resourcepacker = datamanager.createPacker(this.id, source);
+			ResourcePacker resourcepacker = datamanager.createPacker(this.id, soundsource, packsource);
 			
 			final boolean updated = datamanager.update(this.id, resourcepacker);
 			if(resourcepacker == null) {

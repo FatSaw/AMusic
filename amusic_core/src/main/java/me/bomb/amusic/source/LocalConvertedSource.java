@@ -180,9 +180,4 @@ public final class LocalConvertedSource extends SoundSource {
 		return false;
 	}
 
-	@Override
-	public Path getSource() {
-		return this.musicdir;
-	}
-
 }

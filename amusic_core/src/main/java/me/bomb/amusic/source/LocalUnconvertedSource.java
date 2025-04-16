@@ -157,10 +157,5 @@ public final class LocalUnconvertedSource extends SoundSource {
 		}
 		return false;
 	}
-	
-	@Override
-	public Path getSource() {
-		return this.musicdir;
-	}
 
 }

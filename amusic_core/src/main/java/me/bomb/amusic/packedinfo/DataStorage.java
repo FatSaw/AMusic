@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 
 import me.bomb.amusic.resource.ResourcePacker;
+import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 
 import static me.bomb.amusic.util.Base64Utils.toBase64Url;
@@ -119,7 +120,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 						++j;
 					}
 					is.close();
-					DataEntry dataentry = new DataEntry(datapath, packedsize, packedname, sounds, sha1);
+					DefaultDataEntry dataentry = new DefaultDataEntry(datapath, packedsize, packedname, sounds, sha1);
 					dataentry.saved = true;
 					options.put(id, dataentry);
 				} catch (IOException e1) {
@@ -185,7 +186,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			for(Entry<String, DataEntry> entry : options.entrySet()) {
 				String id = entry.getKey();
 				id = toBase64Url(id);
-				DataEntry dataentry = entry.getValue();
+				DefaultDataEntry dataentry = (DefaultDataEntry) entry.getValue();
 				if(dataentry.saved || dataentry.size < 0 || dataentry.name == null || dataentry.sounds == null || dataentry.sha1 == null || dataentry.sha1.length != 20) {
 					continue;
 				}
@@ -294,13 +295,12 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 		}
 	}
 	
-	public ResourcePacker createPacker(final String id, final SoundSource source) {
-		if(this.lockwrite || id == null || source == null || !source.exists(id)) {
+	public ResourcePacker createPacker(final String id, final SoundSource soundsource, final PackSource packsource) {
+		if(this.lockwrite || id == null || soundsource == null || !soundsource.exists(id)) {
 			return null;
 		}
 		final String filteredid = filterName(id);
-		Path sourcearchive = source.getSource().resolve(filteredid.concat(".zip")), resourcefile = datadirectory.resolve(toBase64Url(id).concat(".zip"));
-		ResourcePacker packer = new ResourcePacker(source, filteredid, resourcefile, sourcearchive);
+		ResourcePacker packer = new ResourcePacker(soundsource, filteredid, packsource);
 		return packer;
 	}
 	
@@ -308,10 +308,9 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 		if(this.lockwrite || id == null) {
 			return false;
 		}
-		final Path resourcefile;
-		if(packer == null || (resourcefile = packer.resourcefile) == null) {
+		if(packer == null) {
 			final boolean deleted;
-			DataEntry data = options.remove(id);
+			DefaultDataEntry data = (DefaultDataEntry) options.remove(id);
 			if(data == null) {
 				return false;
 			}
@@ -328,6 +327,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 		if((resourcepack = packer.resourcepack) == null) {
 			return false;
 		}
+		final Path resourcefile = datadirectory.resolve(toBase64Url(id).concat(".zip"));
 		OutputStream os = null;
 		try {
 			os = fs.newOutputStream(resourcefile);
@@ -342,7 +342,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			}
 		}
 		
-		DataEntry data = getPlaylist(id);
+		DefaultDataEntry data = (DefaultDataEntry) getPlaylist(id);
 		if (data != null) {
 			data.size = resourcepack.length;
 			data.sounds = packer.sounds;
@@ -352,7 +352,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			return true;
 		}
 		
-		options.put(id, new DataEntry(resourcefile, resourcepack.length, filterName(id), packer.sounds, packer.sha1));
+		options.put(id, new DefaultDataEntry(resourcefile, resourcepack.length, filterName(id), packer.sounds, packer.sha1));
 		save();
 		return true;
 	}

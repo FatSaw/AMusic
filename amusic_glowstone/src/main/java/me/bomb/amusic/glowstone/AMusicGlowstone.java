@@ -37,7 +37,11 @@ import net.glowstone.GlowServer;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
 import me.bomb.amusic.source.LocalUnconvertedSource;
+import me.bomb.amusic.source.MusicdirFStaticPackSource;
+import me.bomb.amusic.source.MusicdirPackSource;
+import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.source.StaticPackSource;
 
 
 public final class AMusicGlowstone extends JavaPlugin {
@@ -52,7 +56,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicGlowstone() {
-		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
+		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
 		try {
@@ -100,8 +104,9 @@ public final class AMusicGlowstone extends JavaPlugin {
 				this.uploaderhost = config.uploadhost;
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				Runtime runtime = Runtime.getRuntime();
-				SoundSource source = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
-				LocalAMusic amusic = new LocalAMusic(config, source, packsender, soundstarter, soundstopper, playerips.values());
+				SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+				PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
+				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

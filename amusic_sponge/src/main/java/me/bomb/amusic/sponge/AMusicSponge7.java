@@ -49,7 +49,7 @@ public final class AMusicSponge7 {
 	
 	private AMusic amusic;
 	private ConcurrentHashMap<Object,InetAddress> playerips;
-	private boolean waitacception;
+	private boolean waitacception, usecmd;
 	private String configerrors, uploaderhost;
 	private ResourceManager resourcemanager;
 	private PositionTracker positiontracker;
@@ -92,11 +92,12 @@ public final class AMusicSponge7 {
 				fsp.createDirectory(packeddir);
 			} catch (IOException e) {
 			}
+			this.usecmd = config.usecmd;
 			if(config.connectuse) {
 				this.waitacception = false;
 				this.playerips = null;
 				this.uploaderhost = null;
-				ClientAMusic amusic = new ClientAMusic(config.connectifip, config.connectremoteip, config.connectport);
+				ClientAMusic amusic = new ClientAMusic(config);
 				this.resourcemanager = null;
 				this.positiontracker = null;
 				this.amusic = amusic;
@@ -124,6 +125,7 @@ public final class AMusicSponge7 {
 			}
 		} else {
 			this.waitacception = false;
+			this.usecmd = false;
 			this.playerips = null;
 			this.uploaderhost = null;
 			this.resourcemanager = null;
@@ -137,13 +139,16 @@ public final class AMusicSponge7 {
 		if(this.amusic == null) {
 			return;
 		}
-		CommandManager cmdManager = Sponge.getCommandManager();
-		
-		cmdManager.register(this, new LoadmusicCommand(server, amusic), "loadmusic");
-		cmdManager.register(this, new PlaymusicCommand(server, amusic, true), "playmusic");
-		cmdManager.register(this, new PlaymusicCommand(server, amusic, false), "playmusicuntrackable");
-		cmdManager.register(this, new RepeatCommand(server, amusic), "repeat");
-		cmdManager.register(this, new UploadmusicCommand(amusic, uploaderhost), "uploadmusic");
+		UploadmusicCommand uploadmusiccommand = null;
+		if(usecmd) {
+			CommandManager cmdManager = Sponge.getCommandManager();
+			
+			cmdManager.register(this, new LoadmusicCommand(server, amusic), "loadmusic");
+			cmdManager.register(this, new PlaymusicCommand(server, amusic, true), "playmusic");
+			cmdManager.register(this, new PlaymusicCommand(server, amusic, false), "playmusicuntrackable");
+			cmdManager.register(this, new RepeatCommand(server, amusic), "repeat");
+			cmdManager.register(this, uploadmusiccommand = new UploadmusicCommand(amusic, uploaderhost), "uploadmusic");
+		}
 		
 		if(playerips != null) {
 			playerips.clear();
@@ -153,7 +158,7 @@ public final class AMusicSponge7 {
 		}
 		
 		EventManager eventmanager =  Sponge.getEventManager();
-		eventmanager.registerListeners(this, new EventListener(resourcemanager, positiontracker, playerips, null));
+		eventmanager.registerListeners(this, new EventListener(resourcemanager, positiontracker, playerips, uploadmusiccommand));
 		if(this.waitacception) {
 			eventmanager.registerListeners(this, new PackStatusEventListener(resourcemanager));
 		}

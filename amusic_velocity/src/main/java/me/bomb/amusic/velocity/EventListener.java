@@ -39,7 +39,7 @@ public final class EventListener {
 		UUID playeruuid = player.getUniqueId();
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
-		uploadmusic.logoutUploader(player);
+		if(uploadmusic != null) uploadmusic.logoutUploader(player);
 		if(playerips == null) return;
 		playerips.remove(player);
 	}

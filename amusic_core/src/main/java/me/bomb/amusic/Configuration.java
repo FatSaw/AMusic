@@ -20,14 +20,17 @@ import java.security.cert.CertificateException;
 import java.util.Arrays;
 
 import javax.net.ServerSocketFactory;
+import javax.net.SocketFactory;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import me.bomb.amusic.http.SimpleServerSocketFactory;
+import me.bomb.amusic.http.SimpleSocketFactory;
 import me.bomb.amusic.util.SimpleConfiguration;
 
 public final class Configuration {
@@ -35,7 +38,7 @@ public final class Configuration {
 	public final String errors;
 	public final Path musicdir, packeddir;
 	
-	public final boolean use, uploaduse, connectuse, encoderuse, uploadhttps;
+	public final boolean use, usecmd, uploaduse, connectuse, encoderuse, uploadhttps, connecttls;
 	
 	public final String uploadhost, sendpackhost;
 	public final InetAddress sendpackifip, uploadifip, connectifip, connectremoteip;
@@ -56,17 +59,20 @@ public final class Configuration {
 	public final int encoderbitrate, encodersamplingrate;
 	
 	protected final byte[] tokensalt;
-	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory;
+	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
+	protected final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory) {
+	public Configuration(Path musicdir, Path packeddir, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
+		this.usecmd = usecmd;
 		this.uploaduse = uploaduse;
 		this.connectuse = connectuse;
 		this.encoderuse = encoderuse;
 		this.uploadhttps = uploadhttps;
+		this.connecttls = connecthttps;
 		this.uploadhost = uploadhost;
 		this.sendpackhost = sendpackhost;
 		this.sendpackifip = sendpackifip;
@@ -100,6 +106,8 @@ public final class Configuration {
 		this.tokensalt = tokensalt;
 		this.sendpackserverfactory = sendpackserverfactory;
 		this.uploadserverfactory = uploadserverfactory;
+		this.connectserverfactory = connectserverfactory;
+		this.connectsocketfactory = connectsocketfactory;
 	}
 	
 	public Configuration(FileSystem fs, final Path configfile, final Path musicdir, final Path packeddir, final boolean defaultwaitacception, final boolean defaultremoteclient) {
@@ -161,6 +169,7 @@ public final class Configuration {
 			this.use = true;
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;
+			this.usecmd = sc.getBooleanOrError("amusic\0server\0usecmd", errors);
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			this.encoderuse = sc.getBooleanOrError("amusic\0encoder\0use", errors);
@@ -284,6 +293,9 @@ public final class Configuration {
 					}
 				}
 				this.connectifip = connectifip;
+
+				this.connecttls = sc.getBooleanOrError("amusic\0server\0connect\0tls\0use", errors);
+				
 				final boolean client = sc.getBooleanOrDefault("amusic\0server\0connect\0override", defaultremoteclient);
 				if(client) {
 					InetAddress connectserverip = null;
@@ -298,6 +310,64 @@ public final class Configuration {
 					this.connectremoteip = connectserverip;
 					this.connectport = sc.getIntOrError("amusic\0server\0connect\0client\0port", errors);
 					this.connectbacklog = 0;
+					this.connectserverfactory = null;
+					if(connecttls) {
+						KeyStore keystore = null;
+						SSLSocketFactory sslsocketfactory = null;
+						final String connectcertpath = sc.getStringOrError("amusic\0server\0connect\0tls\0path", errors);
+						Path certfile = null;
+						try {
+							certfile = fs.getPath(connectcertpath);
+						} catch (InvalidPathException e) {
+							appendError("Filed to read connect tls certificate file (path invalid)", errors);
+						}
+						
+						final String certpassword;
+						if(certfile != null && (certpassword = sc.getStringOrError("amusic\0server\0connect\0tls\0password", errors)) != null) {
+							is = null;
+							try {
+								is = fs.provider().newInputStream(certfile);
+							} catch (SecurityException e1) {
+								if(is != null) {
+									try {
+										is.close();
+									} catch (IOException e2) {
+									}
+								}
+								appendError("Filed to read connect tls certificate file (no permission)", errors);
+							} catch (IOException e) {
+								appendError("Filed to read connect tls certificate file (not found)", errors);
+							}
+							try {
+								keystore = KeyStore.getInstance("PKCS12");
+							} catch (KeyStoreException e) {
+								keystore = null;
+								appendError("Filed to initialize connect tls certificate (filed to get PKCS12 instance)", errors);
+							}
+							try {
+								keystore.load(is, certpassword.toCharArray());
+							} catch (CertificateException | NoSuchAlgorithmException | IOException e) {
+								keystore = null;
+								appendError("Filed to initialize connect tls certificate", errors);
+							}
+							try {
+								TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+								trustManagerFactory.init(keystore);
+								TrustManager[] trustmanagers = trustManagerFactory.getTrustManagers();
+								KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+								keyManagerFactory.init(keystore, certpassword.toCharArray());
+								KeyManager[] keymanagers = keyManagerFactory.getKeyManagers();
+								SSLContext tlscontext = SSLContext.getInstance("TLSv1.2");
+								tlscontext.init(keymanagers, trustmanagers, SecureRandom.getInstanceStrong());
+								sslsocketfactory = tlscontext.getSocketFactory();
+							} catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyManagementException e) {
+								sslsocketfactory = null;
+							}
+						}
+						this.connectsocketfactory = sslsocketfactory;
+					} else {
+						this.connectsocketfactory = new SimpleSocketFactory();
+					}
 				} else {
 					InetAddress connectclientip = null;
 					String connectclientipstr = sc.getStringOrError("amusic\0server\0connect\0client\0serverip", errors);
@@ -311,12 +381,73 @@ public final class Configuration {
 					this.connectremoteip = connectclientip;
 					this.connectport = sc.getIntOrError("amusic\0server\0connect\0server\0port", errors);
 					this.connectbacklog = sc.getIntOrError("amusic\0server\0connect\0server\0backlog", errors);
+					this.connectsocketfactory = null;
+					if(connecttls) {
+						KeyStore keystore = null;
+						SSLServerSocketFactory sslserverfactory = null;
+						final String connectcertpath = sc.getStringOrError("amusic\0server\0connect\0tls\0path", errors);
+						Path certfile = null;
+						try {
+							certfile = fs.getPath(connectcertpath);
+						} catch (InvalidPathException e) {
+							appendError("Filed to read connect tls certificate file (path invalid)", errors);
+						}
+						
+						final String certpassword;
+						if(certfile != null && (certpassword = sc.getStringOrError("amusic\0server\0connect\0tls\0password", errors)) != null) {
+							is = null;
+							try {
+								is = fs.provider().newInputStream(certfile);
+							} catch (SecurityException e1) {
+								if(is != null) {
+									try {
+										is.close();
+									} catch (IOException e2) {
+									}
+								}
+								appendError("Filed to read connect tls certificate file (no permission)", errors);
+							} catch (IOException e) {
+								appendError("Filed to read connect tls certificate file (not found)", errors);
+							}
+							try {
+								keystore = KeyStore.getInstance("PKCS12");
+							} catch (KeyStoreException e) {
+								keystore = null;
+								appendError("Filed to initialize connect tls certificate (filed to get PKCS12 instance)", errors);
+							}
+							try {
+								keystore.load(is, certpassword.toCharArray());
+							} catch (CertificateException | NoSuchAlgorithmException | IOException e) {
+								keystore = null;
+								appendError("Filed to initialize connect tls certificate", errors);
+							}
+							try {
+								TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+								trustManagerFactory.init(keystore);
+								TrustManager[] trustmanagers = trustManagerFactory.getTrustManagers();
+								KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+								keyManagerFactory.init(keystore, certpassword.toCharArray());
+								KeyManager[] keymanagers = keyManagerFactory.getKeyManagers();
+								SSLContext tlscontext = SSLContext.getInstance("TLSv1.2");
+								tlscontext.init(keymanagers, trustmanagers, SecureRandom.getInstanceStrong());
+								sslserverfactory = tlscontext.getServerSocketFactory();
+							} catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyManagementException e) {
+								sslserverfactory = null;
+							}
+						}
+						this.connectserverfactory = sslserverfactory;
+					} else {
+						this.connectserverfactory = new SimpleServerSocketFactory();
+					}
 				}
 			} else {
 				this.connectifip = null;
+				this.connecttls = false;
 				this.connectremoteip = null;
 				this.connectport = 0;
 				this.connectbacklog = 0;
+				this.connectserverfactory = null;
+				this.connectsocketfactory = null;
 			}
 			if(this.encoderuse) {
 				final String ffmpegpath = sc.getStringOrError("amusic\0encoder\0path", errors);
@@ -351,6 +482,7 @@ public final class Configuration {
 			
 		} else {
 			this.use = false;
+			this.usecmd = false;
 			this.musicdir = null;
 			this.packeddir = null;
 			this.uploaduse = false;
@@ -377,9 +509,12 @@ public final class Configuration {
 			this.waitacception = false;
 			this.tokensalt = null;
 			this.connectifip = null;
+			this.connecttls = false;
 			this.connectremoteip = null;
 			this.connectport = 0;
 			this.connectbacklog = 0;
+			this.connectserverfactory = null;
+			this.connectsocketfactory = null;
 			this.encoderbinary = null;
 			this.encoderbitrate = 0;
 			this.encoderchannels = 0;

@@ -1,6 +1,8 @@
 amusic:
  #Use - set it to false if api mode used
  use: true
+ #Usecmd - register commands
+ usecmd: true
  server:
   #Sound upload server - load and convert sound clientside (ffmpeg wasm)
   upload:
@@ -47,6 +49,10 @@ amusic:
    use: false
    #Interface ip
    ip: 0.0.0.0
+   tls:
+    use: false
+    path: connectcert.p12
+    password: passwordkey
    #Client used on bukkit by default
    client:
     #Remote server ip
@@ -71,7 +77,7 @@ amusic:
   cache:
    #Serverside caching - store all packed resourcepacks in ram
    server: true
-   #Clientside caching - store up to 10 resourcepacks clientside
+   #Clientside caching - store resourcepacks clientside (up to 10)
    client: true
  #Serverside encoder, not recommended to use since web uploader with clientside convertation exists
  encoder:

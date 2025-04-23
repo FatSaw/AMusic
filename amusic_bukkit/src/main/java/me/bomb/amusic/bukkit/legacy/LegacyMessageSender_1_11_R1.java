@@ -9,7 +9,7 @@ import net.minecraft.server.v1_11_R1.PacketPlayOutChat;
 import net.minecraft.server.v1_11_R1.PlayerConnection;
 import net.minecraft.server.v1_11_R1.IChatBaseComponent.ChatSerializer;
 
-public class LegacyMessageSender_1_11_R1 implements MessageSender {
+public final class LegacyMessageSender_1_11_R1 implements MessageSender {
 
 	@Override
 	public void send(Object target, String message) {

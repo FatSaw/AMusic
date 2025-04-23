@@ -13,7 +13,7 @@ import net.minecraft.server.v1_10_R1.PacketDataSerializer;
 import net.minecraft.server.v1_10_R1.PlayerConnection;
 import net.minecraft.server.v1_10_R1.PacketPlayOutCustomPayload;
 
-public class LegacySoundStopper_1_10_R1 implements SoundStopper {
+public final class LegacySoundStopper_1_10_R1 implements SoundStopper {
 
 	@Override
 	public void stopSound(UUID uuid, short id) {

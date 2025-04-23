@@ -9,7 +9,7 @@ import me.bomb.amusic.SoundStarter;
 import net.minecraft.server.v1_10_R1.PacketPlayOutCustomSoundEffect;
 import net.minecraft.server.v1_10_R1.SoundCategory;
 
-public class LegacySoundStarter_1_10_R1 implements SoundStarter {
+public final class LegacySoundStarter_1_10_R1 implements SoundStarter {
 
 	@Override
 	public void startSound(UUID uuid, short id) {

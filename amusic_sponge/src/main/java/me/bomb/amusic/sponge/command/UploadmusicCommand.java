@@ -51,7 +51,8 @@ public final class UploadmusicCommand implements CommandCallable {
 			return CommandResult.success();
 		}
 		String[] args = arguments.split(" ", 127);
-		if(args.length == 1 && "finish".equals(args[0])) {
+		boolean save = false;
+		if(args.length == 1 && (save = "finish".equals(args[0])) || "drop".equals(args[0])) {
 			args[0] = args[0].toLowerCase();
 			if(!(source instanceof Player)) {
 				LangOptions.uploadmusic_finish_player_notplayer.sendMsg(source);
@@ -59,7 +60,7 @@ public final class UploadmusicCommand implements CommandCallable {
 			}
 			Player player = (Player)source;
 			final UUID token = uploaders.remove(player);
-			if(token == null || !amusic.closeUploadSession(token, true)) {
+			if(token == null || !amusic.closeUploadSession(token, save)) {
 				LangOptions.uploadmusic_finish_player_nosession.sendMsg(source);
 				return CommandResult.success();
 			}
@@ -92,14 +93,14 @@ public final class UploadmusicCommand implements CommandCallable {
 			uploaders.put(player, token);
 			return CommandResult.success();
 		}
-		if("finish".equals(args[0])) {
+		if((save = "finish".equals(args[0])) || "drop".equals(args[0])) {
 			if(!source.hasPermission("amusic.uploadmusic.token")) {
 				LangOptions.uploadmusic_nopermissiontoken.sendMsg(source);
 				return CommandResult.success();
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				(amusic.closeUploadSession(token, true) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(source);
+				(amusic.closeUploadSession(token, save) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(source);
 			} catch(IllegalArgumentException ex) {
 				LangOptions.uploadmusic_finish_token_invalid.sendMsg(source);
 			}
@@ -124,10 +125,13 @@ public final class UploadmusicCommand implements CommandCallable {
 			if ("finish".startsWith(arg0)) {
 				tabcomplete.add("finish");
 			}
+			if ("drop".startsWith(arg0)) {
+				tabcomplete.add("drop");
+			}
 		}
 		if (args.length == 2 && source.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
-			if ("finish".equals(arg0)) {
+			if ("finish".equals(arg0) || "drop".equals(arg0)) {
 				UUID[] sessions = amusic.getUploadSessions();
 				String arg1 = args[1].toUpperCase();
 				for(UUID token : sessions) {

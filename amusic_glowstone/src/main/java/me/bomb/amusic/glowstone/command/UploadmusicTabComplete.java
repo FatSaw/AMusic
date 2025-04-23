@@ -1,7 +1,6 @@
 package me.bomb.amusic.glowstone.command;
 
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,10 +32,13 @@ public final class UploadmusicTabComplete implements TabCompleter {
 			if ("finish".startsWith(arg0)) {
 				tabcomplete.add("finish");
 			}
+			if ("drop".startsWith(arg0)) {
+				tabcomplete.add("drop");
+			}
 		}
 		if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
-			if ("finish".equals(arg0)) {
+			if ("finish".equals(arg0) || "drop".equals(arg0)) {
 				UUID[] sessions = amusic.getUploadSessions();
 				String arg1 = args[1].toUpperCase();
 				for(UUID token : sessions) {

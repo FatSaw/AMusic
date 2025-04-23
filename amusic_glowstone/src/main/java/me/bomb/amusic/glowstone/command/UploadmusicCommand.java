@@ -33,7 +33,8 @@ public final class UploadmusicCommand implements CommandExecutor {
 			LangOptions.uploadmusic_nopermission.sendMsg(sender);
 			return true;
 		}
-		if(args.length == 1 && "finish".equals(args[0])) {
+		boolean save = false;
+		if(args.length == 1 && (save = "finish".equals(args[0])) || "drop".equals(args[0])) {
 			args[0] = args[0].toLowerCase();
 			if(!(sender instanceof Player)) {
 				LangOptions.uploadmusic_finish_player_notplayer.sendMsg(sender);
@@ -41,7 +42,7 @@ public final class UploadmusicCommand implements CommandExecutor {
 			}
 			Player player = (Player)sender;
 			final UUID token = uploaders.remove(player);
-			if(token == null || !amusic.closeUploadSession(token, true)) {
+			if(token == null || !amusic.closeUploadSession(token, save)) {
 				LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
 				return true;
 			}
@@ -74,14 +75,14 @@ public final class UploadmusicCommand implements CommandExecutor {
 			uploaders.put(player, token);
 			return true;
 		}
-		if("finish".equals(args[0])) {
+		if((save = "finish".equals(args[0])) || "drop".equals(args[0])) {
 			if(!sender.hasPermission("amusic.uploadmusic.token")) {
 				LangOptions.uploadmusic_nopermissiontoken.sendMsg(sender);
 				return true;
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				(amusic.closeUploadSession(token, true) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+				(amusic.closeUploadSession(token, save) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
 			} catch(IllegalArgumentException ex) {
 				LangOptions.uploadmusic_finish_token_invalid.sendMsg(sender);
 			}

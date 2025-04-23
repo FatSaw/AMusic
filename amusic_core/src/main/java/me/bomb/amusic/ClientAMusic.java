@@ -1,6 +1,5 @@
 package me.bomb.amusic;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -8,51 +7,50 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import javax.net.SocketFactory;
+
 import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.StatusReport;
+import me.bomb.amusic.util.ByteArraysOutputStream;
 
 public final class ClientAMusic implements AMusic {
 	
 	private final InetAddress hostip, remoteip;
 	private final int port;
+	private final SocketFactory socketfactory;
 	
-	public ClientAMusic(InetAddress hostip, InetAddress remoteip, int port) {
-		this.hostip = hostip;
-		this.remoteip = remoteip;
-		this.port = port;
+	public ClientAMusic(Configuration config) {
+		this.hostip = config.connectifip;
+		this.remoteip = config.connectremoteip;
+		this.port = config.connectport;
+		this.socketfactory = config.connectsocketfactory;
 	}
 	
 	private byte[] sendPacket(byte packetid, byte[] buf, boolean sendsize, int responsesize, boolean remotesize) {
 		Socket socket = null;
 		try {
-			int sendlength = 9;
-			if(buf!=null) {
-				sendlength+=buf.length;
-				if(sendsize) {
-					sendlength+=4;
-				}
-			}
-			ByteArrayOutputStream baos = new ByteArrayOutputStream(sendlength);
+			ByteArraysOutputStream baos = new ByteArraysOutputStream(4);
 			baos.write(new byte[] {'a','m','r','a', 0, 0, 0, 0}); //PROTOCOLID
 			baos.write(packetid);
 			if(buf!=null) {
 				if(sendsize) {
+					byte[] sizeb = new byte[4];
 					int size = buf.length;
-					baos.write((byte)size);
+					sizeb[0] = (byte)size;
 					size>>=8;
-					baos.write((byte)size);
+					sizeb[1] = (byte)size;
 					size>>=8;
-					baos.write((byte)size);
+					sizeb[2] = (byte)size;
 					size>>=8;
-					baos.write((byte)size);
+					sizeb[3] = (byte)size;
+					baos.write(sizeb);
 				}
 				baos.write(buf);
 				buf = null;
 			}
-			socket = hostip == null ? new Socket(remoteip, port) : new Socket(remoteip, port, hostip, 0);
+			socket = socketfactory.createSocket(remoteip, port, hostip, 0);
 			baos.writeTo(socket.getOutputStream());
-			socket.shutdownOutput();
-
+			baos.close();
 			InputStream is = socket.getInputStream();
 			if(remotesize) {
 				buf = new byte[4];

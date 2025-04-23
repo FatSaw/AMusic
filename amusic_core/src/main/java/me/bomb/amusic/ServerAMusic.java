@@ -4,12 +4,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.UUID;
+
+import javax.net.ServerSocketFactory;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.resource.EnumStatus;
@@ -21,6 +22,7 @@ import me.bomb.amusic.source.SoundSource;
 public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
 	private final int port, backlog;
+	private final ServerSocketFactory connectserverfactory;
 	private volatile boolean run;
 	private ServerSocket server;
 
@@ -30,6 +32,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		this.remoteip = config.connectremoteip;
 		this.port = config.connectport;
 		this.backlog = config.connectbacklog;
+		this.connectserverfactory = config.connectserverfactory;
 	}
 	
 	@Override
@@ -921,8 +924,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	public void run() {
 		while (run) {
 			try {
-				server = new ServerSocket();
-				server.bind(new InetSocketAddress(hostip, port), backlog);
+				server = connectserverfactory.createServerSocket(port, backlog, hostip);
 			} catch (IOException | SecurityException | IllegalArgumentException e) {
 				e.printStackTrace();
 				return;
@@ -982,7 +984,6 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 				return;
 			}
 		}
-		connected.shutdownInput();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		byte[] obuf = null;
 		int size = 0;
@@ -1127,7 +1128,6 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		break;
 		}
 		baos.writeTo(connected.getOutputStream());
-		connected.shutdownOutput();
 	}
 	
 	/*private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);

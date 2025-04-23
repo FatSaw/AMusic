@@ -169,7 +169,7 @@ public final class Configuration {
 			this.use = true;
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;
-			this.usecmd = sc.getBooleanOrError("amusic\0server\0usecmd", errors);
+			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			this.encoderuse = sc.getBooleanOrError("amusic\0encoder\0use", errors);

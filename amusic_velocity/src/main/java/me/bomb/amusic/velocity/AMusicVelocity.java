@@ -51,6 +51,7 @@ public final class AMusicVelocity {
 	private final AMusic amusic;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
+	private final boolean usecmd;
 	private final PositionTracker positiontracker;
 	private final String configerrors, uploaderhost;
     
@@ -75,6 +76,7 @@ public final class AMusicVelocity {
 				fsp.createDirectory(packeddir);
 			} catch (IOException e) {
 			}
+			this.usecmd = config.usecmd;
 			this.uploaderhost = config.uploadhost;
 			playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 
@@ -101,6 +103,7 @@ public final class AMusicVelocity {
 				AMusicVelocity.instance = this.amusic;
 			}
 		} else {
+			this.usecmd = false;
 			this.playerips = null;
 			this.uploaderhost = null;
 			this.resourcemanager = null;
@@ -127,17 +130,21 @@ public final class AMusicVelocity {
 		ProtocolRegistrationProvider protocolregistration = Protocolize.protocolRegistration();
 		protocolregistration.registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
 		protocolregistration.registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
-		LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic);
-		PlaymusicCommand playmusic = new PlaymusicCommand(server, amusic, true), playmusicuntrackable = new PlaymusicCommand(server, amusic, false);
-		RepeatCommand repeat = new RepeatCommand(server, amusic);
-		UploadmusicCommand uploadmusic = new UploadmusicCommand(amusic, uploaderhost);
-		CommandManager cmdmanager = this.server.getCommandManager();
-		CommandMeta loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build(), playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build(), playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build(), repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build(), uploadmusicmeta = cmdmanager.metaBuilder("uploadmusic").plugin(this).build();
-		cmdmanager.register(loadmusicmeta, loadmusic);
-		cmdmanager.register(playmusicmeta, playmusic);
-		cmdmanager.register(playmusicuntrackablemeta, playmusicuntrackable);
-		cmdmanager.register(repeatmeta, repeat);
-		cmdmanager.register(uploadmusicmeta, uploadmusic);
+		UploadmusicCommand uploadmusic = null;
+		if(this.usecmd) {
+			LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic);
+			PlaymusicCommand playmusic = new PlaymusicCommand(server, amusic, true), playmusicuntrackable = new PlaymusicCommand(server, amusic, false);
+			RepeatCommand repeat = new RepeatCommand(server, amusic);
+			uploadmusic = new UploadmusicCommand(amusic, uploaderhost);
+			CommandManager cmdmanager = this.server.getCommandManager();
+			CommandMeta loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build(), playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build(), playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build(), repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build(), uploadmusicmeta = cmdmanager.metaBuilder("uploadmusic").plugin(this).build();
+			cmdmanager.register(loadmusicmeta, loadmusic);
+			cmdmanager.register(playmusicmeta, playmusic);
+			cmdmanager.register(playmusicuntrackablemeta, playmusicuntrackable);
+			cmdmanager.register(repeatmeta, repeat);
+			cmdmanager.register(uploadmusicmeta, uploadmusic);
+		}
+		
 		if(this.resourcemanager != null) {
 			this.server.getEventManager().register(this, new EventListener(resourcemanager, positiontracker, playerips, uploadmusic));
 		}

@@ -64,7 +64,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	
 	private final AMusic amusic;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	private final boolean waitacception;
+	private final boolean waitacception, usecmd;
 	private final String configerrors, uploaderhost;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
@@ -96,11 +96,12 @@ public final class AMusicBukkit extends JavaPlugin {
 				fsp.createDirectory(packeddir);
 			} catch (IOException e) {
 			}
+			this.usecmd = config.usecmd;
 			if(config.connectuse) {
 				this.waitacception = false;
 				this.playerips = null;
 				this.uploaderhost = null;
-				ClientAMusic amusic = new ClientAMusic(config.connectifip, config.connectremoteip, config.connectport);
+				ClientAMusic amusic = new ClientAMusic(config);
 				this.resourcemanager = null;
 				this.positiontracker = null;
 				this.amusic = amusic;
@@ -182,6 +183,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			}
 		} else {
 			this.waitacception = false;
+			this.usecmd = false;
 			this.playerips = null;
 			this.uploaderhost = null;
 			this.resourcemanager = null;
@@ -204,24 +206,27 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(this.amusic == null) {
 			return;
 		}
-		SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
-		PluginCommand loadmusiccommand = getCommand("loadmusic");
-		loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic, selectorprocessor));
-		loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, amusic));
-		PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, amusic);
-		PluginCommand playmusiccommand = getCommand("playmusic");
-		playmusiccommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, true));
-		playmusiccommand.setTabCompleter(pmtc);
-		PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
-		playmusicntrackablecommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, false));
-		playmusicntrackablecommand.setTabCompleter(pmtc);
-		PluginCommand repeatcommand = getCommand("repeat");
-		repeatcommand.setExecutor(new RepeatCommand(server, amusic, selectorprocessor));
-		repeatcommand.setTabCompleter(new RepeatTabComplete(server));
-		PluginCommand uploadmusiccommand = getCommand("uploadmusic");
-		UploadmusicCommand uploadmusiccmd = new UploadmusicCommand(amusic, uploaderhost);
-		uploadmusiccommand.setExecutor(uploadmusiccmd);
-		uploadmusiccommand.setTabCompleter(new UploadmusicTabComplete(amusic));
+		UploadmusicCommand uploadmusiccmd = null;
+		if(this.usecmd) {
+			SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
+			PluginCommand loadmusiccommand = getCommand("loadmusic");
+			loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic, selectorprocessor));
+			loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, amusic));
+			PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, amusic);
+			PluginCommand playmusiccommand = getCommand("playmusic");
+			playmusiccommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, true));
+			playmusiccommand.setTabCompleter(pmtc);
+			PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
+			playmusicntrackablecommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, false));
+			playmusicntrackablecommand.setTabCompleter(pmtc);
+			PluginCommand repeatcommand = getCommand("repeat");
+			repeatcommand.setExecutor(new RepeatCommand(server, amusic, selectorprocessor));
+			repeatcommand.setTabCompleter(new RepeatTabComplete(server));
+			PluginCommand uploadmusiccommand = getCommand("uploadmusic");
+			uploadmusiccmd = new UploadmusicCommand(amusic, uploaderhost);
+			uploadmusiccommand.setExecutor(uploadmusiccmd);
+			uploadmusiccommand.setTabCompleter(new UploadmusicTabComplete(amusic));
+		}
 		if(playerips != null) {
 			playerips.clear();
 			for(Player player : server.getOnlinePlayers()) {

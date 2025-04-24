@@ -76,10 +76,10 @@ public final class AMusicGlowstone extends JavaPlugin {
 			} catch (IOException e) {
 			}
 			this.usecmd = config.usecmd;
+			this.uploaderhost = config.uploadhost;
 			if(config.connectuse) {
 				this.waitacception = false;
 				this.playerips = null;
-				this.uploaderhost = null;
 				ClientAMusic amusic = new ClientAMusic(config);
 				this.resourcemanager = null;
 				this.positiontracker = null;
@@ -102,12 +102,11 @@ public final class AMusicGlowstone extends JavaPlugin {
 				break;
 				}
 				this.waitacception = config.waitacception;
-				this.uploaderhost = config.uploadhost;
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				Runtime runtime = Runtime.getRuntime();
 				SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips.values());
+				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

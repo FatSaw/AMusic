@@ -1,11 +1,12 @@
 package me.bomb.amusic;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.util.ByteArraysOutputStream;
 
 public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
@@ -925,6 +927,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		while (run) {
 			try {
 				server = connectserverfactory.createServerSocket(port, backlog, hostip);
+				server.setSoTimeout(5000);
 			} catch (IOException | SecurityException | IllegalArgumentException e) {
 				e.printStackTrace();
 				return;
@@ -948,6 +951,10 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 							}
 						}.start();
 					}
+				} catch (SocketTimeoutException e) {
+					continue;
+				} catch (SocketException e) {
+					break;
 				} catch (IOException e) {
 					e.printStackTrace();
 				} finally {
@@ -980,84 +987,96 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			is.read(ibuf);
 			int length = (0xFF & ibuf[3]) << 24 | (0xFF & ibuf[2]) << 16 | (0xFF & ibuf[1]) << 8 | 0xFF & ibuf[0];
 			ibuf = new byte[length];
-			if(packetid < 0 || packetid > 0x13 || length != is.read(ibuf)) {
+			if(length != is.read(ibuf)) {
 				return;
 			}
 		}
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		byte[] obuf = null;
+		ByteArraysOutputStream baos = new ByteArraysOutputStream(2);
+		byte[] sizeb,obuf = null;
 		int size = 0;
 		switch(packetid) {
 		case 0x01:
 			obuf = this.getPlayersLoadedBytes(ibuf);
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x02:
 			obuf = this.getPlaylistsBytes();
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x03:
 			obuf = this.getPlaylistSoundnamesPlaylistnameBytes(ibuf);
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x04:
 			obuf = this.getPlaylistSoundnamesPlayeruuidBytes(ibuf);
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x05:
 			obuf = this.getPlaylistSoundlengthsPlaylistnameBytes(ibuf);
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x06:
 			obuf = this.getPlaylistSoundlengthsPlayeruuidBytes(ibuf);
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x07:
@@ -1066,13 +1085,15 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		case 0x08:
 			obuf = this.getPlayingSoundNameBytes(ibuf);
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x09:
@@ -1087,13 +1108,15 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		case 0x0C:
 			obuf = this.getPackName(ibuf);
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x0D:
@@ -1114,13 +1137,15 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		case 0x12:
 			obuf = this.getUploadSessionsBytes();
 			size = obuf.length;
-			baos.write((byte)size);
+			sizeb = new byte[4];
+			sizeb[0] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[1] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[2] = (byte)size;
 			size>>=8;
-			baos.write((byte)size);
+			sizeb[3] = (byte)size;
+			baos.write(sizeb);
 			baos.write(obuf);
 		break;
 		case 0x13:

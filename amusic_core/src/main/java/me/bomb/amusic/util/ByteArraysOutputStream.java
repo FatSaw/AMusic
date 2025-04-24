@@ -103,7 +103,8 @@ public class ByteArraysOutputStream extends OutputStream {
     	final byte[][] bufs = this.bufs;
     	final int index = this.index;
     	for(int i = 0;i < index;++i) {
-            out.write(bufs[i], 0, bufs[i].length);
+    		byte[] buf = bufs[i];
+            out.write(buf, 0, buf.length);
     	}
     }
 

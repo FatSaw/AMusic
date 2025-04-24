@@ -86,12 +86,12 @@ public final class AMusicVelocity {
 			SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 			PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
 			if(config.connectuse) {
-				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips.values());
+				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
 			} else {
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips.values());
+				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

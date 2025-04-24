@@ -173,7 +173,19 @@ public final class Configuration {
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			this.encoderuse = sc.getBooleanOrError("amusic\0encoder\0use", errors);
-			if(this.uploaduse) {
+			if(defaultremoteclient && connectuse) {
+				this.uploadhost = sc.getStringOrError("amusic\0server\0upload\0host", errors);
+				this.uploadhttps = false;
+				this.uploadserverfactory = null;
+				this.uploadifip = null;
+				this.uploadport = 0;
+				this.uploadbacklog = 0;
+				this.uploadtimeout = 0;
+				this.uploadstrictaccess = false;
+				this.uploadlifetime = 0;
+				this.uploadlimitsize = 0;
+				this.uploadlimitcount = 0;
+			} else if(this.uploaduse) {
 				this.uploadhost = sc.getStringOrError("amusic\0server\0upload\0host", errors);
 				this.uploadhttps = sc.getBooleanOrError("amusic\0server\0upload\0https\0use", errors);
 				if(uploadhttps) {
@@ -296,11 +308,10 @@ public final class Configuration {
 
 				this.connecttls = sc.getBooleanOrError("amusic\0server\0connect\0tls\0use", errors);
 				
-				final boolean client = sc.getBooleanOrDefault("amusic\0server\0connect\0override", defaultremoteclient);
-				if(client) {
+				if(defaultremoteclient) {
 					InetAddress connectserverip = null;
 					String connectserveripstr = sc.getStringOrError("amusic\0server\0connect\0client\0serverip", errors);
-					if(connectserveripstr!=null) {
+					if(connectserveripstr != null && !connectserveripstr.equals("0.0.0.0")) {
 						try {
 							connectserverip = InetAddress.getByName(connectserveripstr);
 						} catch (UnknownHostException e) {
@@ -370,8 +381,8 @@ public final class Configuration {
 					}
 				} else {
 					InetAddress connectclientip = null;
-					String connectclientipstr = sc.getStringOrError("amusic\0server\0connect\0client\0serverip", errors);
-					if(connectclientipstr!=null) {
+					String connectclientipstr = sc.getStringOrError("amusic\0server\0connect\0server\0clientip", errors);
+					if(connectclientipstr != null && !connectclientipstr.equals("0.0.0.0")) {
 						try {
 							connectclientip = InetAddress.getByName(connectclientipstr);
 						} catch (UnknownHostException e) {

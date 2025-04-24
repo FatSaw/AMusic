@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -28,10 +29,10 @@ public final class ClientAMusic implements AMusic {
 	
 	private byte[] sendPacket(byte packetid, byte[] buf, boolean sendsize, int responsesize, boolean remotesize) {
 		Socket socket = null;
+		boolean fail = false;
 		try {
-			ByteArraysOutputStream baos = new ByteArraysOutputStream(4);
-			baos.write(new byte[] {'a','m','r','a', 0, 0, 0, 0}); //PROTOCOLID
-			baos.write(packetid);
+			ByteArraysOutputStream baos = new ByteArraysOutputStream(3);
+			baos.write(new byte[] {'a','m','r','a', 0, 0, 0, 0, packetid}); //PROTOCOLID
 			if(buf!=null) {
 				if(sendsize) {
 					byte[] sizeb = new byte[4];
@@ -49,8 +50,9 @@ public final class ClientAMusic implements AMusic {
 				buf = null;
 			}
 			socket = socketfactory.createSocket(remoteip, port, hostip, 0);
+			socket.setSoTimeout(5000);
 			baos.writeTo(socket.getOutputStream());
-			baos.close();
+			//baos.close();
 			InputStream is = socket.getInputStream();
 			if(remotesize) {
 				buf = new byte[4];
@@ -65,6 +67,8 @@ public final class ClientAMusic implements AMusic {
 				buf = new byte[responsesize];
 				is.read(buf);
 			}
+		} catch (SocketTimeoutException e) {
+			fail = true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -75,7 +79,7 @@ public final class ClientAMusic implements AMusic {
 				}
 			}
 		}
-		return buf;
+		return fail ? new byte[0] : buf;
 	}
 	
 	

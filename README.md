@@ -103,8 +103,8 @@ api.disable(); //stops threads
 ```
 ### For all operating modes
 ```
-api.getPlaylists(); //get list of already packed playlists(resourcepacks)
-api.getPlaylistSoundnames(String playlistname); //get list of sounds in playlist "playlistname"
+api.getPlaylists(boolean packed); //get playlists(resourcepacks)
+api.getPlaylistSoundnames(String playlistname, boolean  packed); //get list of sounds in playlist "playlistname"
 api.getPlaylistSoundnames(UUID playeruuid); //get list of sounds loaded to player with uuid "playeruuid"
 api.getPlaylistSoundlengths(String playlistname); //get list of sounds length in playlist "playlistname"
 api.getPlaylistSoundlengths(UUID playeruuid); //get list of sounds length loaded to player with uuid "playeruuid"

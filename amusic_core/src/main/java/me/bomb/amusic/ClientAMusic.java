@@ -14,11 +14,12 @@ import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.util.ByteArraysOutputStream;
 
-public final class ClientAMusic implements AMusic {
+public final class ClientAMusic extends Thread implements AMusic {
 	
 	private final InetAddress hostip, remoteip;
 	private final int port;
 	private final SocketFactory socketfactory;
+	private volatile boolean run;
 	
 	public ClientAMusic(Configuration config) {
 		this.hostip = config.connectifip;
@@ -70,7 +71,7 @@ public final class ClientAMusic implements AMusic {
 		} catch (SocketTimeoutException e) {
 			fail = true;
 		} catch (IOException e) {
-			e.printStackTrace();
+			fail = true;
 		} finally {
 			if(socket != null) {
 				try {
@@ -86,12 +87,20 @@ public final class ClientAMusic implements AMusic {
 
 	@Override
 	public void enable() {
-		
+		this.run = true;
+		start();
+	}
+	
+	@Override
+	public void run() {
+		while(run) {
+			
+		}
 	}
 
 	@Override
 	public void disable() {
-		
+		this.run = false;
 	}
 
 	@Override
@@ -142,8 +151,8 @@ public final class ClientAMusic implements AMusic {
 	}
 
 	@Override
-	public String[] getPlaylists() {
-		byte[] buf = this.sendPacket((byte)0x02, null, false, 0, true);
+	public String[] getPlaylists(boolean packed) {
+		byte[] buf = this.sendPacket((byte)0x02, new byte[] {(byte) (packed ? 1 : 0)}, false, 0, true);
 		if(buf.length < 2) {
 			return null;
 		}

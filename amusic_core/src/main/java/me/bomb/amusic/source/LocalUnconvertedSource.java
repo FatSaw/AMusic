@@ -5,6 +5,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,6 +16,11 @@ public final class LocalUnconvertedSource extends SoundSource {
 		@Override
 		public boolean accept(Path path) throws IOException {
 			return !path.getFileSystem().provider().readAttributes(path, BasicFileAttributes.class).isDirectory();
+		}
+    }, dirfilter = new DirectoryStream.Filter<Path>() {
+    	@Override
+		public boolean accept(Path path) throws IOException {
+			return path.getFileSystem().provider().readAttributes(path, BasicFileAttributes.class).isDirectory();
 		}
     };
 
@@ -156,6 +162,30 @@ public final class LocalUnconvertedSource extends SoundSource {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public String[] getAll() {
+		DirectoryStream<Path> ds = null;
+		ArrayList<String> playlists = new ArrayList<String>();
+		try {
+			ds = fs.newDirectoryStream(musicdir, dirfilter);
+			final Iterator<Path> it = ds.iterator();
+			while(it.hasNext()) {
+				final Path playlistdir = it.next().getFileName();
+				playlists.add(playlistdir.toString());
+			}
+			ds.close();
+			return playlists.toArray(new String[playlists.size()]);
+		} catch(IOException e1) {
+			if(ds != null) {
+				try {
+					ds.close();
+				} catch(IOException e2) {
+				}
+			}
+		}
+		return null;
 	}
 
 }

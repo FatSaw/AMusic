@@ -5,6 +5,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -17,6 +18,11 @@ public final class LocalConvertedSource extends SoundSource {
 		public boolean accept(Path path) throws IOException {
 			final String name = path.getFileName().toString();
 			return name.startsWith(".ogg", name.length() - 4);
+		}
+    }, dirfilter = new DirectoryStream.Filter<Path>() {
+    	@Override
+		public boolean accept(Path path) throws IOException {
+			return path.getFileSystem().provider().readAttributes(path, BasicFileAttributes.class).isDirectory();
 		}
     };
 	
@@ -178,6 +184,66 @@ public final class LocalConvertedSource extends SoundSource {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public String[] getAll() {
+		DirectoryStream<Path> ds = null;
+		ArrayList<Path> playlistsc = new ArrayList<Path>();
+		try {
+			ds = fs.newDirectoryStream(musicdir, dirfilter);
+			final Iterator<Path> it = ds.iterator();
+			while(it.hasNext()) {
+				final Path musicdir = it.next();
+				playlistsc.add(musicdir);
+			}
+			ds.close();
+		} catch(IOException e1) {
+			if(ds != null) {
+				try {
+					ds.close();
+				} catch(IOException e2) {
+				}
+			}
+		}
+		ds = null;
+
+		ArrayList<String> playlists = new ArrayList<String>();
+		final Iterator<Path> itc = playlistsc.iterator();
+		while(itc.hasNext()) {
+			final Path musicdir = itc.next();
+			try {
+				ds = fs.newDirectoryStream(musicdir, oggfilter);
+				final Iterator<Path> it = ds.iterator();
+				boolean add = false;
+				while(it.hasNext()) {
+					final Path oggfile = it.next();
+					try {
+						BasicFileAttributes attributes = fs.readAttributes(oggfile, BasicFileAttributes.class);
+						final long size = attributes.size();
+						if(attributes.isDirectory() || size > maxsoundsize) {
+							continue;
+						}
+						add = true;
+						break;
+					} catch (IOException e) {
+						continue;
+					}
+				}
+				ds.close();
+				if(add) {
+					playlists.add(musicdir.getFileName().toString());
+				}
+			} catch(IOException e1) {
+				if(ds != null) {
+					try {
+						ds.close();
+					} catch(IOException e2) {
+					}
+				}
+			}
+		}
+		return playlists.toArray(new String[playlists.size()]);
 	}
 
 }

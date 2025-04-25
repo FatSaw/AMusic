@@ -96,7 +96,7 @@ public final class LoadmusicCommand implements CommandCallable {
 			executeCommand(source, name, new UUID[]{targetuuid});
 		} else if(args.length == 1 && args[0].equals("@l") && (source instanceof ConsoleSource || source instanceof RconSource)) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : amusic.getPlaylists()) {
+			for(String playlistname : amusic.getPlaylists(true)) {
 				sb.append(playlistname);
 				sb.append(' ');
 			}
@@ -129,7 +129,7 @@ public final class LoadmusicCommand implements CommandCallable {
 		}
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			String[] playlists = amusic.getPlaylists();
+			String[] playlists = amusic.getPlaylists(!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update"));
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {

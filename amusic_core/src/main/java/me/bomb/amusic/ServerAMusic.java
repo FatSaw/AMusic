@@ -104,8 +104,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		return response;
 	}
 	
-	public final byte[] getPlaylistsBytes() {
-		String[] playlists = datamanager.getPlaylists();
+	public final byte[] getPlaylistsBytes(byte[] packedb) {
+		String[] playlists = packedb[0] == 1 ? datamanager.getPlaylists() : soundsource.getAll();
 		int playlistcount = playlists.length;
 		if(playlistcount > 65535) {
 			playlistcount = 65535;
@@ -945,6 +945,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 								try {
 									processConnection(fconnected);
 									fconnected.close();
+								} catch(SocketException e) {
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
@@ -982,6 +983,9 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		} else if(packetid == 0x04 || packetid == 0x06 || packetid == 0x08 || packetid == 0x09 || packetid == 0x0A || packetid == 0x0C || packetid == 0x0D || packetid == 0x0E) {
 			ibuf = new byte[0x10];
 			is.read(ibuf);
+		} else if(packetid == 0x02) {
+			ibuf = new byte[0x01];
+			is.read(ibuf);
 		} else if(packetid != 0x02 && packetid != 0x12) {
 			ibuf = new byte[4];
 			is.read(ibuf);
@@ -1010,7 +1014,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			baos.write(obuf);
 		break;
 		case 0x02:
-			obuf = this.getPlaylistsBytes();
+			obuf = this.getPlaylistsBytes(ibuf);
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;

@@ -82,7 +82,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 			amusic.loadPack(targetuuid == null ? null : new UUID[] {targetuuid}, name, targetuuid == null, statusreport);
 		} else if(args.length == 1 && args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : amusic.getPlaylists()) {
+			for(String playlistname : amusic.getPlaylists(true)) {
 				sb.append(playlistname);
 				sb.append(' ');
 			}
@@ -117,7 +117,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 		}
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			String[] playlists = amusic.getPlaylists();
+			String[] playlists = amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"));
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {

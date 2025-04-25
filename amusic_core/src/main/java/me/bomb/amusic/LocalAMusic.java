@@ -69,8 +69,8 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of playlists that were loaded at least once.
 	 */
-	public final String[] getPlaylists() {
-		return datamanager.getPlaylists();
+	public final String[] getPlaylists(boolean packed) {
+		return packed ? datamanager.getPlaylists() : soundsource.getAll();
 	}
 
 	/**

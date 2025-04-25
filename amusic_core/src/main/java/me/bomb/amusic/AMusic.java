@@ -28,7 +28,7 @@ public interface AMusic {
 	 *
 	 * @return the names of playlists that were loaded at least once.
 	 */
-	public String[] getPlaylists();
+	public String[] getPlaylists(boolean packed);
 
 	/**
 	 * Get the names of sounds in playlist.

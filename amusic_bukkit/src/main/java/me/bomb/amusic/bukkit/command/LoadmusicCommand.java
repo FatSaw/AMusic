@@ -107,7 +107,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 			executeCommand(sender, name, new UUID[]{targetuuid});
 		} else if(args.length == 1 && args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
 			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : amusic.getPlaylists()) {
+			for(String playlistname : amusic.getPlaylists(true)) {
 				sb.append(playlistname);
 				sb.append(' ');
 			}

@@ -13,6 +13,8 @@ public abstract class SoundSource {
 	 */
 	public abstract boolean exists(String entrykey);
 	
-	public abstract String[] getAll();
+	public abstract String[] getPlaylists();
+	
+	public abstract String[] getSounds(String playlistname);
 	
 }

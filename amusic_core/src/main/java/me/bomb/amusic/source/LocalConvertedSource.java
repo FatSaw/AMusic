@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static me.bomb.amusic.util.NameFilter.filterName;
+
 public final class LocalConvertedSource extends SoundSource {
 	
 	private static final DirectoryStream.Filter<Path> oggfilter = new DirectoryStream.Filter<Path>() {
@@ -187,7 +189,7 @@ public final class LocalConvertedSource extends SoundSource {
 	}
 
 	@Override
-	public String[] getAll() {
+	public String[] getPlaylists() {
 		DirectoryStream<Path> ds = null;
 		ArrayList<Path> playlistsc = new ArrayList<Path>();
 		try {
@@ -244,6 +246,49 @@ public final class LocalConvertedSource extends SoundSource {
 			}
 		}
 		return playlists.toArray(new String[playlists.size()]);
+	}
+
+	@Override
+	public String[] getSounds(String playlistname) {
+		playlistname = filterName(playlistname);
+		
+		Path musicdir = this.musicdir.resolve(playlistname);
+		if(musicdir == null) {
+			return null;
+		}
+		DirectoryStream<Path> ds = null;
+		ArrayList<String> tracks = new ArrayList<String>();
+		try {
+			ds = fs.newDirectoryStream(musicdir, oggfilter);
+			final Iterator<Path> it = ds.iterator();
+			while(it.hasNext()) {
+				final Path oggfile = it.next();
+				try {
+					BasicFileAttributes attributes = fs.readAttributes(oggfile, BasicFileAttributes.class);
+					final long size = attributes.size();
+					if(attributes.isDirectory() || size > maxsoundsize) {
+						continue;
+					}
+					String trackname = musicdir.getFileName().toString();
+					int index = trackname.lastIndexOf('.');
+					if(index != -1) {
+						trackname = trackname.substring(0, index);
+					}
+					tracks.add(trackname);
+				} catch (IOException e) {
+					continue;
+				}
+			}
+			ds.close();
+		} catch(IOException e1) {
+			if(ds != null) {
+				try {
+					ds.close();
+				} catch(IOException e2) {
+				}
+			}
+		}
+		return tracks.size() == 0 ? null : tracks.toArray(new String[tracks.size()]);
 	}
 
 }

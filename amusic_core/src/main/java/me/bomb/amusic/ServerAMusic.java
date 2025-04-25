@@ -56,7 +56,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final byte[] getPlayersLoadedBytes(byte[] playlistnameb) {
-		if(playlistnameb.length > 255) {
+		if(playlistnameb.length > 255 || playlistnameb.length < 1) {
 			return new byte[0];
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
@@ -105,7 +105,10 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final byte[] getPlaylistsBytes(byte[] packedb) {
-		String[] playlists = packedb[0] == 1 ? datamanager.getPlaylists() : soundsource.getAll();
+		if(packedb.length != 1) {
+			return new byte[0];
+		}
+		String[] playlists = packedb[0] == 1 ? datamanager.getPlaylists() : soundsource.getPlaylists();
 		int playlistcount = playlists.length;
 		if(playlistcount > 65535) {
 			playlistcount = 65535;
@@ -142,49 +145,94 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		return response;
 	}
 	
-	public final byte[] getPlaylistSoundnamesPlaylistnameBytes(byte[] playlistnameb) {
-		if(playlistnameb.length > 255) {
+	public final byte[] getPlaylistSoundnamesPlaylistnameBytes(byte[] playlistnamepackedb) {
+		if(playlistnamepackedb.length > 256 || playlistnamepackedb.length < 1) {
 			return new byte[0];
 		}
+		boolean packed = playlistnamepackedb[0] == 1;
+		byte[] playlistnameb = new byte[playlistnamepackedb.length-1];
+		System.arraycopy(playlistnamepackedb, 1, playlistnameb, 0, playlistnameb.length);
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
-		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
-		if(soundinfos==null) {
-			return new byte[0];
-		}
-		int soundcount = soundinfos.length;
-		if(soundcount > 65535) {
-			soundcount = 65535;
-		}
-		int i = soundcount;
-		int totallengths = 0;
-		byte[] lengths = new byte[i];
-		byte[][] anames = new byte[i][];
-		while(--i > -1) {
-			byte[] namebytes = soundinfos[i].name.getBytes(StandardCharsets.UTF_8);
-			int length = namebytes.length;
-			if(length > 0xFF) {
-				length = 0xFF;
-				byte[] nnamebytes = new byte[0xFF];
-				System.arraycopy(namebytes, 0, nnamebytes, 0, length);
-				namebytes = nnamebytes;
+		if(packed) {
+			SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+			if(soundinfos==null) {
+				return new byte[0];
 			}
-			totallengths += length;
-			anames[i] = namebytes;
-			lengths[i] = (byte) length;
+			int soundcount = soundinfos.length;
+			if(soundcount > 65535) {
+				soundcount = 65535;
+			}
+			int i = soundcount;
+			int totallengths = 0;
+			byte[] lengths = new byte[i];
+			byte[][] anames = new byte[i][];
+			while(--i > -1) {
+				byte[] namebytes = soundinfos[i].name.getBytes(StandardCharsets.UTF_8);
+				int length = namebytes.length;
+				if(length > 0xFF) {
+					length = 0xFF;
+					byte[] nnamebytes = new byte[0xFF];
+					System.arraycopy(namebytes, 0, nnamebytes, 0, length);
+					namebytes = nnamebytes;
+				}
+				totallengths += length;
+				anames[i] = namebytes;
+				lengths[i] = (byte) length;
+			}
+			i = soundcount;
+			byte[] response = new byte[2 + i + totallengths];
+			response[0] = (byte)i;
+			response[1] = (byte) (i>>8);
+			System.arraycopy(lengths, 0, response, 2, i);
+			int j = i;
+			while(--i > -1) {
+				byte[] name = anames[i];
+				int length = name.length;
+				System.arraycopy(name, 0, response, j, length);
+				j+=length;
+			}
+			return response;
+		} else {
+			String[] sounds = soundsource.getSounds(playlistname);
+			if(sounds==null) {
+				return new byte[0];
+			}
+			int soundcount = sounds.length;
+			if(soundcount > 65535) {
+				soundcount = 65535;
+			}
+			int i = soundcount;
+			int totallengths = 0;
+			byte[] lengths = new byte[i];
+			byte[][] anames = new byte[i][];
+			while(--i > -1) {
+				byte[] namebytes = sounds[i].getBytes(StandardCharsets.UTF_8);
+				int length = namebytes.length;
+				if(length > 0xFF) {
+					length = 0xFF;
+					byte[] nnamebytes = new byte[0xFF];
+					System.arraycopy(namebytes, 0, nnamebytes, 0, length);
+					namebytes = nnamebytes;
+				}
+				totallengths += length;
+				anames[i] = namebytes;
+				lengths[i] = (byte) length;
+			}
+			i = soundcount;
+			byte[] response = new byte[2 + i + totallengths];
+			response[0] = (byte)i;
+			response[1] = (byte) (i>>8);
+			System.arraycopy(lengths, 0, response, 2, i);
+			int j = i;
+			while(--i > -1) {
+				byte[] name = anames[i];
+				int length = name.length;
+				System.arraycopy(name, 0, response, j, length);
+				j+=length;
+			}
+			return response;
 		}
-		i = soundcount;
-		byte[] response = new byte[2 + i + totallengths];
-		response[0] = (byte)i;
-		response[1] = (byte) (i>>8);
-		System.arraycopy(lengths, 0, response, 2, i);
-		int j = i;
-		while(--i > -1) {
-			byte[] name = anames[i];
-			int length = name.length;
-			System.arraycopy(name, 0, response, j, length);
-			j+=length;
-		}
-		return response;
+		
 	}
 	
 	public final byte[] getPlaylistSoundnamesPlayeruuidBytes(byte[] playeruuidb) {
@@ -264,7 +312,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final byte[] getPlaylistSoundlengthsPlaylistnameBytes(byte[] playlistnameb) {
-		if(playlistnameb.length > 255) {
+		if(playlistnameb.length > 255 || playlistnameb.length < 1) {
 			return new byte[0];
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
@@ -794,7 +842,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final byte[] openUploadSessionBytes(byte[] playlistnameb) {
-		if(uploadermanager == null || playlistnameb.length > 255) {
+		if(uploadermanager == null || playlistnameb.length > 255 || playlistnameb.length < 1) {
 			return new byte[0];
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
@@ -986,7 +1034,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		} else if(packetid == 0x02) {
 			ibuf = new byte[0x01];
 			is.read(ibuf);
-		} else if(packetid != 0x02 && packetid != 0x12) {
+		} else if(packetid != 0x12) {
 			ibuf = new byte[4];
 			is.read(ibuf);
 			int length = (0xFF & ibuf[3]) << 24 | (0xFF & ibuf[2]) << 16 | (0xFF & ibuf[1]) << 8 | 0xFF & ibuf[0];

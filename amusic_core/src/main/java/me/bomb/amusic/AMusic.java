@@ -35,7 +35,7 @@ public interface AMusic {
 	 *
 	 * @return the names of sounds in playlist.
 	 */
-	public String[] getPlaylistSoundnames(String playlistname);
+	public String[] getPlaylistSoundnames(String playlistname, boolean packed);
 
 	/**
 	 * Get the names of sounds in playlist that loaded to player.

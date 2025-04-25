@@ -67,6 +67,8 @@ public final class ClientAMusic extends Thread implements AMusic {
 			if(responsesize > 0) {
 				buf = new byte[responsesize];
 				is.read(buf);
+			} else {
+				buf = new byte[0];
 			}
 		} catch (SocketTimeoutException e) {
 			fail = true;
@@ -94,7 +96,10 @@ public final class ClientAMusic extends Thread implements AMusic {
 	@Override
 	public void run() {
 		while(run) {
-			
+			try {
+				sleep(1000);
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 
@@ -110,6 +115,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		}
 		byte[] buf = playlistname.getBytes(StandardCharsets.UTF_8);
 		buf = this.sendPacket((byte)0x01, buf, true, 0, true);
+		if(buf.length == 0) {
+			return null;
+		}
 		int count = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0], i = 4 + (count << 4);
 		UUID[] players = new UUID[count];
 		while(--count > -1) {
@@ -153,7 +161,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 	@Override
 	public String[] getPlaylists(boolean packed) {
 		byte[] buf = this.sendPacket((byte)0x02, new byte[] {(byte) (packed ? 1 : 0)}, false, 0, true);
-		if(buf.length < 2) {
+		if(buf.length == 0) {
 			return null;
 		}
 		int count = (0xFF & buf[1]) << 8 | 0xFF & buf[0];
@@ -170,12 +178,19 @@ public final class ClientAMusic extends Thread implements AMusic {
 	}
 
 	@Override
-	public String[] getPlaylistSoundnames(String playlistname) {
+	public String[] getPlaylistSoundnames(String playlistname, boolean packed) {
 		if(playlistname == null) {
 			return null;
 		}
-		byte[] buf = playlistname.getBytes(StandardCharsets.UTF_8);
+		byte[] playlistnameb = playlistname.getBytes(StandardCharsets.UTF_8);
+		byte[] buf = new byte[playlistnameb.length+1];
+		buf[0] = (byte) (packed ? 1 : 0);
+		System.arraycopy(playlistnameb, 0, buf, 1, playlistnameb.length);
+		
 		buf = this.sendPacket((byte)0x03, buf, true, 0, true);
+		if(buf.length == 0) {
+			return null;
+		}
 		int count = (0xFF & buf[1]) << 8 | 0xFF & buf[0];
 		String[] names = new String[count];
 		int i = 2 + count, pos = i;
@@ -224,6 +239,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		lsb>>=8;
 		buf[0x0F] = (byte) lsb;
 		buf = this.sendPacket((byte)0x04, buf, false, 0, true);
+		if(buf.length == 0) {
+			return null;
+		}
 		int count = (0xFF & buf[1]) << 8 | 0xFF & buf[0];
 		String[] names = new String[count];
 		int i = 2 + count, pos = i;
@@ -243,6 +261,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 			return null;
 		}
 		byte[] buf = playlistname.getBytes(StandardCharsets.UTF_8);
+		if(buf.length == 0) {
+			return null;
+		}
 		buf = this.sendPacket((byte)0x05, buf, true, 0, true);
 		int soundcount = 0xFF & buf[0] | buf[1] << 8, j = 2 + (soundcount<<1);
 		short[] lengths = new short[soundcount];
@@ -287,6 +308,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		lsb>>=8;
 		buf[0x0F] = (byte) lsb;
 		buf = this.sendPacket((byte)0x06, buf, false, 0, true);
+		if(buf.length == 0) {
+			return null;
+		}
 		int soundcount = 0xFF & buf[0] | buf[1] << 8, j = 2 + (soundcount<<1);
 		short[] lengths = new short[soundcount];
 		while(--soundcount > -1) {
@@ -374,6 +398,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		lsb>>=8;
 		buf[0x0F] = (byte) lsb;
 		buf = this.sendPacket((byte)0x08, buf, false, 0, true);
+		if(buf.length == 0) {
+			return null;
+		}
 		return new String(buf, StandardCharsets.UTF_8);
 	}
 
@@ -415,6 +442,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		lsb>>=8;
 		buf[0x0F] = (byte) lsb;
 		buf = this.sendPacket((byte)0x09, buf, false, 2, false);
+		if(buf.length == 0) {
+			return -1;
+		}
 		return (short) (buf[0] & 0xFF | buf[1]<<8);
 	}
 
@@ -456,6 +486,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		lsb>>=8;
 		buf[0x0F] = (byte) lsb;
 		buf = this.sendPacket((byte)0x0A, buf, false, 2, false);
+		if(buf.length == 0) {
+			return -1;
+		}
 		return (short) (buf[0] & 0xFF | buf[1]<<8);
 	}
 
@@ -591,6 +624,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		lsb>>=8;
 		buf[0x0F] = (byte) lsb;
 		buf = this.sendPacket((byte)0x0C, buf, false, 0, true);
+		if(buf.length == 0) {
+			return null;
+		}
 		return new String(buf, StandardCharsets.UTF_8);
 	}
 
@@ -779,6 +815,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 		}
 		byte[] buf = playlistname.getBytes(StandardCharsets.UTF_8);
 		buf = this.sendPacket((byte)0x11, buf, true, 16, false);
+		if(buf.length == 0) {
+			return null;
+		}
 		long lsb = 0L, msb = 0L;
 		lsb = buf[0x0F] & 0xFF;
 		lsb<<=8;
@@ -817,6 +856,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 	@Override
 	public UUID[] getUploadSessions() {
 		byte[] buf = this.sendPacket((byte)0x12, null, false, 0, true);
+		if(buf.length == 0) {
+			return null;
+		}
 		int count = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0], i = 4 + (count << 4);
 		UUID[] tokens = new UUID[count];
 		while(--count > -1) {
@@ -861,6 +903,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 	public boolean closeUploadSession(UUID token, boolean save) {
 		long msb = token.getMostSignificantBits(), lsb = token.getLeastSignificantBits();
 		byte[] buf = new byte[0x11];
+		if(buf.length == 0) {
+			return false;
+		}
 		buf[0x00] = (byte) msb;
 		msb>>=8;
 		buf[0x01] = (byte) msb;

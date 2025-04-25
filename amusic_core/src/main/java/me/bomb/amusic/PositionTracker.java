@@ -29,8 +29,14 @@ public final class PositionTracker extends Thread {
 	}
 	
 	public UUID[] getPlayersLoaded(String playlistname) {
+		if(playlistname == null) {
+			return null;
+		}
 		KeySetView<UUID, String> ksview = loadedplaylistnames.keySet(playlistname);
 		int i = ksview.size();
+		if(i == 0) {
+			return null;
+		}
 		UUID[] players = new UUID[i];
 		if(i > 0) {
 			Iterator<UUID> iterator = ksview.iterator();

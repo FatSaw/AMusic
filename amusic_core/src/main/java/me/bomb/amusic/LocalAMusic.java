@@ -70,7 +70,7 @@ public class LocalAMusic implements AMusic {
 	 * @return the names of playlists that were loaded at least once.
 	 */
 	public final String[] getPlaylists(boolean packed) {
-		return packed ? datamanager.getPlaylists() : soundsource.getAll();
+		return packed ? datamanager.getPlaylists() : soundsource.getPlaylists();
 	}
 
 	/**
@@ -78,17 +78,21 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of sounds in playlist.
 	 */
-	public final String[] getPlaylistSoundnames(String playlistname) {
-		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
-		if(soundinfos==null) {
-			return null;
+	public final String[] getPlaylistSoundnames(String playlistname, boolean packed) {
+		if(packed) {
+			SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+			if(soundinfos==null) {
+				return null;
+			}
+			int i = soundinfos.length;
+			String[] soundnames = new String[i];
+			while(--i > -1) {
+				soundnames[i] = soundinfos[i].name;
+			}
+			return soundnames;
+		} else {
+			return soundsource.getSounds(playlistname);
 		}
-		int i = soundinfos.length;
-		String[] soundnames = new String[i];
-		while(--i > -1) {
-			soundnames[i] = soundinfos[i].name;
-		}
-		return soundnames;
 	}
 
 	/**

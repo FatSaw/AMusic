@@ -27,7 +27,7 @@ Music through resource pack
 - `/loadmusic <playername> <playlistname>` - loads playlist(resourcepack) to player, update flag true if playlist not loaded before or used null target `@n`
 - `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
 - `/repeat <playername> <repeat type>` - set repeat type
-- `/uploadmusic <start/finish> <playlist>/[token]` - upload sound
+- `/uploadmusic <start/finish/drop> <playlist>/[token]/[token]` - upload sound
 
 ### Permissions
 - `amusic.loadmusic` - load playlist(resourcepack), allows `@s` usage

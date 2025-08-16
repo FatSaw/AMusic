@@ -3,14 +3,17 @@ package me.bomb.amusic.glowstone;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.PackSender;
 
 public final class GlowstonePackSender implements PackSender {
 	
-	protected GlowstonePackSender() {
+	private final Server server;
+	
+	protected GlowstonePackSender(Server server) {
+		this.server = server;
 	}
 
 	@Override
@@ -18,7 +21,7 @@ public final class GlowstonePackSender implements PackSender {
 		if(uuid == null) {
 			return;
 		}
-		Player player = Bukkit.getPlayer(uuid);
+		Player player = server.getPlayer(uuid);
 		player.setResourcePack(url, bytesToHex(sha1));
 	}
 	

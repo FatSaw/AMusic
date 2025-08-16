@@ -2,7 +2,7 @@ package me.bomb.amusic.bukkit.legacy;
 
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
@@ -11,7 +11,10 @@ import net.minecraft.server.v1_10_R1.PacketPlayOutResourcePackSend;
 
 public final class LegacyPackSender_1_10_R1 implements PackSender {
 	
-	public LegacyPackSender_1_10_R1() {
+	private final Server server;
+	
+	public LegacyPackSender_1_10_R1(Server server) {
+		this.server = server;
 	}
 
 	@Override
@@ -19,7 +22,7 @@ public final class LegacyPackSender_1_10_R1 implements PackSender {
 		if(uuid == null) {
 			return;
 		}
-		Player player = Bukkit.getPlayer(uuid);
+		Player player = server.getPlayer(uuid);
 		StringBuilder sb = new StringBuilder();
 		for (byte b : sha1) {
 			int value = b & 0xFF;

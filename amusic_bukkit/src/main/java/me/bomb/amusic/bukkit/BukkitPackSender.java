@@ -3,13 +3,17 @@ package me.bomb.amusic.bukkit;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.PackSender;
 
 public final class BukkitPackSender implements PackSender {
 	
-	protected BukkitPackSender() {
+	private final Server server;
+	
+	protected BukkitPackSender(Server server) {
+		this.server = server;
 	}
 
 	@Override
@@ -17,7 +21,7 @@ public final class BukkitPackSender implements PackSender {
 		if(uuid == null) {
 			return;
 		}
-		Player player = Bukkit.getPlayer(uuid);
+		Player player = server.getPlayer(uuid);
 		player.setResourcePack(url, sha1);
 	}
 

@@ -2,7 +2,7 @@ package me.bomb.amusic.bukkit.legacy;
 
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
@@ -15,12 +15,18 @@ import net.minecraft.server.v1_9_R2.PacketPlayOutCustomPayload;
 
 public final class LegacySoundStopper_1_9_R2 implements SoundStopper {
 
+	private final Server server;
+	
+	public LegacySoundStopper_1_9_R2(Server server) {
+		this.server = server;
+	}
+	
 	@Override
 	public void stopSound(UUID uuid, short id) {
 		if(uuid == null) {
 			return;
 		}
-		Player player = Bukkit.getPlayer(uuid);
+		Player player = server.getPlayer(uuid);
 		EntityPlayer entityplayer = ((CraftPlayer)player).getHandle();
 		PlayerConnection connection = entityplayer.playerConnection;
 		PacketDataSerializer packetdataserializer = new PacketDataSerializer(Unpooled.buffer());

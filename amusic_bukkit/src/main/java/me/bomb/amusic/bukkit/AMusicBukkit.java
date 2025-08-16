@@ -70,6 +70,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
+		final Server server = this.getServer();
 		byte ver = 127;
 		try {
 			String nmsversion = this.getServer().getClass().getPackage().getName().substring(23);
@@ -111,38 +112,38 @@ public final class AMusicBukkit extends JavaPlugin {
 				SoundStopper soundstopper;
 				switch (ver) {
 				case 7:
-					packsender = new LegacyPackSender_1_7_R4();
-					soundstarter = new BukkitLegacySoundStarter();
-					//soundstopper = new LegacySoundStopper_1_7_R4();
-					soundstopper = new BukkitSoundSilenceLockStopper();
+					packsender = new LegacyPackSender_1_7_R4(server);
+					soundstarter = new BukkitLegacySoundStarter(server);
+					//soundstopper = new LegacySoundStopper_1_7_R4(server);
+					soundstopper = new BukkitSoundSilenceLockStopper(server);
 				break;
 				case 8:
-					packsender = new LegacyPackSender_1_8_R3();
-					soundstarter = new BukkitLegacySoundStarter();
-					//soundstopper = new LegacySoundStopper_1_8_R3();
-					soundstopper = new BukkitSoundSilenceLockStopper();
+					packsender = new LegacyPackSender_1_8_R3(server);
+					soundstarter = new BukkitLegacySoundStarter(server);
+					//soundstopper = new LegacySoundStopper_1_8_R3(server);
+					soundstopper = new BukkitSoundSilenceLockStopper(server);
 				break;
 				case 9:
-					packsender = new LegacyPackSender_1_9_R2();
-					//soundstarter = new LegacySoundStarter_1_9_R2();
-					soundstarter = new BukkitLegacySoundStarter();
-					soundstopper = new LegacySoundStopper_1_9_R2();
+					packsender = new LegacyPackSender_1_9_R2(server);
+					//soundstarter = new LegacySoundStarter_1_9_R2(server);
+					soundstarter = new BukkitLegacySoundStarter(server);
+					soundstopper = new LegacySoundStopper_1_9_R2(server);
 				break;
 				case 10:
-					packsender = new LegacyPackSender_1_10_R1();
-					//soundstarter = new LegacySoundStarter_1_10_R1();
-					soundstarter = new BukkitLegacySoundStarter();
-					soundstopper = new LegacySoundStopper_1_10_R1();
+					packsender = new LegacyPackSender_1_10_R1(server);
+					//soundstarter = new LegacySoundStarter_1_10_R1(server);
+					soundstarter = new BukkitLegacySoundStarter(server);
+					soundstopper = new LegacySoundStopper_1_10_R1(server);
 				break;
 				case 11: case 12:
-					packsender = new BukkitPackSender();
-					soundstarter = new BukkitLegacySoundStarter();
-					soundstopper = new BukkitLegacySoundStopper();
+					packsender = new BukkitPackSender(server);
+					soundstarter = new BukkitLegacySoundStarter(server);
+					soundstopper = new BukkitLegacySoundStopper(server);
 				break;
 				default:
-					packsender = new BukkitPackSender();
-					soundstarter = new BukkitSoundStarter();
-					soundstopper = new BukkitSoundStopper();
+					packsender = new BukkitPackSender(server);
+					soundstarter = new BukkitSoundStarter(server);
+					soundstopper = new BukkitSoundStopper(server);
 				break;
 				}
 				this.waitacception = config.waitacception;
@@ -199,7 +200,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	public void onEnable() {
 		final Server server = this.getServer();
 		if(!this.configerrors.isEmpty()) {
-			server.getLogger().severe("AMusic config initialization errors: \n".concat(configerrors));
+			this.getLogger().severe("AMusic config initialization errors: \n".concat(configerrors));
 			return;
 		}
 		if(this.amusic == null) {

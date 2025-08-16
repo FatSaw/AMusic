@@ -2,14 +2,17 @@ package me.bomb.amusic.glowstone;
 
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.SoundStopper;
 
 public class GlowstoneLegacySoundStopper implements SoundStopper {
 	
-	protected GlowstoneLegacySoundStopper() {
+	private final Server server;
+	
+	protected GlowstoneLegacySoundStopper(Server server) {
+		this.server = server;
 	}
 
 	@Override
@@ -17,7 +20,7 @@ public class GlowstoneLegacySoundStopper implements SoundStopper {
 		if(uuid == null) {
 			return;
 		}
-		Player player = Bukkit.getPlayer(uuid);
+		Player player = server.getPlayer(uuid);
 		player.stopSound("amusic.music".concat(Short.toString(id)));
 	}
 }

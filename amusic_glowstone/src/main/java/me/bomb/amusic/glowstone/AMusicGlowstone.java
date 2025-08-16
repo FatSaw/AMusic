@@ -56,6 +56,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicGlowstone() {
+		final Server server = this.getServer();
 		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
@@ -85,20 +86,20 @@ public final class AMusicGlowstone extends JavaPlugin {
 				this.positiontracker = null;
 				this.amusic = amusic;
 			} else {
-				PackSender packsender = new GlowstonePackSender();
+				PackSender packsender = new GlowstonePackSender(server);
 				SoundStarter soundstarter;
-				SoundStopper soundstopper = new GlowstoneSoundStopper();
+				SoundStopper soundstopper = new GlowstoneSoundStopper(server);
 				
 				switch (GlowServer.PROTOCOL_VERSION) {
 				case 340:
-					packsender = new GlowstonePackSender();
-					soundstarter = new GlowstoneLegacySoundStarter();
-					soundstopper = new GlowstoneLegacySoundStopper();
+					packsender = new GlowstonePackSender(server);
+					soundstarter = new GlowstoneLegacySoundStarter(server);
+					soundstopper = new GlowstoneLegacySoundStopper(server);
 				break;
 				default:
-					packsender = new GlowstonePackSender();
-					soundstarter = new GlowstoneSoundStarter();
-					soundstopper = new GlowstoneSoundStopper();
+					packsender = new GlowstonePackSender(server);
+					soundstarter = new GlowstoneSoundStarter(server);
+					soundstopper = new GlowstoneSoundStopper(server);
 				break;
 				}
 				this.waitacception = config.waitacception;
@@ -136,7 +137,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 	public void onEnable() {
 		final Server server = this.getServer();
 		if(!this.configerrors.isEmpty()) {
-			server.getLogger().severe("AMusic config initialization errors: \n".concat(configerrors));
+			this.getLogger().severe("AMusic config initialization errors: \n".concat(configerrors));
 			return;
 		}
 		if(this.amusic == null) {

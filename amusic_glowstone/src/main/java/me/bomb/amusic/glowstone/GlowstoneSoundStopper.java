@@ -3,7 +3,7 @@ package me.bomb.amusic.glowstone;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
+import org.bukkit.Server;
 
 import com.flowpowered.network.util.ByteBufUtils;
 
@@ -15,7 +15,10 @@ import net.glowstone.net.message.play.game.PluginMessage;
 
 public final class GlowstoneSoundStopper implements SoundStopper {
 	
-	protected GlowstoneSoundStopper() {
+	private final Server server;
+	
+	protected GlowstoneSoundStopper(Server server) {
+		this.server = server;
 	}
 
 	@Override
@@ -23,7 +26,7 @@ public final class GlowstoneSoundStopper implements SoundStopper {
 		if(uuid == null) {
 			return;
 		}
-		GlowPlayer player = (GlowPlayer) Bukkit.getPlayer(uuid);
+		GlowPlayer player = (GlowPlayer) server.getPlayer(uuid);
 		try {
 			ByteBuf buffer = Unpooled.buffer();
 			ByteBufUtils.writeUTF8(buffer, "voice"); //Source

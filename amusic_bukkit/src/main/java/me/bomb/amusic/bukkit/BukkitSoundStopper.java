@@ -3,6 +3,7 @@ package me.bomb.amusic.bukkit;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Server;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
@@ -10,7 +11,10 @@ import me.bomb.amusic.SoundStopper;
 
 public final class BukkitSoundStopper implements SoundStopper {
 	
-	protected BukkitSoundStopper() {
+	private final Server server;
+	
+	protected BukkitSoundStopper(Server server) {
+		this.server = server;
 	}
 
 	@Override
@@ -18,7 +22,7 @@ public final class BukkitSoundStopper implements SoundStopper {
 		if(uuid == null) {
 			return;
 		}
-		Player player = Bukkit.getPlayer(uuid);
+		Player player = server.getPlayer(uuid);
 		player.stopSound("amusic.music".concat(Short.toString(id)), SoundCategory.VOICE);
 	}
 

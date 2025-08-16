@@ -8,7 +8,20 @@ import static java.lang.System.arraycopy;
 
 /**
  * This class implements an output stream in which the data is
- * written into a byte array array. The buffer automatically grows as data
+ * written into a 2 dimensional byte array.
+ * 
+ * Optimised memory consumption for unknown size but known write count,
+ * no buffer copied on each write,
+ * effective only for {@code write(byte buf[])} method,
+ * capacity(estimated write count) should be specified for best effect.
+ * 
+ * Recommended to specify capacity(estimated write count)
+ * to avoid buffer recreation on each write.
+ * 
+ * No buffer copy for {@code write(byte buf[])} method,
+ * buffer should not be reused.
+ * 
+ * The buffer automatically grows as data
  * is written to it.
  * The data can be retrieved using {@code toByteArray()} and
  * {@code toByteArrays()}.

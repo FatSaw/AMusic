@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.spongepowered.api.Server;
-import org.spongepowered.api.effect.sound.SoundCategories;
 import org.spongepowered.api.effect.sound.SoundType;
 import org.spongepowered.api.entity.living.player.Player;
 

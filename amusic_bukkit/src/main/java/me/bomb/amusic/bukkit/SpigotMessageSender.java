@@ -1,6 +1,5 @@
 package me.bomb.amusic.bukkit;
 
-import org.bukkit.block.CommandBlock;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

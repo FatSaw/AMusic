@@ -1,6 +1,5 @@
 package me.bomb.amusic.bukkit.command;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Server;

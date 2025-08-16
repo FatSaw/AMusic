@@ -53,7 +53,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 			socket = socketfactory.createSocket(remoteip, port, hostip, 0);
 			socket.setSoTimeout(5000);
 			baos.writeTo(socket.getOutputStream());
-			//baos.close();
+			baos.close();
 			InputStream is = socket.getInputStream();
 			if(remotesize) {
 				buf = new byte[4];

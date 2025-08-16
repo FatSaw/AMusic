@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLException;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.resource.EnumStatus;
@@ -993,7 +994,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 								try {
 									processConnection(fconnected);
 									fconnected.close();
-								} catch(SocketException e) {
+								} catch(SocketException | SSLException e) {
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
@@ -1205,6 +1206,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		break;
 		}
 		baos.writeTo(connected.getOutputStream());
+		baos.close();
 	}
 	
 	/*private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);

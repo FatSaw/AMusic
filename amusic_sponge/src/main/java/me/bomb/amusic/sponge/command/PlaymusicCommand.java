@@ -222,35 +222,48 @@ public final class PlaymusicCommand implements CommandCallable {
 				Optional<Player> otarget = server.getPlayer(args[0]);
 				if (otarget.isPresent()) {
 					Player target = otarget.get();
-					String[] soundnames = null;
-					//String[] soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
-					if (soundnames != null) {
-						int lastspace = -1;
-						if(args.length > 2) {
-							StringBuilder sb = new StringBuilder(args[1]);
-							for(int i = 2;i < args.length;++i) {
-								sb.append(' ');
-								sb.append(args[i]);
-							}
-							args[1] = sb.toString();
-							lastspace = args[1].lastIndexOf(' ');
-						}
-						++lastspace;
-						
-						if(lastspace == 0) {
-							for (String soundname : soundnames) {
-								if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
-									tabcomplete.add(soundname);
+					Consumer<String[]> consumer = new Consumer<String[]>() {
+						@Override
+						public void accept(String[] soundnames) {
+							if (soundnames != null) {
+								int lastspace = -1;
+								if(args.length > 2) {
+									StringBuilder sb = new StringBuilder(args[1]);
+									for(int i = 2;i < args.length;++i) {
+										sb.append(' ');
+										sb.append(args[i]);
+									}
+									args[1] = sb.toString();
+									lastspace = args[1].lastIndexOf(' ');
+								}
+								++lastspace;
+								
+								if(lastspace == 0) {
+									for (String soundname : soundnames) {
+										if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+											tabcomplete.add(soundname);
+										}
+									}
+								} else {
+									for (String soundname : soundnames) {
+										if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+											soundname = soundname.substring(lastspace);
+											tabcomplete.add(soundname);
+										}
+									}
 								}
 							}
-						} else {
-							for (String soundname : soundnames) {
-								if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
-									soundname = soundname.substring(lastspace);
-									tabcomplete.add(soundname);
-								}
+							synchronized (tabcomplete) {
+								tabcomplete.notify();
 							}
 						}
+					};
+					amusic.getPlaylistSoundnames(target.getUniqueId(), consumer);
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
 					}
 				}
 			}

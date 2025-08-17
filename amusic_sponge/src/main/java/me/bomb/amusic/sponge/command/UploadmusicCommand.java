@@ -154,14 +154,27 @@ public final class UploadmusicCommand implements CommandCallable {
 		if (args.length == 2 && source.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0) || "drop".equals(arg0)) {
-				UUID[] sessions = new UUID[0];
-				//UUID[] sessions = amusic.getUploadSessions();
-				String arg1 = args[1].toUpperCase();
-				for(UUID token : sessions) {
-					String tokenstr = token.toString();
-					if(tokenstr.startsWith(arg1)) {
-						tabcomplete.add(tokenstr);
+				Consumer<UUID[]> consumer = new Consumer<UUID[]>() {
+					@Override
+					public void accept(UUID[] sessions) {
+						String arg1 = args[1].toUpperCase();
+						for(UUID token : sessions) {
+							String tokenstr = token.toString();
+							if(tokenstr.startsWith(arg1)) {
+								tabcomplete.add(tokenstr);
+							}
+						}
+						synchronized (tabcomplete) {
+							tabcomplete.notify();
+						}
 					}
+				};
+				amusic.getUploadSessions(consumer);
+				try {
+					synchronized (tabcomplete) {
+						tabcomplete.wait(200);
+					}
+				} catch (InterruptedException e) {
 				}
 			}
 		}

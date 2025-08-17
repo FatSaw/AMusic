@@ -47,7 +47,8 @@ public final class PlaymusicTabComplete implements TabCompleter {
 			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
 				Player target = server.getPlayerExact(args[0]);
 				if (target != null) {
-					String[] soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
+					String[] soundnames = null;
+					//String[] soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
 					if (soundnames != null) {
 						int lastspace = -1;
 						if(args.length > 2) {

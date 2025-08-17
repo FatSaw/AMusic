@@ -1,6 +1,7 @@
 package me.bomb.amusic;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import me.bomb.amusic.resource.StatusReport;
 
@@ -21,42 +22,42 @@ public interface AMusic {
 	 *
 	 * @return player uuids that loaded specific playlistname.
 	 */
-	public UUID[] getPlayersLoaded(String playlistname);
+	public void getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer);
 	
 	/**
 	 * Get the names of playlists that were loaded at least once.
 	 *
 	 * @return the names of playlists that were loaded at least once.
 	 */
-	public String[] getPlaylists(boolean packed);
+	public void getPlaylists(boolean packed, Consumer<String[]> resultConsumer);
 
 	/**
 	 * Get the names of sounds in playlist.
 	 *
 	 * @return the names of sounds in playlist.
 	 */
-	public String[] getPlaylistSoundnames(String playlistname, boolean packed);
+	public void  getPlaylistSoundnames(String playlistname, boolean packed, Consumer<String[]> resultConsumer);
 
 	/**
 	 * Get the names of sounds in playlist that loaded to player.
 	 *
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
-	public String[] getPlaylistSoundnames(UUID playeruuid);
+	public void getPlaylistSoundnames(UUID playeruuid, Consumer<String[]> resultConsumer);
 
 	/**
 	 * Get the lenghs of sounds in playlist.
 	 *
 	 * @return the lenghs of sounds in playlist.
 	 */
-	public short[] getPlaylistSoundlengths(String playlistname);
+	public void getPlaylistSoundlengths(String playlistname, Consumer<short[]> resultConsumer);
 
 	/**
 	 * Get the lenghs of sounds in playlist that loaded to player.
 	 *
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
-	public short[] getPlaylistSoundlengths(UUID playeruuid);
+	public void getPlaylistSoundlengths(UUID playeruuid, Consumer<short[]> resultConsumer);
 
 	/**
 	 * Set sound repeat mode, null to not repeat.
@@ -68,21 +69,21 @@ public interface AMusic {
 	 *
 	 * @return playing sound name.
 	 */
-	public String getPlayingSoundName(UUID playeruuid);
+	public void getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer);
 
 	/**
 	 * Get playing sound size in seconds.
 	 *
 	 * @return playing sound size in seconds.
 	 */
-	public short getPlayingSoundSize(UUID playeruuid);
+	public void getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer);
 
 	/**
 	 * Get playing sound remaining seconds.
 	 *
 	 * @return playing sound remaining seconds.
 	 */
-	public short getPlayingSoundRemain(UUID playeruuid);
+	public void getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer);
 
 	/**
 	 * Loads resource pack to player.
@@ -94,7 +95,7 @@ public interface AMusic {
 	 *
 	 * @return loaded pack name.
 	 */
-	public String getPackName(UUID playeruuid);
+	public void getPackName(UUID playeruuid, Consumer<String> resultConsumer);
 
 	/**
 	 * Stop sound from loaded pack.
@@ -121,19 +122,26 @@ public interface AMusic {
 	 * 
 	 * @return session token.
 	 */
-	public UUID openUploadSession(String playlistname);
+	public void openUploadSession(String playlistname, Consumer<UUID> resultConsumer);
 	
 	/**
 	 * Get upload sessions.
 	 * 
 	 * @return upload sessions.
 	 */
-	public UUID[] getUploadSessions();
+	public void getUploadSessions(Consumer<UUID[]> resultConsumer);
 	
 	/**
 	 * Close upload session.
 	 * 
 	 * @return true if session closed successfully.
 	 */
-	public boolean closeUploadSession(UUID token, boolean save);
+	public void closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer);
+
+	/**
+	 * Close upload session.
+	 * 
+	 * @return true if session closed successfully.
+	 */
+	public void closeUploadSession(UUID token, boolean save);
 }

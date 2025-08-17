@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.spongepowered.api.Server;
 import org.spongepowered.api.command.CommandCallable;
@@ -95,12 +96,18 @@ public final class LoadmusicCommand implements CommandCallable {
 			}
 			executeCommand(source, name, new UUID[]{targetuuid});
 		} else if(args.length == 1 && args[0].equals("@l") && (source instanceof ConsoleSource || source instanceof RconSource)) {
-			StringBuilder sb = new StringBuilder("Playlists: ");
-			for(String playlistname : amusic.getPlaylists(true)) {
-				sb.append(playlistname);
-				sb.append(' ');
-			}
-			source.sendMessage(Text.of(sb.toString()));
+			Consumer<String[]> consumer = new Consumer<String[]>() {
+				@Override
+				public void accept(String[] playlists) {
+					StringBuilder sb = new StringBuilder("Playlists: ");
+					for(String playlistname : playlists) {
+						sb.append(playlistname);
+						sb.append(' ');
+					}
+					source.sendMessage(Text.of(sb.toString()));
+				}
+			};
+			amusic.getPlaylists(true, consumer);
 		} else {
 			LangOptions.loadmusic_usage.sendMsg(source);
 		}
@@ -129,7 +136,8 @@ public final class LoadmusicCommand implements CommandCallable {
 		}
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			String[] playlists = amusic.getPlaylists(!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update"));
+			String[] playlists = null;
+			//String[] playlists = amusic.getPlaylists(!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update"));
 			if (playlists != null) {
 				int lastspace = -1;
 				if(args.length > 2) {

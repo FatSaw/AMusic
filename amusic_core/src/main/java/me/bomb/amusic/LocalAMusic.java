@@ -3,6 +3,7 @@ package me.bomb.amusic;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.SoundInfo;
@@ -60,8 +61,16 @@ public class LocalAMusic implements AMusic {
 	 * @return player uuids that loaded specific playlistname.
 	 */
 	@Override
-	public final UUID[] getPlayersLoaded(String playlistname) {
-		return positiontracker.getPlayersLoaded(playlistname);
+	public final void getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer) {
+		if(playlistname == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlayersLoaded(playlistname));
+			}
+		};
+		r.run();
 	}
 	
 	/**
@@ -69,8 +78,13 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of playlists that were loaded at least once.
 	 */
-	public final String[] getPlaylists(boolean packed) {
-		return packed ? datamanager.getPlaylists() : soundsource.getPlaylists();
+	public final void getPlaylists(boolean packed, Consumer<String[]> resultConsumer) {
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(packed ? datamanager.getPlaylists() : soundsource.getPlaylists());
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -78,21 +92,31 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of sounds in playlist.
 	 */
-	public final String[] getPlaylistSoundnames(String playlistname, boolean packed) {
-		if(packed) {
-			SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
-			if(soundinfos==null) {
-				return null;
-			}
-			int i = soundinfos.length;
-			String[] soundnames = new String[i];
-			while(--i > -1) {
-				soundnames[i] = soundinfos[i].name;
-			}
-			return soundnames;
-		} else {
-			return soundsource.getSounds(playlistname);
+	public final void getPlaylistSoundnames(String playlistname, boolean packed, Consumer<String[]> resultConsumer) {
+		if(playlistname == null) {
+			return;
 		}
+		Runnable r = new Runnable() {
+			public void run() {
+				if(packed) {
+					SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+					if(soundinfos==null) {
+						resultConsumer.accept(null);
+						return;
+					}
+					int i = soundinfos.length;
+					String[] soundnames = new String[i];
+					while(--i > -1) {
+						soundnames[i] = soundinfos[i].name;
+					}
+
+					resultConsumer.accept(soundnames);
+				} else {
+					resultConsumer.accept(soundsource.getSounds(playlistname));
+				}
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -100,17 +124,26 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return the names of sounds in playlist that loaded to player.
 	 */
-	public final String[] getPlaylistSoundnames(UUID playeruuid) {
-		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-		if(soundinfos==null) {
-			return null;
+	public final void getPlaylistSoundnames(UUID playeruuid, Consumer<String[]> resultConsumer) {
+		if(playeruuid == null) {
+			return;
 		}
-		int i = soundinfos.length;
-		String[] soundnames = new String[i];
-		while(--i > -1) {
-			soundnames[i] = soundinfos[i].name;
-		}
-		return soundnames;
+		Runnable r = new Runnable() {
+			public void run() {
+				SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
+				if(soundinfos==null) {
+					resultConsumer.accept(null);
+					return;
+				}
+				int i = soundinfos.length;
+				String[] soundnames = new String[i];
+				while(--i > -1) {
+					soundnames[i] = soundinfos[i].name;
+				}
+				resultConsumer.accept(soundnames);
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -118,17 +151,26 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return the lenghs of sounds in playlist.
 	 */
-	public final short[] getPlaylistSoundlengths(String playlistname) {
-		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
-		if(soundinfos==null) {
-			return null;
+	public final void getPlaylistSoundlengths(String playlistname, Consumer<short[]> resultConsumer) {
+		if(playlistname == null) {
+			return;
 		}
-		int i = soundinfos.length;
-		short[] soundlengths = new short[i];
-		while(--i > -1) {
-			soundlengths[i] = soundinfos[i].length;
-		}
-		return soundlengths;
+		Runnable r = new Runnable() {
+			public void run() {
+				SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+				if(soundinfos==null) {
+					resultConsumer.accept(null);
+					return;
+				}
+				int i = soundinfos.length;
+				short[] soundlengths = new short[i];
+				while(--i > -1) {
+					soundlengths[i] = soundinfos[i].length;
+				}
+				resultConsumer.accept(soundlengths);
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -136,24 +178,41 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return the lenghs of sounds in playlist that loaded to player.
 	 */
-	public final short[] getPlaylistSoundlengths(UUID playeruuid) {
-		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-		if(soundinfos==null) {
-			return null;
+	public final void getPlaylistSoundlengths(UUID playeruuid, Consumer<short[]> resultConsumer) {
+		if(playeruuid == null) {
+			return;
 		}
-		int i = soundinfos.length;
-		short[] soundlengths = new short[i];
-		while(--i > -1) {
-			soundlengths[i] = soundinfos[i].length;
-		}
-		return soundlengths;
+		Runnable r = new Runnable() {
+			public void run() {
+				SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
+				if(soundinfos==null) {
+					resultConsumer.accept(null);
+					return;
+				}
+				int i = soundinfos.length;
+				short[] soundlengths = new short[i];
+				while(--i > -1) {
+					soundlengths[i] = soundinfos[i].length;
+				}
+				resultConsumer.accept(soundlengths);
+			}
+		};
+		r.run();
 	}
 
 	/**
 	 * Set sound repeat mode, null to not repeat.
 	 */
 	public final void setRepeatMode(UUID playeruuid, RepeatType repeattype) {
-		positiontracker.setRepeater(playeruuid, repeattype);
+		if(playeruuid == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.setRepeater(playeruuid, repeattype);
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -161,8 +220,16 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return playing sound name.
 	 */
-	public final String getPlayingSoundName(UUID playeruuid) {
-		return positiontracker.getPlaying(playeruuid);
+	public final void getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer) {
+		if(playeruuid == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlaying(playeruuid));
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -170,8 +237,16 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return playing sound size in seconds.
 	 */
-	public final short getPlayingSoundSize(UUID playeruuid) {
-		return positiontracker.getPlayingSize(playeruuid);
+	public final void getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer) {
+		if(playeruuid == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlayingSize(playeruuid));
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -179,15 +254,28 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return playing sound remaining seconds.
 	 */
-	public final short getPlayingSoundRemain(UUID playeruuid) {
-		return positiontracker.getPlayingRemain(playeruuid);
+	public final void getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer) {
+		if(playeruuid == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlayingRemain(playeruuid));
+			}
+		};
+		r.run();
 	}
 
 	/**
 	 * Loads resource pack to player.
 	 */
 	public final void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
-		new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport, true);
+		Runnable r = new Runnable() {
+			public void run() {
+				new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport, true);
+			}
+		};
+		r.run();
 	}
 
 	/**
@@ -195,36 +283,76 @@ public class LocalAMusic implements AMusic {
 	 *
 	 * @return loaded pack name.
 	 */
-	public final String getPackName(UUID playeruuid) {
-		return positiontracker.getPlaylistName(playeruuid);
+	public final void getPackName(UUID playeruuid, Consumer<String> resultConsumer) {
+		if(playeruuid == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlaylistName(playeruuid));
+			}
+		};
+		r.run();
 	}
 
 	/**
 	 * Stop sound from loaded pack.
 	 */
 	public final void stopSound(UUID playeruuid) {
-		positiontracker.stopMusic(playeruuid);
+		if(playeruuid == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.stopMusic(playeruuid);
+			}
+		};
+		r.run();
 	}
 	
 	/**
 	 * Stop sound from loaded pack.
 	 */
 	public final void stopSoundUntrackable(UUID playeruuid) {
-		positiontracker.stopMusicUntrackable(playeruuid);
+		if(playeruuid == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.stopMusicUntrackable(playeruuid);
+			}
+		};
+		r.run();
 	}
 
 	/**
 	 * Play sound from loaded pack.
 	 */
 	public final void playSound(UUID playeruuid, String name) {
-		positiontracker.playMusic(playeruuid, name);
+		if(playeruuid == null || name == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.playMusic(playeruuid, name);
+			}
+		};
+		r.run();
 	}
 	
 	/**
 	 * Play sound from loaded pack.
 	 */
 	public final void playSoundUntrackable(UUID playeruuid, String name) {
-		positiontracker.playMusicUntrackable(playeruuid, name);
+		if(playeruuid == null || name == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.playMusicUntrackable(playeruuid, name);
+			}
+		};
+		r.run();
 	}
 	
 	/**
@@ -232,8 +360,16 @@ public class LocalAMusic implements AMusic {
 	 * 
 	 * @return session token.
 	 */
-	public final UUID openUploadSession(String playlistname) {
-		return uploadermanager == null ? null : uploadermanager.startSession(playlistname);
+	public final void openUploadSession(String playlistname, Consumer<UUID> resultConsumer) {
+		if(playlistname == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.startSession(playlistname));
+			}
+		};
+		r.run();
 	}
 	
 	/**
@@ -241,8 +377,13 @@ public class LocalAMusic implements AMusic {
 	 * 
 	 * @return upload sessions.
 	 */
-	public final UUID[] getUploadSessions() {
-		return uploadermanager == null ? null : uploadermanager.getSessions();
+	public final void getUploadSessions(Consumer<UUID[]> resultConsumer) {
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.getSessions());
+			}
+		};
+		r.run();
 	}
 	
 	/**
@@ -250,8 +391,31 @@ public class LocalAMusic implements AMusic {
 	 * 
 	 * @return true if session closed successfully.
 	 */
-	public final boolean closeUploadSession(UUID token, boolean save) {
-		return uploadermanager == null ? false : uploadermanager.endSession(token, save);
+	public final void closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer) {
+		if(token == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(uploadermanager == null ? false : uploadermanager.endSession(token, save));
+			}
+		};
+		r.run();
+	}
+	
+	public final void closeUploadSession(UUID token, boolean save) {
+		if(token == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				if(uploadermanager ==null) {
+					return;
+				}
+				uploadermanager.endSession(token, save);
+			}
+		};
+		r.run();
 	}
 	
 }

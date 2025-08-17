@@ -2,6 +2,7 @@ package me.bomb.amusic.glowstone.command;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -42,11 +43,21 @@ public final class UploadmusicCommand implements CommandExecutor {
 			}
 			Player player = (Player)sender;
 			final UUID token = uploaders.remove(player);
-			if(token == null || !amusic.closeUploadSession(token, save)) {
+			if(token == null) {
 				LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
 				return true;
 			}
-			LangOptions.uploadmusic_finish_player_success.sendMsg(sender);
+			Consumer<Boolean> consumer = new Consumer<Boolean>() {
+				@Override
+				public void accept(Boolean t) {
+					if(!t) {
+						LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
+						return;
+					}
+					LangOptions.uploadmusic_finish_player_success.sendMsg(sender);
+				}
+			};
+			amusic.closeUploadSession(token, save, consumer);
 			return true;
 		}
 		if(args.length < 2) {
@@ -65,14 +76,19 @@ public final class UploadmusicCommand implements CommandExecutor {
 					args[1] = sb.toString();
 				}
 			}
-			final UUID token = amusic.openUploadSession(args[1]);
-			String url = uploaderhost.concat(token.toString());
-			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
-			if(!(sender instanceof Player)) {
-				return true;
-			}
-			Player player = (Player)sender;
-			uploaders.put(player, token);
+			Consumer<UUID> consumer = new Consumer<UUID>() {
+				@Override
+				public void accept(UUID token) {
+					String url = uploaderhost.concat(token.toString());
+					(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
+					if(!(sender instanceof Player)) {
+						return;
+					}
+					Player player = (Player)sender;
+					uploaders.put(player, token);
+				}
+			};
+			amusic.openUploadSession(args[1], consumer);
 			return true;
 		}
 		if((save = "finish".equals(args[0])) || "drop".equals(args[0])) {
@@ -82,7 +98,13 @@ public final class UploadmusicCommand implements CommandExecutor {
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				(amusic.closeUploadSession(token, save) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+				Consumer<Boolean> consumer = new Consumer<Boolean>() {
+					@Override
+					public void accept(Boolean t) {
+						(t ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+					}
+				};
+				amusic.closeUploadSession(token, save, consumer);
 			} catch(IllegalArgumentException ex) {
 				LangOptions.uploadmusic_finish_token_invalid.sendMsg(sender);
 			}

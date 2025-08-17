@@ -243,12 +243,14 @@ public final class PlaymusicCommand implements SimpleCommand  {
 						}
 					}
 				};
-				amusic.getPlaylistSoundnames(otarget.get().getUniqueId(), consumer);
-				try {
-					synchronized (tabcomplete) {
-						tabcomplete.wait(200);
+				boolean async = amusic.getPlaylistSoundnames(otarget.get().getUniqueId(), consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
 					}
-				} catch (InterruptedException e) {
 				}
 			}
 		}

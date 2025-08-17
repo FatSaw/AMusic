@@ -55,12 +55,14 @@ public final class UploadmusicTabComplete implements TabCompleter {
 						}
 					}
 				};
-				amusic.getUploadSessions(consumer);
-				try {
-					synchronized (tabcomplete) {
-						tabcomplete.wait(200);
+				boolean async = amusic.getUploadSessions(consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
 					}
-				} catch (InterruptedException e) {
 				}
 			}
 		}

@@ -84,12 +84,14 @@ public final class PlaymusicTabComplete implements TabCompleter {
 							}
 						}
 					};
-					amusic.getPlaylistSoundnames(target.getUniqueId(), consumer);
-					try {
-						synchronized (tabcomplete) {
-							tabcomplete.wait(200);
+					boolean async = amusic.getPlaylistSoundnames(target.getUniqueId(), consumer);
+					if(async) {
+						try {
+							synchronized (tabcomplete) {
+								tabcomplete.wait(200);
+							}
+						} catch (InterruptedException e) {
 						}
-					} catch (InterruptedException e) {
 					}
 				}
 			}

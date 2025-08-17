@@ -126,9 +126,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 	}
 
 	@Override
-	public void getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer) {
+	public boolean getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer) {
 		if(playlistname == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -179,6 +179,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 	
 	private AtomicBoolean cachePlaylistsPackedUpdated = new AtomicBoolean(false);
@@ -187,16 +188,16 @@ public final class ClientAMusic extends Thread implements AMusic {
 	private String[] cachePlaylists = null;
 
 	@Override
-	public void getPlaylists(boolean packed, Consumer<String[]> resultConsumer) {
+	public boolean getPlaylists(boolean packed, Consumer<String[]> resultConsumer) {
 		if(packed) {
 			if(cachePlaylistsPackedUpdated.get()) {
 				resultConsumer.accept(cachePlaylistsPacked);
-				return;
+				return false;
 			}
 		} else {
 			if(cachePlaylistsUpdated.get()) {
 				resultConsumer.accept(cachePlaylists);
-				return;
+				return false;
 			}
 		}
 		Runnable r = new Runnable() {
@@ -229,15 +230,16 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 	
 	private ConcurrentHashMap<String, String[]> cachePlaylistSoundnamesPacked = new ConcurrentHashMap<>();
 	private ConcurrentHashMap<String, String[]> cachePlaylistSoundnames = new ConcurrentHashMap<>();
 
 	@Override
-	public void getPlaylistSoundnames(String playlistname, boolean packed, Consumer<String[]> resultConsumer) {
+	public boolean getPlaylistSoundnames(String playlistname, boolean packed, Consumer<String[]> resultConsumer) {
 		if(playlistname == null) {
-			return;
+			return false;
 		}
 		if(packed) {
 			String[] soundnames = cachePlaylistSoundnamesPacked.get(playlistname);
@@ -288,12 +290,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void getPlaylistSoundnames(UUID playeruuid, Consumer<String[]> resultConsumer) {
+	public boolean getPlaylistSoundnames(UUID playeruuid, Consumer<String[]> resultConsumer) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -348,19 +351,20 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 	
 	private ConcurrentHashMap<String, short[]> cachePlaylistSoundlengths = new ConcurrentHashMap<>();
 
 	@Override
-	public void getPlaylistSoundlengths(String playlistname, Consumer<short[]> resultConsumer) {
+	public boolean getPlaylistSoundlengths(String playlistname, Consumer<short[]> resultConsumer) {
 		if(playlistname == null) {
-			return;
+			return false;
 		}
 		short[] soundlengths = cachePlaylistSoundlengths.get(playlistname);
 		if(soundlengths != null) {
 			resultConsumer.accept(soundlengths);
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -382,12 +386,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void getPlaylistSoundlengths(UUID playeruuid, Consumer<short[]> resultConsumer) {
+	public boolean getPlaylistSoundlengths(UUID playeruuid, Consumer<short[]> resultConsumer) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -437,12 +442,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void setRepeatMode(UUID playeruuid, RepeatType repeattype) {
+	public boolean setRepeatMode(UUID playeruuid, RepeatType repeattype) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -483,12 +489,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer) {
+	public boolean getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -533,12 +540,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer) {
+	public boolean getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -583,12 +591,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer) {
+	public boolean getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -633,12 +642,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
+	public boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
 		if(name == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -747,12 +757,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void getPackName(UUID playeruuid, Consumer<String> resultConsumer) {
+	public boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -797,12 +808,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void stopSound(UUID playeruuid) {
+	public boolean stopSound(UUID playeruuid) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -842,12 +854,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void stopSoundUntrackable(UUID playeruuid) {
+	public boolean stopSoundUntrackable(UUID playeruuid) {
 		if(playeruuid == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -887,12 +900,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void playSound(UUID playeruuid, String name) {
+	public boolean playSound(UUID playeruuid, String name) {
 		if(playeruuid == null || name == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -941,12 +955,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void playSoundUntrackable(UUID playeruuid, String name) {
+	public boolean playSoundUntrackable(UUID playeruuid, String name) {
 		if(playeruuid == null || name == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -995,12 +1010,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void openUploadSession(String playlistname, Consumer<UUID> resultConsumer) {
+	public boolean openUploadSession(String playlistname, Consumer<UUID> resultConsumer) {
 		if(playlistname == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -1047,10 +1063,11 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void getUploadSessions(Consumer<UUID[]> resultConsumer) {
+	public boolean getUploadSessions(Consumer<UUID[]> resultConsumer) {
 		Runnable r = new Runnable() {
 			public void run() {
 				byte[] buf = ClientAMusic.this.sendPacket((byte)0x12, null, false, 0, true);
@@ -1099,12 +1116,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 
 	@Override
-	public void closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer) {
+	public boolean closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer) {
 		if(token == null) {
-			return;
+			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -1152,6 +1170,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 			}
 		};
 		addToQueue(r);
+		return true;
 	}
 	
 	@Override

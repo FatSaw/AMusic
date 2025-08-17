@@ -78,12 +78,14 @@ public final class LoadmusicTabComplete implements TabCompleter {
 					}
 				}
 			};
-			amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"), consumer);
-			try {
-				synchronized (tabcomplete) {
-					tabcomplete.wait(200);
+			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"), consumer);
+			if(async) {
+				try {
+					synchronized (tabcomplete) {
+						tabcomplete.wait(200);
+					}
+				} catch (InterruptedException e) {
 				}
-			} catch (InterruptedException e) {
 			}
 		}
 		return tabcomplete;

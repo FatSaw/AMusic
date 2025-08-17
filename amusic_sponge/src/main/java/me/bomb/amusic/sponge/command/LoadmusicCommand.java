@@ -171,12 +171,14 @@ public final class LoadmusicCommand implements CommandCallable {
 					}
 				}
 			};
-			amusic.getPlaylists(!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update"), consumer);
-			try {
-				synchronized (tabcomplete) {
-					tabcomplete.wait(200);
+			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update"), consumer);
+			if(async) {
+				try {
+					synchronized (tabcomplete) {
+						tabcomplete.wait(200);
+					}
+				} catch (InterruptedException e) {
 				}
-			} catch (InterruptedException e) {
 			}
 		}
 		return tabcomplete;

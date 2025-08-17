@@ -8,7 +8,12 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -23,14 +28,15 @@ public final class ClientAMusic extends Thread implements AMusic {
 	private final InetAddress hostip, remoteip;
 	private final int port;
 	private final SocketFactory socketfactory;
+	private final Executor executor;
 	private volatile boolean run;
-	private ArrayList<Runnable> queue = new ArrayList<Runnable>(4);
 	
 	public ClientAMusic(Configuration config) {
 		this.hostip = config.connectifip;
 		this.remoteip = config.connectremoteip;
 		this.port = config.connectport;
 		this.socketfactory = config.connectsocketfactory;
+		this.executor = new ThreadPoolExecutor(1, 2, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1024));
 	}
 	
 	private byte[] sendPacket(byte packetid, byte[] buf, boolean sendsize, int responsesize, boolean remotesize) {
@@ -102,28 +108,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 	public void run() {
 		while(run) {
 			try {
-				synchronized (this) {
-					this.wait();
-				}
-				int size = queue.size();
-				{
-					int i = size;
-					while (--i > -1) {
-						Runnable run = queue.get(i);
-						if(run == null) continue;
-						try {
-							run.run();
-						} catch(Exception e) {
-							e.printStackTrace();
-						}
-					}
-				}
-				int i = size;
-				while (--i > -1) {
-					synchronized (queue) {
-						queue.remove(i);
-					}
-				}
+				sleep(1000L);
 			} catch (InterruptedException e) {
 				interrupted();
 			}
@@ -137,12 +122,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 	}
 	
 	private void addToQueue(Runnable run) {
-		synchronized (queue) {
-			queue.add(run);
-		}
-		synchronized (this) {
-			this.notify();
-		}
+		executor.execute(run);
 	}
 
 	@Override

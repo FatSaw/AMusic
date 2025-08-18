@@ -144,7 +144,7 @@ public final class PlaymusicCommand implements CommandCallable {
 						amusic.getPlayingSoundName(targetuuid, consumerSoundName);
 					}
 				};
-				amusic.getPlaylistSoundnames(targetuuid, consumer);
+				amusic.getPlaylistSoundnames(targetuuid, false, consumer);
 				return CommandResult.success();
 			} else if(!source.hasPermission("amusic.playmusic.other")) {
 				LangOptions.playmusic_nopermissionother.sendMsg(source);
@@ -184,7 +184,7 @@ public final class PlaymusicCommand implements CommandCallable {
 					LangOptions.playmusic_missingtrack.sendMsg(source,placeholders);
 				}
 			};
-			amusic.getPlaylistSoundnames(target.getUniqueId(), consumer);
+			amusic.getPlaylistSoundnames(target.getUniqueId(), false, consumer);
 			return CommandResult.success();
 		} else {
 			LangOptions.playmusic_usage.sendMsg(source);
@@ -258,7 +258,7 @@ public final class PlaymusicCommand implements CommandCallable {
 							}
 						}
 					};
-					boolean async = amusic.getPlaylistSoundnames(target.getUniqueId(), consumer);
+					boolean async = amusic.getPlaylistSoundnames(target.getUniqueId(), true, consumer);
 					if(async) {
 						try {
 							synchronized (tabcomplete) {

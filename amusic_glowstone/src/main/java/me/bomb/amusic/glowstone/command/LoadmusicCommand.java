@@ -120,7 +120,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 				}
 				
 			};
-			amusic.getPlaylists(true, consumer);
+			amusic.getPlaylists(true, false, consumer);
 			
 		} else {
 			LangOptions.loadmusic_usage.sendMsg(sender);

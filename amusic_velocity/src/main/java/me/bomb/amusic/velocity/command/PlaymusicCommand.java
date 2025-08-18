@@ -166,7 +166,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				}
 				
 			};
-			amusic.getPlaylistSoundnames(target.getUniqueId(), consumer);
+			amusic.getPlaylistSoundnames(target.getUniqueId(), false, consumer);
 			return;
 		} else {
 			LangOptions.playmusic_usage.sendMsg(sender);
@@ -243,7 +243,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 						}
 					}
 				};
-				boolean async = amusic.getPlaylistSoundnames(otarget.get().getUniqueId(), consumer);
+				boolean async = amusic.getPlaylistSoundnames(otarget.get().getUniqueId(), true, consumer);
 				if(async) {
 					try {
 						synchronized (tabcomplete) {

@@ -94,7 +94,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 				}
 				
 			};
-			amusic.getPlaylists(true, consumer);
+			amusic.getPlaylists(true, false, consumer);
 		} else {
 			LangOptions.loadmusic_usage.sendMsg(sender);
 		}
@@ -160,7 +160,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 					}
 				}
 			};
-			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"), consumer);
+			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"), true, consumer);
 			if(async) {
 				try {
 					synchronized (tabcomplete) {

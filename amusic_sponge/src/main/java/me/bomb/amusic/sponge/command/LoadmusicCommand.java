@@ -107,7 +107,7 @@ public final class LoadmusicCommand implements CommandCallable {
 					source.sendMessage(Text.of(sb.toString()));
 				}
 			};
-			amusic.getPlaylists(true, consumer);
+			amusic.getPlaylists(true, false, consumer);
 		} else {
 			LangOptions.loadmusic_usage.sendMsg(source);
 		}
@@ -171,7 +171,7 @@ public final class LoadmusicCommand implements CommandCallable {
 					}
 				}
 			};
-			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update"), consumer);
+			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !source.hasPermission("amusic.loadmusic.update"), true, consumer);
 			if(async) {
 				try {
 					synchronized (tabcomplete) {

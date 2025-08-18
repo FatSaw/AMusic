@@ -6,9 +6,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -121,6 +119,11 @@ public final class ClientAMusic extends Thread implements AMusic {
 		this.interrupt();
 	}
 	
+	public void logout(UUID playeruuid) {
+		cachePlayerPlaylistSoundnames.remove(playeruuid);
+		cachePlayerPlaylistSoundlengths.remove(playeruuid);
+	}
+	
 	private void addToQueue(Runnable run) {
 		executor.execute(run);
 	}
@@ -188,16 +191,18 @@ public final class ClientAMusic extends Thread implements AMusic {
 	private String[] cachePlaylists = null;
 
 	@Override
-	public boolean getPlaylists(boolean packed, Consumer<String[]> resultConsumer) {
-		if(packed) {
-			if(cachePlaylistsPackedUpdated.get()) {
-				resultConsumer.accept(cachePlaylistsPacked);
-				return false;
-			}
-		} else {
-			if(cachePlaylistsUpdated.get()) {
-				resultConsumer.accept(cachePlaylists);
-				return false;
+	public boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
+		if(useCache) {
+			if(packed) {
+				if(cachePlaylistsPackedUpdated.get()) {
+					resultConsumer.accept(cachePlaylistsPacked);
+					return false;
+				}
+			} else {
+				if(cachePlaylistsUpdated.get()) {
+					resultConsumer.accept(cachePlaylists);
+					return false;
+				}
 			}
 		}
 		Runnable r = new Runnable() {
@@ -237,19 +242,23 @@ public final class ClientAMusic extends Thread implements AMusic {
 	private ConcurrentHashMap<String, String[]> cachePlaylistSoundnames = new ConcurrentHashMap<>();
 
 	@Override
-	public boolean getPlaylistSoundnames(String playlistname, boolean packed, Consumer<String[]> resultConsumer) {
+	public boolean getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
 		if(playlistname == null) {
 			return false;
 		}
-		if(packed) {
-			String[] soundnames = cachePlaylistSoundnamesPacked.get(playlistname);
-			if(soundnames != null) {
-				resultConsumer.accept(soundnames);
-			}
-		} else {
-			String[] soundnames = cachePlaylistSoundnames.get(playlistname);
-			if(soundnames != null) {
-				resultConsumer.accept(soundnames);
+		if(useCache) {
+			if(packed) {
+				String[] soundnames = cachePlaylistSoundnamesPacked.get(playlistname);
+				if(soundnames != null) {
+					resultConsumer.accept(soundnames);
+					return false;
+				}
+			} else {
+				String[] soundnames = cachePlaylistSoundnames.get(playlistname);
+				if(soundnames != null) {
+					resultConsumer.accept(soundnames);
+					return false;
+				}
 			}
 		}
 		Runnable r = new Runnable() {
@@ -292,11 +301,20 @@ public final class ClientAMusic extends Thread implements AMusic {
 		addToQueue(r);
 		return true;
 	}
+	
+	private ConcurrentHashMap<UUID, String[]> cachePlayerPlaylistSoundnames = new ConcurrentHashMap<>();
 
 	@Override
-	public boolean getPlaylistSoundnames(UUID playeruuid, Consumer<String[]> resultConsumer) {
+	public boolean getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
+		}
+		if(useCache) {
+			String[] soundnames = cachePlayerPlaylistSoundnames.get(playeruuid);
+			if(soundnames != null) {
+				resultConsumer.accept(soundnames);
+				return false;
+			}
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -347,6 +365,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 					pos+=namelength;
 					names[count] = new String(nameb, StandardCharsets.UTF_8);
 				}
+				String[] namescache = new String[names.length];
+				System.arraycopy(names, 0, namescache, 0, names.length);
+				cachePlayerPlaylistSoundnames.put(playeruuid, namescache);
 				resultConsumer.accept(names);
 			}
 		};
@@ -357,14 +378,16 @@ public final class ClientAMusic extends Thread implements AMusic {
 	private ConcurrentHashMap<String, short[]> cachePlaylistSoundlengths = new ConcurrentHashMap<>();
 
 	@Override
-	public boolean getPlaylistSoundlengths(String playlistname, Consumer<short[]> resultConsumer) {
+	public boolean getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer) {
 		if(playlistname == null) {
 			return false;
 		}
-		short[] soundlengths = cachePlaylistSoundlengths.get(playlistname);
-		if(soundlengths != null) {
-			resultConsumer.accept(soundlengths);
-			return false;
+		if(useCache) {
+			short[] soundlengths = cachePlaylistSoundlengths.get(playlistname);
+			if(soundlengths != null) {
+				resultConsumer.accept(soundlengths);
+				return false;
+			}
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -388,11 +411,20 @@ public final class ClientAMusic extends Thread implements AMusic {
 		addToQueue(r);
 		return true;
 	}
+	
+	private ConcurrentHashMap<UUID, short[]> cachePlayerPlaylistSoundlengths = new ConcurrentHashMap<>();
 
 	@Override
-	public boolean getPlaylistSoundlengths(UUID playeruuid, Consumer<short[]> resultConsumer) {
+	public boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
+		}
+		if(useCache) {
+			short[] soundlengths = cachePlayerPlaylistSoundlengths.get(playeruuid);
+			if(soundlengths != null) {
+				resultConsumer.accept(soundlengths);
+				return false;
+			}
 		}
 		Runnable r = new Runnable() {
 			public void run() {
@@ -438,6 +470,9 @@ public final class ClientAMusic extends Thread implements AMusic {
 				while(--soundcount > -1) {
 					lengths[soundcount] = (short) (buf[--j]<<8 | buf[--j] & 0xFF);
 				}
+				short[] lengthscache = new short[lengths.length];
+				System.arraycopy(lengths, 0, lengthscache, 0, lengths.length);
+				cachePlayerPlaylistSoundlengths.put(playeruuid, lengthscache);
 				resultConsumer.accept(lengths);
 			}
 		};
@@ -722,6 +757,12 @@ public final class ClientAMusic extends Thread implements AMusic {
 					switch (status) {
 					case 1:
 						statusreport.onStatusResponse(EnumStatus.DISPATCHED);
+						int uuidcount = playeruuid.length;
+						while(--uuidcount > -1) {
+							UUID uuid = playeruuid[uuidcount];
+							cachePlayerPlaylistSoundnames.remove(uuid);
+							cachePlayerPlaylistSoundlengths.remove(uuid);
+						}
 					break;
 					case 2:
 						statusreport.onStatusResponse(EnumStatus.NOTEXSIST);
@@ -752,6 +793,12 @@ public final class ClientAMusic extends Thread implements AMusic {
 						cachePlaylistsPackedUpdated.set(false);
 						cachePlaylistSoundnames.remove(name);
 						cachePlaylistSoundlengths.remove(name);
+					}
+					int uuidcount = playeruuid.length;
+					while(--uuidcount > -1) {
+						UUID uuid = playeruuid[uuidcount];
+						cachePlayerPlaylistSoundnames.remove(uuid);
+						cachePlayerPlaylistSoundlengths.remove(uuid);
 					}
 				}
 			}

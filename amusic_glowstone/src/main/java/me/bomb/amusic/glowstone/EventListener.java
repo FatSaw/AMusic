@@ -12,16 +12,19 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.glowstone.command.UploadmusicCommand;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class EventListener implements Listener {
+	private final AMusic amusic;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final UploadmusicCommand uploadmusiccmd;
-	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd) {
+	protected EventListener(AMusic amusic, ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd) {
+		this.amusic = amusic;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
@@ -37,6 +40,7 @@ public final class EventListener implements Listener {
 	public void playerQuit(PlayerQuitEvent event) {
 		Player player = event.getPlayer();
 		UUID playeruuid = player.getUniqueId();
+		amusic.logout(playeruuid);
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
 		if(uploadmusiccmd != null) uploadmusiccmd.logoutUploader(player);

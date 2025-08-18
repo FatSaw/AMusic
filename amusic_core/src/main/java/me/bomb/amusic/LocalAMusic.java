@@ -34,9 +34,6 @@ public class LocalAMusic implements AMusic {
 		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 	}
 	
-	/**
-	 * Starts threads.
-	 */
 	public void enable() {
 		positiontracker.start();
 		resourcemanager.start();
@@ -45,9 +42,6 @@ public class LocalAMusic implements AMusic {
 		datamanager.load();
 	}
 	
-	/**
-	 * Stops threads.
-	 */
 	public void disable() {
 		positiontracker.end();
 		resourcemanager.end();
@@ -55,11 +49,9 @@ public class LocalAMusic implements AMusic {
 		if(this.uploadermanager != null) uploadermanager.end();
 	}
 	
-	/**
-	 * Get player uuids that loaded specific playlistname.
-	 *
-	 * @return player uuids that loaded specific playlistname.
-	 */
+	public void logout(UUID playeruuid) {
+	}
+	
 	@Override
 	public final boolean getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer) {
 		if(playlistname == null) {
@@ -74,12 +66,7 @@ public class LocalAMusic implements AMusic {
 		return false;
 	}
 	
-	/**
-	 * Get the names of playlists that were loaded at least once.
-	 *
-	 * @return the names of playlists that were loaded at least once.
-	 */
-	public final boolean getPlaylists(boolean packed, Consumer<String[]> resultConsumer) {
+	public final boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
 		Runnable r = new Runnable() {
 			public void run() {
 				resultConsumer.accept(packed ? datamanager.getPlaylists() : soundsource.getPlaylists());
@@ -88,13 +75,8 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get the names of sounds in playlist.
-	 *
-	 * @return the names of sounds in playlist.
-	 */
-	public final boolean getPlaylistSoundnames(String playlistname, boolean packed, Consumer<String[]> resultConsumer) {
+	
+	public final boolean getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
 		if(playlistname == null) {
 			return false;
 		}
@@ -121,13 +103,8 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get the names of sounds in playlist that loaded to player.
-	 *
-	 * @return the names of sounds in playlist that loaded to player.
-	 */
-	public final boolean getPlaylistSoundnames(UUID playeruuid, Consumer<String[]> resultConsumer) {
+	
+	public final boolean getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
 		}
@@ -149,13 +126,8 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get the lenghs of sounds in playlist.
-	 *
-	 * @return the lenghs of sounds in playlist.
-	 */
-	public final boolean getPlaylistSoundlengths(String playlistname, Consumer<short[]> resultConsumer) {
+	
+	public final boolean getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer) {
 		if(playlistname == null) {
 			return false;
 		}
@@ -177,13 +149,8 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get the lenghs of sounds in playlist that loaded to player.
-	 *
-	 * @return the lenghs of sounds in playlist that loaded to player.
-	 */
-	public final boolean getPlaylistSoundlengths(UUID playeruuid, Consumer<short[]> resultConsumer) {
+	
+	public final boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
 		}
@@ -205,10 +172,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Set sound repeat mode, null to not repeat.
-	 */
+	
 	public final boolean setRepeatMode(UUID playeruuid, RepeatType repeattype) {
 		if(playeruuid == null) {
 			return false;
@@ -221,12 +185,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get playing sound name.
-	 *
-	 * @return playing sound name.
-	 */
+	
 	public final boolean getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -239,12 +198,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get playing sound size in seconds.
-	 *
-	 * @return playing sound size in seconds.
-	 */
+	
 	public final boolean getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -257,12 +211,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get playing sound remaining seconds.
-	 *
-	 * @return playing sound remaining seconds.
-	 */
+	
 	public final boolean getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -275,10 +224,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Loads resource pack to player.
-	 */
+	
 	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
 		Runnable r = new Runnable() {
 			public void run() {
@@ -288,12 +234,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Get loaded pack name.
-	 *
-	 * @return loaded pack name.
-	 */
+	
 	public final boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -306,10 +247,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Stop sound from loaded pack.
-	 */
+	
 	public final boolean stopSound(UUID playeruuid) {
 		if(playeruuid == null) {
 			return false;
@@ -323,9 +261,6 @@ public class LocalAMusic implements AMusic {
 		return false;
 	}
 	
-	/**
-	 * Stop sound from loaded pack.
-	 */
 	public final boolean stopSoundUntrackable(UUID playeruuid) {
 		if(playeruuid == null) {
 			return false;
@@ -338,10 +273,7 @@ public class LocalAMusic implements AMusic {
 		r.run();
 		return false;
 	}
-
-	/**
-	 * Play sound from loaded pack.
-	 */
+	
 	public final boolean playSound(UUID playeruuid, String name) {
 		if(playeruuid == null || name == null) {
 			return false;
@@ -355,9 +287,6 @@ public class LocalAMusic implements AMusic {
 		return false;
 	}
 	
-	/**
-	 * Play sound from loaded pack.
-	 */
 	public final boolean playSoundUntrackable(UUID playeruuid, String name) {
 		if(playeruuid == null || name == null) {
 			return false;
@@ -371,11 +300,6 @@ public class LocalAMusic implements AMusic {
 		return false;
 	}
 	
-	/**
-	 * Open upload session.
-	 * 
-	 * @return session token.
-	 */
 	public final boolean openUploadSession(String playlistname, Consumer<UUID> resultConsumer) {
 		if(playlistname == null) {
 			return false;
@@ -389,11 +313,6 @@ public class LocalAMusic implements AMusic {
 		return false;
 	}
 	
-	/**
-	 * Get upload sessions.
-	 * 
-	 * @return upload sessions.
-	 */
 	public final boolean getUploadSessions(Consumer<UUID[]> resultConsumer) {
 		Runnable r = new Runnable() {
 			public void run() {
@@ -404,11 +323,6 @@ public class LocalAMusic implements AMusic {
 		return false;
 	}
 	
-	/**
-	 * Close upload session.
-	 * 
-	 * @return true if session closed successfully.
-	 */
 	public final boolean closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer) {
 		if(token == null) {
 			return false;

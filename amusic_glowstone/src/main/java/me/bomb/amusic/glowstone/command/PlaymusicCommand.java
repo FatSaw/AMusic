@@ -158,7 +158,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 						amusic.getPlayingSoundName(targetuuid, consumerSoundName);
 					}
 				};
-				amusic.getPlaylistSoundnames(targetuuid, consumer);
+				amusic.getPlaylistSoundnames(targetuuid, false, consumer);
 				
 				return true;
 			} else if(!sender.hasPermission("amusic.playmusic.other")) {
@@ -241,7 +241,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 				}
 				
 			};
-			amusic.getPlaylistSoundnames(target.getUniqueId(), consumer);
+			amusic.getPlaylistSoundnames(target.getUniqueId(), false, consumer);
 			return true;
 		} else {
 			LangOptions.playmusic_usage.sendMsg(sender);

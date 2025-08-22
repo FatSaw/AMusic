@@ -11,6 +11,7 @@ import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 import dev.simplix.protocolize.api.Protocolize;
 import dev.simplix.protocolize.api.player.ProtocolizePlayer;
 import me.bomb.amusic.SoundStopper;
+import me.bomb.amusic.util.HexUtils;
 
 public final class ProtocoliseSoundStopper implements SoundStopper {
 	
@@ -46,9 +47,9 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 			}
 			return;
 		}
-		final String soundid = "amusic.music".concat(Short.toString(id));
+		final String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		if(version > 388) {
-			SoundStopPacket packet = new SoundStopPacket(9, soundid);
+			SoundStopPacket packet = new SoundStopPacket(9, musicid);
 			player.sendPacket(packet);
 			return;
 		}
@@ -56,7 +57,7 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 		if(oplayer.isEmpty()) {
 			return;
 		}
-		oplayer.get().sendPluginMessage(identifier, new StringPluginMessageEncoder(soundid));
+		oplayer.get().sendPluginMessage(identifier, new StringPluginMessageEncoder(musicid));
 	}
 	
 	@Override

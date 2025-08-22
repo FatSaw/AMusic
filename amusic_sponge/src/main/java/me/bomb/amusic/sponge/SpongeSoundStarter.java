@@ -10,6 +10,7 @@ import org.spongepowered.api.entity.living.player.Player;
 import com.flowpowered.math.vector.Vector3d;
 
 import me.bomb.amusic.SoundStarter;
+import me.bomb.amusic.util.HexUtils;
 
 public final class SpongeSoundStarter implements SoundStarter {
 	
@@ -20,7 +21,7 @@ public final class SpongeSoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, short id) {
+	public void startSound(UUID uuid, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
@@ -28,13 +29,14 @@ public final class SpongeSoundStarter implements SoundStarter {
 		if(oplayer.isPresent()) {
 			Player player = oplayer.get();
 			SoundType sound = new SoundType() {
+				String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 				@Override
 				public String getName() {
-					return "amusic.music".concat(Short.toString(id));
+					return musicid;
 				}
 				@Override
 				public String getId() {
-					return "amusic.music".concat(Short.toString(id));
+					return musicid;
 				}
 			};
 			

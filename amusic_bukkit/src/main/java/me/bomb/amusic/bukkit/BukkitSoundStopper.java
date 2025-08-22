@@ -8,6 +8,7 @@ import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.SoundStopper;
+import me.bomb.amusic.util.HexUtils;
 
 public final class BukkitSoundStopper implements SoundStopper {
 	
@@ -18,12 +19,13 @@ public final class BukkitSoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, short id) {
+	public void stopSound(UUID uuid, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
+		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Player player = server.getPlayer(uuid);
-		player.stopSound("amusic.music".concat(Short.toString(id)), SoundCategory.VOICE);
+		player.stopSound(musicid, SoundCategory.VOICE);
 	}
 
 }

@@ -6,6 +6,6 @@ public interface SoundStarter {
 	/**
 	 * Starts amusic sound.
 	 */
-	public void startSound(UUID uuid, short id);
+	public void startSound(UUID uuid, short id, byte part);
 
 }

@@ -68,8 +68,9 @@ public final class LocalUnconvertedSource extends SoundSource {
 		int i;
 		final Path[] files;
 		final String[] names;
+		final byte[] splits;
 		final short[] lengths;
-		final byte[][] data;
+		final byte[][][] data;
 		final AtomicBoolean[] finished;
 		final boolean[] success;
 		final SourceEntry source;
@@ -84,11 +85,12 @@ public final class LocalUnconvertedSource extends SoundSource {
 			i = filesm.size();
 			files = new Path[i];
 			names = new String[i];
+			splits = new byte[i];
 			lengths = new short[i];
-			data = new byte[i][];
+			data = new byte[i][][];
 			finished = usemt ? new AtomicBoolean[i] : null;
 			success = new boolean[i];
-			source = new SourceEntry(names, lengths, data, finished, success);
+			source = new SourceEntry(names, splits, lengths, data, finished, success);
 			Iterator<Path> fiterator = filesm.iterator();
 			while(--i > -1) {
 				final Path file = fiterator.next();
@@ -99,6 +101,7 @@ public final class LocalUnconvertedSource extends SoundSource {
 					songname = songname.substring(0, j);
 				}
 				names[i] = songname;
+				splits[i] = 1; //HARDCODE SPLITS
 				if(!usemt) {
 					continue;
 				}
@@ -135,10 +138,10 @@ public final class LocalUnconvertedSource extends SoundSource {
 				if(--remain > -1) {
 					++nums;
 				}
-				new Thread(new ConvertSound(runtime, args, maxsoundsize, null, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
+				new Thread(new ConvertSound(runtime, args, maxsoundsize, splits, null, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
 			}
 		} else {
-			new ConvertSound(runtime, args, maxsoundsize, null, files, data, lengths, finished, success, 0, files.length).run();
+			new ConvertSound(runtime, args, maxsoundsize, splits, null, files, data, lengths, finished, success, 0, files.length).run();
 		}
 		return source;
 	}

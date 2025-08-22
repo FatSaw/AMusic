@@ -27,7 +27,7 @@ public final class ProtocoliseSoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, short id) {
+	public void stopSound(UUID uuid, short id, byte partid) {
 		ProtocolizePlayer player = Protocolize.playerProvider().player(uuid);
 		if(player==null) {
 			return;

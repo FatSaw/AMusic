@@ -5,13 +5,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class SourceEntry {
 	
 	public final String[] names;
+	public final byte[] splits;
 	public final short[] lengths;
-	public final byte[][] data;
+	public final byte[][][] data;
 	private final AtomicBoolean[] finished;
 	public final boolean[] success;
 	
-	public SourceEntry(String[] names, short[] lengths, byte[][] data, AtomicBoolean[] finished, boolean[] success) {
+	public SourceEntry(String[] names, byte[] splits, short[] lengths, byte[][][] data, AtomicBoolean[] finished, boolean[] success) {
 		this.names = names;
+		this.splits = splits;
 		this.lengths = lengths;
 		this.data = data;
 		this.finished = finished;

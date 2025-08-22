@@ -17,6 +17,7 @@ import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
 import me.bomb.amusic.util.ByteArraysOutputStream;
+import me.bomb.amusic.util.HexUtils;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -62,6 +63,7 @@ public final class ResourcePacker implements Runnable {
 			return;
 		}
 		String[] soundnames = sourceentry.names;
+		byte[] splits = sourceentry.splits;
 		int musiccount = soundnames.length;
 		if(musiccount < 1) {
 			return;
@@ -80,11 +82,24 @@ public final class ResourcePacker implements Runnable {
 			StringBuffer sounds = new StringBuffer("\n");
 			int i = musiccount;
 			while(--i > -1) {
-				sounds.append("\t\"amusic.music");
-				sounds.append(i);
-				sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/music");
-				sounds.append(i);
-				sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+				final byte split = splits[i];
+				short partid = (short) (split & 0xFF);
+				byte splitbitid = 8;
+				while(--splitbitid > -1) {
+					boolean splitpresent = ((split >> splitbitid) & 0x01) == 0x01;
+					if(splitpresent) {
+						final byte partscount = (byte) (1 << splitbitid);
+						short partsend = (short) (partid - partscount);
+						while(--partid >= partsend) {
+							String musicid = new StringBuilder("music").append(HexUtils.shortToHex((short) i)).append(HexUtils.byteToHex((byte) partid)).toString();
+							sounds.append("\t\"amusic.");
+							sounds.append(musicid);
+							sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/");
+							sounds.append(musicid);
+							sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+						}
+					}
+				}
 			}
 			sounds.append("\t\"amusic.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n");
 			soundslist = sounds.toString();
@@ -179,7 +194,7 @@ public final class ResourcePacker implements Runnable {
 			}
 			byte sleepcount = 0;
 			boolean processing = true;
-			byte[][] topack = sourceentry.data;
+			byte[][][] ntopack = sourceentry.data;
 			boolean[] success = sourceentry.success, processed = new boolean[musiccount];
 			while(processing && --sleepcount != 0) {
 				processing = false;
@@ -192,19 +207,34 @@ public final class ResourcePacker implements Runnable {
 						processing = true;
 						continue;
 					}
-					try {
-						byte[] resource = success[i] ? topack[i] : silencesound;
-						int cap = resource.length >> 9;
-						if(cap < 1) {
-							cap = 1;
+					final byte split = splits[i];
+					String entryid = "assets/minecraft/sounds/amusic/music".concat(HexUtils.shortToHex((short)i));
+					
+					byte[][] sounddata = ntopack[i];
+					short partid = (short) (split & 0xFF);
+					byte splitbitid = 8;
+					while(--splitbitid > -1) {
+						boolean splitpresent = ((split >> splitbitid) & 0x01) == 0x01;
+						if(splitpresent) {
+							final byte partscount = (byte) (1 << splitbitid);
+							short partsend = (short) (partid - partscount);
+							while(--partid >= partsend) {
+								byte[] part = sounddata[partid];
+								int cap = part.length >> 9;
+								if(cap < 1) {
+									cap = 1;
+								}
+								try {
+									baos.increaseCapacity(cap);
+									zos.putNextEntry(new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg")));
+						            zos.write(part);
+						            zos.closeEntry();
+								} catch (IOException e) {
+								}
+							}
 						}
-						baos.increaseCapacity(cap);
-						zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/music".concat(Integer.toString(i)).concat(".ogg")));
-			            zos.write(resource);
-			            zos.closeEntry();
-					} catch (IOException e) {
 					}
-					topack[i] = null;
+					ntopack[i] = null;
 					sleepcount = 0; //reset inactivity timer
 					processed[i] = true;
 				}
@@ -226,7 +256,7 @@ public final class ResourcePacker implements Runnable {
 		int i = musiccount;
 		this.sounds = new SoundInfo[i];
 		while(--i > -1) {
-			this.sounds[i] = new SoundInfo(soundnames[i], soundlengths[i]);
+			this.sounds[i] = new SoundInfo(soundnames[i], soundlengths[i], splits[i]);
 		}
 
 		long timeelapsed = currentTimeMillis() - timestart;

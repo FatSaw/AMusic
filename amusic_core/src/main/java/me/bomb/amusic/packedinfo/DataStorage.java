@@ -22,7 +22,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 	
 	private static final String FORMAT = ".ampi";
 	private static final byte FORMATSIZE = 5;
-	private static final byte VERSION = 2;
+	private static final byte VERSION = 3;
 	private static final DirectoryStream.Filter<Path> ampifilter = new DirectoryStream.Filter<Path>() {
 		@Override
 		public boolean accept(Path path) throws IOException {
@@ -46,7 +46,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 
 	@Override
 	protected void save() {
-		if(this.lockwrite) {
+		if(this.lockwrite && !this.run) {
 			return;
 		}
 		synchronized(this) {
@@ -102,9 +102,10 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 					}
 					int soundcount = 0x0000FFFF;
 					soundcount &= 0xFF & buf[0] | buf[1] << 8;
-					byte[] namelengths = new byte[soundcount];
+					byte[] namelengths = new byte[soundcount], splits = new byte[soundcount];
 					buf = new byte[soundcount<<1];
 					is.read(namelengths);
+					is.read(splits);
 					short[] lengths = new short[soundcount];
 					is.read(buf);
 					for(int k = 0,j = 0; k < soundcount; ++k, ++j) {
@@ -116,7 +117,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 					while(j < soundcount) {
 						buf = new byte[0xFF & namelengths[j]];
 						is.read(buf);
-						sounds[j] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[j]);
+						sounds[j] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[j], splits[j]);
 						++j;
 					}
 					is.close();
@@ -151,6 +152,8 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 				try {
 					this.wait();
 				} catch (InterruptedException e) {
+					this.run = false;
+					return;
 				}
 			}
 			DirectoryStream<Path> ds = null;
@@ -232,7 +235,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 					soundcountb[1] = (byte) (soundcount>>8);
 					os.write(soundcountb);
 					int lengthscount = soundcount<<1;
-					byte[] namelengths = new byte[soundcount], lengths = new byte[lengthscount];
+					byte[] namelengths = new byte[soundcount], splits = new byte[soundcount],lengths = new byte[lengthscount];
 					short i = 0, j = 0;
 					int totalsoundnamelength = 0;
 					byte[][] anames = new byte[soundcount][];
@@ -248,6 +251,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 						totalsoundnamelength += soundnamelength;
 						anames[i] = soundnamebytes;
 						namelengths[i] = (byte) soundnamelength;
+						splits[i] = dataentry.sounds[i].split;
 						short length = dataentry.sounds[i].length;
 						++i;
 						lengths[j] = (byte) length;
@@ -266,8 +270,9 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 						namesi+=soundnamelength;
 						++i;
 					}
-					os.write(namelengths); //NAME LENGTHS  ENTRY 0-255
-					os.write(lengths); //SOUND LENGTHS  ENTRY 0-65535
+					os.write(namelengths); //NAME LENGTHS ENTRY 0-255
+					os.write(splits); //SOUND SPLITS ENTRY 0-255
+					os.write(lengths); //SOUND LENGTHS ENTRY 0-65535
 					os.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
 					
 					os.close();
@@ -289,9 +294,8 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 	}
 	
 	public void end() {
-		run = false;
-		synchronized(this) {
-			this.notify();
+		if(savethread != null) {
+			savethread.interrupt();
 		}
 	}
 	

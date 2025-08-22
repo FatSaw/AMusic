@@ -13,16 +13,18 @@ import me.bomb.amusic.util.ByteArraysOutputStream;
 public class ReadSound implements Runnable {
 
 	protected final int maxsoundsize;
+	protected final byte[] splits;
 	protected final int[] sizes;
 	protected final Path[] files;
-	protected final byte[][] data;
+	protected final byte[][][] data;
 	protected final short[] lengths;
 	protected final AtomicBoolean[] finished;
 	protected final boolean[] success;
 	protected final int start, end;
 	
-	public ReadSound(int maxsoundsize, int[] sizes, Path[] files, byte[][] data, short[] lengths, AtomicBoolean[] finished , boolean[] success, int start, int end) {
+	public ReadSound(int maxsoundsize, byte[] splits, int[] sizes, Path[] files, byte[][][] data, short[] lengths, AtomicBoolean[] finished , boolean[] success, int start, int end) {
 		this.maxsoundsize = maxsoundsize;
+		this.splits = splits;
 		this.sizes = sizes;
 		this.files = files;
 		this.data = data;
@@ -36,6 +38,7 @@ public class ReadSound implements Runnable {
 	@Override
 	public void run() {
 		final boolean sizesknown = sizes != null;
+
 		for(int i = this.start; i < this.end;++i) {
 			byte[] buf = sizesknown ? new byte[sizes[i]] : null;
 			InputStream is = null;
@@ -59,9 +62,6 @@ public class ReadSound implements Runnable {
 					buf = baos.toByteArray();
 					baos.close();
 				}
-				data[i] = buf;
-				lengths[i] = calculateDuration(buf);
-				success[i] = true;
 				is.close();
 			} catch (IOException e1) {
 				success[i] = false;
@@ -72,6 +72,28 @@ public class ReadSound implements Runnable {
 					}
 				}
 			}
+			final byte split = splits[i];
+			
+			byte[][] parts = new byte[split][];
+			
+			if((split & 0xFE) != 0x00) {
+				byte lastsplitbitid = 8;
+				while(--lastsplitbitid > 0) {
+					if((split >>> lastsplitbitid & 0x01) == 0x01) {
+						break;
+					}
+				}
+				//TODO: IMPLEMENT SPLITTER
+			}
+			
+			if((split & 0x01) == 0x01) {
+				parts[parts.length - 1] = buf;
+			}
+			
+			data[i] = parts;
+			lengths[i] = calculateDuration(buf);
+			success[i] = true;
+			
 			if(finished == null) {
 				continue;
 			}

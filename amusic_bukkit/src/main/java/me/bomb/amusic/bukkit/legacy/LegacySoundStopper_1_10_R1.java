@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 
 import io.netty.buffer.Unpooled;
 import me.bomb.amusic.SoundStopper;
+import me.bomb.amusic.util.HexUtils;
 import net.minecraft.server.v1_10_R1.EntityPlayer;
 import net.minecraft.server.v1_10_R1.PacketDataSerializer;
 import net.minecraft.server.v1_10_R1.PlayerConnection;
@@ -22,16 +23,17 @@ public final class LegacySoundStopper_1_10_R1 implements SoundStopper {
 	}
 	
 	@Override
-	public void stopSound(UUID uuid, short id) {
+	public void stopSound(UUID uuid, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
+		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Player player = server.getPlayer(uuid);
 		EntityPlayer entityplayer = ((CraftPlayer)player).getHandle();
 		PlayerConnection connection = entityplayer.playerConnection;
 		PacketDataSerializer packetdataserializer = new PacketDataSerializer(Unpooled.buffer());
         packetdataserializer.a("");
-        packetdataserializer.a("amusic.music".concat(Short.toString(id)));
+        packetdataserializer.a(musicid);
         connection.sendPacket(new PacketPlayOutCustomPayload("MC|StopSound", packetdataserializer));
 		
 	}

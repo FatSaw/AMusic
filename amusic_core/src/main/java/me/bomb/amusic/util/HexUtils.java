@@ -4,7 +4,7 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 
 public final class HexUtils {
 	
-	private static final byte[] HEX = "0123456789ABCDEF".getBytes(US_ASCII);
+	private static final byte[] HEX = "0123456789abcdef".getBytes(US_ASCII);
 	
 	private HexUtils() {
 	}
@@ -26,6 +26,83 @@ public final class HexUtils {
         }
         return new String(hexChars, US_ASCII);
     }
+	
+	public static String byteToHex(byte abyte) {
+        byte[] hexChars = new byte[2];
+        hexChars[1] = HEX[abyte & 0x0F];
+        abyte >>>= 4;
+        hexChars[0] = HEX[abyte];
+        return new String(hexChars, US_ASCII);
+	}
+	public static String shortToHex(short ashort) {
+        byte[] hexChars = new byte[4];
+        hexChars[3] = HEX[ashort & 0x0F];
+        ashort >>>= 4;
+        hexChars[2] = HEX[ashort & 0x0F];
+        ashort >>>= 4;
+        hexChars[1] = HEX[ashort & 0x0F];
+        ashort >>>= 4;
+        hexChars[0] = HEX[ashort];
+        return new String(hexChars, US_ASCII);
+	}
+	public static String intToHex(int aint) {
+        byte[] hexChars = new byte[8];
+        hexChars[7] = HEX[aint & 0x0F];
+        aint >>>= 4;
+        hexChars[6] = HEX[aint & 0x0F];
+        aint >>>= 4;
+        hexChars[5] = HEX[aint & 0x0F];
+        aint >>>= 4;
+        hexChars[4] = HEX[aint & 0x0F];
+        aint >>>= 4;
+        hexChars[3] = HEX[aint & 0x0F];
+        aint >>>= 4;
+        hexChars[2] = HEX[aint & 0x0F];
+        aint >>>= 4;
+        hexChars[1] = HEX[aint & 0x0F];
+        aint >>>= 4;
+        hexChars[0] = HEX[aint];
+        return new String(hexChars, US_ASCII);
+	}
+	public static String longToHex(long along) {
+        byte[] hexChars = new byte[16];
+        hexChars[15] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[14] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[13] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[12] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[11] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[10] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[9] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[8] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[7] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[6] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[5] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[4] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[3] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[2] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[1] = HEX[(int) (along & 0x0F)];
+        along >>>= 4;
+        hexChars[0] = HEX[(int) along];
+        return new String(hexChars, US_ASCII);
+	}
+	
+	public static String getHex(byte abyte) {
+        return new String(new byte[] {HEX[abyte & 0x0F]}, US_ASCII);
+	}
 	
 	/**
      * Converts a hexadecimal string to a byte array.

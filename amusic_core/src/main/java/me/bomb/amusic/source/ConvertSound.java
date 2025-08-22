@@ -12,8 +12,8 @@ public class ConvertSound extends ReadSound {
 	protected final Runtime runtime;
 	protected final String[] args;
 
-	public ConvertSound(Runtime runtime, String[] args, int maxsoundsize, int[] sizes, Path[] files, byte[][] data, short[] lengths, AtomicBoolean[] finished, boolean[] success, int start, int end) {
-		super(maxsoundsize, sizes, files, data, lengths, finished, success, start, end);
+	public ConvertSound(Runtime runtime, String[] args, int maxsoundsize, byte[] splits, int[] sizes, Path[] files, byte[][][] data, short[] lengths, AtomicBoolean[] finished, boolean[] success, int start, int end) {
+		super(maxsoundsize, splits, sizes, files, data, lengths, finished, success, start, end);
 		this.runtime = runtime;
 		this.args = Arrays.copyOf(args, args.length);
 	}
@@ -61,9 +61,6 @@ public class ConvertSound extends ReadSound {
 					buf = baos.toByteArray();
 					baos.close();
 				}
-				data[i] = buf;
-				lengths[i] = calculateDuration(buf);
-				success[i] = true;
 				is.close();
 			} catch (IOException e1) {
 				success[i] = false;
@@ -74,6 +71,23 @@ public class ConvertSound extends ReadSound {
 					}
 				}
 			}
+			
+			final byte split = splits[i];
+			
+			byte[][] parts = new byte[split][];
+			
+			if((split & 0xFE) != 0x00) {
+				//TODO: IMPLEMENT SPLITTER
+			}
+			
+			if((split & 0x01) == 0x01) {
+				parts[parts.length - 1] = buf;
+			}
+			
+			data[i] = parts;
+			lengths[i] = calculateDuration(buf);
+			success[i] = true;
+			
 			if(finished == null) {
 				continue;
 			}

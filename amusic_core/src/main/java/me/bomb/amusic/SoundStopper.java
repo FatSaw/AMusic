@@ -7,7 +7,7 @@ public interface SoundStopper {
 	/**
 	 * Stops amusic sound.
 	 */
-	public void stopSound(UUID uuid, short id);
+	public void stopSound(UUID uuid, short id, byte partid);
 	
 	public default boolean isStopAll() {
 		return false;

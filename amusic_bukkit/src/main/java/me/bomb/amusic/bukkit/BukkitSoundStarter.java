@@ -2,12 +2,12 @@ package me.bomb.amusic.bukkit;
 
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.SoundStarter;
+import me.bomb.amusic.util.HexUtils;
 
 public final class BukkitSoundStarter implements SoundStarter {
 	
@@ -18,12 +18,13 @@ public final class BukkitSoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, short id) {
+	public void startSound(UUID uuid, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
+		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Player player = server.getPlayer(uuid);
-		player.playSound(player.getLocation(), "amusic.music".concat(Short.toString(id)), SoundCategory.VOICE, 1.0f, 1.0f);
+		player.playSound(player.getLocation(), musicid, SoundCategory.VOICE, 1.0f, 1.0f);
 	}
 
 }

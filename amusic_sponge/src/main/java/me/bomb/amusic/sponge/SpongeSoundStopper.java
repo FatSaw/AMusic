@@ -9,6 +9,7 @@ import org.spongepowered.api.entity.living.player.Player;
 
 
 import me.bomb.amusic.SoundStopper;
+import me.bomb.amusic.util.HexUtils;
 
 public final class SpongeSoundStopper implements SoundStopper {
 	
@@ -19,21 +20,22 @@ public final class SpongeSoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, short id) {
+	public void stopSound(UUID uuid, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
+		final String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Optional<Player> oplayer = server.getPlayer(uuid);
 		if(oplayer.isPresent()) {
 			Player player = oplayer.get();
 			SoundType sound = new SoundType() {
 				@Override
 				public String getName() {
-					return "amusic.music".concat(Short.toString(id));
+					return musicid;
 				}
 				@Override
 				public String getId() {
-					return "amusic.music".concat(Short.toString(id));
+					return musicid;
 				}
 			};
 			player.stopSounds(sound);

@@ -2,7 +2,6 @@ package me.bomb.amusic.bukkit;
 
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -17,7 +16,7 @@ public final class BukkitSoundSilenceLockStopper implements SoundStopper {
 		this.server = server;
 	}
 	
-	public void stopSound(UUID uuid, short id) {
+	public void stopSound(UUID uuid, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}

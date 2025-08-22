@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
@@ -45,11 +46,21 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			Player player = (Player)sender;
 			final UUID token = uploaders.remove(player);
-			if(token == null || !amusic.closeUploadSession(token, save)) {
+			if(token == null) {
 				LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
 				return;
 			}
-			LangOptions.uploadmusic_finish_player_success.sendMsg(sender);
+			Consumer<Boolean> consumer = new Consumer<Boolean>() {
+				@Override
+				public void accept(Boolean t) {
+					if(!t) {
+						LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
+						return;
+					}
+					LangOptions.uploadmusic_finish_player_success.sendMsg(sender);
+				}
+			};
+			amusic.closeUploadSession(token, save, consumer);
 			return;
 		}
 		if(args.length < 2) {
@@ -68,14 +79,19 @@ public final class UploadmusicCommand implements SimpleCommand {
 					args[1] = sb.toString();
 				}
 			}
-			final UUID token = amusic.openUploadSession(args[1]);
-			String url = uploaderhost.concat(token.toString());
-			(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
-			if(!(sender instanceof Player)) {
-				return;
-			}
-			Player player = (Player)sender;
-			uploaders.put(player, token);
+			Consumer<UUID> consumer = new Consumer<UUID>() {
+				@Override
+				public void accept(UUID token) {
+					String url = uploaderhost.concat(token.toString());
+					(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
+					if(!(sender instanceof Player)) {
+						return;
+					}
+					Player player = (Player)sender;
+					uploaders.put(player, token);
+				}
+			};
+			amusic.openUploadSession(args[1], consumer);
 			return;
 		}
 		if((save = "finish".equals(args[0])) || "drop".equals(args[0])) {
@@ -85,7 +101,13 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				(amusic.closeUploadSession(token, save) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+				Consumer<Boolean> consumer = new Consumer<Boolean>() {
+					@Override
+					public void accept(Boolean t) {
+						(t ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+					}
+				};
+				amusic.closeUploadSession(token, save, consumer);
 			} catch(IllegalArgumentException ex) {
 				LangOptions.uploadmusic_finish_token_invalid.sendMsg(sender);
 			}
@@ -118,12 +140,28 @@ public final class UploadmusicCommand implements SimpleCommand {
 		if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0) || "drop".equals(arg0)) {
-				UUID[] sessions = amusic.getUploadSessions();
-				String arg1 = args[1].toUpperCase();
-				for(UUID token : sessions) {
-					String tokenstr = token.toString();
-					if(tokenstr.startsWith(arg1)) {
-						tabcomplete.add(tokenstr);
+				Consumer<UUID[]> consumer = new Consumer<UUID[]>() {
+					@Override
+					public void accept(UUID[] sessions) {
+						String arg1 = args[1].toUpperCase();
+						for(UUID token : sessions) {
+							String tokenstr = token.toString();
+							if(tokenstr.startsWith(arg1)) {
+								tabcomplete.add(tokenstr);
+							}
+						}
+						synchronized (tabcomplete) {
+							tabcomplete.notify();
+						}
+					}
+				};
+				boolean async = amusic.getUploadSessions(consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
 					}
 				}
 			}

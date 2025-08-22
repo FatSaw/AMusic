@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
@@ -60,11 +61,21 @@ public final class UploadmusicCommand implements CommandCallable {
 			}
 			Player player = (Player)source;
 			final UUID token = uploaders.remove(player);
-			if(token == null || !amusic.closeUploadSession(token, save)) {
+			if(token == null) {
 				LangOptions.uploadmusic_finish_player_nosession.sendMsg(source);
 				return CommandResult.success();
 			}
-			LangOptions.uploadmusic_finish_player_success.sendMsg(source);
+			Consumer<Boolean> consumer = new Consumer<Boolean>() {
+				@Override
+				public void accept(Boolean t) {
+					if(!t) {
+						LangOptions.uploadmusic_finish_player_nosession.sendMsg(source);
+						return;
+					}
+					LangOptions.uploadmusic_finish_player_success.sendMsg(source);
+				}
+			};
+			amusic.closeUploadSession(token, save, consumer);
 			return CommandResult.success();
 		}
 		if(args.length < 2) {
@@ -83,14 +94,19 @@ public final class UploadmusicCommand implements CommandCallable {
 					args[1] = sb.toString();
 				}
 			}
-			final UUID token = amusic.openUploadSession(args[1]);
-			String url = uploaderhost.concat(token.toString());
-			(source instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(source, new Placeholder("%url%", url));
-			if(!(source instanceof Player)) {
-				return CommandResult.success();
-			}
-			Player player = (Player)source;
-			uploaders.put(player, token);
+			Consumer<UUID> consumer = new Consumer<UUID>() {
+				@Override
+				public void accept(UUID token) {
+					String url = uploaderhost.concat(token.toString());
+					(source instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(source, new Placeholder("%url%", url));
+					if(!(source instanceof Player)) {
+						return;
+					}
+					Player player = (Player)source;
+					uploaders.put(player, token);
+				}
+			};
+			amusic.openUploadSession(args[1], consumer);
 			return CommandResult.success();
 		}
 		if((save = "finish".equals(args[0])) || "drop".equals(args[0])) {
@@ -100,7 +116,13 @@ public final class UploadmusicCommand implements CommandCallable {
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				(amusic.closeUploadSession(token, save) ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(source);
+				Consumer<Boolean> consumer = new Consumer<Boolean>() {
+					@Override
+					public void accept(Boolean t) {
+						(t ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(source);
+					}
+				};
+				amusic.closeUploadSession(token, save, consumer);
 			} catch(IllegalArgumentException ex) {
 				LangOptions.uploadmusic_finish_token_invalid.sendMsg(source);
 			}
@@ -132,12 +154,28 @@ public final class UploadmusicCommand implements CommandCallable {
 		if (args.length == 2 && source.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0) || "drop".equals(arg0)) {
-				UUID[] sessions = amusic.getUploadSessions();
-				String arg1 = args[1].toUpperCase();
-				for(UUID token : sessions) {
-					String tokenstr = token.toString();
-					if(tokenstr.startsWith(arg1)) {
-						tabcomplete.add(tokenstr);
+				Consumer<UUID[]> consumer = new Consumer<UUID[]>() {
+					@Override
+					public void accept(UUID[] sessions) {
+						String arg1 = args[1].toUpperCase();
+						for(UUID token : sessions) {
+							String tokenstr = token.toString();
+							if(tokenstr.startsWith(arg1)) {
+								tabcomplete.add(tokenstr);
+							}
+						}
+						synchronized (tabcomplete) {
+							tabcomplete.notify();
+						}
+					}
+				};
+				boolean async = amusic.getUploadSessions(consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
 					}
 				}
 			}

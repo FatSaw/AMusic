@@ -3,6 +3,7 @@ package me.bomb.amusic;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.SoundInfo;
@@ -33,9 +34,6 @@ public class LocalAMusic implements AMusic {
 		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 	}
 	
-	/**
-	 * Starts threads.
-	 */
 	public void enable() {
 		positiontracker.start();
 		resourcemanager.start();
@@ -44,9 +42,6 @@ public class LocalAMusic implements AMusic {
 		datamanager.load();
 	}
 	
-	/**
-	 * Stops threads.
-	 */
 	public void disable() {
 		positiontracker.end();
 		resourcemanager.end();
@@ -54,204 +49,306 @@ public class LocalAMusic implements AMusic {
 		if(this.uploadermanager != null) uploadermanager.end();
 	}
 	
-	/**
-	 * Get player uuids that loaded specific playlistname.
-	 *
-	 * @return player uuids that loaded specific playlistname.
-	 */
+	public void logout(UUID playeruuid) {
+	}
+	
 	@Override
-	public final UUID[] getPlayersLoaded(String playlistname) {
-		return positiontracker.getPlayersLoaded(playlistname);
-	}
-	
-	/**
-	 * Get the names of playlists that were loaded at least once.
-	 *
-	 * @return the names of playlists that were loaded at least once.
-	 */
-	public final String[] getPlaylists(boolean packed) {
-		return packed ? datamanager.getPlaylists() : soundsource.getPlaylists();
-	}
-
-	/**
-	 * Get the names of sounds in playlist.
-	 *
-	 * @return the names of sounds in playlist.
-	 */
-	public final String[] getPlaylistSoundnames(String playlistname, boolean packed) {
-		if(packed) {
-			SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
-			if(soundinfos==null) {
-				return null;
+	public final boolean getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer) {
+		if(playlistname == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlayersLoaded(playlistname));
 			}
-			int i = soundinfos.length;
-			String[] soundnames = new String[i];
-			while(--i > -1) {
-				soundnames[i] = soundinfos[i].name;
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(packed ? datamanager.getPlaylists() : soundsource.getPlaylists());
 			}
-			return soundnames;
-		} else {
-			return soundsource.getSounds(playlistname);
-		}
-	}
-
-	/**
-	 * Get the names of sounds in playlist that loaded to player.
-	 *
-	 * @return the names of sounds in playlist that loaded to player.
-	 */
-	public final String[] getPlaylistSoundnames(UUID playeruuid) {
-		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-		if(soundinfos==null) {
-			return null;
-		}
-		int i = soundinfos.length;
-		String[] soundnames = new String[i];
-		while(--i > -1) {
-			soundnames[i] = soundinfos[i].name;
-		}
-		return soundnames;
-	}
-
-	/**
-	 * Get the lenghs of sounds in playlist.
-	 *
-	 * @return the lenghs of sounds in playlist.
-	 */
-	public final short[] getPlaylistSoundlengths(String playlistname) {
-		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
-		if(soundinfos==null) {
-			return null;
-		}
-		int i = soundinfos.length;
-		short[] soundlengths = new short[i];
-		while(--i > -1) {
-			soundlengths[i] = soundinfos[i].length;
-		}
-		return soundlengths;
-	}
-
-	/**
-	 * Get the lenghs of sounds in playlist that loaded to player.
-	 *
-	 * @return the lenghs of sounds in playlist that loaded to player.
-	 */
-	public final short[] getPlaylistSoundlengths(UUID playeruuid) {
-		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-		if(soundinfos==null) {
-			return null;
-		}
-		int i = soundinfos.length;
-		short[] soundlengths = new short[i];
-		while(--i > -1) {
-			soundlengths[i] = soundinfos[i].length;
-		}
-		return soundlengths;
-	}
-
-	/**
-	 * Set sound repeat mode, null to not repeat.
-	 */
-	public final void setRepeatMode(UUID playeruuid, RepeatType repeattype) {
-		positiontracker.setRepeater(playeruuid, repeattype);
-	}
-
-	/**
-	 * Get playing sound name.
-	 *
-	 * @return playing sound name.
-	 */
-	public final String getPlayingSoundName(UUID playeruuid) {
-		return positiontracker.getPlaying(playeruuid);
-	}
-
-	/**
-	 * Get playing sound size in seconds.
-	 *
-	 * @return playing sound size in seconds.
-	 */
-	public final short getPlayingSoundSize(UUID playeruuid) {
-		return positiontracker.getPlayingSize(playeruuid);
-	}
-
-	/**
-	 * Get playing sound remaining seconds.
-	 *
-	 * @return playing sound remaining seconds.
-	 */
-	public final short getPlayingSoundRemain(UUID playeruuid) {
-		return positiontracker.getPlayingRemain(playeruuid);
-	}
-
-	/**
-	 * Loads resource pack to player.
-	 */
-	public final void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
-		new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport, true);
-	}
-
-	/**
-	 * Get loaded pack name.
-	 *
-	 * @return loaded pack name.
-	 */
-	public final String getPackName(UUID playeruuid) {
-		return positiontracker.getPlaylistName(playeruuid);
-	}
-
-	/**
-	 * Stop sound from loaded pack.
-	 */
-	public final void stopSound(UUID playeruuid) {
-		positiontracker.stopMusic(playeruuid);
+		};
+		r.run();
+		return false;
 	}
 	
-	/**
-	 * Stop sound from loaded pack.
-	 */
-	public final void stopSoundUntrackable(UUID playeruuid) {
-		positiontracker.stopMusicUntrackable(playeruuid);
-	}
+	public final boolean getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
+		if(playlistname == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				if(packed) {
+					SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+					if(soundinfos==null) {
+						resultConsumer.accept(null);
+						return;
+					}
+					int i = soundinfos.length;
+					String[] soundnames = new String[i];
+					while(--i > -1) {
+						soundnames[i] = soundinfos[i].name;
+					}
 
-	/**
-	 * Play sound from loaded pack.
-	 */
-	public final void playSound(UUID playeruuid, String name) {
-		positiontracker.playMusic(playeruuid, name);
+					resultConsumer.accept(soundnames);
+				} else {
+					resultConsumer.accept(soundsource.getSounds(playlistname));
+				}
+			}
+		};
+		r.run();
+		return false;
 	}
 	
-	/**
-	 * Play sound from loaded pack.
-	 */
-	public final void playSoundUntrackable(UUID playeruuid, String name) {
-		positiontracker.playMusicUntrackable(playeruuid, name);
+	public final boolean getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
+				if(soundinfos==null) {
+					resultConsumer.accept(null);
+					return;
+				}
+				int i = soundinfos.length;
+				String[] soundnames = new String[i];
+				while(--i > -1) {
+					soundnames[i] = soundinfos[i].name;
+				}
+				resultConsumer.accept(soundnames);
+			}
+		};
+		r.run();
+		return false;
 	}
 	
-	/**
-	 * Open upload session.
-	 * 
-	 * @return session token.
-	 */
-	public final UUID openUploadSession(String playlistname) {
-		return uploadermanager == null ? null : uploadermanager.startSession(playlistname);
+	public final boolean getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer) {
+		if(playlistname == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+				if(soundinfos==null) {
+					resultConsumer.accept(null);
+					return;
+				}
+				int i = soundinfos.length;
+				short[] soundlengths = new short[i];
+				while(--i > -1) {
+					soundlengths[i] = soundinfos[i].length;
+				}
+				resultConsumer.accept(soundlengths);
+			}
+		};
+		r.run();
+		return false;
 	}
 	
-	/**
-	 * Get upload sessions.
-	 * 
-	 * @return upload sessions.
-	 */
-	public final UUID[] getUploadSessions() {
-		return uploadermanager == null ? null : uploadermanager.getSessions();
+	public final boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
+				if(soundinfos==null) {
+					resultConsumer.accept(null);
+					return;
+				}
+				int i = soundinfos.length;
+				short[] soundlengths = new short[i];
+				while(--i > -1) {
+					soundlengths[i] = soundinfos[i].length;
+				}
+				resultConsumer.accept(soundlengths);
+			}
+		};
+		r.run();
+		return false;
 	}
 	
-	/**
-	 * Close upload session.
-	 * 
-	 * @return true if session closed successfully.
-	 */
-	public final boolean closeUploadSession(UUID token, boolean save) {
-		return uploadermanager == null ? false : uploadermanager.endSession(token, save);
+	public final boolean setRepeatMode(UUID playeruuid, RepeatType repeattype) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.setRepeater(playeruuid, repeattype);
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlaying(playeruuid));
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlayingSize(playeruuid));
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlayingRemain(playeruuid));
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
+		Runnable r = new Runnable() {
+			public void run() {
+				new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport, true);
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getPlaylistName(playeruuid));
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean stopSound(UUID playeruuid) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.stopMusic(playeruuid);
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean stopSoundUntrackable(UUID playeruuid) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.stopMusicUntrackable(playeruuid);
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean playSound(UUID playeruuid, String name) {
+		if(playeruuid == null || name == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.playMusic(playeruuid, name);
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean playSoundUntrackable(UUID playeruuid, String name) {
+		if(playeruuid == null || name == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				positiontracker.playMusicUntrackable(playeruuid, name);
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean openUploadSession(String playlistname, Consumer<UUID> resultConsumer) {
+		if(playlistname == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.startSession(playlistname));
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean getUploadSessions(Consumer<UUID[]> resultConsumer) {
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.getSessions());
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final boolean closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer) {
+		if(token == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(uploadermanager == null ? false : uploadermanager.endSession(token, save));
+			}
+		};
+		r.run();
+		return false;
+	}
+	
+	public final void closeUploadSession(UUID token, boolean save) {
+		if(token == null) {
+			return;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				if(uploadermanager ==null) {
+					return;
+				}
+				uploadermanager.endSession(token, save);
+			}
+		};
+		r.run();
 	}
 	
 }

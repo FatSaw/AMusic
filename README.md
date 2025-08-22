@@ -103,20 +103,22 @@ api.disable(); //stops threads
 ```
 ### For all operating modes
 ```
-api.getPlaylists(boolean packed); //get playlists(resourcepacks)
-api.getPlaylistSoundnames(String playlistname, boolean  packed); //get list of sounds in playlist "playlistname"
-api.getPlaylistSoundnames(UUID playeruuid); //get list of sounds loaded to player with uuid "playeruuid"
-api.getPlaylistSoundlengths(String playlistname); //get list of sounds length in playlist "playlistname"
-api.getPlaylistSoundlengths(UUID playeruuid); //get list of sounds length loaded to player with uuid "playeruuid"
+api.logout(UUID playeruuid); //Handle logout.
+api.getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer); //get playlists(resourcepacks)
+api.getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer); //get list of sounds in playlist "playlistname"
+api.getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer); //get list of sounds loaded to player with uuid "playeruuid"
+api.getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer); //get list of sounds length in playlist "playlistname"
+api.getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer); //get list of sounds length loaded to player with uuid "playeruuid"
 api.loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
-api.getPackName(UUID playeruuid); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
+api.getPackName(UUID playeruuid, Consumer<String> resultConsumer); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
 api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //set repeat mode "repeattype" to player with uuid "playeruuid"
 api.stopSound(UUID playeruuid); //stop sound to player with uuid "playeruuid"
 api.playSound(UUID playeruuid, String name); //start sound "name" to player with uuid "playeruuid"
-api.getPlayingSoundName(UUID playeruuid); //get currently playing sound of player with uuid "playeruuid"
-api.getPlayingSoundSize(UUID playeruuid); //get currently playing sound size of player with uuid "playeruuid"
-api.getPlayingSoundRemain(UUID playeruuid); //get currently playing sound remaining time of player with uuid "playeruuid"
-api.openUploadSession(String playlistname); //open upload session.
-api.getUploadSessions(); //get upload sessions.
+api.getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer); //get currently playing sound of player with uuid "playeruuid"
+api.getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer); //get currently playing sound size of player with uuid "playeruuid"
+api.getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer); //get currently playing sound remaining time of player with uuid "playeruuid"
+api.openUploadSession(String playlistname, Consumer<UUID> resultConsumer); //open upload session.
+api.getUploadSessions(Consumer<UUID[]> resultConsumer); //get upload sessions.
+api.closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer); //close upload session
 api.closeUploadSession(UUID token, boolean save); //close upload session
 ```

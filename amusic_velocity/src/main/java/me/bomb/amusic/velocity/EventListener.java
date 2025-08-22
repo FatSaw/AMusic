@@ -11,17 +11,19 @@ import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent.Status;
 import com.velocitypowered.api.proxy.Player;
 
+import me.bomb.amusic.AMusic;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.velocity.command.UploadmusicCommand;
 
 public final class EventListener {
-	
+	private final AMusic amusic;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final UploadmusicCommand uploadmusic;
-	protected EventListener(ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic) {
+	protected EventListener(AMusic amusic, ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic) {
+		this.amusic = amusic;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
@@ -37,6 +39,7 @@ public final class EventListener {
 	public void onDisconnectEvent(DisconnectEvent event) {
 		Player player = event.getPlayer();
 		UUID playeruuid = player.getUniqueId();
+		amusic.logout(playeruuid);
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
 		if(uploadmusic != null) uploadmusic.logoutUploader(player);

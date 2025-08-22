@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
@@ -75,33 +76,55 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				}
 				Player target = otarget.get();
 				UUID targetuuid = target.getUniqueId();
-				String[] soundnames = amusic.getPlaylistSoundnames(targetuuid);
-				if(soundnames==null) {
-					LangOptions.playmusic_noplaylist.sendMsg(sender);
-					return;
-				}
-				String playing = amusic.getPlayingSoundName(targetuuid);
-				short playingsize = amusic.getPlayingSoundSize(targetuuid), playingstate = amusic.getPlayingSoundRemain(targetuuid);;
-				
-				StringBuilder sb = new StringBuilder();
-				if(playing!=null) {
-					sb.append("Playing: ");
-					sb.append(playing);
-					sb.append(' ');
-				}
-				if(playingsize!=-1&&playingstate!=-1) {
-					playingstate=(short) (playingsize-playingstate);
-					sb.append(Short.toString(playingstate));
-					sb.append('/');
-					sb.append(Short.toString(playingsize));
-					sb.append(' ');
-				}
-				sb.append("Sounds: ");
-				for(String soundname : soundnames) {
-					sb.append(soundname);
-					sb.append(' ');
-				}
-				sender.sendPlainMessage(sb.toString());
+				Consumer<String[]> consumer = new Consumer<String[]>() {
+					@Override
+					public void accept(String[] soundnames) {
+						if(soundnames==null) {
+							LangOptions.playmusic_noplaylist.sendMsg(sender);
+							return;
+						}
+						Consumer<String> consumerSoundName = new Consumer<String>() {
+
+							@Override
+							public void accept(String playing) {
+								Consumer<Short> consumerSoundSize = new Consumer<Short>() {
+									@Override
+									public void accept(Short playingsize) {
+										Consumer<Short> consumerSoundRemain = new Consumer<Short>() {
+											@Override
+											public void accept(Short playingstate) {
+												StringBuilder sb = new StringBuilder();
+												if(playing!=null) {
+													sb.append("Playing: ");
+													sb.append(playing);
+													sb.append(' ');
+												}
+												if(playingsize!=-1&&playingstate!=-1) {
+													playingstate=(short) (playingsize-playingstate);
+													sb.append(Short.toString(playingstate));
+													sb.append('/');
+													sb.append(Short.toString(playingsize));
+													sb.append(' ');
+												}
+												sb.append("Sounds: ");
+												for(String soundname : soundnames) {
+													sb.append(soundname);
+													sb.append(' ');
+												}
+												sender.sendPlainMessage(sb.toString());
+											}
+										};
+										amusic.getPlayingSoundRemain(targetuuid, consumerSoundRemain);
+									}
+								};
+								amusic.getPlayingSoundSize(targetuuid, consumerSoundSize);
+							}
+							
+						};
+						amusic.getPlayingSoundName(targetuuid, consumerSoundName);
+						
+					}
+				};
 				return;
 			}
 			Optional<Player> otarget = server.getPlayer(args[0]);
@@ -110,33 +133,40 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				return;
 			}
 			Player target = otarget.get();
-			String[] soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
-			if(soundnames==null) {
-				LangOptions.playmusic_noplaylist.sendMsg(sender);
-				return;
-			}
-			if(args.length>2) {
-				StringBuilder sb = new StringBuilder(args[1]);
-				for(int i = 2;i < args.length;++i) {
-					sb.append(' ');
-					sb.append(args[i]);
-				}
-				args[1] = sb.toString();
-			}
-			Placeholder[] placeholders = new Placeholder[1];
-			placeholders[0] = new Placeholder("%soundname%",args[1]);
-			for(String soundname : soundnames) {
-				if(soundname.equals(args[1])) {
-					if(trackable) {
-						amusic.playSound(target.getUniqueId(),args[1]);
-					} else {
-						amusic.playSoundUntrackable(target.getUniqueId(),args[1]);
+			Consumer<String[]> consumer = new Consumer<String[]>() {
+
+				@Override
+				public void accept(String[] soundnames) {
+					if(soundnames==null) {
+						LangOptions.playmusic_noplaylist.sendMsg(sender);
+						return;
 					}
-					LangOptions.playmusic_success.sendMsg(sender,placeholders);
-					return;
+					if(args.length>2) {
+						StringBuilder sb = new StringBuilder(args[1]);
+						for(int i = 2;i < args.length;++i) {
+							sb.append(' ');
+							sb.append(args[i]);
+						}
+						args[1] = sb.toString();
+					}
+					Placeholder[] placeholders = new Placeholder[1];
+					placeholders[0] = new Placeholder("%soundname%",args[1]);
+					for(String soundname : soundnames) {
+						if(soundname.equals(args[1])) {
+							if(trackable) {
+								amusic.playSound(target.getUniqueId(),args[1]);
+							} else {
+								amusic.playSoundUntrackable(target.getUniqueId(),args[1]);
+							}
+							LangOptions.playmusic_success.sendMsg(sender,placeholders);
+							return;
+						}
+					}
+					LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
 				}
-			}
-			LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
+				
+			};
+			amusic.getPlaylistSoundnames(target.getUniqueId(), false, consumer);
 			return;
 		} else {
 			LangOptions.playmusic_usage.sendMsg(sender);
@@ -177,33 +207,49 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				if(otarget.isEmpty()) {
 					return null;
 				}
-				String[] soundnames = amusic.getPlaylistSoundnames(otarget.get().getUniqueId());
-				if (soundnames != null) {
-					int lastspace = -1;
-					if(args.length > 2) {
-						StringBuilder sb = new StringBuilder(args[1]);
-						for(int i = 2;i < args.length;++i) {
-							sb.append(' ');
-							sb.append(args[i]);
+				Consumer<String[]> consumer = new Consumer<String[]>() {
+					@Override
+					public void accept(String[] soundnames) {
+						if (soundnames != null) {
+							int lastspace = -1;
+							if(args.length > 2) {
+								StringBuilder sb = new StringBuilder(args[1]);
+								for(int i = 2;i < args.length;++i) {
+									sb.append(' ');
+									sb.append(args[i]);
+								}
+								args[1] = sb.toString();
+								lastspace = args[1].lastIndexOf(' ');
+							}
+							++lastspace;
+							
+							if(lastspace == 0) {
+								for (String soundname : soundnames) {
+									if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+										tabcomplete.add(soundname);
+									}
+								}
+							} else {
+								for (String soundname : soundnames) {
+									if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+										soundname = soundname.substring(lastspace);
+										tabcomplete.add(soundname);
+									}
+								}
+							}
 						}
-						args[1] = sb.toString();
-						lastspace = args[1].lastIndexOf(' ');
+						synchronized (tabcomplete) {
+							tabcomplete.notify();
+						}
 					}
-					++lastspace;
-					
-					if(lastspace == 0) {
-						for (String soundname : soundnames) {
-							if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
-								tabcomplete.add(soundname);
-							}
+				};
+				boolean async = amusic.getPlaylistSoundnames(otarget.get().getUniqueId(), true, consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
 						}
-					} else {
-						for (String soundname : soundnames) {
-							if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
-								soundname = soundname.substring(lastspace);
-								tabcomplete.add(soundname);
-							}
-						}
+					} catch (InterruptedException e) {
 					}
 				}
 			}

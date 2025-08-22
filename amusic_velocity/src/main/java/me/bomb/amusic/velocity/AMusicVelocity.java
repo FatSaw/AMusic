@@ -146,7 +146,7 @@ public final class AMusicVelocity {
 		}
 		
 		if(this.resourcemanager != null) {
-			this.server.getEventManager().register(this, new EventListener(resourcemanager, positiontracker, playerips, uploadmusic));
+			this.server.getEventManager().register(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusic));
 		}
 		this.amusic.enable();
 	}

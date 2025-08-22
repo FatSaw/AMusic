@@ -1,6 +1,7 @@
 package me.bomb.amusic;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import me.bomb.amusic.resource.StatusReport;
 
@@ -17,123 +18,145 @@ public interface AMusic {
 	public void disable();
 	
 	/**
+	 * Handle logout.
+	 */
+	public void logout(UUID playeruuid);
+	
+	/**
 	 * Get player uuids that loaded specific playlistname.
 	 *
-	 * @return player uuids that loaded specific playlistname.
+	 * @return true if async used.
 	 */
-	public UUID[] getPlayersLoaded(String playlistname);
+	public boolean getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer);
 	
 	/**
 	 * Get the names of playlists that were loaded at least once.
 	 *
-	 * @return the names of playlists that were loaded at least once.
+	 * @return true if async used.
 	 */
-	public String[] getPlaylists(boolean packed);
+	public boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer);
 
 	/**
 	 * Get the names of sounds in playlist.
 	 *
-	 * @return the names of sounds in playlist.
+	 * @return true if async used.
 	 */
-	public String[] getPlaylistSoundnames(String playlistname, boolean packed);
+	public boolean getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer);
 
 	/**
 	 * Get the names of sounds in playlist that loaded to player.
 	 *
-	 * @return the names of sounds in playlist that loaded to player.
+	 * @return true if async used.
 	 */
-	public String[] getPlaylistSoundnames(UUID playeruuid);
+	public boolean getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer);
 
 	/**
 	 * Get the lenghs of sounds in playlist.
 	 *
-	 * @return the lenghs of sounds in playlist.
+	 * @return true if async used.
 	 */
-	public short[] getPlaylistSoundlengths(String playlistname);
+	public boolean getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer);
 
 	/**
 	 * Get the lenghs of sounds in playlist that loaded to player.
 	 *
-	 * @return the lenghs of sounds in playlist that loaded to player.
+	 * @return true if async used.
 	 */
-	public short[] getPlaylistSoundlengths(UUID playeruuid);
+	public boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer);
 
 	/**
 	 * Set sound repeat mode, null to not repeat.
+	 * 
+	 * @return true if async used.
 	 */
-	public void setRepeatMode(UUID playeruuid, RepeatType repeattype);
+	public boolean setRepeatMode(UUID playeruuid, RepeatType repeattype);
 
 	/**
 	 * Get playing sound name.
 	 *
-	 * @return playing sound name.
+	 * @return true if async used.
 	 */
-	public String getPlayingSoundName(UUID playeruuid);
+	public boolean getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer);
 
 	/**
 	 * Get playing sound size in seconds.
 	 *
-	 * @return playing sound size in seconds.
+	 * @return true if async used.
 	 */
-	public short getPlayingSoundSize(UUID playeruuid);
+	public boolean getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer);
 
 	/**
 	 * Get playing sound remaining seconds.
 	 *
-	 * @return playing sound remaining seconds.
+	 * @return true if async used.
 	 */
-	public short getPlayingSoundRemain(UUID playeruuid);
+	public boolean getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer);
 
 	/**
 	 * Loads resource pack to player.
+	 * 
+	 * @return true if async used.
 	 */
-	public void loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport);
+	public boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport);
 
 	/**
 	 * Get loaded pack name.
 	 *
-	 * @return loaded pack name.
+	 * @return true if async used.
 	 */
-	public String getPackName(UUID playeruuid);
+	public boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer);
 
 	/**
 	 * Stop sound from loaded pack.
+	 * 
+	 * @return true if async used.
 	 */
-	public void stopSound(UUID playeruuid);
+	public boolean stopSound(UUID playeruuid);
 	
 	/**
 	 * Stop untrackable sound from loaded pack.
+	 * 
+	 * @return true if async used.
 	 */
-	public void stopSoundUntrackable(UUID playeruuid);
+	public boolean stopSoundUntrackable(UUID playeruuid);
 
 	/**
 	 * Play sound from loaded pack.
+	 * 
+	 * @return true if async used.
 	 */
-	public void playSound(UUID playeruuid, String name);
+	public boolean playSound(UUID playeruuid, String name);
 
 	/**
 	 * Play untrackable sound from loaded pack.
+	 * 
+	 * @return true if async used.
 	 */
-	public void playSoundUntrackable(UUID playeruuid, String name);
+	public boolean playSoundUntrackable(UUID playeruuid, String name);
 	
 	/**
 	 * Open upload session.
 	 * 
-	 * @return session token.
+	 * @return true if async used.
 	 */
-	public UUID openUploadSession(String playlistname);
+	public boolean openUploadSession(String playlistname, Consumer<UUID> resultConsumer);
 	
 	/**
 	 * Get upload sessions.
 	 * 
-	 * @return upload sessions.
+	 * @return true if async used.
 	 */
-	public UUID[] getUploadSessions();
+	public boolean getUploadSessions(Consumer<UUID[]> resultConsumer);
 	
 	/**
 	 * Close upload session.
 	 * 
-	 * @return true if session closed successfully.
+	 * @return true if async used.
 	 */
-	public boolean closeUploadSession(UUID token, boolean save);
+	public boolean closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer);
+
+	/**
+	 * Close upload session.
+	 */
+	public void closeUploadSession(UUID token, boolean save);
 }

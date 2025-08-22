@@ -2,6 +2,7 @@ package me.bomb.amusic.bukkit.command;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -47,33 +48,49 @@ public final class PlaymusicTabComplete implements TabCompleter {
 			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
 				Player target = server.getPlayerExact(args[0]);
 				if (target != null) {
-					String[] soundnames = amusic.getPlaylistSoundnames(target.getUniqueId());
-					if (soundnames != null) {
-						int lastspace = -1;
-						if(args.length > 2) {
-							StringBuilder sb = new StringBuilder(args[1]);
-							for(int i = 2;i < args.length;++i) {
-								sb.append(' ');
-								sb.append(args[i]);
+					Consumer<String[]> consumer = new Consumer<String[]>() {
+						@Override
+						public void accept(String[] soundnames) {
+							if (soundnames != null) {
+								int lastspace = -1;
+								if(args.length > 2) {
+									StringBuilder sb = new StringBuilder(args[1]);
+									for(int i = 2;i < args.length;++i) {
+										sb.append(' ');
+										sb.append(args[i]);
+									}
+									args[1] = sb.toString();
+									lastspace = args[1].lastIndexOf(' ');
+								}
+								++lastspace;
+								
+								if(lastspace == 0) {
+									for (String soundname : soundnames) {
+										if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+											tabcomplete.add(soundname);
+										}
+									}
+								} else {
+									for (String soundname : soundnames) {
+										if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+											soundname = soundname.substring(lastspace);
+											tabcomplete.add(soundname);
+										}
+									}
+								}
 							}
-							args[1] = sb.toString();
-							lastspace = args[1].lastIndexOf(' ');
+							synchronized (tabcomplete) {
+								tabcomplete.notify();
+							}
 						}
-						++lastspace;
-						
-						if(lastspace == 0) {
-							for (String soundname : soundnames) {
-								if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
-									tabcomplete.add(soundname);
-								}
+					};
+					boolean async = amusic.getPlaylistSoundnames(target.getUniqueId(), true, consumer);
+					if(async) {
+						try {
+							synchronized (tabcomplete) {
+								tabcomplete.wait(200);
 							}
-						} else {
-							for (String soundname : soundnames) {
-								if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
-									soundname = soundname.substring(lastspace);
-									tabcomplete.add(soundname);
-								}
-							}
+						} catch (InterruptedException e) {
 						}
 					}
 				}

@@ -2,6 +2,7 @@ package me.bomb.amusic.bukkit.command;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -42,32 +43,48 @@ public final class LoadmusicTabComplete implements TabCompleter {
 		
 		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
 		if (args.length > 1 && !args[0].equals("@l")) {
-			String[] playlists = amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"));
-			if (playlists != null) {
-				int lastspace = -1;
-				if(args.length > 2) {
-					StringBuilder sb = new StringBuilder(args[1]);
-					for(int i = 2;i < args.length;++i) {
-						sb.append(' ');
-						sb.append(args[i]);
+			Consumer<String[]> consumer = new Consumer<String[]>() {
+				@Override
+				public void accept(String[] playlists) {
+					if (playlists != null) {
+						int lastspace = -1;
+						if(args.length > 2) {
+							StringBuilder sb = new StringBuilder(args[1]);
+							for(int i = 2;i < args.length;++i) {
+								sb.append(' ');
+								sb.append(args[i]);
+							}
+							args[1] = sb.toString();
+							lastspace = args[1].lastIndexOf(' ');
+						}
+						++lastspace;
+						if(lastspace == 0) {
+							for (String playlist : playlists) {
+								if (playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
+									tabcomplete.add(playlist);
+								}
+							}
+						} else {
+							for (String playlist : playlists) {
+								if (lastspace < playlist.length() && playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
+									playlist = playlist.substring(lastspace);
+									tabcomplete.add(playlist);
+								}
+							}
+						}
 					}
-					args[1] = sb.toString();
-					lastspace = args[1].lastIndexOf(' ');
+					synchronized (tabcomplete) {
+						tabcomplete.notify();
+					}
 				}
-				++lastspace;
-				if(lastspace == 0) {
-					for (String playlist : playlists) {
-						if (playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
-							tabcomplete.add(playlist);
-						}
+			};
+			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"), true, consumer);
+			if(async) {
+				try {
+					synchronized (tabcomplete) {
+						tabcomplete.wait(200);
 					}
-				} else {
-					for (String playlist : playlists) {
-						if (lastspace < playlist.length() && playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
-							playlist = playlist.substring(lastspace);
-							tabcomplete.add(playlist);
-						}
-					}
+				} catch (InterruptedException e) {
 				}
 			}
 		}

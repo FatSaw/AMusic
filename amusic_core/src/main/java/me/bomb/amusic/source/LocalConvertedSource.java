@@ -108,7 +108,7 @@ public final class LocalConvertedSource extends SoundSource {
 					songname = songname.substring(0, j);
 				}
 				names[i] = songname;
-				splits[i] = 1; //HARDCODE SPLITS
+				splits[i] = 3; //HARDCODE SPLITS
 				sizes[i] = filee.getValue();
 				if(!usemt) {
 					continue;

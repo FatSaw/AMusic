@@ -86,12 +86,11 @@ public final class ResourcePacker implements Runnable {
 				short partid = (short) (split & 0xFF);
 				byte splitbitid = 8;
 				while(--splitbitid > -1) {
-					boolean splitpresent = ((split >> splitbitid) & 0x01) == 0x01;
+					boolean splitpresent = ((split >>> splitbitid) & 0x01) == 0x01;
 					if(splitpresent) {
-						final byte partscount = (byte) (1 << splitbitid);
-						short partsend = (short) (partid - partscount);
-						while(--partid >= partsend) {
-							String musicid = new StringBuilder("music").append(HexUtils.shortToHex((short) i)).append(HexUtils.byteToHex((byte) partid)).toString();
+						byte partscount = (byte) (1 << splitbitid);
+						while(--partscount > -1) {
+							String musicid = new StringBuilder("music").append(HexUtils.shortToHex((short) i)).append(HexUtils.byteToHex((byte) --partid)).toString();
 							sounds.append("\t\"amusic.");
 							sounds.append(musicid);
 							sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/");
@@ -216,10 +215,9 @@ public final class ResourcePacker implements Runnable {
 					while(--splitbitid > -1) {
 						boolean splitpresent = ((split >> splitbitid) & 0x01) == 0x01;
 						if(splitpresent) {
-							final byte partscount = (byte) (1 << splitbitid);
-							short partsend = (short) (partid - partscount);
-							while(--partid >= partsend) {
-								byte[] part = sounddata[partid];
+							byte partscount = (byte) (1 << splitbitid);
+							while(--partscount > -1) {
+								byte[] part = sounddata[--partid];
 								int cap = part.length >> 9;
 								if(cap < 1) {
 									cap = 1;

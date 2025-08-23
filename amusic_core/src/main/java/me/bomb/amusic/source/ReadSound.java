@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import me.bomb.amusic.util.ByteArraysOutputStream;
@@ -75,19 +77,45 @@ public class ReadSound implements Runnable {
 			final byte split = splits[i];
 			
 			byte[][] parts = new byte[split][];
-			
+			/*int partid = parts.length;
 			if((split & 0xFE) != 0x00) {
-				byte lastsplitbitid = 8;
+				byte lastsplitbitid = 8, listcount = 0;
 				while(--lastsplitbitid > 0) {
 					if((split >>> lastsplitbitid & 0x01) == 0x01) {
-						break;
+						++listcount;
 					}
 				}
+				
+				lastsplitbitid = 8;
+				List<byte[]>[] lists = new ArrayList[split];
+				while(--lastsplitbitid > 0) {
+					if((split >>> lastsplitbitid & 0x01) == 0x01) {
+						lists[--listcount] = new ArrayList(1 << lastsplitbitid);
+					}
+				}
+				splitRecursive(buf, (byte)0, (byte) 0, split, lists);
+				int j = lists.length;
+				while(--j > - 1) {
+					List<byte[]> list = lists[j];
+					int k = list.size();
+					while(--k > - 1) {
+						parts[--partid] = list.get(k);
+					}
+				}
+				
 				//TODO: IMPLEMENT SPLITTER
+			}*/
+			int partid = parts.length;
+			
+			if(((split >>> 1) & 0x01) == 0x01) {
+				OggVorbisSplitter splitter = new OggVorbisSplitter(buf);
+				splitter.run();
+				parts[--partid] = splitter.part2;
+				parts[--partid] = splitter.part1;
 			}
 			
 			if((split & 0x01) == 0x01) {
-				parts[parts.length - 1] = buf;
+				parts[--partid] = buf;
 			}
 			
 			data[i] = parts;
@@ -98,6 +126,25 @@ public class ReadSound implements Runnable {
 				continue;
 			}
 			finished[i].set(true);
+		}
+	}
+	
+	public List<byte[]> prepareList(final byte depth) {
+		return new ArrayList<>(1 << depth);
+	}
+	
+	public void splitRecursive(final byte[] in, byte depth, byte outid, final byte splitmask, final List<byte[]>[] out) {
+		if(++depth <= out.length) {
+			OggVorbisSplitter split = new OggVorbisSplitter(in);
+			split.run();
+			if((splitmask >>> depth & 0x01) == 0x01) {
+				List<byte[]> list = out[outid];
+				list.add(split.part1);
+				list.add(split.part2);
+				++outid;
+			}
+			splitRecursive(split.part1, depth, outid, splitmask, out);
+			splitRecursive(split.part2, depth, outid, splitmask, out);
 		}
 	}
 	

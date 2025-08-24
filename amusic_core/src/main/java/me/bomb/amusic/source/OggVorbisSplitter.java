@@ -2,6 +2,9 @@ package me.bomb.amusic.source;
 
 public class OggVorbisSplitter implements Runnable {
 	
+	//TODO: Fix invalid size
+	//TODO: Fix broken output sometimes
+	
 	private final byte[] srcOggVorbis;
 	public byte[] part1, part2;
 	
@@ -16,7 +19,9 @@ public class OggVorbisSplitter implements Runnable {
         while (offset < srcOggVorbis.length) {
             if (srcOggVorbis[offset] == 'O' && srcOggVorbis[offset + 1] == 'g' && srcOggVorbis[offset + 2] == 'g' && srcOggVorbis[offset + 3] == 'S') {
                 offset += 26;
-                ++pagecount;
+                if(offset < srcOggVorbis.length) {
+                    ++pagecount;
+                }
             } else {
                 offset++;
             }
@@ -28,15 +33,20 @@ public class OggVorbisSplitter implements Runnable {
                 --pagecount;
                 pagestarts[pagecount] = offset;
                 offset+=26;
-                int segmentCount = srcOggVorbis[offset] & 0xFF;
-                int size = 26;
-                while(--segmentCount > -1) {
-                	int segmentSize = srcOggVorbis[offset + segmentCount] & 0xFF;
-                	size+=segmentSize;
-                	offset += segmentSize;
-                }
-                pagesizes[pagecount] = size;
                 
+                try {
+                    int segmentCount = srcOggVorbis[offset] & 0xFF;
+                    ++offset;
+                    int size = 26;
+                    while(--segmentCount > -1) {
+                    	int segmentSize = srcOggVorbis[offset + segmentCount] & 0xFF;
+                    	size += segmentSize;
+                    	offset += segmentSize;
+                    }
+                    pagesizes[pagecount] = size;
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    pagesizes[pagecount] = srcOggVorbis.length - pagestarts[pagecount];
+                }
             } else {
                 ++offset;
             }
@@ -47,9 +57,9 @@ public class OggVorbisSplitter implements Runnable {
         final int eof = pagesizes[0] + pagestarts[0];
         final int center = pagestarts[pagecount >>> 1];
         
-        offset = bof + 26;
+        /*offset = bof + 26;
 
-    	/*int[] vorbisstart = new int[3], vorbissize = new int[3];
+    	int[] vorbisstart = new int[3], vorbissize = new int[3];
         {
         	//SEARCH VORBIS HEADERS
         	int pageid = pagecount;
@@ -126,7 +136,34 @@ public class OggVorbisSplitter implements Runnable {
         System.arraycopy(srcOggVorbis, center, secondpart, vorbisHeaderEnd, secondpart.length - vorbisHeaderEnd);
         System.arraycopy(srcOggVorbis, bof, secondpart, 0, vorbisHeaderEnd); //Copy vorbis headers to second part
         
-        firstpart[pagestarts[(pagecount >>> 1) + 1] + 5] |= 0x04; //EOS
+        offset = pagesizes[0];
+        /*byte i = 14;
+        long length = 0;
+        while(--i > 5) {
+            length = srcOggVorbis[offset + i];
+            length <<= 8;
+        }
+        
+        length >>>= 1;*/
+        offset = pagestarts[(pagecount >>> 1) + 1];
+        //long alength = length;
+        byte i = 14;
+        while(--i > 5) {
+        	firstpart[offset + i] = 0;
+            //firstpart[offset + i] = (byte) (alength & 0xFF); 
+            //alength >>>= 8;
+        }
+        firstpart[offset + 5] |= 0x04; //EOS
+        
+        offset = pagestarts[0] - center;
+        //alength = length;
+        i = 14;
+        while(--i > 5) {
+        	secondpart[offset + i] = 0;
+        	//secondpart[offset + i] = (byte) (alength & 0xFF); 
+            //alength >>>= 8;
+        }
+        
         //secondpart[5] |= 0x02; //BOS //Not needed since headers copied
         
         part1 = firstpart; //OK;

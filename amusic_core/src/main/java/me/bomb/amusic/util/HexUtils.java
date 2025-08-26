@@ -31,7 +31,7 @@ public final class HexUtils {
         byte[] hexChars = new byte[2];
         hexChars[1] = HEX[abyte & 0x0F];
         abyte >>>= 4;
-        hexChars[0] = HEX[abyte];
+        hexChars[0] = HEX[abyte & 0x0F];
         return new String(hexChars, US_ASCII);
 	}
 	public static String shortToHex(short ashort) {
@@ -42,7 +42,7 @@ public final class HexUtils {
         ashort >>>= 4;
         hexChars[1] = HEX[ashort & 0x0F];
         ashort >>>= 4;
-        hexChars[0] = HEX[ashort];
+        hexChars[0] = HEX[ashort & 0x0F];
         return new String(hexChars, US_ASCII);
 	}
 	public static String intToHex(int aint) {
@@ -61,7 +61,7 @@ public final class HexUtils {
         aint >>>= 4;
         hexChars[1] = HEX[aint & 0x0F];
         aint >>>= 4;
-        hexChars[0] = HEX[aint];
+        hexChars[0] = HEX[aint & 0x0F];
         return new String(hexChars, US_ASCII);
 	}
 	public static String longToHex(long along) {
@@ -96,7 +96,7 @@ public final class HexUtils {
         along >>>= 4;
         hexChars[1] = HEX[(int) (along & 0x0F)];
         along >>>= 4;
-        hexChars[0] = HEX[(int) along];
+        hexChars[0] = HEX[(int) along & 0x0F];
         return new String(hexChars, US_ASCII);
 	}
 	

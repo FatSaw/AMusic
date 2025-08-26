@@ -74,20 +74,40 @@ public class ReadSound implements Runnable {
 			}
 			final byte split = splits[i];
 			
-			byte[][] parts = new byte[split][];
+			byte lastsplitbitid = 8;
+			while(--lastsplitbitid > 0) {
+				if((split >>> lastsplitbitid & 0x01) == 0x01) {
+					break;
+				}
+			}
+			++lastsplitbitid;
 			
-			if((split & 0xFE) != 0x00) {
-				byte lastsplitbitid = 8;
-				while(--lastsplitbitid > 0) {
-					if((split >>> lastsplitbitid & 0x01) == 0x01) {
-						break;
+			byte[][] parts = new byte[split][];
+			int partid = -1;
+			if((split & 0x01) == 0x01) {
+				parts[++partid] = buf;
+			}
+
+			byte[][] allparts = new byte[1][];
+			allparts[0] = buf;
+			
+			byte splitbitid = 0;
+			while(++splitbitid < lastsplitbitid) {
+				int newallpartid = -1;
+				byte[][] newallpart = new byte[1 << splitbitid][];
+				int allpartid = -1;
+				while(++allpartid < allparts.length) {
+					OggVorbisSplitter splitter = new OggVorbisSplitter(allparts[allpartid]);
+					splitter.run();
+					newallpart[++newallpartid] = splitter.part1;
+					newallpart[++newallpartid] = splitter.part2;
+					if((split >>> splitbitid & 0x01) == 0x01) {
+						parts[++partid] = splitter.part1;
+						parts[++partid] = splitter.part2;
 					}
 				}
-				//TODO: IMPLEMENT SPLITTER
-			}
-			
-			if((split & 0x01) == 0x01) {
-				parts[parts.length - 1] = buf;
+				allparts = newallpart;
+				newallpartid = -1;
 			}
 			
 			data[i] = parts;

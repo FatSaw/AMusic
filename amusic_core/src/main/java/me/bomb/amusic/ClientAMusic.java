@@ -773,6 +773,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 					case 3:
 						statusreport.onStatusResponse(EnumStatus.PACKED);
 						if(update) {
+							cachePlaylistsUpdated.set(false);
 							cachePlaylistsPackedUpdated.set(false);
 							cachePlaylistSoundnames.remove(name);
 							cachePlaylistSoundlengths.remove(name);
@@ -781,6 +782,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 					case 4:
 						statusreport.onStatusResponse(EnumStatus.REMOVED);
 						if(update) {
+							cachePlaylistsUpdated.set(false);
 							cachePlaylistsPackedUpdated.set(false);
 							cachePlaylistSoundnames.remove(name);
 							cachePlaylistSoundlengths.remove(name);
@@ -793,6 +795,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 				} else {
 					buf = ClientAMusic.this.sendPacket((byte)0x0B, buf, true, 0, false);
 					if(update) {
+						cachePlaylistsUpdated.set(false);
 						cachePlaylistsPackedUpdated.set(false);
 						cachePlaylistSoundnames.remove(name);
 						cachePlaylistSoundlengths.remove(name);

@@ -1,11 +1,12 @@
 package me.bomb.amusic;
 
+import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
 
@@ -15,6 +16,7 @@ public final class PositionTracker extends Thread {
 	private final ConcurrentHashMap<UUID, RepeatType> repeaters = new ConcurrentHashMap<UUID, RepeatType>();
 	private final ConcurrentHashMap<UUID, SoundInfo[]> playlistinfo = new ConcurrentHashMap<UUID, SoundInfo[]>();
 	private final ConcurrentHashMap<UUID, String> loadedplaylistnames = new ConcurrentHashMap<UUID, String>();
+	
 	private final SoundStarter soundstarter;
 	private final SoundStopper soundstopper;
 	
@@ -32,19 +34,14 @@ public final class PositionTracker extends Thread {
 		if(playlistname == null) {
 			return null;
 		}
-		KeySetView<UUID, String> ksview = loadedplaylistnames.keySet(playlistname);
-		int i = ksview.size();
-		if(i == 0) {
-			return null;
-		}
-		UUID[] players = new UUID[i];
-		if(i > 0) {
-			Iterator<UUID> iterator = ksview.iterator();
-			while(iterator.hasNext() && --i > -1) {
-				players[i] = iterator.next();
+		ArrayList<UUID> playerslist = new ArrayList<UUID>(loadedplaylistnames.size());
+		for(Entry<UUID, String> entry : loadedplaylistnames.entrySet()) {
+			if(entry.getValue().equals(playlistname)) {
+				UUID playeruuid = entry.getKey();
+				playerslist.add(playeruuid);
 			}
 		}
-		return players;
+		return playerslist.toArray(new UUID[playerslist.size()]);
 	}
 
 	public String getPlaylistName(UUID playeruuid) {

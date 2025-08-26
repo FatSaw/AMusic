@@ -38,8 +38,12 @@ public final class UploadmusicCommand implements SimpleCommand {
 		}
 		String[] args = invocation.arguments();
 		boolean save = false;
+		if(args.length < 1) {
+			LangOptions.uploadmusic_usage.sendMsg(sender);
+			return;
+		}
+		args[0] = args[0].toLowerCase();
 		if(args.length == 1 && (save = "finish".equals(args[0])) || "drop".equals(args[0])) {
-			args[0] = args[0].toLowerCase();
 			if(!(sender instanceof Player)) {
 				LangOptions.uploadmusic_finish_player_notplayer.sendMsg(sender);
 				return;
@@ -67,7 +71,6 @@ public final class UploadmusicCommand implements SimpleCommand {
 			LangOptions.uploadmusic_usage.sendMsg(sender);
 			return;
 		}
-		args[0] = args[0].toLowerCase();
 		if("start".equals(args[0])) {
 			if (args.length > 1) {
 				if (args.length > 2) {
@@ -125,6 +128,11 @@ public final class UploadmusicCommand implements SimpleCommand {
 		}
 		String[] args = invocation.arguments();
 		ArrayList<String> tabcomplete = new ArrayList<String>();
+		if (args.length == 0) {
+			tabcomplete.add("start");
+			tabcomplete.add("finish");
+			tabcomplete.add("drop");
+		}
 		if (args.length == 1) {
 			String arg0 = args[0].toLowerCase();
 			if ("start".startsWith(arg0)) {

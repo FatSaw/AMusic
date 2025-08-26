@@ -25,6 +25,11 @@ public final class UploadmusicTabComplete implements TabCompleter {
 			return null;
 		}
 		ArrayList<String> tabcomplete = new ArrayList<String>();
+		if (args.length == 0) {
+			tabcomplete.add("start");
+			tabcomplete.add("finish");
+			tabcomplete.add("drop");
+		}
 		if (args.length == 1) {
 			String arg0 = args[0].toLowerCase();
 			if ("start".startsWith(arg0)) {

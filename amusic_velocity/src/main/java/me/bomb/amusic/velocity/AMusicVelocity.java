@@ -36,6 +36,7 @@ import me.bomb.amusic.source.MusicdirPackSource;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.StaticPackSource;
+import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
@@ -57,6 +58,22 @@ public final class AMusicVelocity {
     
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
+		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
+			@Override
+			public void warn(String msg) {
+				logger.warn(msg);
+			}
+			
+			@Override
+			public void info(String msg) {
+				logger.info(msg);
+			}
+			
+			@Override
+			public void error(String msg) {
+				logger.error(msg);
+			}
+		});
 		Path plugindir = dataDirectory, configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();

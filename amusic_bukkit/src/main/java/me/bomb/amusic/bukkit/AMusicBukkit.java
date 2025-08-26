@@ -23,6 +23,7 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundStarter;
 import me.bomb.amusic.ClientAMusic;
 import me.bomb.amusic.SoundStopper;
+import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
 import me.bomb.amusic.bukkit.command.LoadmusicTabComplete;
@@ -70,6 +71,23 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicBukkit() {
+		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
+			java.util.logging.Logger logger = AMusicBukkit.this.getLogger();
+			@Override
+			public void warn(String msg) {
+				logger.warning(msg);
+			}
+			
+			@Override
+			public void info(String msg) {
+				logger.info(msg);
+			}
+			
+			@Override
+			public void error(String msg) {
+				logger.severe(msg);
+			}
+		});
 		final Server server = this.getServer();
 		byte ver = 127;
 		try {

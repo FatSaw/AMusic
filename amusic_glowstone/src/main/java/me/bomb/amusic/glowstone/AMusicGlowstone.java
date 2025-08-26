@@ -32,6 +32,7 @@ import me.bomb.amusic.glowstone.command.RepeatTabComplete;
 import me.bomb.amusic.glowstone.command.SelectorProcessor;
 import me.bomb.amusic.glowstone.command.UploadmusicCommand;
 import me.bomb.amusic.glowstone.command.UploadmusicTabComplete;
+import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.LangOptions;
 import net.glowstone.GlowServer;
 import me.bomb.amusic.resourceserver.ResourceManager;
@@ -56,6 +57,23 @@ public final class AMusicGlowstone extends JavaPlugin {
 	private final PositionTracker positiontracker;
 
 	public AMusicGlowstone() {
+		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
+			java.util.logging.Logger logger = AMusicGlowstone.this.getLogger();
+			@Override
+			public void warn(String msg) {
+				logger.warning(msg);
+			}
+			
+			@Override
+			public void info(String msg) {
+				logger.info(msg);
+			}
+			
+			@Override
+			public void error(String msg) {
+				logger.severe(msg);
+			}
+		});
 		final Server server = this.getServer();
 		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();

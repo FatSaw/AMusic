@@ -18,6 +18,7 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundStarter;
 import me.bomb.amusic.ClientAMusic;
 import me.bomb.amusic.SoundStopper;
+import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
@@ -63,6 +64,23 @@ public final class AMusicSponge7 {
 	
 
 	public AMusicSponge7() {
+		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
+			org.slf4j.Logger logger = AMusicSponge7.this.logger;
+			@Override
+			public void warn(String msg) {
+				logger.warn(msg);
+			}
+			
+			@Override
+			public void info(String msg) {
+				logger.info(msg);
+			}
+			
+			@Override
+			public void error(String msg) {
+				logger.error(msg);
+			}
+		});
 		
 	}
 	

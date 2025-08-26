@@ -62,44 +62,47 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
 		UUID[] playeruuids = positiontracker.getPlayersLoaded(playlistname);
+		if(playeruuids == null) {
+			playeruuids = new UUID[0];
+		}
 		int i = playeruuids.length, j = 3;
 		byte[] response = new byte[4 + (i<<4)];
 		response[0] = (byte)i;
-		response[1] = (byte) (i>>8);
-		response[2] = (byte) (i>>16);
-		response[3] = (byte) (i>>24);
+		response[1] = (byte) (i>>>8);
+		response[2] = (byte) (i>>>16);
+		response[3] = (byte) (i>>>24);
 		while(--i > -1) {
 			UUID playeruuid = playeruuids[i];
 			long msb = playeruuid.getMostSignificantBits(), lsb = playeruuid.getLeastSignificantBits();
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
 		}
 		return response;
@@ -134,7 +137,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		i = playlistcount;
 		byte[] response = new byte[2 + i + totallengths];
 		response[0] = (byte)i;
-		response[1] = (byte) (i>>8);
+		response[1] = (byte) (i>>>8);
 		System.arraycopy(lengths, 0, response, 2, i);
 		int pos = 2 + i;
 		while(--i > -1) {
@@ -183,9 +186,9 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			i = soundcount;
 			byte[] response = new byte[2 + i + totallengths];
 			response[0] = (byte)i;
-			response[1] = (byte) (i>>8);
+			response[1] = (byte) (i>>>8);
 			System.arraycopy(lengths, 0, response, 2, i);
-			int j = i;
+			int j = 2 + i;
 			while(--i > -1) {
 				byte[] name = anames[i];
 				int length = name.length;
@@ -194,6 +197,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			}
 			return response;
 		} else {
+			//
 			String[] sounds = soundsource.getSounds(playlistname);
 			if(sounds==null) {
 				return new byte[0];
@@ -222,9 +226,9 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			i = soundcount;
 			byte[] response = new byte[2 + i + totallengths];
 			response[0] = (byte)i;
-			response[1] = (byte) (i>>8);
+			response[1] = (byte) (i>>>8);
 			System.arraycopy(lengths, 0, response, 2, i);
-			int j = i;
+			int j = 2 + i;
 			while(--i > -1) {
 				byte[] name = anames[i];
 				int length = name.length;
@@ -300,7 +304,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		i = soundcount;
 		byte[] response = new byte[2 + i + totallengths];
 		response[0] = (byte)i;
-		response[1] = (byte) (i>>8);
+		response[1] = (byte) (i>>>8);
 		System.arraycopy(lengths, 0, response, 2, i);
 		int pos = 2 + i;
 		while(--i > -1) {
@@ -328,11 +332,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		int i = soundcount, j = 2 + (i << 1);
 		byte[] response = new byte[j];
 		response[0] = (byte)i;
-		response[1] = (byte) (i>>8);
+		response[1] = (byte) (i>>>8);
 		while(--i > -1) {
 			short length = soundinfos[i].length;
 			response[--j] = (byte) length;
-			length>>=8;
+			length>>>=8;
 			response[--j] = (byte) length;
 		}
 		return response;
@@ -385,11 +389,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		int i = soundcount, j = 2 + (i << 1);
 		byte[] response = new byte[j];
 		response[0] = (byte)i;
-		response[1] = (byte) (i>>8);
+		response[1] = (byte) (i>>>8);
 		while(--i > -1) {
 			short length = soundinfos[i].length;
 			response[--j] = (byte) length;
-			length>>=8;
+			length>>>=8;
 			response[--j] = (byte) length;
 		}
 		return response;
@@ -512,7 +516,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb |= playeruuidb[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
 		short size = positiontracker.getPlayingSize(playeruuid);
-		return size == -1 ? new byte[0] : new byte[] {(byte) size, (byte) (size >> 8)};
+		return size == -1 ? new byte[0] : new byte[] {(byte) size, (byte) (size >>> 8)};
 	}
 	
 	public final byte[] getPlayingSoundRemainBytes(byte[] playeruuidb) {
@@ -552,7 +556,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb |= playeruuidb[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
 		short size = positiontracker.getPlayingRemain(playeruuid);
-		return size == -1 ? new byte[0] : new byte[] {(byte) size, (byte) (size >> 8)};
+		return size == -1 ? new byte[0] : new byte[] {(byte) size, (byte) (size >>> 8)};
 	}
 	
 	public final byte[] loadPackBytes(byte[] playeruuidnameupdatestatusb) {
@@ -851,34 +855,34 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		long msb = token.getMostSignificantBits(), lsb = token.getLeastSignificantBits();
 		byte[] response = new byte[0x10];
 		response[0x00] = (byte) msb;
-		msb>>=8;
+		msb>>>=8;
 		response[0x01] = (byte) msb;
-		msb>>=8;
+		msb>>>=8;
 		response[0x02] = (byte) msb;
-		msb>>=8;
+		msb>>>=8;
 		response[0x03] = (byte) msb;
-		msb>>=8;
+		msb>>>=8;
 		response[0x04] = (byte) msb;
-		msb>>=8;
+		msb>>>=8;
 		response[0x05] = (byte) msb;
-		msb>>=8;
+		msb>>>=8;
 		response[0x06] = (byte) msb;
-		msb>>=8;
+		msb>>>=8;
 		response[0x07] = (byte) msb;
 		response[0x08] = (byte) lsb;
-		lsb>>=8;
+		lsb>>>=8;
 		response[0x09] = (byte) lsb;
-		lsb>>=8;
+		lsb>>>=8;
 		response[0x0A] = (byte) lsb;
-		lsb>>=8;
+		lsb>>>=8;
 		response[0x0B] = (byte) lsb;
-		lsb>>=8;
+		lsb>>>=8;
 		response[0x0C] = (byte) lsb;
-		lsb>>=8;
+		lsb>>>=8;
 		response[0x0D] = (byte) lsb;
-		lsb>>=8;
+		lsb>>>=8;
 		response[0x0E] = (byte) lsb;
-		lsb>>=8;
+		lsb>>>=8;
 		response[0x0F] = (byte) lsb;
 		return response;
 	}
@@ -891,41 +895,41 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		int i = sessions.length, j = 3;
 		byte[] response = new byte[4 + (i<<4)];
 		response[0] = (byte)i;
-		response[1] = (byte) (i>>8);
-		response[2] = (byte) (i>>16);
-		response[3] = (byte) (i>>24);
+		response[1] = (byte) (i>>>8);
+		response[2] = (byte) (i>>>16);
+		response[3] = (byte) (i>>>24);
 		while(--i > -1) {
 			UUID session = sessions[i];
 			long msb = session.getMostSignificantBits(), lsb = session.getLeastSignificantBits();
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
-			msb>>=8;
+			msb>>>=8;
 			response[++j] = (byte) msb;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
-			lsb>>=8;
+			lsb>>>=8;
 			response[++j] = (byte) lsb;
 		}
 		return response;
@@ -1053,11 +1057,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1067,11 +1071,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1081,11 +1085,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1095,11 +1099,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1109,11 +1113,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1123,11 +1127,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1140,11 +1144,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1163,11 +1167,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);
@@ -1192,11 +1196,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			size = obuf.length;
 			sizeb = new byte[4];
 			sizeb[0] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[1] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[2] = (byte)size;
-			size>>=8;
+			size>>>=8;
 			sizeb[3] = (byte)size;
 			baos.write(sizeb);
 			baos.write(obuf);

@@ -269,6 +269,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 				System.arraycopy(playlistnameb, 0, buf, 1, playlistnameb.length);
 				
 				buf = ClientAMusic.this.sendPacket((byte)0x03, buf, true, 0, true);
+				
 				if(buf.length == 0) {
 					if(packed) {
 						cachePlaylistSoundnamesPacked.remove(playlistname);
@@ -757,11 +758,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 					switch (status) {
 					case 1:
 						statusreport.onStatusResponse(EnumStatus.DISPATCHED);
-						int uuidcount = playeruuid.length;
-						while(--uuidcount > -1) {
-							UUID uuid = playeruuid[uuidcount];
-							cachePlayerPlaylistSoundnames.remove(uuid);
-							cachePlayerPlaylistSoundlengths.remove(uuid);
+						if(playeruuid != null) {
+							int uuidcount = playeruuid.length;
+							while(--uuidcount > -1) {
+								UUID uuid = playeruuid[uuidcount];
+								cachePlayerPlaylistSoundnames.remove(uuid);
+								cachePlayerPlaylistSoundlengths.remove(uuid);
+							}
 						}
 					break;
 					case 2:
@@ -794,11 +797,13 @@ public final class ClientAMusic extends Thread implements AMusic {
 						cachePlaylistSoundnames.remove(name);
 						cachePlaylistSoundlengths.remove(name);
 					}
-					int uuidcount = playeruuid.length;
-					while(--uuidcount > -1) {
-						UUID uuid = playeruuid[uuidcount];
-						cachePlayerPlaylistSoundnames.remove(uuid);
-						cachePlayerPlaylistSoundlengths.remove(uuid);
+					if(playeruuid != null) {
+						int uuidcount = playeruuid.length;
+						while(--uuidcount > -1) {
+							UUID uuid = playeruuid[uuidcount];
+							cachePlayerPlaylistSoundnames.remove(uuid);
+							cachePlayerPlaylistSoundlengths.remove(uuid);
+						}
 					}
 				}
 			}

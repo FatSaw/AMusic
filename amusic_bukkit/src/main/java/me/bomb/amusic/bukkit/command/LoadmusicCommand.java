@@ -129,7 +129,7 @@ public final class LoadmusicCommand implements CommandExecutor {
 	}
 	
 	private void executeCommand(CommandSender sender, String playlistname, UUID[] targetuuids) {
-		Placeholder placeholder = new Placeholder("%playlistname%", playlistname);
+		Placeholder placeholder = new Placeholder("%playlistname%", playlistname, true);
 		StatusReport statusreport = new StatusReport() {
 			@Override
 			public void onStatusResponse(EnumStatus status) {

@@ -150,7 +150,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 						args[1] = sb.toString();
 					}
 					Placeholder[] placeholders = new Placeholder[1];
-					placeholders[0] = new Placeholder("%soundname%",args[1]);
+					placeholders[0] = new Placeholder("%soundname%",args[1],true);
 					for(String soundname : soundnames) {
 						if(soundname.equals(args[1])) {
 							if(trackable) {

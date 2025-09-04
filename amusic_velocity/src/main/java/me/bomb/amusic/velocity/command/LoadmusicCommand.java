@@ -69,7 +69,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 			}
 			String name = args[1];
 			
-			Placeholder placeholder = new Placeholder("%playlistname%", name);
+			Placeholder placeholder = new Placeholder("%playlistname%", name, true);
 			StatusReport statusreport = new StatusReport() {
 				@Override
 				public void onStatusResponse(EnumStatus status) {

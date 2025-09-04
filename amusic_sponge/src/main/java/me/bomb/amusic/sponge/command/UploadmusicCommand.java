@@ -101,7 +101,7 @@ public final class UploadmusicCommand implements CommandCallable {
 				@Override
 				public void accept(UUID token) {
 					String url = uploaderhost.concat(token.toString());
-					(source instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(source, new Placeholder("%url%", url));
+					(source instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(source, new Placeholder("%url%", url, false));
 					if(!(source instanceof Player)) {
 						return;
 					}

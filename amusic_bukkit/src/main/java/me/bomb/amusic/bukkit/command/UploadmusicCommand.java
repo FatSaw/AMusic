@@ -83,7 +83,7 @@ public final class UploadmusicCommand implements CommandExecutor {
 				@Override
 				public void accept(UUID token) {
 					String url = uploaderhost.concat(token.toString());
-					(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url));
+					(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url, false));
 					if(!(sender instanceof Player)) {
 						return;
 					}

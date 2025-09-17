@@ -16,11 +16,12 @@ public class OggVorbisPageInfo {
                 try {
                 	offset += 26;
                     int segmentCount = src[offset] & 0xFF;
-                    ++offset;
+                    int size = 0;
                     while(--segmentCount > -1) {
-                    	int segmentSize = src[offset + segmentCount] & 0xFF;
-                    	offset += segmentSize;
+                    	int segmentSize = src[++offset] & 0xFF;
+                    	size += segmentSize;
                     }
+                    offset += size;
                     if(offset > src.length) {
                         continue;
                     }
@@ -37,21 +38,24 @@ public class OggVorbisPageInfo {
         offset = 0;
         while (offset < src.length) {
             if (src[offset] == 'O' && src[offset + 1] == 'g' && src[offset + 2] == 'g' && src[offset + 3] == 'S') {
-                --pagecount;
-                pagestarts[pagecount] = offset;
-                offset+=26;
-                try {
-                    int segmentCount = src[offset] & 0xFF;
-                    ++offset;
-                    int size = 26;
-                    while(--segmentCount > -1) {
-                    	int segmentSize = src[offset + segmentCount] & 0xFF;
-                    	size += segmentSize;
-                    	offset += segmentSize;
+                if(--pagecount > -1) {
+                    pagestarts[pagecount] = offset;
+                    offset+=26;
+                    try {
+                        int segmentCount = src[offset] & 0xFF;
+                        int size = 27 + segmentCount, segmentsSize = 0;
+                        while(--segmentCount > -1) {
+                        	int segmentSize = src[++offset] & 0xFF;
+                        	segmentsSize += segmentSize;
+                        }
+                    	size += segmentsSize;
+                    	offset += segmentsSize;
+                        pagesizes[pagecount] = size;
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        pagesizes[pagecount] = src.length - pagestarts[pagecount];
                     }
-                    pagesizes[pagecount] = size;
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    pagesizes[pagecount] = src.length - pagestarts[pagecount];
+                } else {
+                    offset=Integer.MAX_VALUE;
                 }
             } else {
                 ++offset;

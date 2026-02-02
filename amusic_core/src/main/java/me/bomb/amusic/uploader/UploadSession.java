@@ -1,5 +1,8 @@
 package me.bomb.amusic.uploader;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -43,6 +46,65 @@ final class UploadSession {
 		resetTime();
 		size.addAndGet(sound.length);
 		uploadentrys.put(soundname, sound);
+	}
+	
+	protected byte[] query() {
+		if(end) {
+			return null;
+		}
+		resetTime();
+		int bufsize = 2;
+		int i = uploadentrys.size();
+		byte[] keysizes = new byte[i];
+		byte[] valuesizes = new byte[i<<2];
+		byte[][] keysb = new byte[i][];
+		bufsize += i;;
+		bufsize += i << 2;
+		Iterator<Entry<String, byte[]>> iterator = uploadentrys.entrySet().iterator();
+		Entry<String, byte[]> entry;
+		byte[] key, value;
+		int length;
+		while(--i > -1 && iterator.hasNext()) {
+			length = (key = (entry = iterator.next()).getKey().getBytes(StandardCharsets.UTF_8)).length;
+			if(length > 0xff) {
+				length = 0xff;
+				byte[] nkey = new byte[0xff];
+				System.arraycopy(key, 0, nkey, 0, 0xff);
+				key = nkey;
+			}
+			keysizes[i] = (byte) length;
+			bufsize += length;
+			if((value = entry.getValue()) != null) {
+				length = value.length;
+				int j = (1+i)<<2;
+				valuesizes[--j] = (byte) length;
+				length >>>= 8;
+				valuesizes[--j] = (byte) length;
+				length >>>= 8;
+				valuesizes[--j] = (byte) length;
+				length >>>= 8;
+				valuesizes[--j] = (byte) length;
+			}
+			keysb[i] = key;
+		}
+		byte[] query = new byte[bufsize];
+		i = keysb.length;
+		while(--i > -1) {
+			byte[] keys = keysb[i];
+			length = keys.length;
+			bufsize-=length;
+			System.arraycopy(keys, 0, query, bufsize, length);
+		}
+		length = valuesizes.length;
+		bufsize-=length;
+		System.arraycopy(valuesizes, 0, query, bufsize, length);
+		length = keysizes.length;
+		bufsize-=length;
+		System.arraycopy(keysizes, 0, query, bufsize, length);
+		query[--bufsize] = (byte) length;
+		length >>>= 8;
+		query[--bufsize] = (byte) length;
+		return query;
 	}
 	
 	protected void remove(String soundname) {

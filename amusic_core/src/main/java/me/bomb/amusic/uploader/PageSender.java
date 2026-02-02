@@ -14,7 +14,7 @@ import static me.bomb.amusic.util.NameFilter.filterName;
 
 final class PageSender implements ServerWorker {
 	
-	private static final byte[] empty, notfound, updated, nolength, novalidtoken, notoken, headertoolarge, datatoolarge, clidentifier, uidentifier, expectidentifier, headerend, headersplit;
+	private static final byte[] empty, notfound, updated, nolength, novalidtoken, notoken, headertoolarge, novalidtokenget, notokenget, headertoolargeget, datatoolarge, queryheader, clidentifier, uidentifier, expectidentifier, headerend, headersplit;
 	private static final byte[][] web;
 	private static final byte[][] identifier;
 
@@ -28,9 +28,13 @@ final class PageSender implements ServerWorker {
 		novalidtoken = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		notoken = "HTTP/1.1 410 Gone\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		headertoolarge = "HTTP/1.1 431 Request Header Fields Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		novalidtokenget = "HTTP/1.1 403 Forbidden\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		notokenget = "HTTP/1.1 410 Gone\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		headertoolargeget = "HTTP/1.1 431 Request Header Fields Too Large\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		datatoolarge = "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		queryheader = "HTTP/1.1 200 OK\r\nCache-Control: no-store\r\nContent-Type: application/octet-stream\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII);
 		clidentifier = "Content-Length: ".getBytes(StandardCharsets.US_ASCII);
-		uidentifier = "UUID: ".getBytes(StandardCharsets.US_ASCII);
+		uidentifier = "AUTH: ".getBytes(StandardCharsets.US_ASCII);
 		expectidentifier = "Fits: ".getBytes(StandardCharsets.US_ASCII);
 		headerend = new byte[] {'\r','\n','\r','\n'};
 		headersplit = new byte[] {'\r','\n'};
@@ -44,14 +48,15 @@ final class PageSender implements ServerWorker {
 		
 		final ClassLoader classloader = PageSender.class.getClassLoader();
 		web = new byte[5][];
-		identifier = new byte[7][];
-		loadStaticContent(classloader, (byte)0, 2946 , "index.html", "", responseparthtml0, responseclose);
+		identifier = new byte[8][];
+		loadStaticContent(classloader, (byte)0, 3543 , "index.html", "", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)4, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm0, responseclose);
 		identifier[5] = "PUT".getBytes(StandardCharsets.US_ASCII);
 		identifier[6] = "DELETE".getBytes(StandardCharsets.US_ASCII);
+		identifier[7] = "GET / ".getBytes(StandardCharsets.US_ASCII);
 	}
 	
 	private static void loadStaticContent(final ClassLoader classloader, final byte id, final int contentsize, final String contentid, final String contentpublicid, byte[] header, byte[] headerclose) {
@@ -94,11 +99,12 @@ final class PageSender implements ServerWorker {
 		try {
 			final InputStream cis = connected.getInputStream();
 			int readcount = cis.read(buf);
-			byte e = 7;
+			byte e = 8;
 			while (--e > -1) {
 				int i = identifier[e].length;
 				boolean b = false;
-				if (buf.length <= i || (e != 0 && buf[i] != ' ')) {
+				//if (buf.length <= i || (e != 0 && buf[i] != ' ')) {
+				if (buf.length <= i || (e != 7 && e != 0 && buf[i] != ' ')) {
 					continue;
 				}
 				while (--i > -1) {
@@ -123,7 +129,53 @@ final class PageSender implements ServerWorker {
 					--e;
 				}
 			}
-			if(e == 6) {
+			if(e == 7) {
+				int i = 6;
+				int split = indexOf(buf, headerend, i, buf.length);
+				if(split != -1) {
+					int pi = i;
+					UUID token = null;
+					while(token == null && (i = indexOf(buf, headersplit, i, split)) != -1) {
+
+						int length = i - pi;
+						if(length == 42) {
+							byte k = 6;
+							int l = pi + k;
+							while(--k > -1) {
+								if(uidentifier[k] != buf[--l]) {
+									break;
+								}
+							}
+							if(k == -1) {
+								length -= 6;
+								try {
+									token = UUID.fromString(new String(buf, pi + 6, length, StandardCharsets.US_ASCII));
+								} catch (IndexOutOfBoundsException | IllegalArgumentException ex) {
+								}
+							}
+						}
+						i += headersplit.length;
+						pi = i;
+					}
+					if(token != null) {
+						final UploadSession session = uploadmanager.getSession(token);
+						if(session != null) {
+							byte[] query = session.query();
+							connected.getOutputStream().write(queryheader);
+							connected.getOutputStream().write(Integer.toString(query.length).getBytes(StandardCharsets.UTF_8));
+							connected.getOutputStream().write(headerend);
+							connected.getOutputStream().write(query);
+						} else {
+							connected.getOutputStream().write(notokenget);
+						}
+						
+					} else {
+						connected.getOutputStream().write(novalidtokenget);
+					}
+				} else {
+					connected.getOutputStream().write(headertoolargeget);
+				}
+			} else if(e == 6) {
 				//DELETE REQUEST
 				int i = 8;
 				while(i < readcount) {

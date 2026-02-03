@@ -49,7 +49,7 @@ final class PageSender implements ServerWorker {
 		final ClassLoader classloader = PageSender.class.getClassLoader();
 		web = new byte[5][];
 		identifier = new byte[8][];
-		loadStaticContent(classloader, (byte)0, 3543 , "index.html", "", responseparthtml0, responseclose);
+		loadStaticContent(classloader, (byte)0, 14113 , "index.html", "", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
@@ -217,9 +217,6 @@ final class PageSender implements ServerWorker {
 					if(token != null) {
 						final UploadSession session = uploadmanager.getSession(token);
 						if(session != null) {
-							if((i = name.lastIndexOf('.')) != -1) {
-								name = name.substring(0, i);
-							}
 							session.remove(name);
 							connected.getOutputStream().write(updated);
 						} else {
@@ -327,15 +324,9 @@ final class PageSender implements ServerWorker {
 												System.arraycopy(buf, 0, bytes, pos, readcount);
 												pos+=readcount;
 											}
-											if((i = name.lastIndexOf('.')) != -1) {
-												name = name.substring(0, i);
-											}
 											session.put(name, bytes); //PUT
 										}
 									} else {
-										if((i = name.lastIndexOf('.')) != -1) {
-											name = name.substring(0, i);
-										}
 										session.put(name, empty);
 									}
 								} else {

@@ -2,6 +2,7 @@
 <html>
 <head>
 	<link rel="icon" href="data:,">
+	<meta name="color-scheme" content="light dark">
 	<script src="./index.js"></script>
 	<style>
 		:root {
@@ -71,6 +72,30 @@
 		.progress-container.transcoding .progress-bar { background: #4a90e2; }
 		.progress-container.playing .progress-bar { background: #2ecc71; }
 		.progress-container.uploading .progress-bar { background: #f39c12; }
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--primary: #5aa2ff;
+				--primary-hover: #3d82d6;
+				--bg: #121212;
+				--card: #1e1e1e;
+				--text: #e5e5e5;
+			}
+			.file-item {
+				border-bottom: 1px solid #2a2a2a;
+			}
+			#file-list {
+				box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+			}
+			.status {
+				color: #aaa;
+			}
+			.progress-container {
+				background: #2a2a2a;
+			}
+			.upload-label.disabled {
+				background: #555;
+			}
+		}
 	</style>
 </head>
 <body>

@@ -38,9 +38,9 @@ final class PageSender implements ServerWorker {
 		expectidentifier = "Fits: ".getBytes(StandardCharsets.US_ASCII);
 		headerend = new byte[] {'\r','\n','\r','\n'};
 		headersplit = new byte[] {'\r','\n'};
-		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/html\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
+		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 				.getBytes(StandardCharsets.US_ASCII),
-				responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/javascript\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
+				responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/javascript; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 						.getBytes(StandardCharsets.US_ASCII),
 				responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: application/wasm\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 						.getBytes(StandardCharsets.US_ASCII),
@@ -49,9 +49,9 @@ final class PageSender implements ServerWorker {
 		final ClassLoader classloader = PageSender.class.getClassLoader();
 		web = new byte[6][];
 		identifier = new byte[9][];
-		web[0] = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/html\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 284\r\nConnection: close\r\n\r\n<!DOCTYPE html><html><head><title>Upload sound</title><link rel=\"icon\" href=\"data:,\"><style>\nbody, html { margin: 0; padding: 0; height: 100%; overflow: hiden;}\niframe { width: 100%; height: 100%; border: none; }\n</style></head><body><iframe src=\"./index.html\"></iframe></body></html>".getBytes(StandardCharsets.US_ASCII);
+		web[0] = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 424\r\nConnection: close\r\n\r\n<!DOCTYPE html><html><head><title>Upload sound</title><link rel=\"icon\" href=\"data:,\"><meta name=\"color-scheme\" content=\"light dark\"><style>\nbody, html { margin: 0; padding: 0; height: 100%; overflow: hiden; background: #f5f5f7;}\n@media (prefers-color-scheme: dark) {html, body {background: #121212;}}\niframe { width: 100%; height: 100%; border: none; }\n</style></head><body><iframe src=\"./index.html\"></iframe></body></html>".getBytes(StandardCharsets.US_ASCII);
 		identifier[0] = "GET /".getBytes(StandardCharsets.US_ASCII);
-		loadStaticContent(classloader, (byte)1, 12569 , "index.html", "index.html", responseparthtml0, responseclose);
+		loadStaticContent(classloader, (byte)1, 13065 , "index.html", "index.html", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)2, 7272, "index.js", "index.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)3, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)4, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);

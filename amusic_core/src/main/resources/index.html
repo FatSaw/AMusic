@@ -243,22 +243,47 @@
 			}
 		}
 		async function sendPut(name, blob) {
-			const data = await blob.arrayBuffer();
 			let binaryString = '';
-			new TextEncoder().encode(name).forEach(byte => binaryString += String.fromCharCode(byte));
-			const url = "./" + window.btoa(binaryString);
-			setProgress(name, 33, 'uploading');
+			new TextEncoder().encode(name).forEach(b => binaryString += String.fromCharCode(b));
+			const url = "./" + btoa(binaryString);
+			const data = await blob.arrayBuffer();
 			const checkreq = await fetch(url, {method: "PUT", headers: {"Fits": data.byteLength, "AUTH": token}});
 			if(checkreq.status === 204) {
-				setProgress(name, 66, 'uploading');
-				await fetch(url, {method: "PUT", headers: {"AUTH": token}, body: data});
-				setProgress(name, 100, 'uploading');
-				updateUIStatus(name, 'uploaded');
-				const progress = document.getElementById(`pg-cont-${utf8ToBase64(name)}`);
-				if(progress) {
-					progress.style.display = 'none';
-					progress.remove();
-				}
+				updateUIStatus(name, 'uploading');
+				setProgress(name, 0, 'uploading');
+				return new Promise(async (resolve, reject) => {
+					const xhr = new XMLHttpRequest();
+					xhr.open("PUT", url, true);
+					xhr.setRequestHeader("AUTH", token);
+					let lastLoaded = 0;
+					let lastTime = performance.now();
+					xhr.upload.onprogress = (e) => {
+						const now = performance.now();
+						const deltaBytes = e.loaded - lastLoaded;
+						const deltaTime = (now - lastTime) / 1000;
+						const speed = (deltaBytes / deltaTime / 1024).toFixed(1); // KB/s
+						lastLoaded = e.loaded;
+						lastTime = now;
+						const percent = Math.round((e.loaded / e.total) * 100);
+						setProgress(name, percent, 'uploading');
+					};
+					xhr.onload = () => {
+						if (xhr.status === 200 || xhr.status === 204) {
+							setProgress(name, 100, 'uploading');
+							updateUIStatus(name, 'uploaded');
+							const progress = document.getElementById(`pg-cont-${utf8ToBase64(name)}`);
+							if (progress) {
+								progress.style.display = 'none';
+								progress.remove();
+							}
+							resolve();
+						} else {
+							reject(xhr.statusText);
+						}
+					};
+					xhr.onerror = reject;
+					xhr.send(data);
+				});
 			}
 		}
 		async function sendDelete(name) {
@@ -278,10 +303,16 @@
 				playBtn.onclick = () => togglePlay(playBtn, url, name);
 				const confirmBtn = document.createElement('button');
 				confirmBtn.className = 'btn btn-confirm';
-				confirmBtn.textContent = 'Confirm';
+				confirmBtn.textContent = 'Upload';
 				confirmBtn.onclick = () => confirmUpload(name);
 				ctrl.replaceChildren(playBtn, confirmBtn);
 				setProgress(name, 0, 'playing');
+			} else if (status === 'uploading') {
+				const confirmBtn = document.createElement('button');
+				confirmBtn.className = 'btn btn-confirm';
+				confirmBtn.textContent = 'Uploading...';
+				confirmBtn.onclick = () => confirmUpload(name);
+				ctrl.replaceChildren(confirmBtn);
 			} else if (status === 'uploaded') {
 				const statusSpan = document.createElement('span');
 				statusSpan.className = 'status';
@@ -330,7 +361,7 @@
 				let ffmpeg = null;
 				const initffmpeg = async () => {
 					if (ffmpeg === null) {
-						ffmpeg = new FFmpeg();
+						ffmpeg = new FFmpeg({ log: false });
 						ffmpeg.on("progress", ({progress}) => {
 						if(controlledproggress) {
 							setProgress(controlledproggress, Math.round(progress * 100), 'transcoding');

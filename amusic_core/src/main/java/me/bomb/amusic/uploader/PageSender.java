@@ -51,7 +51,7 @@ final class PageSender implements ServerWorker {
 		identifier = new byte[9][];
 		web[0] = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 424\r\nConnection: close\r\n\r\n<!DOCTYPE html><html><head><title>Upload sound</title><link rel=\"icon\" href=\"data:,\"><meta name=\"color-scheme\" content=\"light dark\"><style>\nbody, html { margin: 0; padding: 0; height: 100%; overflow: hiden; background: #f5f5f7;}\n@media (prefers-color-scheme: dark) {html, body {background: #121212;}}\niframe { width: 100%; height: 100%; border: none; }\n</style></head><body><iframe src=\"./index.html\"></iframe></body></html>".getBytes(StandardCharsets.US_ASCII);
 		identifier[0] = "GET /".getBytes(StandardCharsets.US_ASCII);
-		loadStaticContent(classloader, (byte)1, 13065 , "index.html", "index.html", responseparthtml0, responseclose);
+		loadStaticContent(classloader, (byte)1, 14145 , "index.html", "index.html", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)2, 7272, "index.js", "index.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)3, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
 		loadStaticContent(classloader, (byte)4, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
@@ -311,27 +311,26 @@ final class PageSender implements ServerWorker {
 						if(cl != -1) {
 							final UploadSession session = uploadmanager.getSession(token);
 							if(session != null) {
-								final boolean canput = session.canPut(cl);
-								if(canput) {
-									split += 4;
-									connected.getOutputStream().write(updated);
-									if(cl != 0) {
-										if(!expect) {
+								if(!expect) {
+									bytes = session.tryAllocPutBuf(name, cl);
+									if(bytes != null) {
+										split += 4;
+										connected.getOutputStream().write(updated);
+										if(cl != 0) {
 											readcount-=split;
-											bytes = new byte[cl];
 											System.arraycopy(buf, split, bytes, 0, readcount);
 											int pos = readcount;
 											while((readcount = cis.read(buf)) != -1) {
 												System.arraycopy(buf, 0, bytes, pos, readcount);
 												pos+=readcount;
 											}
-											session.put(name, bytes); //PUT
 										}
+										session.putDone(name);
 									} else {
-										session.put(name, empty);
+										connected.getOutputStream().write(datatoolarge);
 									}
 								} else {
-									connected.getOutputStream().write(datatoolarge);
+									connected.getOutputStream().write(session.canPut(name, cl) ? updated : datatoolarge);
 								}
 							} else {
 								connected.getOutputStream().write(notoken);

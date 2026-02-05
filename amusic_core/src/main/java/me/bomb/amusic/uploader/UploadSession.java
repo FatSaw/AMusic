@@ -10,7 +10,7 @@ final class UploadSession {
 	
 	private final int limitsize, limitcount;
 	protected final String targetplaylist;
-	private final ConcurrentHashMap<String, byte[]> uploadentrys;
+	private final ConcurrentHashMap<String, byte[]> uploadingentrys, uploadentrys;
 	private final AtomicInteger size = new AtomicInteger(0);
 	private volatile boolean end;
 	private volatile long lastaccesstime;
@@ -19,6 +19,7 @@ final class UploadSession {
 		this.limitsize = limitsize;
 		this.limitcount = limitcount;
 		this.targetplaylist = targetplaylist;
+		this.uploadingentrys = new ConcurrentHashMap<>();
 		this.uploadentrys = new ConcurrentHashMap<>();
 		resetTime();
 	}
@@ -31,21 +32,57 @@ final class UploadSession {
 		return System.currentTimeMillis() - this.lastaccesstime;
 	}
 	
-	protected boolean canPut(int size) {
+	protected boolean canPut(final String soundname, int size) {
 		if(end) {
 			return false;
 		}
 		resetTime();
-		return uploadentrys.size() < limitcount && this.size.get() + size < this.limitsize;
+		return uploadentrys.size() < limitcount && this.size.get() + size < this.limitsize && !uploadingentrys.containsKey(soundname);
 	}
 	
-	protected void put(String soundname, byte[] sound) {
-		if(end || soundname == null || sound == null || size.get() + sound.length>limitsize) {
+	protected byte[] tryAllocPutBuf(final String soundname, final int allocSize) {
+		if (end || soundname == null || allocSize < 0) {
+	    	return null;
+	    }
+	    resetTime();
+	    
+	    byte i = 16;
+	    while (--i!=0) {
+	    	final int current = size.get(), next = current + allocSize;
+	        if (next > limitsize) {
+	        	return null;
+	        }
+	        if (size.compareAndSet(current, next)) {
+	        	break;
+	        }
+	        try {
+				Thread.sleep(10L);
+			} catch (InterruptedException e) {
+			}
+	    }
+	    if (i==0) {
+	    	return null;
+	    }
+	    byte[] buf = new byte[allocSize];
+	    byte[] prev = uploadingentrys.putIfAbsent(soundname, buf);
+	    if (prev != null) {
+	    	size.addAndGet(-allocSize);
+	        return null;
+	    }
+		if (uploadingentrys.size() > limitcount) {
+			uploadingentrys.remove(soundname);
+	        size.addAndGet(-allocSize);
+	        return null;
+		}
+	    return buf;
+	}
+	
+	protected void putDone(final String soundname) {
+		final byte[] buf;
+		if(end || (buf = uploadingentrys.remove(soundname)) == null) {
 			return;
 		}
-		resetTime();
-		size.addAndGet(sound.length);
-		uploadentrys.put(soundname, sound);
+		uploadentrys.put(soundname, buf);
 	}
 	
 	protected byte[] query() {

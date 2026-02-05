@@ -22,41 +22,43 @@ final class PageSender implements ServerWorker {
 
 	static {
 		empty = new byte[0];
-		notfound = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		updated = "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		nolength = "HTTP/1.1 411 Length Required\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		novalidtoken = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		notoken = "HTTP/1.1 410 Gone\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		headertoolarge = "HTTP/1.1 431 Request Header Fields Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		novalidtokenget = "HTTP/1.1 403 Forbidden\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		notokenget = "HTTP/1.1 410 Gone\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		headertoolargeget = "HTTP/1.1 431 Request Header Fields Too Large\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		datatoolarge = "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-		queryheader = "HTTP/1.1 200 OK\r\nCache-Control: no-store\r\nContent-Type: application/octet-stream\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII);
+		notfound = "HTTP/1.1 404 Not Found\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		updated = "HTTP/1.1 204 No Content\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		nolength = "HTTP/1.1 411 Length Required\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		novalidtoken = "HTTP/1.1 403 Forbidden\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		notoken = "HTTP/1.1 410 Gone\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		headertoolarge = "HTTP/1.1 431 Request Header Fields Too Large\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		novalidtokenget = "HTTP/1.1 403 Forbidden\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		notokenget = "HTTP/1.1 410 Gone\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		headertoolargeget = "HTTP/1.1 431 Request Header Fields Too Large\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/plain\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		datatoolarge = "HTTP/1.1 413 Payload Too Large\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+		queryheader = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: application/octet-stream\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII);
 		clidentifier = "Content-Length: ".getBytes(StandardCharsets.US_ASCII);
 		uidentifier = "AUTH: ".getBytes(StandardCharsets.US_ASCII);
 		expectidentifier = "Fits: ".getBytes(StandardCharsets.US_ASCII);
 		headerend = new byte[] {'\r','\n','\r','\n'};
 		headersplit = new byte[] {'\r','\n'};
-		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic sound upload server\r\nCache-Control: no-store\r\nContent-Type: text/html\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
+		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/html\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 				.getBytes(StandardCharsets.US_ASCII),
-				responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: AMusic sound upload server\r\nCache-Control: max-age=86400\r\nContent-Type: text/javascript\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
+				responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/javascript\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 						.getBytes(StandardCharsets.US_ASCII),
-				responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: AMusic sound upload server\r\nCache-Control: max-age=86400\r\nContent-Type: application/wasm\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
+				responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: application/wasm\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
 						.getBytes(StandardCharsets.US_ASCII),
 				responseclose = "\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		
 		final ClassLoader classloader = PageSender.class.getClassLoader();
-		web = new byte[5][];
-		identifier = new byte[8][];
-		loadStaticContent(classloader, (byte)0, 14113 , "index.html", "", responseparthtml0, responseclose);
-		loadStaticContent(classloader, (byte)1, 7272, "index.js", "index.js", responsepartjs0, responseclose);
-		loadStaticContent(classloader, (byte)2, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
-		loadStaticContent(classloader, (byte)3, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
-		loadStaticContent(classloader, (byte)4, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm0, responseclose);
-		identifier[5] = "PUT".getBytes(StandardCharsets.US_ASCII);
-		identifier[6] = "DELETE".getBytes(StandardCharsets.US_ASCII);
-		identifier[7] = "GET / ".getBytes(StandardCharsets.US_ASCII);
+		web = new byte[6][];
+		identifier = new byte[9][];
+		web[0] = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/html\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 284\r\nConnection: close\r\n\r\n<!DOCTYPE html><html><head><title>Upload sound</title><link rel=\"icon\" href=\"data:,\"><style>\nbody, html { margin: 0; padding: 0; height: 100%; overflow: hiden;}\niframe { width: 100%; height: 100%; border: none; }\n</style></head><body><iframe src=\"./index.html\"></iframe></body></html>".getBytes(StandardCharsets.US_ASCII);
+		identifier[0] = "GET /".getBytes(StandardCharsets.US_ASCII);
+		loadStaticContent(classloader, (byte)1, 12569 , "index.html", "index.html", responseparthtml0, responseclose);
+		loadStaticContent(classloader, (byte)2, 7272, "index.js", "index.js", responsepartjs0, responseclose);
+		loadStaticContent(classloader, (byte)3, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
+		loadStaticContent(classloader, (byte)4, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
+		loadStaticContent(classloader, (byte)5, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm0, responseclose);
+		identifier[6] = "PUT".getBytes(StandardCharsets.US_ASCII);
+		identifier[7] = "DELETE".getBytes(StandardCharsets.US_ASCII);
+		identifier[8] = "GET / ".getBytes(StandardCharsets.US_ASCII);
 	}
 	
 	private static void loadStaticContent(final ClassLoader classloader, final byte id, final int contentsize, final String contentid, final String contentpublicid, byte[] header, byte[] headerclose) {
@@ -99,12 +101,11 @@ final class PageSender implements ServerWorker {
 		try {
 			final InputStream cis = connected.getInputStream();
 			int readcount = cis.read(buf);
-			byte e = 8;
+			byte e = 9;
 			while (--e > -1) {
 				int i = identifier[e].length;
 				boolean b = false;
-				//if (buf.length <= i || (e != 0 && buf[i] != ' ')) {
-				if (buf.length <= i || (e != 7 && e != 0 && buf[i] != ' ')) {
+				if (buf.length <= i || (e != 8 && e != 0 && buf[i] != ' ')) {
 					continue;
 				}
 				while (--i > -1) {
@@ -129,7 +130,7 @@ final class PageSender implements ServerWorker {
 					--e;
 				}
 			}
-			if(e == 7) {
+			if(e == 8) {
 				int i = 6;
 				int split = indexOf(buf, headerend, i, buf.length);
 				if(split != -1) {
@@ -175,7 +176,7 @@ final class PageSender implements ServerWorker {
 				} else {
 					connected.getOutputStream().write(headertoolargeget);
 				}
-			} else if(e == 6) {
+			} else if(e == 7) {
 				//DELETE REQUEST
 				int i = 8;
 				while(i < readcount) {
@@ -228,7 +229,7 @@ final class PageSender implements ServerWorker {
 				} else {
 					connected.getOutputStream().write(headertoolarge);
 				}
-			} else if(e == 5) {
+			} else if(e == 6) {
 				//PUT REQUEST
 				int i = 5;
 				while(i < readcount) {

@@ -1,412 +1,353 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Convert to OGG</title>
-    <link rel="icon" href="data:,">
-    <script src="./index.js"></script>
-    <style>
-        :root {
-            --primary: #4a90e2;
-            --primary-hover: #357abd;
-            --bg: #f5f5f7;
-            --card: #ffffff;
-            --text: #333;
-        }
-
-        body { 
-            display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; font-family: 'Segoe UI', Roboto, sans-serif; 
-            margin: 0; padding: 20px; background: var(--bg); color: var(--text);
-        }
-
-        .upload-label {
-            display: inline-block;
-            padding: 12px 24px;
-            background: var(--primary);
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-weight: 600;
-        }
-        .upload-label:hover { background: var(--primary-hover); }
-        .upload-label.disabled { background: #ccc; cursor: not-allowed; }
-        #uploader { display: none; }
-
-        #file-list { 
-            width: 100%; max-width: 700px; margin-top: 30px; 
-            background: var(--card); border-radius: 12px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;
-        }
-
-        .file-item { 
-            display: flex; align-items: center; justify-content: space-between; 
-            padding: 15px 20px; border-bottom: 1px solid #eee; 
-        }
-
-        .file-name { font-weight: 500; flex-grow: 1; margin-right: 15px; }
-
-        .controls { display: flex; gap: 10px; align-items: center; }
-
-        .btn {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: opacity 0.2s;
-        }
-        .btn-play { background: #2ecc71; color: white; }
-        .btn-confirm { background: var(--primary); color: white; }
-        .btn-undo { background: #e74c3c; color: white; }
-
-        .status { font-size: 0.85em; color: #888; }
-		
+	<link rel="icon" href="data:,">
+	<script src="./index.js"></script>
+	<style>
+		:root {
+			--primary: #4a90e2;
+			--primary-hover: #357abd;
+			--bg: #f5f5f7;
+			--card: #ffffff;
+			--text: #333;
+		}
+		body { 
+			display: flex; flex-direction: column; align-items: center; 
+			min-height: 100vh; font-family: 'Segoe UI', Roboto, sans-serif; 
+			margin: 0; padding: 20px; background: var(--bg); color: var(--text);
+		}
+		.upload-label {
+			display: inline-block;
+			padding: 12px 24px;
+			background: var(--primary);
+			color: white;
+			border-radius: 6px;
+			cursor: pointer;
+			transition: background 0.2s;
+			font-weight: 600;
+		}
+		.upload-label:hover { background: var(--primary-hover); }
+		.upload-label.disabled { background: #ccc; cursor: not-allowed; }
+		#uploader { display: none; }
+		#file-list { 
+			width: 100%; max-width: 700px; margin-top: 30px; 
+			background: var(--card); border-radius: 12px; 
+			box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;
+		}
+		.file-item { 
+			display: flex; align-items: center; justify-content: space-between; 
+			padding: 15px 20px; border-bottom: 1px solid #eee; 
+		}
+		.file-name { font-weight: 500; flex-grow: 1; margin-right: 15px; }
+		.controls { display: flex; gap: 10px; align-items: center; }
+		.btn {
+			padding: 6px 14px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 14px;
+			transition: opacity 0.2s;
+		}
+		.btn-play { background: #2ecc71; color: white; }
+		.btn-confirm { background: var(--primary); color: white; }
+		.btn-undo { background: #e74c3c; color: white; }
+		.status { font-size: 0.85em; color: #888; }
 		.progress-container {
-		    width: 100%;
-		    height: 8px;
-		    background: #eee;
-		    border-radius: 4px;
-		    margin-top: 10px;
-		    overflow: hidden;
-		    display: none;
-		    cursor: pointer;
+			width: 100%;
+			height: 8px;
+			background: #eee;
+			border-radius: 4px;
+			margin-top: 10px;
+			overflow: hidden;
+			display: none;
+			cursor: pointer;
 		}
 		.progress-bar {
-		    width: 0%;
-		    height: 100%;
-		    background: var(--primary);
-		    transition: width 0.1s linear;
+			width: 0%;
+			height: 100%;
+			background: var(--primary);
+			transition: width 0.1s linear;
 		}
 		.progress-container.transcoding .progress-bar { background: #4a90e2; }
 		.progress-container.playing .progress-bar { background: #2ecc71; }
 		.progress-container.uploading .progress-bar { background: #f39c12; }
-    </style>
+	</style>
 </head>
 <body>
-    <label for="uploader" class="upload-label disabled" id="upload-btn">Select Files</label>
-    <input type="file" accept="audio/*, video/*" id="uploader" disabled multiple>
-    
-    <p id="message">Loading FFmpeg...</p>
-    
-    <div id="file-list"></div>
-
-    <script>
-		const token = window.location.pathname.substring(1);
+	<label for="uploader" class="upload-label disabled" id="upload-btn">Select Files</label>
+	<input type="file" accept="audio/*, video/*" id="uploader" disabled multiple>
+	<p id="message">Loading FFmpeg...</p>
+	<div id="file-list"></div>
+	<script>
+		const token = window.parent.location.pathname.substring(1);
 		const convertedBlobs = new Map();
 		const objectUrls = new Map();
 		let currentAudio = null;
 		let playingFileName = null;
 		let currentProgressUpdate = null;
-		
 		const fileListContainer = document.getElementById('file-list');
-		
 		function utf8ToBase64(str) {
-		    const bytes = new TextEncoder().encode(str);
-		    let binary = '';
-		    bytes.forEach(b => binary += String.fromCharCode(b));
-		    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+			const bytes = new TextEncoder().encode(str);
+			let binary = '';
+			bytes.forEach(b => binary += String.fromCharCode(b));
+			return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 		}
-		
 		function createFileUI(name, isuploaded = false) {
-		    const key = utf8ToBase64(name);
+			const key = utf8ToBase64(name);
 			const previous = document.getElementById(`item-${key}`);
 			if (previous) {
 				if (currentAudio && playingFileName === name) {
-						        currentAudio.pause();
-								clearInterval(currentProgressUpdate);
-								playingFileName = null;
-						        currentAudio = null;
-						    }
+					currentAudio.pause();
+					clearInterval(currentProgressUpdate);
+					playingFileName = null;
+					currentAudio = null;
+				}
 				previous.remove();
 			}
-		    const div = document.createElement('div');
-		    div.className = 'file-item';
-		    div.id = `item-${key}`;
-		    div.style.flexDirection = 'column';
-
-		    const header = document.createElement('div');
-		    header.style.cssText = 'display:flex; width:100%; justify-content:space-between; align-items:center;';
-
-		    const fileName = document.createElement('span');
-		    fileName.className = 'file-name';
-		    fileName.textContent = name;
-
-		    const controls = document.createElement('div');
-		    controls.className = 'controls';
-		    controls.id = `ctrl-${key}`;
-
-		    const status = document.createElement('span');
-		    status.className = 'status';
-
-		    if (isuploaded) {
-		        status.textContent = 'On Server';
-		        const undoBtn = document.createElement('button');
-		        undoBtn.className = 'btn btn-undo';
-		        undoBtn.textContent = 'Undo';
-		        undoBtn.onclick = () => undoUpload(name);
-		        
-		        controls.append(status, undoBtn);
-		    } else {
-		        status.textContent = 'Waiting...';
-		        controls.append(status);
-		    }
-
-		    header.append(fileName, controls);
-
-		    const progressCont = document.createElement('div');
-		    progressCont.className = 'progress-container';
-		    progressCont.id = `pg-cont-${key}`;
-		    progressCont.onclick = (e) => seekAudio(e, name);
-
-		    const progressBar = document.createElement('div');
-		    progressBar.className = 'progress-bar';
-		    progressBar.id = `pg-bar-${key}`;
-
-		    progressCont.append(progressBar);
-		    div.append(header, progressCont);
-		    fileListContainer.appendChild(div);
-
-		    return div;
+			const div = document.createElement('div');
+			div.className = 'file-item';
+			div.id = `item-${key}`;
+			div.style.flexDirection = 'column';
+			const header = document.createElement('div');
+			header.style.cssText = 'display:flex; width:100%; justify-content:space-between; align-items:center;';
+			const fileName = document.createElement('span');
+			fileName.className = 'file-name';
+			fileName.textContent = name;
+			const controls = document.createElement('div');
+			controls.className = 'controls';
+			controls.id = `ctrl-${key}`;
+			const status = document.createElement('span');
+			status.className = 'status';
+			if (isuploaded) {
+				status.textContent = 'On Server';
+				const undoBtn = document.createElement('button');
+				undoBtn.className = 'btn btn-undo';
+				undoBtn.textContent = 'Undo';
+				undoBtn.onclick = () => undoUpload(name);
+				controls.append(status, undoBtn);
+			} else {
+				status.textContent = 'Waiting...';
+				controls.append(status);
+			}
+			header.append(fileName, controls);
+			const progressCont = document.createElement('div');
+			progressCont.className = 'progress-container';
+			progressCont.id = `pg-cont-${key}`;
+			progressCont.onclick = (e) => seekAudio(e, name);
+			const progressBar = document.createElement('div');
+			progressBar.className = 'progress-bar';
+			progressBar.id = `pg-bar-${key}`;
+			progressCont.append(progressBar);
+			div.append(header, progressCont);
+			fileListContainer.appendChild(div);
+			return div;
 		}
-
 		function setProgress(name, percent, type) {
-		    const cont = document.getElementById(`pg-cont-${utf8ToBase64(name)}`);
-		    const bar = document.getElementById(`pg-bar-${utf8ToBase64(name)}`);
-		    if (!cont || !bar) return;
-
-		    cont.style.display = 'block';
-		    cont.className = 'progress-container ' + type;
-		    bar.style.width = percent + '%';
+			const cont = document.getElementById(`pg-cont-${utf8ToBase64(name)}`);
+			const bar = document.getElementById(`pg-bar-${utf8ToBase64(name)}`);
+			if (!cont || !bar) return;
+			cont.style.display = 'block';
+			cont.className = 'progress-container ' + type;
+			bar.style.width = percent + '%';
 		}
-
 		function seekAudio(e, name) {
-		    if (playingFileName === name && currentAudio) {
-		        const rect = e.currentTarget.getBoundingClientRect();
-		        const x = e.clientX - rect.left;
-		        const clickedPercent = x / rect.width;
-		        currentAudio.currentTime = clickedPercent * currentAudio.duration;
-		    }
+			if (playingFileName === name && currentAudio) {
+				const rect = e.currentTarget.getBoundingClientRect();
+				const x = e.clientX - rect.left;
+				const clickedPercent = x / rect.width;
+				currentAudio.currentTime = clickedPercent * currentAudio.duration;
+			}
 		}
-
 		function togglePlay(btn, url, name) {
-		    const bar = document.getElementById(`pg-bar-${utf8ToBase64(name)}`);
-		    
-		    if (currentAudio && playingFileName === name) {
-		        if (currentAudio.paused) {
-		            currentAudio.play();
-		            btn.textContent = 'Pause';
-		        } else {
-		            currentAudio.pause();
-		            btn.textContent = 'Play';
-		        }
-		    } else {
-		        if (currentAudio) {
-		            currentAudio.pause();
-		            clearInterval(currentProgressUpdate);
-		            document.querySelectorAll('.btn-play').forEach(b => b.textContent = 'Play');
-		        }
-		        
-		        currentAudio = new Audio(url);
-		        playingFileName = name;
-		        currentAudio.play();
-		        btn.textContent = 'Pause';
-				
-				if (currentProgressUpdate) {
-				    clearInterval(currentProgressUpdate);
-				    currentProgressUpdate = null;
+			const bar = document.getElementById(`pg-bar-${utf8ToBase64(name)}`);
+			if (currentAudio && playingFileName === name) {
+				if (currentAudio.paused) {
+					currentAudio.play();
+					btn.textContent = 'Pause';
+				} else {
+					currentAudio.pause();
+					btn.textContent = 'Play';
 				}
-		        currentProgressUpdate = setInterval(() => {
+			} else {
+				if (currentAudio) {
+					currentAudio.pause();
+					clearInterval(currentProgressUpdate);
+					document.querySelectorAll('.btn-play').forEach(b => b.textContent = 'Play');
+				}
+				currentAudio = new Audio(url);
+				playingFileName = name;
+				currentAudio.play();
+				btn.textContent = 'Pause';
+				if (currentProgressUpdate) {
+					clearInterval(currentProgressUpdate);
+					currentProgressUpdate = null;
+				}
+				currentProgressUpdate = setInterval(() => {
 					if (!isFinite(currentAudio.duration)) return;
-		            const pct = (currentAudio.currentTime / currentAudio.duration) * 100;
-		            setProgress(name, pct, 'playing');
-		        }, 100);
-
-		        currentAudio.onended = () => {
-		            btn.textContent = 'Play';
-		            playingFileName = null;
-		            clearInterval(currentProgressUpdate);
-		            setProgress(name, 0, 'playing');
-		        };
-		    }
+					const pct = (currentAudio.currentTime / currentAudio.duration) * 100;
+					setProgress(name, pct, 'playing');
+				}, 100);
+				currentAudio.onended = () => {
+					btn.textContent = 'Play';
+					playingFileName = null;
+					clearInterval(currentProgressUpdate);
+					setProgress(name, 0, 'playing');
+				};
+			}
 		}
-		
 		async function getData() {
-		    const response = await fetch("./", {method: "GET", headers: {"AUTH": token}});
-		    if(response.status === 200) {
-		        const arrayBuffer = await response.arrayBuffer();
-		        const buf = new Uint8Array(arrayBuffer);
-		        const decoder = new TextDecoder();
-		        const count = (buf[0] << 8) | buf[1];
-		        const keysizesOffset = 2;
-		        const valuesizesOffset = keysizesOffset + count;
-		        const stringsStart = valuesizesOffset + (count * 4);
-		        
-		        let currentStrOffset = stringsStart;
-		        for (let i = 0; i < count; i++) {
-		            const strLen = buf[keysizesOffset + i];
-		            const vIdx = valuesizesOffset + (i * 4);
-		            const size = (buf[vIdx] << 24) | (buf[vIdx + 1] << 16) | (buf[vIdx + 2] << 8) | buf[vIdx + 3];
-		            const key = decoder.decode(buf.subarray(currentStrOffset, currentStrOffset + strLen));
-		            
-		            createFileUI(key, true);
-		            currentStrOffset += strLen;
-		        }
-		    }
+			const response = await fetch("./", {method: "GET", headers: {"AUTH": token}});
+			if(response.status === 200) {
+				const arrayBuffer = await response.arrayBuffer();
+				const buf = new Uint8Array(arrayBuffer);
+				const decoder = new TextDecoder();
+				const count = (buf[0] << 8) | buf[1];
+				const keysizesOffset = 2;
+				const valuesizesOffset = keysizesOffset + count;
+				const stringsStart = valuesizesOffset + (count * 4);
+				
+				let currentStrOffset = stringsStart;
+				for (let i = 0; i < count; i++) {
+					const strLen = buf[keysizesOffset + i];
+					const vIdx = valuesizesOffset + (i * 4);
+					const size = (buf[vIdx] << 24) | (buf[vIdx + 1] << 16) | (buf[vIdx + 2] << 8) | buf[vIdx + 3];
+					const key = decoder.decode(buf.subarray(currentStrOffset, currentStrOffset + strLen));
+					createFileUI(key, true);
+					currentStrOffset += strLen;
+				}
+			}
 		}
-
 		async function sendPut(name, blob) {
 			const data = await blob.arrayBuffer();
-		    let binaryString = '';
-		    new TextEncoder().encode(name).forEach(byte => binaryString += String.fromCharCode(byte));
-		    const url = "./" + window.btoa(binaryString);
-		    
-		    setProgress(name, 33, 'uploading');
-		    
-		    const checkreq = await fetch(url, {method: "PUT", headers: {"Fits": data.byteLength, "AUTH": token}});
-		    if(checkreq.status === 204) {
+			let binaryString = '';
+			new TextEncoder().encode(name).forEach(byte => binaryString += String.fromCharCode(byte));
+			const url = "./" + window.btoa(binaryString);
+			setProgress(name, 33, 'uploading');
+			const checkreq = await fetch(url, {method: "PUT", headers: {"Fits": data.byteLength, "AUTH": token}});
+			if(checkreq.status === 204) {
 				setProgress(name, 66, 'uploading');
-		        await fetch(url, {method: "PUT", headers: {"AUTH": token}, body: data});
-		        setProgress(name, 100, 'uploading');
-		        updateUIStatus(name, 'uploaded');
+				await fetch(url, {method: "PUT", headers: {"AUTH": token}, body: data});
+				setProgress(name, 100, 'uploading');
+				updateUIStatus(name, 'uploaded');
 				const progress = document.getElementById(`pg-cont-${utf8ToBase64(name)}`);
 				if(progress) {
 					progress.style.display = 'none';
 					progress.remove();
 				}
-		    }
+			}
 		}
-		
 		async function sendDelete(name) {
-		    let binaryString = '';
-		    new TextEncoder().encode(name).forEach(byte => binaryString += String.fromCharCode(byte));
-		    await fetch("./" + window.btoa(binaryString), {method: "DELETE", headers: {"AUTH": token}});
+			let binaryString = '';
+			new TextEncoder().encode(name).forEach(byte => binaryString += String.fromCharCode(byte));
+			await fetch("./" + window.btoa(binaryString), {method: "DELETE", headers: {"AUTH": token}});
 		}
-		
 		function updateUIStatus(name, status, blob = null) {
-		    const ctrl = document.getElementById(`ctrl-${utf8ToBase64(name)}`);
-		    if (!ctrl) return;
-
-		    if (status === 'converted') {
-		        const url = URL.createObjectURL(blob);
+			const ctrl = document.getElementById(`ctrl-${utf8ToBase64(name)}`);
+			if (!ctrl) return;
+			if (status === 'converted') {
+				const url = URL.createObjectURL(blob);
 				objectUrls.set(name, url);
-		        const playBtn = document.createElement('button');
-		        playBtn.className = 'btn btn-play';
-		        playBtn.textContent = 'Play';
-		        playBtn.onclick = () => togglePlay(playBtn, url, name);
-
-		        const confirmBtn = document.createElement('button');
-		        confirmBtn.className = 'btn btn-confirm';
-		        confirmBtn.textContent = 'Confirm';
-		        confirmBtn.onclick = () => confirmUpload(name);
-
-		        ctrl.replaceChildren(playBtn, confirmBtn);
-
-		        setProgress(name, 0, 'playing');
-		    } else if (status === 'uploaded') {
-		        const statusSpan = document.createElement('span');
-		        statusSpan.className = 'status';
-		        statusSpan.textContent = 'Uploaded';
-
-		        const undoBtn = document.createElement('button');
-		        undoBtn.className = 'btn btn-undo';
-		        undoBtn.textContent = 'Undo';
-		        undoBtn.onclick = () => undoUpload(name);
-
-		        ctrl.replaceChildren(statusSpan, undoBtn);
-		    }
+				const playBtn = document.createElement('button');
+				playBtn.className = 'btn btn-play';
+				playBtn.textContent = 'Play';
+				playBtn.onclick = () => togglePlay(playBtn, url, name);
+				const confirmBtn = document.createElement('button');
+				confirmBtn.className = 'btn btn-confirm';
+				confirmBtn.textContent = 'Confirm';
+				confirmBtn.onclick = () => confirmUpload(name);
+				ctrl.replaceChildren(playBtn, confirmBtn);
+				setProgress(name, 0, 'playing');
+			} else if (status === 'uploaded') {
+				const statusSpan = document.createElement('span');
+				statusSpan.className = 'status';
+				statusSpan.textContent = 'Uploaded';
+				const undoBtn = document.createElement('button');
+				undoBtn.className = 'btn btn-undo';
+				undoBtn.textContent = 'Undo';
+				undoBtn.onclick = () => undoUpload(name);
+				ctrl.replaceChildren(statusSpan, undoBtn);
+			}
 		}
-		
 		async function confirmUpload(name) {
-		    if (currentAudio && playingFileName === name) {
-		        currentAudio.pause();
+			if (currentAudio && playingFileName === name) {
+				currentAudio.pause();
 				clearInterval(currentProgressUpdate);
 				playingFileName = null;
-		        currentAudio = null;
-		    }
-		    
-		    const data = convertedBlobs.get(name);
-		    if (data) {
-		        await sendPut(name, data);
-		        const ctrl = document.getElementById(`ctrl-${utf8ToBase64(name)}`);
+				currentAudio = null;
+			}
+			const data = convertedBlobs.get(name);
+			if (data) {
+				await sendPut(name, data);
+				const ctrl = document.getElementById(`ctrl-${utf8ToBase64(name)}`);
 				const url = objectUrls.get(name);
 				if (url) {
-				  URL.revokeObjectURL(url);
-				  objectUrls.delete(name);
+					URL.revokeObjectURL(url);
+					objectUrls.delete(name);
 				}
-		        convertedBlobs.delete(name);
-		    }
+				convertedBlobs.delete(name);
+			}
 		}
-
 		async function undoUpload(name) {
-		    await sendDelete(name);
-		    
-		    if (convertedBlobs.has(name)) {
-		        convertedBlobs.delete(name);
-		    }
-		    
-		    const item = document.getElementById(`item-${utf8ToBase64(name)}`);
-		    if (item) item.remove();
+			await sendDelete(name);
+			if (convertedBlobs.has(name)) {
+				convertedBlobs.delete(name);
+			}
+			const item = document.getElementById(`item-${utf8ToBase64(name)}`);
+			if (item) item.remove();
 		}
-
 		{
 			const msg = document.getElementById('message');
 			const uploader = document.getElementById('uploader');
+			const uploadBtn = document.getElementById('upload-btn');
 			let controlledproggress = null;
 			const { fetchFile } = FFmpegUtil;
-			    const { FFmpeg } = FFmpegWASM;
-			    let ffmpeg = null;
-
-			    const initffmpeg = async () => {
-			        if (ffmpeg === null) {
-			            ffmpeg = new FFmpeg();
-			            ffmpeg.on("progress", ({progress}) => {
-							if(controlledproggress) {
-								setProgress(controlledproggress, Math.round(progress * 100), 'transcoding');
-							}
-			                msg.innerHTML = `Converting: ${Math.round(progress * 100)}%`;
-			            });
-			            await ffmpeg.load({coreURL: "./ffmpeg-core.js"});
-			        }
-			        uploader.disabled = false;
-					const uploadBtn = document.getElementById('upload-btn');
-			        uploadBtn.classList.remove('disabled');
-			        msg.innerHTML = "Ready";
-			        await getData();
-			    };
-		    
-		    const transcode = async ({target: { files }}) => {
-				uploader.disabled = true;
-		        for (const file of files) {
-
-					const dotIndex = file.name.lastIndexOf(".");
-					const name = dotIndex === -1 ? file.name : file.name.slice(0, dotIndex);
-					
-		            createFileUI(name);
-					controlledproggress = name;
-
-		            await ffmpeg.writeFile(name, await fetchFile(file));
-		            const outputName = 'output_' + Date.now() + '.ogg';
-		            
-		            await ffmpeg.exec(["-i", name, "-strict", "-2", "-acodec", "vorbis", "-ab", "64000", "-ac", "2", "-ar", "44100", "-f", "ogg", "-vn", "-y", outputName]);
-		            
-		            const data = await ffmpeg.readFile(outputName);
-		            const blob = new Blob([data], { type: 'audio/ogg' });
-		            
-		            convertedBlobs.set(name, blob);
-		            updateUIStatus(name, 'converted', blob);
-		            
-		            await ffmpeg.deleteFile(name);
-		            await ffmpeg.deleteFile(outputName);
-
-					controlledproggress = null;
-		        }
+			const { FFmpeg } = FFmpegWASM;
+				let ffmpeg = null;
+				const initffmpeg = async () => {
+					if (ffmpeg === null) {
+						ffmpeg = new FFmpeg();
+						ffmpeg.on("progress", ({progress}) => {
+						if(controlledproggress) {
+							setProgress(controlledproggress, Math.round(progress * 100), 'transcoding');
+						}
+						msg.innerHTML = `Converting: ${Math.round(progress * 100)}%`;
+					});
+					await ffmpeg.load({coreURL: "./ffmpeg-core.js"});
+				}
+				msg.innerHTML = "Loading data...";
+			    await getData();
 				uploader.disabled = false;
-		        msg.innerHTML = "Done";
-		    };
+				msg.innerHTML = "Done";
+				uploadBtn.classList.remove('disabled');
+			};
+		    
+			const transcode = async ({target: { files }}) => {
+				uploader.disabled = true;
+				uploadBtn.classList.add('disabled');
+				for (const file of files) {
+					const dotIndex = file.name.lastIndexOf(".");
+					const fileNameIn = file.name;
+					const name = dotIndex === -1 ? fileNameIn : fileNameIn.slice(0, dotIndex);
+					createFileUI(name);
+					controlledproggress = name;
+					await ffmpeg.writeFile(fileNameIn, await fetchFile(file));
+					const fileNameOut = 'output_' + name + '.ogg';
+					await ffmpeg.exec(["-i", fileNameIn, "-strict", "-2", "-acodec", "vorbis", "-ab", "64000", "-ac", "2", "-ar", "44100", "-f", "ogg", "-vn", "-y", fileNameOut]);
+					const data = await ffmpeg.readFile(fileNameOut);
+					const blob = new Blob([data], { type: 'audio/ogg' });
+					convertedBlobs.set(name, blob);
+					updateUIStatus(name, 'converted', blob);
+					await ffmpeg.deleteFile(fileNameIn);
+					await ffmpeg.deleteFile(fileNameOut);
+					controlledproggress = null;
+				}
+				uploader.disabled = false;
+				uploadBtn.classList.remove('disabled');
+				msg.innerHTML = "Done";
+			};
 			uploader.addEventListener('change', transcode);
 			initffmpeg();
 		}
-    </script>
+	</script>
 </body>
 </html>

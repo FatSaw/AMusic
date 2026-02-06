@@ -43,7 +43,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			return;
 		}
 		args[0] = args[0].toLowerCase();
-		if(args.length == 1 && (save = "finish".equals(args[0])) || "drop".equals(args[0])) {
+		if(args.length == 1 && ((save = "finish".equals(args[0])) || "drop".equals(args[0]))) {
 			if(!(sender instanceof Player)) {
 				LangOptions.uploadmusic_finish_player_notplayer.sendMsg(sender);
 				return;

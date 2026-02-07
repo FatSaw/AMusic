@@ -14,14 +14,13 @@ import static me.bomb.amusic.util.NameFilter.filterName;
 
 final class PageSender implements ServerWorker {
 	
-	private static final byte[] empty, notfound, updated, nolength, novalidtoken, notoken, headertoolarge, novalidtokenget, notokenget, headertoolargeget, datatoolarge, queryheader, clidentifier, uidentifier, expectidentifier, headerend, headersplit;
+	private static final byte[] notfound, updated, nolength, novalidtoken, notoken, headertoolarge, novalidtokenget, notokenget, headertoolargeget, datatoolarge, queryheader, clidentifier, uidentifier, expectidentifier, headerend, headersplit;
 	private static final byte[][] web;
 	private static final byte[][] identifier;
 
 	private final UploadManager uploadmanager;
 
 	static {
-		empty = new byte[0];
 		notfound = "HTTP/1.1 404 Not Found\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		updated = "HTTP/1.1 204 No Content\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		nolength = "HTTP/1.1 411 Length Required\r\nServer: AMusic upload\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
@@ -38,24 +37,21 @@ final class PageSender implements ServerWorker {
 		expectidentifier = "Fits: ".getBytes(StandardCharsets.US_ASCII);
 		headerend = new byte[] {'\r','\n','\r','\n'};
 		headersplit = new byte[] {'\r','\n'};
-		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
-				.getBytes(StandardCharsets.US_ASCII),
-				responsepartjs0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/javascript; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
-						.getBytes(StandardCharsets.US_ASCII),
-				responsepartwasm0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: application/wasm\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: "
-						.getBytes(StandardCharsets.US_ASCII),
+		final byte[] responseparthtml0 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nCross-Origin-Embedder-Policy: require-corp\r\nCross-Origin-Opener-Policy: same-origin\r\nCross-Origin-Resource-Policy: same-origin\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII),
+				responsepartjs1 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: text/javascript; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nCross-Origin-Embedder-Policy: require-corp\r\nCross-Origin-Opener-Policy: same-origin\r\nCross-Origin-Resource-Policy: same-origin\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII),
+				responsepartwasm1 = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: max-age=86400\r\nContent-Type: application/wasm\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nCross-Origin-Embedder-Policy: require-corp\r\nCross-Origin-Opener-Policy: same-origin\r\nCross-Origin-Resource-Policy: same-origin\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII),
 				responseclose = "\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 		
 		final ClassLoader classloader = PageSender.class.getClassLoader();
 		web = new byte[6][];
 		identifier = new byte[9][];
-		web[0] = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: no-store\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nContent-Length: 424\r\nConnection: close\r\n\r\n<!DOCTYPE html><html><head><title>Upload sound</title><link rel=\"icon\" href=\"data:,\"><meta name=\"color-scheme\" content=\"light dark\"><style>\nbody, html { margin: 0; padding: 0; height: 100%; overflow: hiden; background: #f5f5f7;}\n@media (prefers-color-scheme: dark) {html, body {background: #121212;}}\niframe { width: 100%; height: 100%; border: none; }\n</style></head><body><iframe src=\"./index.html\"></iframe></body></html>".getBytes(StandardCharsets.US_ASCII);
+		web[0] = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: private, max-age=5\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nLink: </index.html>; rel=preload; as=fetch, </index.js>; rel=preload; as=script, </814.ffmpeg.js>; rel=preload; as=script, </ffmpeg-core.js>; rel=preload; as=script, </ffmpeg-core.wasm>; rel=preload; as=fetch\r\nCross-Origin-Embedder-Policy: require-corp\r\nCross-Origin-Opener-Policy: same-origin\r\nCross-Origin-Resource-Policy: same-origin\r\nContent-Length: 595\r\nConnection: close\r\n\r\n<!DOCTYPE html><html><head><meta charset=\"us-ascii\"><title>Upload</title><link rel=\"icon\" href=\"data:,\"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#f5f5f7}@media(prefers-color-scheme:dark){body,html{background:#121212}}iframe{width:100%;height:100%;border:none}</style></head><body><iframe id=\"f\"></iframe><script>async function l(){try{const r=await fetch(\"./index.html\"),t=await r.text(),s='<meta charset=\"us-ascii\"><base href=\"'+location.origin+'/\">',h=t.replace(\"<head>\",\"<head>\"+s);document.getElementById(\"f\").srcdoc=h}catch(e){}}l();</script></body></html>".getBytes(StandardCharsets.US_ASCII);
 		identifier[0] = "GET /".getBytes(StandardCharsets.US_ASCII);
 		loadStaticContent(classloader, (byte)1, 14145 , "index.html", "index.html", responseparthtml0, responseclose);
-		loadStaticContent(classloader, (byte)2, 7272, "index.js", "index.js", responsepartjs0, responseclose);
-		loadStaticContent(classloader, (byte)3, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs0, responseclose);
-		loadStaticContent(classloader, (byte)4, 87056, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs0, responseclose);
-		loadStaticContent(classloader, (byte)5, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm0, responseclose);
+		loadStaticContent(classloader, (byte)2, 7272, "index.js", "index.js", responsepartjs1, responseclose);
+		loadStaticContent(classloader, (byte)3, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs1, responseclose);
+		loadStaticContent(classloader, (byte)4, 87000, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs1, responseclose);
+		loadStaticContent(classloader, (byte)5, 2284922, "ffmpeg-core.wasm", "ffmpeg-core.wasm", responsepartwasm1, responseclose);
 		identifier[6] = "PUT".getBytes(StandardCharsets.US_ASCII);
 		identifier[7] = "DELETE".getBytes(StandardCharsets.US_ASCII);
 		identifier[8] = "GET / ".getBytes(StandardCharsets.US_ASCII);

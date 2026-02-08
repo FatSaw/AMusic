@@ -3,10 +3,15 @@ package me.bomb.amusic.uploader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +23,13 @@ import me.bomb.amusic.http.ServerManager;
 import static me.bomb.amusic.util.NameFilter.filterName;
 
 public final class UploadManager extends Thread {
+	
+	private static final DirectoryStream.Filter<Path> filefilter = new DirectoryStream.Filter<Path>() {
+    	@Override
+		public boolean accept(Path path) throws IOException {
+			return path.getFileSystem().provider().readAttributes(path, BasicFileAttributes.class).isRegularFile();
+		}
+    };
 	
 	private final int expiretime, limitsize, limitcount;
 	private final FileSystemProvider fs;
@@ -63,9 +75,39 @@ public final class UploadManager extends Thread {
 		final UUID token = UUID.randomUUID();
 		targetplaylist = filterName(targetplaylist);
 		if(targetplaylist == null) {
-			targetplaylist = "";
+			return null;
 		}
-		sessions.put(token, new UploadSession(limitsize, limitcount, targetplaylist));
+		HashMap<String, Integer> previousentrys = new HashMap<String, Integer>();
+		Path musicdir = this.musicdir.resolve(targetplaylist);
+		try {
+			fs.createDirectory(musicdir);
+		} catch (IOException e) {
+		}
+		DirectoryStream<Path> ds = null;
+		try {
+			ds = fs.newDirectoryStream(musicdir, filefilter);
+			final Iterator<Path> it = ds.iterator();
+			while(it.hasNext()) {
+				final Path musicfile = it.next();
+				long filesize = fs.readAttributes(musicfile, BasicFileAttributes.class).size();
+				String filename = musicfile.getFileName().toString();
+				if(filesize > 0x7fffffff || !filename.toLowerCase().endsWith(".ogg")) {
+					continue;
+				}
+				filename = filename.substring(0, filename.length() - 4);
+				previousentrys.put(filename, Integer.valueOf((int)filesize));
+			}
+			ds.close();
+		} catch(IOException e1) {
+			if(ds != null) {
+				try {
+					ds.close();
+				} catch(IOException e2) {
+				}
+			}
+		}
+		ds = null;
+		sessions.put(token, new UploadSession(limitsize, limitcount, targetplaylist, previousentrys));
 		return token;
 	}
 	

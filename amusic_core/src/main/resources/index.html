@@ -78,6 +78,7 @@ let currentAudio=null;
 let playingFileId=null;
 let currentProgressUpdate=null;
 let controlledProgressId=null;
+let limitsize;
 const fileListContainer=document.getElementById('file-list');
 const msg=document.getElementById('message');
 const uploader=document.getElementById('uploader');
@@ -86,11 +87,21 @@ function uid(){return Math.random().toString(36).substr(2,9);}
 function byteLength(str){return new TextEncoder().encode(str).length;}
 function truncateName(str,maxBytes){let enc=new TextEncoder(); let bytes=enc.encode(str); if(bytes.length<=maxBytes) return str; let truncated=str; while(byteLength(truncated)>maxBytes){truncated=truncated.slice(0,-1);} return truncated;}
 function formatSize(bytes){
-if(bytes<0) bytes &= 0x7fffffff;
+bytes &= 0x7fffffff;
 if(bytes<1024) return bytes+' B';
 if(bytes<1048576) return (bytes/1024).toFixed(1)+' KiB';
 if(bytes<1073741824) return (bytes/1048576).toFixed(1)+' MiB';
 return (bytes/1073741824).toFixed(2)+' GiB';
+}
+function calculateFreeSize() {
+let totalsize = 0;
+for (const file of files.values()) {
+let size = file.size;
+if ((file.status === 'onserver' || file.status === 'uploaded') && (file.added || size>-1)) {
+totalsize += size;
+}
+}
+return limitsize - totalsize;
 }
 function renderFile(file){
 let div=document.getElementById('item-'+file.id);
@@ -262,7 +273,6 @@ const data=new ArrayBuffer(0);;
 const encoder=new TextEncoder(); const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
 const url='./'+btoa(binName); const xhr=new XMLHttpRequest();
 xhr.open('PUT',url,true); xhr.setRequestHeader('AUTH',token);
-xhr.upload.onprogress=e=>setProgress(id,Math.round(e.loaded/e.total*100),'uploading');
 xhr.onload=()=>{if(xhr.status===204){file.status='onserver';file.size|=0x80000000;renderFile(file);}};
 xhr.onerror=()=>{file.status='onserver'; renderFile(file);};
 xhr.send(data);
@@ -273,7 +283,7 @@ const file=files.get(id); if(!file) return;
 const encoder=new TextEncoder(); const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
 const url='./'+btoa(binName); const xhr=new XMLHttpRequest();
 xhr.open('DELETE',url,true); xhr.setRequestHeader('AUTH',token);
-xhr.onload=()=>{if(xhr.status===204){if(file.added){if(file.url)URL.revokeObjectURL(file.url);files.delete(id);const div=document.getElementById('item-'+id);if(div) div.remove();}else{file.size&=0x7fffffff;renderFile(file);}file.status='onserver'; renderFile(file);}};
+xhr.onload=()=>{if(xhr.status===204){if(file.added){if(file.url)URL.revokeObjectURL(file.url);files.delete(id);const div=document.getElementById('item-'+id);if(div) div.remove();}else{file.size&=0x7fffffff;file.status='onserver'; renderFile(file);}}};
 xhr.send();
 }
 async function loadUploadedFiles(){
@@ -307,6 +317,9 @@ files_.set(name, fileObj);
 }
 }
 }
+
+limitsize = (buf[off]<<24) | (buf[off+1]<<16) | (buf[off+2]<<8) | buf[off+3];
+off+=4;
 readBlock(false);
 readBlock(true);
 for (const value of files_.values()) {

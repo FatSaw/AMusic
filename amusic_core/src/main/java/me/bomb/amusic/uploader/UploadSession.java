@@ -25,7 +25,7 @@ final class UploadSession {
 		this.targetplaylist = targetplaylist;
 		this.previousentrys = previousentrys;
 		this.uploadingentrys = new ConcurrentHashMap<>();
-		int bufsize = 2;
+		int bufsize = 6;
 		int i = previousentrys.size();
 		byte[] keysizes = new byte[i];
 		byte[] valuesizes = new byte[i<<2];
@@ -79,6 +79,13 @@ final class UploadSession {
 		query[--bufsize] = (byte) length;
 		length >>>= 8;
 		query[--bufsize] = (byte) length;
+		query[--bufsize] = (byte) limitsize;
+		limitsize >>>= 8;
+		query[--bufsize] = (byte) limitsize;
+		limitsize >>>= 8;
+		query[--bufsize] = (byte) limitsize;
+		limitsize >>>= 8;
+		query[--bufsize] = (byte) limitsize;
 		this.pquery = query;
 		this.uploadentrys = new ConcurrentHashMap<>();
 		size = new AtomicInteger(totallength);

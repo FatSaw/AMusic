@@ -15,11 +15,10 @@ import static me.bomb.amusic.util.NameFilter.filterName;
 
 public final class LocalConvertedSource extends SoundSource {
 	
-	private static final DirectoryStream.Filter<Path> oggfilter = new DirectoryStream.Filter<Path>() {
+	private static final DirectoryStream.Filter<Path> filefilter = new DirectoryStream.Filter<Path>() {
 		@Override
 		public boolean accept(Path path) throws IOException {
-			final String name = path.getFileName().toString();
-			return name.startsWith(".ogg", name.length() - 4);
+			return path.getFileSystem().provider().readAttributes(path, BasicFileAttributes.class).isRegularFile();
 		}
     }, dirfilter = new DirectoryStream.Filter<Path>() {
     	@Override
@@ -71,7 +70,7 @@ public final class LocalConvertedSource extends SoundSource {
 		final SourceEntry source;
 		try {
 			HashMap<Path, Integer> filesm = new HashMap<>();
-			ds = fs.newDirectoryStream(musicdir, oggfilter);
+			ds = fs.newDirectoryStream(musicdir, filefilter);
 			final Iterator<Path> it = ds.iterator();
 			while(it.hasNext()) {
 				final Path oggfile = it.next();
@@ -163,14 +162,14 @@ public final class LocalConvertedSource extends SoundSource {
 		}
 		DirectoryStream<Path> ds = null;
 		try {
-			ds = fs.newDirectoryStream(musicdir, oggfilter);
+			ds = fs.newDirectoryStream(musicdir, filefilter);
 			final Iterator<Path> it = ds.iterator();
 			while(it.hasNext()) {
 				final Path oggfile = it.next();
 				try {
 					BasicFileAttributes attributes = fs.readAttributes(oggfile, BasicFileAttributes.class);
 					final long size = attributes.size();
-					if(attributes.isDirectory() || size > maxsoundsize) {
+					if(size > maxsoundsize) {
 						continue;
 					}
 					ds.close();
@@ -218,7 +217,7 @@ public final class LocalConvertedSource extends SoundSource {
 		while(itc.hasNext()) {
 			final Path musicdir = itc.next();
 			try {
-				ds = fs.newDirectoryStream(musicdir, oggfilter);
+				ds = fs.newDirectoryStream(musicdir, filefilter);
 				final Iterator<Path> it = ds.iterator();
 				boolean add = false;
 				while(it.hasNext()) {
@@ -226,7 +225,7 @@ public final class LocalConvertedSource extends SoundSource {
 					try {
 						BasicFileAttributes attributes = fs.readAttributes(oggfile, BasicFileAttributes.class);
 						final long size = attributes.size();
-						if(attributes.isDirectory() || size > maxsoundsize) {
+						if(size > maxsoundsize) {
 							continue;
 						}
 						add = true;
@@ -262,14 +261,14 @@ public final class LocalConvertedSource extends SoundSource {
 		DirectoryStream<Path> ds = null;
 		ArrayList<String> tracks = new ArrayList<String>();
 		try {
-			ds = fs.newDirectoryStream(musicdir, oggfilter);
+			ds = fs.newDirectoryStream(musicdir, filefilter);
 			final Iterator<Path> it = ds.iterator();
 			while(it.hasNext()) {
 				final Path oggfile = it.next();
 				try {
 					BasicFileAttributes attributes = fs.readAttributes(oggfile, BasicFileAttributes.class);
 					final long size = attributes.size();
-					if(attributes.isDirectory() || size > maxsoundsize) {
+					if(size > maxsoundsize) {
 						continue;
 					}
 					String trackname = musicdir.getFileName().toString();

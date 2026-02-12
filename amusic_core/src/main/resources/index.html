@@ -83,254 +83,464 @@ const fileListContainer=document.getElementById('file-list');
 const msg=document.getElementById('message');
 const uploader=document.getElementById('uploader');
 const uploadBtn=document.getElementById('upload-btn');
-function uid(){return Math.random().toString(36).substr(2,9);}
-function byteLength(str){return new TextEncoder().encode(str).length;}
-function truncateName(str,maxBytes){let enc=new TextEncoder(); let bytes=enc.encode(str); if(bytes.length<=maxBytes) return str; let truncated=str; while(byteLength(truncated)>maxBytes){truncated=truncated.slice(0,-1);} return truncated;}
+function uid(){
+	return Math.random().toString(36).substr(2,9);
+}
+function byteLength(str){
+	return new TextEncoder().encode(str).length;
+}
+function truncateName(str,maxBytes){
+	let enc=new TextEncoder();
+	let bytes=enc.encode(str);
+	if(bytes.length<=maxBytes) return str;
+	let truncated=str;
+	while(byteLength(truncated)>maxBytes){
+		truncated=truncated.slice(0,-1);
+	} 
+	return truncated;
+}
 function formatSize(bytes){
-bytes &= 0x7fffffff;
-if(bytes<1024) return bytes+' B';
-if(bytes<1048576) return (bytes/1024).toFixed(1)+' KiB';
-if(bytes<1073741824) return (bytes/1048576).toFixed(1)+' MiB';
-return (bytes/1073741824).toFixed(2)+' GiB';
+	bytes &= 0x7fffffff;
+	if(bytes<1024) return bytes+' B';
+	if(bytes<1048576) return (bytes/1024).toFixed(1)+' KiB';
+	if(bytes<1073741824) return (bytes/1048576).toFixed(1)+' MiB';
+	return (bytes/1073741824).toFixed(2)+' GiB';
 }
 function calculateFreeSize() {
-let totalsize = 0;
-for (const file of files.values()) {
-let size = file.size;
-if ((file.status === 'onserver' || file.status === 'uploaded') && (file.added || size>-1)) {
-totalsize += size;
-}
-}
-return limitsize - totalsize;
+	let totalsize = 0;
+	for (const file of files.values()) {
+		let size = file.size;
+		if ((file.status === 'onserver' || file.status === 'uploaded') && (file.added || size>-1)) {
+			totalsize += size;
+		}
+	}
+	return limitsize - totalsize;
 }
 function renderFile(file){
-let div=document.getElementById('item-'+file.id);
-if(!div){
-div=document.createElement('div'); div.className='file-item'; div.id='item-'+file.id;
-const header=document.createElement('div'); header.className='file-header';
-const nameSpan=document.createElement('span'); nameSpan.className='file-name'; nameSpan.textContent=file.name;
-header.appendChild(nameSpan);
-const controls=document.createElement('div'); controls.className='controls'; controls.id='ctrl-'+file.id;
-header.appendChild(controls);
-div.appendChild(header);
-const progressCont=document.createElement('div'); progressCont.className='progress-container'; progressCont.id='pg-cont-'+file.id;
-progressCont.onclick=e=>seekAudio(e,file.id);
-const progressBar=document.createElement('div'); progressBar.className='progress-bar'; progressBar.id='pg-bar-'+file.id;
-progressCont.appendChild(progressBar);
-div.appendChild(progressCont);
-fileListContainer.appendChild(div);
-}
-updateUI(file);
+	let div=document.getElementById('item-'+file.id);
+	if(!div){
+		div=document.createElement('div');
+		div.className='file-item';
+		div.id='item-'+file.id;
+		const header=document.createElement('div');
+		header.className='file-header';
+		const nameSpan=document.createElement('span');
+		nameSpan.className='file-name';
+		nameSpan.textContent=file.name;
+		header.appendChild(nameSpan);
+		const controls=document.createElement('div');
+		controls.className='controls';
+		controls.id='ctrl-'+file.id;
+		header.appendChild(controls);
+		div.appendChild(header);
+		const progressCont=document.createElement('div');
+		progressCont.className='progress-container';
+		progressCont.id='pg-cont-'+file.id;
+		progressCont.onclick=e=>seekAudio(e,file.id);
+		const progressBar=document.createElement('div');
+		progressBar.className='progress-bar';
+		progressBar.id='pg-bar-'+file.id;
+		progressCont.appendChild(progressBar);
+		div.appendChild(progressCont);
+		fileListContainer.appendChild(div);
+	}
+	updateUI(file);
 }
 function updateUI(file){
-const ctrl=document.getElementById('ctrl-'+file.id);
-if(!ctrl) return;
-ctrl.innerHTML='';
-if(file.status==='converted'){
-const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
-if(file.size) sizeSpan.textContent=formatSize(file.size);
-const playBtn=document.createElement('button'); playBtn.className='btn btn-play'; playBtn.textContent='Play';
-playBtn.onclick=()=>togglePlay(playBtn,file.id);
-const confirmBtn=document.createElement('button'); confirmBtn.className='btn btn-confirm'; confirmBtn.textContent='Upload';
-confirmBtn.onclick=()=>confirmUpload(file.id);
-const renameBtn=document.createElement('button'); renameBtn.className='btn btn-rename'; renameBtn.textContent='Rename';
-renameBtn.onclick=()=>startRename(file.id);
-ctrl.appendChild(sizeSpan); ctrl.appendChild(playBtn); ctrl.appendChild(confirmBtn); ctrl.appendChild(renameBtn);
-}else if(file.status==='uploading'){
-const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
-if(file.size) sizeSpan.textContent=formatSize(file.size);
-const statusSpan=document.createElement('span'); statusSpan.className='status'; statusSpan.textContent='Uploading...';
-ctrl.appendChild(sizeSpan); ctrl.appendChild(statusSpan);
-}else if(file.status==='uploaded'){
-const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
-if(file.size) sizeSpan.textContent=formatSize(file.size);
-const statusSpan=document.createElement('span'); statusSpan.className='status'; statusSpan.textContent='Uploaded';
-const playBtn=document.createElement('button'); playBtn.className='btn btn-play'; playBtn.textContent='Play';
-playBtn.onclick=()=>togglePlay(playBtn,file.id);
-const undoBtn=document.createElement('button'); undoBtn.className='btn btn-undo'; undoBtn.textContent='Undo';
-undoBtn.onclick=()=>undoUpload(file.id);
-ctrl.appendChild(sizeSpan); ctrl.appendChild(statusSpan); ctrl.appendChild(playBtn); ctrl.appendChild(undoBtn);
-}else if(file.status==='onserver') {
-if(file.added) {
-const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
-if(file.size) sizeSpan.textContent=formatSize(file.size);
-const statusSpan=document.createElement('span'); statusSpan.className='status'; statusSpan.textContent='On Server';
-const undoBtn=document.createElement('button'); undoBtn.className='btn btn-undo'; undoBtn.textContent='Undo';
-undoBtn.onclick=()=>undoUpload(file.id);
-ctrl.appendChild(sizeSpan); ctrl.appendChild(statusSpan); ctrl.appendChild(undoBtn);
-} else {
-if(file.size < 0) {
-const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
-if(file.size) sizeSpan.textContent=formatSize(file.size);
-const statusSpan=document.createElement('span'); statusSpan.className='status'; statusSpan.textContent='Removed';
-const undoBtn=document.createElement('button'); undoBtn.className='btn btn-undo'; undoBtn.textContent='Undo';
-undoBtn.onclick=()=>undoUpload(file.id);
-ctrl.appendChild(sizeSpan); ctrl.appendChild(statusSpan); ctrl.appendChild(undoBtn);
-} else {
-const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
-if(file.size) sizeSpan.textContent=formatSize(file.size);
-const statusSpan=document.createElement('span'); statusSpan.className='status'; statusSpan.textContent='On Server';
-const removeBtn=document.createElement('button'); removeBtn.className='btn btn-undo'; removeBtn.textContent='Remove';
-removeBtn.onclick=()=>confirmUpload(file.id);
-ctrl.appendChild(sizeSpan); ctrl.appendChild(statusSpan); ctrl.appendChild(removeBtn);
-}
-}
-}else if(file.status==='transcoding'){
-setProgress(file.id,0,'transcoding');
-}
+	const ctrl=document.getElementById('ctrl-'+file.id);
+	if(!ctrl) return;
+	function generatePlayButton(id){
+		const playBtn=document.createElement('button');
+		playBtn.className='btn btn-play';
+		playBtn.onclick=()=>togglePlay(playBtn,id);
+		if(currentAudio && playingFileId===id && !currentAudio.paused){
+			playBtn.textContent='Pause';
+		} else {
+			playBtn.textContent='Play';
+		}
+		return playBtn;
+	}
+	function generateRenameButton(id){
+		const renameBtn=document.createElement('button'); renameBtn.className='btn btn-rename'; renameBtn.textContent='Rename';
+		renameBtn.onclick=()=>startRename(id);
+		return renameBtn;
+	}
+	function generateFileSize(size) {
+		const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
+		if(size) sizeSpan.textContent=formatSize(size);
+		return sizeSpan;
+	}
+	function generateStatus(text){
+		const statusSpan=document.createElement('span');
+		statusSpan.className='status';
+		statusSpan.textContent=text;
+		return statusSpan;
+	}
+	ctrl.innerHTML='';
+	if(file.status==='converted'){
+		const sizeSpan=generateFileSize(file.size);
+		const playBtn=generatePlayButton(file.id);
+		const confirmBtn=document.createElement('button');
+		confirmBtn.className='btn btn-confirm';
+		confirmBtn.textContent='Upload';
+		confirmBtn.onclick=()=>confirmUpload(file.id);
+		const renameBtn=generateRenameButton(file.id);
+		ctrl.appendChild(sizeSpan);
+		ctrl.appendChild(playBtn);
+		ctrl.appendChild(confirmBtn);
+		ctrl.appendChild(renameBtn);
+	}else if(file.status==='uploading'){
+		const sizeSpan=generateFileSize(file.size);
+		const statusSpan=generateStatus('Uploading...');
+		const playBtn=generatePlayButton(file.id);
+		ctrl.appendChild(sizeSpan);
+		ctrl.appendChild(statusSpan);
+		ctrl.appendChild(playBtn);
+	}else if(file.status==='uploaded'){
+		const sizeSpan=generateFileSize(file.size);
+		const statusSpan=generateStatus('Uploaded');
+		const playBtn=generatePlayButton(file.id);
+		const undoBtn=document.createElement('button');
+		undoBtn.className='btn btn-undo';
+		undoBtn.textContent='Undo';
+		undoBtn.onclick=()=>undoUpload(file.id);
+		ctrl.appendChild(sizeSpan);
+		ctrl.appendChild(statusSpan);
+		ctrl.appendChild(playBtn);
+		ctrl.appendChild(undoBtn);
+	}else if(file.status==='onserver') {
+		if(file.added) {
+			const sizeSpan=generateFileSize(file.size);
+			const statusSpan=generateStatus('On Server');
+			const undoBtn=document.createElement('button');
+			undoBtn.className='btn btn-undo';
+			undoBtn.textContent='Undo';
+			undoBtn.onclick=()=>undoUpload(file.id);
+			ctrl.appendChild(sizeSpan);
+			ctrl.appendChild(statusSpan);
+			ctrl.appendChild(undoBtn);
+		} else {
+			if(file.size < 0) {
+				const sizeSpan=generateFileSize(file.size);
+				const statusSpan=generateStatus('Removed');
+				const undoBtn=document.createElement('button');
+				undoBtn.className='btn btn-undo';
+				undoBtn.textContent='Undo';
+				undoBtn.onclick=()=>undoUpload(file.id);
+				ctrl.appendChild(sizeSpan);
+				ctrl.appendChild(statusSpan);
+				ctrl.appendChild(undoBtn);
+			} else {
+				const sizeSpan=generateFileSize(file.size);
+				const statusSpan=generateStatus('On Server');
+				const removeBtn=document.createElement('button');
+				removeBtn.className='btn btn-undo';
+				removeBtn.textContent='Remove';
+				removeBtn.onclick=()=>confirmUpload(file.id);
+				ctrl.appendChild(sizeSpan); ctrl.appendChild(statusSpan); ctrl.appendChild(removeBtn);
+			}
+		}
+	}else if(file.status==='transcoding'){
+		setProgress(file.id,0,'transcoding');
+		const statusSpan=generateStatus('Transcoding...');
+		ctrl.appendChild(statusSpan);
+	}else if(file.status==='pending'){
+		const statusSpan=generateStatus('Pending...');
+		ctrl.appendChild(statusSpan);
+	}
 }
 function setProgress(id,percent,type){
-const cont=document.getElementById('pg-cont-'+id);
-const bar=document.getElementById('pg-bar-'+id);
-if(!cont||!bar) return;
-cont.style.display='block';
-cont.className='progress-container '+type;
-bar.style.width=percent+'%';
+	const cont=document.getElementById('pg-cont-'+id);
+	const bar=document.getElementById('pg-bar-'+id);
+	if(!cont||!bar) return;
+	cont.style.display='block';
+	cont.className='progress-container '+type;
+	bar.style.width=percent+'%';
 }
 function seekAudio(e,id){
-if(playingFileId===id && currentAudio){
-const rect=e.currentTarget.getBoundingClientRect();
-const x=e.clientX-rect.left;
-currentAudio.currentTime=(x/rect.width)*currentAudio.duration;
+	if(playingFileId===id && currentAudio){
+		const rect=e.currentTarget.getBoundingClientRect();
+		const x=e.clientX-rect.left;
+		currentAudio.currentTime=(x/rect.width)*currentAudio.duration;
+	}
 }
-}
-function togglePlay(btn,id){
-const file=files.get(id); if(!file||!file.url) return;
-if(currentAudio && playingFileId===id){
-if(currentAudio.paused){currentAudio.play();btn.textContent='Pause';}else{currentAudio.pause();btn.textContent='Play';}
-}else{
-if(currentAudio){currentAudio.pause();clearInterval(currentProgressUpdate);document.querySelectorAll('.btn-play').forEach(b=>b.textContent='Play');}
-currentAudio=new Audio(file.url); playingFileId=id; currentAudio.play(); btn.textContent='Pause';
-if(currentProgressUpdate) clearInterval(currentProgressUpdate);
-currentProgressUpdate=setInterval(()=>{if(isFinite(currentAudio.duration)) setProgress(id,(currentAudio.currentTime/currentAudio.duration)*100,'playing');},100);
-currentAudio.onended=()=>{btn.textContent='Play';playingFileId=null;clearInterval(currentProgressUpdate);setProgress(id,0,'playing');};
-}
+let transitioning = false;
+async function togglePlay(btn,id){
+	if(transitioning) return;
+	const file=files.get(id);
+	if(!file||!file.url) return;
+	if(currentAudio && playingFileId===id){
+		if(currentAudio.paused){
+			transitioning = true;
+			btn.textContent = 'Pause';
+			currentAudio.play().then(() => {
+			}).catch(err => {
+				if (err.name !== 'AbortError') {
+					console.error("Play failed", err);
+					btn.textContent = 'Play';
+				} else {
+				}
+			}).finally(() => {
+				transitioning = false;
+			});
+		}else{
+			btn.textContent='Play';
+			currentAudio.pause();
+		}
+		return;
+	}
+	transitioning = true;
+	if(currentAudio){
+		currentAudio.onended = null;
+		currentAudio.onloadedmetadata = null;
+		currentAudio.pause();
+		currentAudio.removeAttribute('src'); 
+		currentAudio.load();
+		document.querySelectorAll('.btn-play').forEach(b=>b.textContent='Play');
+	}
+	if (currentProgressUpdate) clearInterval(currentProgressUpdate);
+	setProgress(id, 0, 'playing');
+	currentProgressUpdate = null;
+	function createProggressbarInterval(currentAudio) {
+		const duration = currentAudio.duration;
+		if (!currentProgressUpdate && isFinite(duration)) {
+			currentProgressUpdate = setInterval(() => {
+				setProgress(id, (currentAudio.currentTime / duration) * 100, 'playing');
+			}, 100);
+		}
+	}
+	currentAudio=new Audio(file.url);
+	playingFileId=id;
+	currentAudio.onloadedmetadata = () => {
+		createProggressbarInterval(currentAudio);
+	};
+	currentAudio.onended = () => {
+		btn.textContent = 'Play';
+		playingFileId = null;
+		if (currentProgressUpdate) clearInterval(currentProgressUpdate);
+		setProgress(id, 0, 'playing');
+	};
+	btn.textContent = 'Pause';
+	currentAudio.play().then(() => {
+		createProggressbarInterval(currentAudio);
+	}).catch(err => {
+		if (err.name !== 'AbortError') {
+			console.error("Play failed", err);
+			btn.textContent = 'Play';
+		} else {
+			if (currentAudio && !currentAudio.paused) {
+				createProggressbarInterval(currentAudio);
+			}
+		}
+	}).finally(() => {
+		transitioning = false;
+	});
 }
 function startRename(id){
-const file=files.get(id); if(!file || !file.size) return;
-const div=document.getElementById('item-'+id);
-const nameSpan=div.querySelector('.file-name');
-const oldName=file.name;
-const input=document.createElement('input');
-input.type='text';
-input.value=file.name;
-input.maxLength=255;
-const counter=document.createElement('span');
-counter.className='byte-counter';
-counter.textContent='['+byteLength(input.value)+' bytes]';
-input.oninput=()=>{counter.textContent='['+byteLength(input.value)+' bytes]';};
-nameSpan.textContent=''; nameSpan.appendChild(input); nameSpan.appendChild(counter);
-input.focus(); input.select();
-const finish=(confirm)=>{if(confirm){file.name=truncateName(input.value,255);} nameSpan.textContent=file.name; input.remove(); counter.remove();};
-input.onblur=()=>finish(true);
-input.onkeydown=e=>{if(e.key==='Enter') finish(true); if(e.key==='Escape') finish(false);}
+	const file=files.get(id);
+	if(!file || !file.size) return;
+	const div=document.getElementById('item-'+id);
+	const nameSpan=div.querySelector('.file-name');
+	const oldName=file.name;
+	const input=document.createElement('input');
+	input.type='text';
+	input.value=file.name;
+	input.maxLength=255;
+	const counter=document.createElement('span');
+	counter.className='byte-counter';
+	counter.textContent='['+byteLength(input.value)+' bytes]';
+	input.oninput=()=>{
+		counter.textContent='['+byteLength(input.value)+' bytes]';
+	};
+	nameSpan.textContent='';
+	nameSpan.appendChild(input);
+	nameSpan.appendChild(counter);
+	input.focus();
+	input.select();
+	const finish=(confirm)=>{
+		if(confirm){
+			file.name=truncateName(input.value,255);
+		} 
+		nameSpan.textContent=file.name;
+		input.remove();
+		counter.remove();
+	};
+	input.onblur=()=>finish(true);
+	input.onkeydown=e=>{
+		if(e.key==='Enter') finish(true);
+		if(e.key==='Escape') finish(false);
+	};
 }
 let ffmpeg=null;
-async function initFFmpeg(){if(ffmpeg) return;ffmpeg=new FFmpegWASM.FFmpeg({log:false});
-ffmpeg.on('progress',p=>{if(controlledProgressId)setProgress(controlledProgressId,Math.round(p.progress*100),'transcoding');msg.textContent='Converting: '+Math.round(p.progress*100)+'%';});
-await ffmpeg.load({coreURL:'./ffmpeg-core.js'});}
-async function transcodeFiles(filesToTranscode){
-uploader.disabled=true; uploadBtn.classList.add('disabled'); await initFFmpeg();
-for(const file of filesToTranscode){
-controlledProgressId=file.id;
-const inName='input_'+file.id; const outName='output_'+file.id+'.ogg';
-await ffmpeg.writeFile(inName,await FFmpegUtil.fetchFile(file.file));
-await ffmpeg.exec(['-i',inName,'-strict','-2','-acodec','vorbis','-ab','64000','-ac','2','-ar','44100','-f','ogg','-vn','-y',outName]);
-const data=await ffmpeg.readFile(outName);
-file.blob=new Blob([data.buffer],{type:'audio/ogg'});
-file.url=URL.createObjectURL(file.blob);
-file.size = file.blob.size;
-file.status='converted';
-renderFile(file);
-await ffmpeg.deleteFile(inName); await ffmpeg.deleteFile(outName); controlledProgressId=null;
+async function initFFmpeg(){
+	if(ffmpeg) return;
+	ffmpeg=new FFmpegWASM.FFmpeg({log:false});
+	ffmpeg.on('progress',p=>{
+		if(controlledProgressId)setProgress(controlledProgressId,Math.round(p.progress*100),'transcoding');
+		msg.textContent='Transcoding: '+Math.round(p.progress*100)+'%';
+	});
+	await ffmpeg.load({coreURL:'./ffmpeg-core.js'});
 }
-uploader.disabled=false; uploadBtn.classList.remove('disabled'); msg.textContent='Done';
+async function transcodeFiles(filesToTranscode){
+	for(const file of filesToTranscode){
+		file.status='transcoding';
+		renderFile(file);
+		controlledProgressId=file.id;
+		const inName='input_'+file.id; const outName='output_'+file.id+'.ogg';
+		await ffmpeg.writeFile(inName,await FFmpegUtil.fetchFile(file.file));
+		await ffmpeg.exec(['-i',inName,'-strict','-2','-acodec','vorbis','-ab','64000','-ac','2','-ar','44100','-f','ogg','-vn','-y',outName]);
+		const data=await ffmpeg.readFile(outName);
+		file.blob=new Blob([data.buffer],{type:'audio/ogg'});
+		file.url=URL.createObjectURL(file.blob);
+		file.size = file.blob.size;
+		file.status='converted';
+		renderFile(file);
+		setProgress(file.id, 0, 'playing');
+		await ffmpeg.deleteFile(inName);
+		await ffmpeg.deleteFile(outName);
+		controlledProgressId=null;
+	}
+	msg.textContent='Done';
 }
 uploader.addEventListener('change',async e=>{
-const filesToTranscode=[];
-for(const f of e.target.files){
-const id=uid(); const name=f.name.replace(/\.[^.]+$/,'');
-const fileObj={id:id,name:name,size:0,added:true,status:'transcoding',file:f,blob:null,url:null};
-files.set(id,fileObj); filesToTranscode.push(fileObj); renderFile(fileObj);
-}
-await transcodeFiles(filesToTranscode);
+	uploader.disabled=true; uploadBtn.classList.add('disabled');
+	const filesToTranscode=[];
+	for(const f of e.target.files){
+		const id=uid();
+		const name=truncateName(f.name.replace(/\.[^.]+$/,''),255);
+		const fileObj={id:id,name:name,size:0,added:true,status:'pending',file:f,blob:null,url:null};
+		files.set(id,fileObj);
+		filesToTranscode.push(fileObj);
+		renderFile(fileObj);
+	}
+	await transcodeFiles(filesToTranscode);
+	uploader.disabled=false; uploadBtn.classList.remove('disabled');
 });
 async function confirmUpload(id){
-const file=files.get(id);
-if(!file) return;
-if(file.added) {
-if(!file.blob) return;
-file.status='uploading'; renderFile(file);
-const data=await file.blob.arrayBuffer(); const encoder=new TextEncoder(); const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
-const url='./'+btoa(binName); const xhr=new XMLHttpRequest();
-xhr.open('PUT',url,true); xhr.setRequestHeader('AUTH',token);
-xhr.upload.onprogress=e=>setProgress(id,Math.round(e.loaded/e.total*100),'uploading');
-xhr.onload=()=>{if(xhr.status===204){file.status='uploaded'; renderFile(file);}};
-xhr.onerror=()=>{file.status='converted'; renderFile(file);};
-xhr.send(data);
-} else {
-const data=new ArrayBuffer(0);;
-const encoder=new TextEncoder(); const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
-const url='./'+btoa(binName); const xhr=new XMLHttpRequest();
-xhr.open('PUT',url,true); xhr.setRequestHeader('AUTH',token);
-xhr.onload=()=>{if(xhr.status===204){file.status='onserver';file.size|=0x80000000;renderFile(file);}};
-xhr.onerror=()=>{file.status='onserver'; renderFile(file);};
-xhr.send(data);
-}
+	const file=files.get(id);
+	if(!file) return;
+	if(file.added) {
+		if(!file.blob) return;
+		const data=await file.blob.arrayBuffer();
+		if(calculateFreeSize()-file.size<0){
+			return;
+		}
+		file.status='uploading';
+		renderFile(file);
+		const encoder=new TextEncoder();
+		const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
+		const url='./'+btoa(binName);
+		const xhr=new XMLHttpRequest();
+		xhr.open('PUT',url,true);
+		xhr.setRequestHeader('AUTH',token);
+		xhr.upload.onprogress=e=>setProgress(id,Math.round(e.loaded/e.total*100),'uploading');
+		xhr.onload=()=>{
+			if(xhr.status===204){
+				file.status='uploaded'; renderFile(file);
+			}
+		};
+		xhr.onerror=()=>{
+			file.status='converted'; renderFile(file);
+		};
+		xhr.send(data);
+	} else {
+		const data=new ArrayBuffer(0);;
+		const encoder=new TextEncoder();
+		const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
+		const url='./'+btoa(binName);
+		const xhr=new XMLHttpRequest();
+		xhr.open('PUT',url,true);
+		xhr.setRequestHeader('AUTH',token);
+		xhr.onload=()=>{
+			if(xhr.status===204){
+				file.status='onserver';file.size|=0x80000000;renderFile(file);
+			}
+		};
+		xhr.onerror=()=>{
+			file.status='onserver'; renderFile(file);
+		};
+		xhr.send(data);
+	}
 }
 async function undoUpload(id){
-const file=files.get(id); if(!file) return;
-const encoder=new TextEncoder(); const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
-const url='./'+btoa(binName); const xhr=new XMLHttpRequest();
-xhr.open('DELETE',url,true); xhr.setRequestHeader('AUTH',token);
-xhr.onload=()=>{if(xhr.status===204){if(file.added){if(file.url)URL.revokeObjectURL(file.url);files.delete(id);const div=document.getElementById('item-'+id);if(div) div.remove();}else{file.size&=0x7fffffff;file.status='onserver'; renderFile(file);}}};
-xhr.send();
+	const file=files.get(id);
+	if(!file) return;
+	if(!file.added&&calculateFreeSize()-(file.size&0x7fffffff)<0){
+		return;
+	}
+	const encoder=new TextEncoder();
+	const binName=Array.from(encoder.encode(file.name)).map(c=>String.fromCharCode(c)).join('');
+	const url='./'+btoa(binName);
+	const xhr=new XMLHttpRequest();
+	xhr.open('DELETE',url,true);
+	xhr.setRequestHeader('AUTH',token);
+	xhr.onload=()=>{
+		if(xhr.status===204){
+			if(file.added){
+				if(file.url)URL.revokeObjectURL(file.url);
+				files.delete(id);
+				const div=document.getElementById('item-'+id);
+				if(div) div.remove();
+			}else{
+				file.size&=0x7fffffff;
+				file.status='onserver';
+				renderFile(file);
+			}
+		}
+	};
+	xhr.send();
 }
 async function loadUploadedFiles(){
-try{
-const resp = await fetch('./', { method:'GET', headers:{ 'AUTH': token } });
-if(resp.status !== 200) return;
-const buf = new Uint8Array(await resp.arrayBuffer());
-const decoder = new TextDecoder();
-let off = 0;
-const files_=new Map();
-function readBlock(added){
-const count = (buf[off]<<8) | buf[off+1];
-off += 2;
-const nameLens = buf.subarray(off, off + count);
-off += count;
-const sizes = [];
-for(let i=0;i<count;i++){
-sizes.push((buf[off]<<24)|(buf[off+1]<<16)|(buf[off+2]<<8)|buf[off+3]);
-off += 4;
-}
-for(let i=0;i<count;i++){
-const name = decoder.decode(buf.subarray(off, off + nameLens[i]));
-off += nameLens[i];
-const pfile = files_.get(name);
-if(pfile) {
-pfile.size |= 0x80000000; 
-} else {
-const id = uid();
-const fileObj = {id:id,name:name,size:sizes[i],added:added,status:'onserver',blob:null,url:null};
-files_.set(name, fileObj);
-}
-}
-}
+	try{
+		const resp = await fetch('./', { method:'GET', headers:{ 'AUTH': token } });
+		if(resp.status !== 200) return;
+		const buf = new Uint8Array(await resp.arrayBuffer());
+		const decoder = new TextDecoder();
+		let off = 0;
+		const files_=new Map();
+		function readBlock(added){
+			const count = (buf[off]<<8) | buf[off+1];
+			off += 2;
+			const nameLens = buf.subarray(off, off + count);
+			off += count;
+			const sizes = [];
+			for(let i=0;i<count;i++){
+				sizes.push((buf[off]<<24)|(buf[off+1]<<16)|(buf[off+2]<<8)|buf[off+3]);
+				off += 4;
+			}
+			for(let i=0;i<count;i++){
+				const name = decoder.decode(buf.subarray(off, off + nameLens[i]));
+				off += nameLens[i];
+				const pfile = files_.get(name);
+				if(pfile) {
+					pfile.size |= 0x80000000; 
+				} else {
+					const id = uid();
+					const fileObj = {id:id,name:name,size:sizes[i],added:added,status:'onserver',blob:null,url:null};
+					files_.set(name, fileObj);
+				}
+			}
+		}
 
-limitsize = (buf[off]<<24) | (buf[off+1]<<16) | (buf[off+2]<<8) | buf[off+3];
-off+=4;
-readBlock(false);
-readBlock(true);
-for (const value of files_.values()) {
-files.set(value.id, value);
-renderFile(value);
+		limitsize = (buf[off]<<24) | (buf[off+1]<<16) | (buf[off+2]<<8) | buf[off+3];
+		off+=4;
+		readBlock(false);
+		readBlock(true);
+		for (const value of files_.values()) {
+			files.set(value.id, value);
+			renderFile(value);
+		}
+	} catch(e){
+		console.log('Failed to load uploaded files', e);
+	}
 }
-} catch(e){
-console.log('Failed to load uploaded files', e);
-}
-}
-(async()=>{await initFFmpeg();await loadUploadedFiles(); uploader.disabled=false; uploadBtn.classList.remove('disabled'); msg.textContent='Ready';})();
+(async()=>{
+	await initFFmpeg();
+	await loadUploadedFiles();
+	uploader.disabled=false;
+	uploadBtn.classList.remove('disabled');
+	msg.textContent='Ready';
+})();
 </script>
 </body>
 </html>

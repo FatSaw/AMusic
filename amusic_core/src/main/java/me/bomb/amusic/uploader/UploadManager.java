@@ -91,7 +91,7 @@ public final class UploadManager extends Thread {
 				final Path musicfile = it.next();
 				long filesize = fs.readAttributes(musicfile, BasicFileAttributes.class).size();
 				String filename = musicfile.getFileName().toString();
-				if(filesize > 0x7fffffff || !filename.toLowerCase().endsWith(".ogg")) {
+				if(filesize > 0x7fffffff) {
 					continue;
 				}
 				filename = filename.substring(0, filename.length() - 4);
@@ -143,7 +143,7 @@ public final class UploadManager extends Thread {
 		}
 		for(Entry<String, byte[]> entry : uploadentrys.entrySet()) {
 			byte[] value = entry.getValue();
-			Path soundfile = musicdir.resolve(entry.getKey().concat(".ogg"));
+			Path soundfile = musicdir.resolve(entry.getKey());
 			if(value == null || value.length == 0) {
 				try {
 					fs.delete(soundfile);

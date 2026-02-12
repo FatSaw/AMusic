@@ -33,6 +33,7 @@ class ServerConnect extends Thread {
 				final Socket connected;
 				try {
 					connected = server.accept();
+					connected.setSoTimeout(serverwatcher.timeout);
 					worker.processConnection(connected);
 				} catch (SocketTimeoutException e) {
 					continue;

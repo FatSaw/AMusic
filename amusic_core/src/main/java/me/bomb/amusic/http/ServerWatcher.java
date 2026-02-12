@@ -10,7 +10,8 @@ final class ServerWatcher extends Thread {
 
 	private final ServerSocketFactory serverfactory;
 	private final InetAddress ip;
-	private final int port, backlog, timeout;
+	private final int port, backlog;
+	protected final int timeout;
 	protected volatile boolean run = false;
 	protected ServerSocket server = null;
 	private ServerConnect[] connects;

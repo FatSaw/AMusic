@@ -38,6 +38,7 @@ final class ConnectedServerConnect extends ServerConnect {
 				try {
 					connected = server.accept();
 					if (onlineips.contains(connected.getInetAddress())) {
+						connected.setSoTimeout(serverwatcher.timeout);
 						worker.processConnection(connected);
 					} else {
 						connected.getOutputStream().write(noaccess);

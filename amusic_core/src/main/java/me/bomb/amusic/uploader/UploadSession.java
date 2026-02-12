@@ -122,11 +122,12 @@ final class UploadSession {
 	    }
 	    byte i = 16;
 	    while (--i!=0) {
-	    	final int current = size.get(), next = current + allocSize;
+	    	final int current = size.get();
+	    	final long next = (long)current + (long)allocSize;
 	        if (next > limitsize) {
 	        	return null;
 	        }
-	        if (size.compareAndSet(current, next)) {
+	        if (size.compareAndSet(current, (int)next)) {
 	        	break;
 	        }
 	        try {
@@ -245,11 +246,12 @@ final class UploadSession {
 		}
 		byte i = 16;
 	    while (--i!=0) {
-	    	final int current = this.size.get(), next = current + size;
+	    	final int current = this.size.get();
+	    	long next = (long)current + (long)size;
 	        if (next > limitsize) {
 	        	return false;
 	        }
-	        if (this.size.compareAndSet(current, next)) {
+	        if (this.size.compareAndSet(current, (int)next)) {
 	        	break;
 	        }
 	        try {

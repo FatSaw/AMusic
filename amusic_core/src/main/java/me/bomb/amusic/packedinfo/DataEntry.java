@@ -2,12 +2,14 @@ package me.bomb.amusic.packedinfo;
 
 public abstract class DataEntry {
 	
-	public int size;
+	public final String storeid;
+	public final int size;
 	public final String name;
-	public SoundInfo[] sounds;
-	public byte[] sha1;
+	public final SoundInfo[] sounds;
+	public final byte[] sha1;
 
-	protected DataEntry(int size, String name, SoundInfo[] sounds, byte[] sha1) {
+	protected DataEntry(String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1) {
+		this.storeid = storeid;
 		this.size = size;
 		this.name = name;
 		this.sounds = sounds;

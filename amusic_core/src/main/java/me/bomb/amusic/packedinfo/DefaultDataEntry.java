@@ -11,12 +11,14 @@ public final class DefaultDataEntry extends DataEntry {
 	
 
 	private final FileSystemProvider fs;
+	protected final int skip;
 	protected final Path datapath;
 	protected boolean saved;
 
-	protected DefaultDataEntry(Path datapath, int size, String name, SoundInfo[] sounds, byte[] sha1) {
-		super(size, name, sounds, sha1);
+	protected DefaultDataEntry(int skip, Path datapath, String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1) {
+		super(storeid, size, name, sounds, sha1);
 		this.fs = datapath.getFileSystem().provider();
+		this.skip = skip;
 		this.datapath = datapath;
 	}
 	
@@ -32,7 +34,8 @@ public final class DefaultDataEntry extends DataEntry {
 		byte[] buf = new byte[size];
 		try {
 			is = fs.newInputStream(datapath);
-			is.read(buf, 0, buf.length);
+			is.skip(this.skip);
+			is.read(buf, 0, size);
 			is.close();
 		} catch (IOException e1) {
 			if(is != null) {
@@ -42,14 +45,8 @@ public final class DefaultDataEntry extends DataEntry {
 				}
 			}
 		}
-		byte i = 20;
 		byte[] filesha1 = sha1hash.digest(buf);
-		while(--i > -1) {
-			if(filesha1[i] != sha1[i]) {
-				return null;
-			}
-		}
-		
+		if (!MessageDigest.isEqual(filesha1, sha1)) return null;
 		return buf;
 	}
 

@@ -8,21 +8,19 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.UUID;
 
 import me.bomb.amusic.resource.ResourcePacker;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 
-import static me.bomb.amusic.util.Base64Utils.toBase64Url;
 import static me.bomb.amusic.util.NameFilter.filterName;
-import static me.bomb.amusic.util.Base64Utils.fromBase64Url;
 
-final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnable {
+final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 	
 	private static final String FORMAT = ".ampi";
 	private static final byte FORMATSIZE = 5;
-	private static final byte VERSION = 3;
+	private static final byte VERSION = 4;
 	private static final DirectoryStream.Filter<Path> ampifilter = new DirectoryStream.Filter<Path>() {
 		@Override
 		public boolean accept(Path path) throws IOException {
@@ -33,25 +31,18 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 	
     private final FileSystemProvider fs;
     private final Path datadirectory;
-	private final Thread savethread;
-	private volatile boolean run;
 	
 	protected DataStorage(Path datadirectory, boolean lockwrite) {
 		super(lockwrite);
 		this.datadirectory = datadirectory;
-		this.run = !this.lockwrite;
-		this.savethread = this.lockwrite ? null : new Thread(this);
 		this.fs = datadirectory.getFileSystem().provider();
 	}
 
+	/**
+	 * Ignored.
+	 */
 	@Override
 	protected void save() {
-		if(this.lockwrite && !this.run) {
-			return;
-		}
-		synchronized(this) {
-			notify();
-		}
 	}
 
 	@Override
@@ -64,17 +55,10 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			while(it.hasNext()) {
 				final Path ampifile = it.next();
 				String id = ampifile.getFileName().toString();
-				final int namesize = id.length() - FORMATSIZE;
-				final Path datapath;
-				try {
-					id = id.substring(0, namesize);
-					datapath = datadirectory.resolve(id.concat(".zip"));
-					id = fromBase64Url(id);
-				} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
-					continue;
-				}
+				id = id.substring(0, id.length() - FORMATSIZE);
 				InputStream is = null;
 				try {
+					int skip = 36;
 					is = fs.newInputStream(ampifile);
 					byte[] buf = new byte[8];
 					if(is.read(buf) != 8 || buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'p' || buf[3] != 'i' || buf[4] != 0 || buf[7] != 0) {
@@ -91,6 +75,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 						is.close();
 						continue;
 					}
+					skip+=packednamelength;
 					int packedsize = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0];
 					buf = new byte[packednamelength];
 					is.read(buf);
@@ -102,6 +87,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 					}
 					int soundcount = 0x0000FFFF;
 					soundcount &= 0xFF & buf[0] | buf[1] << 8;
+					skip+=soundcount<<2;
 					byte[] namelengths = new byte[soundcount], splits = new byte[soundcount];
 					buf = new byte[soundcount<<1];
 					is.read(namelengths);
@@ -117,13 +103,14 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 					while(j < soundcount) {
 						buf = new byte[0xFF & namelengths[j]];
 						is.read(buf);
+						skip+=buf.length;
 						sounds[j] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[j], splits[j]);
 						++j;
 					}
 					is.close();
-					DefaultDataEntry dataentry = new DefaultDataEntry(datapath, packedsize, packedname, sounds, sha1);
+					DefaultDataEntry dataentry = new DefaultDataEntry(skip, ampifile, id, packedsize, packedname, sounds, sha1);
 					dataentry.saved = true;
-					options.put(id, dataentry);
+					options.put(packedname, dataentry);
 				} catch (IOException e1) {
 					if (is != null) {
 						try {
@@ -145,158 +132,108 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 		}
 	}
 	
-	@Override
-	public void run() {
-		while(run) {
-			synchronized(this) {
-				try {
-					this.wait();
-				} catch (InterruptedException e) {
-					this.run = false;
-					return;
-				}
+	private void saveAmp(String id, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] resource) {
+		if(size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20) {
+			return;
+		}
+		int skip = 36;
+		Path ampifile = datadirectory.resolve(id.concat(FORMAT));
+		OutputStream os = null;
+		try {
+			int soundcount = sounds.length;
+			os = fs.newOutputStream(ampifile);
+			os.write('a'); //FORMATID
+			os.write('m'); //FORMATID
+			os.write('p'); //FORMATID
+			os.write('i'); //FORMATID
+			os.write(0); //FORMATID
+			os.write(0); //0
+			os.write(0); //0
+			os.write(0); //FORMATID
+			os.write(VERSION); //VERSION
+			int entryfilesize = size;
+			//fos.write(dataentry.size);
+			os.write((byte)entryfilesize); //FILESIZE
+			entryfilesize>>=8;
+			os.write((byte)entryfilesize); //FILESIZE
+			entryfilesize>>=8;
+			os.write((byte)entryfilesize); //FILESIZE
+			entryfilesize>>=8;
+			os.write((byte)entryfilesize); //FILESIZE
+			os.write(sha1); //SHA1
+			byte[] packednamebytes = name.getBytes(StandardCharsets.UTF_8);
+			int packednamelength = packednamebytes.length;
+			if(packednamelength > 0xFF) {
+				packednamelength = 0xFF;
+				byte[] npackednamebytes = new byte[0xFF];
+				System.arraycopy(packednamebytes, 0, npackednamebytes, 0, packednamelength);
+				packednamebytes = npackednamebytes;
 			}
-			DirectoryStream<Path> ds = null;
-			try {
-				ds = fs.newDirectoryStream(datadirectory, ampifilter);
-				final Iterator<Path> it = ds.iterator();
-				while(it.hasNext()) {
-					final Path ampifile = it.next();
-					String id = ampifile.getFileName().toString();
-					final int namesize = id.length() - FORMATSIZE;
-					try {
-						id = id.substring(0, namesize);
-						id = fromBase64Url(id);
-					} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
-						fs.deleteIfExists(ampifile);
-						continue;
-					}
-					if(options.containsKey(id)) {
-						continue;
-					}
-					fs.deleteIfExists(ampifile);
-				}
-			} catch (IOException e) {
-			} finally {
-				if (ds != null) {
-					try {
-						ds.close();
-					} catch (IOException e) {
-					}
-				}
+			os.write((byte) packednamelength); //PACKED FILE PATH
+			skip += packednamelength;
+			os.write(packednamebytes); //PACKED FILE PATH
+			if(soundcount > 0x0000FFFF) {
+				soundcount = 0x0000FFFF;
 			}
-			
-			for(Entry<String, DataEntry> entry : options.entrySet()) {
-				String id = entry.getKey();
-				id = toBase64Url(id);
-				DefaultDataEntry dataentry = (DefaultDataEntry) entry.getValue();
-				if(dataentry.saved || dataentry.size < 0 || dataentry.name == null || dataentry.sounds == null || dataentry.sha1 == null || dataentry.sha1.length != 20) {
-					continue;
+			byte[] soundcountb = new byte[2];
+			soundcountb[0] = (byte) soundcount;
+			soundcountb[1] = (byte) (soundcount>>8);
+			os.write(soundcountb);
+			int lengthscount = soundcount<<1;
+			skip += soundcount<<2;
+			byte[] namelengths = new byte[soundcount], splits = new byte[soundcount],lengths = new byte[lengthscount];
+			short i = 0, j = 0;
+			int totalsoundnamelength = 0;
+			byte[][] anames = new byte[soundcount][];
+			while(i < soundcount) {
+				byte[] soundnamebytes = sounds[i].name.getBytes(StandardCharsets.UTF_8);
+				int soundnamelength = soundnamebytes.length;
+				if(soundnamelength > 0xFF) {
+					soundnamelength = 0xFF;
+					byte[] nsoundnamebytes = new byte[0xFF];
+					System.arraycopy(soundnamebytes, 0, nsoundnamebytes, 0, soundnamelength);
+					soundnamebytes = nsoundnamebytes;
 				}
-				Path ampifile = datadirectory.resolve(id.concat(FORMAT));
-				OutputStream os = null;
+				totalsoundnamelength += soundnamelength;
+				anames[i] = soundnamebytes;
+				namelengths[i] = (byte) soundnamelength;
+				splits[i] = sounds[i].split;
+				short length = sounds[i].length;
+				++i;
+				lengths[j] = (byte) length;
+				length >>= 8;
+				++j;
+				lengths[j] = (byte) length;
+				++j;
+			}
+			skip += totalsoundnamelength;
+			byte[] names = new byte[totalsoundnamelength];
+			int namesi = 0;
+			i = 0;
+			while(i < soundcount) {
+				byte[] soundnamebytes = anames[i];
+				int soundnamelength = soundnamebytes.length;
+				System.arraycopy(soundnamebytes, 0, names, namesi, soundnamelength);
+				namesi+=soundnamelength;
+				++i;
+			}
+			os.write(namelengths); //NAME LENGTHS ENTRY 0-255
+			os.write(splits); //SOUND SPLITS ENTRY 0-255
+			os.write(lengths); //SOUND LENGTHS ENTRY 0-65535
+			os.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
+			os.write(resource); //RESOURCEPACK ARCHIVE
+			os.close();
+		} catch (IOException e1) {
+			if(os != null) {
 				try {
-					int soundcount = dataentry.sounds.length;
-					os = fs.newOutputStream(ampifile);
-					os.write('a'); //FORMATID
-					os.write('m'); //FORMATID
-					os.write('p'); //FORMATID
-					os.write('i'); //FORMATID
-					os.write(0); //FORMATID
-					os.write(0); //0
-					os.write(0); //0
-					os.write(0); //FORMATID
-					os.write(VERSION); //VERSION
-					int entryfilesize = dataentry.size;
-					//fos.write(dataentry.size);
-					os.write((byte)entryfilesize); //FILESIZE
-					entryfilesize>>=8;
-					os.write((byte)entryfilesize); //FILESIZE
-					entryfilesize>>=8;
-					os.write((byte)entryfilesize); //FILESIZE
-					entryfilesize>>=8;
-					os.write((byte)entryfilesize); //FILESIZE
-					os.write(dataentry.sha1); //SHA1
-					byte[] packednamebytes = dataentry.name.getBytes(StandardCharsets.UTF_8);
-					int packednamelength = packednamebytes.length;
-					if(packednamelength > 0xFF) {
-						packednamelength = 0xFF;
-						byte[] npackednamebytes = new byte[0xFF];
-						System.arraycopy(packednamebytes, 0, npackednamebytes, 0, packednamelength);
-						packednamebytes = npackednamebytes;
-					}
-					os.write((byte) packednamelength); //PACKED FILE PATH
-					os.write(packednamebytes); //PACKED FILE PATH
-					if(soundcount > 0x0000FFFF) {
-						soundcount = 0x0000FFFF;
-					}
-					byte[] soundcountb = new byte[2];
-					soundcountb[0] = (byte) soundcount;
-					soundcountb[1] = (byte) (soundcount>>8);
-					os.write(soundcountb);
-					int lengthscount = soundcount<<1;
-					byte[] namelengths = new byte[soundcount], splits = new byte[soundcount],lengths = new byte[lengthscount];
-					short i = 0, j = 0;
-					int totalsoundnamelength = 0;
-					byte[][] anames = new byte[soundcount][];
-					while(i < soundcount) {
-						byte[] soundnamebytes = dataentry.sounds[i].name.getBytes(StandardCharsets.UTF_8);
-						int soundnamelength = soundnamebytes.length;
-						if(soundnamelength > 0xFF) {
-							soundnamelength = 0xFF;
-							byte[] nsoundnamebytes = new byte[0xFF];
-							System.arraycopy(soundnamebytes, 0, nsoundnamebytes, 0, soundnamelength);
-							soundnamebytes = nsoundnamebytes;
-						}
-						totalsoundnamelength += soundnamelength;
-						anames[i] = soundnamebytes;
-						namelengths[i] = (byte) soundnamelength;
-						splits[i] = dataentry.sounds[i].split;
-						short length = dataentry.sounds[i].length;
-						++i;
-						lengths[j] = (byte) length;
-						length >>= 8;
-						++j;
-						lengths[j] = (byte) length;
-						++j;
-					}
-					byte[] names = new byte[totalsoundnamelength];
-					int namesi = 0;
-					i = 0;
-					while(i < soundcount) {
-						byte[] soundnamebytes = anames[i];
-						int soundnamelength = soundnamebytes.length;
-						System.arraycopy(soundnamebytes, 0, names, namesi, soundnamelength);
-						namesi+=soundnamelength;
-						++i;
-					}
-					os.write(namelengths); //NAME LENGTHS ENTRY 0-255
-					os.write(splits); //SOUND SPLITS ENTRY 0-255
-					os.write(lengths); //SOUND LENGTHS ENTRY 0-65535
-					os.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
-					
 					os.close();
-					dataentry.saved = true;
-				} catch (IOException e1) {
-					if(os != null) {
-						try {
-							os.close();
-						} catch (IOException e2) {
-						}
-					}
+				} catch (IOException e2) {
 				}
 			}
 		}
-	}
-	
-	public void start() {
-		savethread.start();
-	}
-	
-	public void end() {
-		if(savethread != null) {
-			savethread.interrupt();
-		}
+		DefaultDataEntry entry = new DefaultDataEntry(skip, ampifile, id, size, name, sounds, sha1);
+		entry.saved = true;
+		options.put(name, entry);
 	}
 	
 	public ResourcePacker createPacker(final String id, final SoundSource soundsource, final PackSource packsource) {
@@ -308,13 +245,13 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 		return packer;
 	}
 	
-	public boolean update(final String id, final ResourcePacker packer) {
-		if(this.lockwrite || id == null) {
+	public boolean update(final String name, final ResourcePacker packer) {
+		if(this.lockwrite || name == null) {
 			return false;
 		}
 		if(packer == null) {
 			final boolean deleted;
-			DefaultDataEntry data = (DefaultDataEntry) options.remove(id);
+			DefaultDataEntry data = (DefaultDataEntry) options.remove(name);
 			if(data == null) {
 				return false;
 			}
@@ -323,7 +260,6 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 			} catch (IOException e) {
 				return false;
 			}
-			save();
 			return deleted;
 		}
 		packer.run();
@@ -331,34 +267,24 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data implements Runnab
 		if((resourcepack = packer.resourcepack) == null) {
 			return false;
 		}
-		final Path resourcefile = datadirectory.resolve(toBase64Url(id).concat(".zip"));
-		OutputStream os = null;
-		try {
-			os = fs.newOutputStream(resourcefile);
-			os.write(resourcepack);
-			os.close();
-		} catch (IOException e1) {
-			if(os != null) {
-				try {
-					os.close();
-				} catch (IOException e2) {
-				}
-			}
-		}
-		
-		DefaultDataEntry data = (DefaultDataEntry) getPlaylist(id);
-		if (data != null) {
-			data.size = resourcepack.length;
-			data.sounds = packer.sounds;
-			data.sha1 = packer.sha1;
-			data.saved = false;
-			save();
-			return true;
-		}
-		
-		options.put(id, new DefaultDataEntry(resourcefile, resourcepack.length, filterName(id), packer.sounds, packer.sha1));
-		save();
+		DataEntry entry = options.remove(name);
+		String id = entry == null ? UUID.randomUUID().toString() : entry.storeid;
+		saveAmp(id, resourcepack.length, name, packer.sounds, packer.sha1, resourcepack);
 		return true;
+	}
+	
+	/**
+	 * Ignored.
+	 */
+	@Override
+	public void start() {
+	}
+	
+	/**
+	 * Ignored.
+	 */
+	@Override
+	public void end() {
 	}
 
 }

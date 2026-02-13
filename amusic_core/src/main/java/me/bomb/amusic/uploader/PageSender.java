@@ -49,7 +49,7 @@ final class PageSender implements ServerWorker {
 		identifier = new byte[9][];
 		web[0] = "HTTP/1.1 200 OK\r\nServer: AMusic upload\r\nCache-Control: private, max-age=5\r\nContent-Type: text/html; charset=us-ascii\r\nX-Content-Type-Options: nosniff\r\nReferrer-Policy: no-referrer\r\nLink: </index.html>; rel=preload; as=fetch, </index.js>; rel=preload; as=script, </814.ffmpeg.js>; rel=preload; as=script, </ffmpeg-core.js>; rel=preload; as=script, </ffmpeg-core.wasm>; rel=preload; as=fetch\r\nCross-Origin-Embedder-Policy: require-corp\r\nCross-Origin-Opener-Policy: same-origin\r\nCross-Origin-Resource-Policy: same-origin\r\nContent-Length: 601\r\nConnection: close\r\n\r\n<!DOCTYPE html><html><head><meta charset=\"us-ascii\"><title>Upload sound</title><link rel=\"icon\" href=\"data:,\"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#f5f5f7}@media(prefers-color-scheme:dark){body,html{background:#121212}}iframe{width:100%;height:100%;border:none}</style></head><body><iframe id=\"f\"></iframe><script>async function l(){try{const r=await fetch(\"./index.html\"),t=await r.text(),s='<meta charset=\"us-ascii\"><base href=\"'+location.origin+'/\">',h=t.replace(\"<head>\",\"<head>\"+s);document.getElementById(\"f\").srcdoc=h}catch(e){}}l();</script></body></html>".getBytes(StandardCharsets.US_ASCII);
 		identifier[0] = "GET /".getBytes(StandardCharsets.US_ASCII);
-		loadStaticContent(classloader, (byte)1, 17619 , "index.html", "index.html", responseparthtml0, responseclose);
+		loadStaticContent(classloader, (byte)1, 17621 , "index.html", "index.html", responseparthtml0, responseclose);
 		loadStaticContent(classloader, (byte)2, 7272, "index.js", "index.js", responsepartjs1, responseclose);
 		loadStaticContent(classloader, (byte)3, 2954, "814.ffmpeg.js", "814.ffmpeg.js", responsepartjs1, responseclose);
 		loadStaticContent(classloader, (byte)4, 87000, "ffmpeg-core.js", "ffmpeg-core.js", responsepartjs1, responseclose);
@@ -289,10 +289,10 @@ final class PageSender implements ServerWorker {
 										final UploadSession session = uploadmanager.getSession(token);
 										if(session != null) {
 											bytes = session.tryAllocPutBuf(name, cl);
-											split += 4;
-											readcount-=split;
-											if(cl>=readcount && bytes != null) {
-												if(cl != 0) {
+											if(cl != 0) {
+												split += 4;
+												readcount-=split;
+												if(cl>=readcount && bytes != null) {
 													System.arraycopy(buf, split, bytes, 0, readcount);
 													int pos = readcount;
 													readcount = cl - pos;
@@ -314,11 +314,11 @@ final class PageSender implements ServerWorker {
 														connected.getOutputStream().write(badrequest);
 													}
 												} else {
-													connected.getOutputStream().write(updated);
-													session.putDone(name);
+													connected.getOutputStream().write(datatoolarge);
 												}
 											} else {
-												connected.getOutputStream().write(datatoolarge);
+												connected.getOutputStream().write(updated);
+												session.putDone(name);
 											}
 										} else {
 											connected.getOutputStream().write(notoken);

@@ -7,7 +7,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -94,7 +93,6 @@ public final class UploadManager extends Thread {
 				if(filesize > 0x7fffffff) {
 					continue;
 				}
-				filename = filename.substring(0, filename.length() - 4);
 				previousentrys.put(filename, Integer.valueOf((int)filesize));
 			}
 			ds.close();

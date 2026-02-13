@@ -15,12 +15,11 @@ Music through resource pack
 - `./resourcepack.zip` - default parent resourcepack file
 - `./Music/` - music directory
 - `./Music/<playlist_name>/` - playlist directory
-- `./Music/<playlist_name>/<sound_name>.ogg` - converted sound
+- `./Music/<playlist_name>/<sound_name>` - converted sound
 - `./Music/<playlist_name>/<sound_name>.<!ogg>` - not converted sound (Ignored if serverside encoder disabled)
 - `./Music/<playlist_name>.zip` - playlist specific parent resourcepack file
 - `./Packed/` - packed resourcepacks directory
-- `./Packed/<playlist_name_base64url>.zip` - packed resourcepack
-- `./Packed/<playlist_name_base64url>.ampi` - packed resourcepack info
+- `./Packed/<uuid>.ampi` - packed resourcepack with info
 
 ## Commands:
 - `/loadmusic @n <playlistname>` - update playlist

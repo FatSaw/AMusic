@@ -45,23 +45,24 @@ public final class UploadmusicCommand implements SimpleCommand {
 		args[0] = args[0].toLowerCase();
 		if(args.length == 1 && ((save = "finish".equals(args[0])) || "drop".equals(args[0]))) {
 			if(!(sender instanceof Player)) {
-				LangOptions.uploadmusic_finish_player_notplayer.sendMsg(sender);
+				(save ? LangOptions.uploadmusic_finish_player_notplayer : LangOptions.uploadmusic_drop_player_notplayer).sendMsg(sender);
 				return;
 			}
 			Player player = (Player)sender;
 			final UUID token = uploaders.remove(player);
 			if(token == null) {
-				LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
+				(save ? LangOptions.uploadmusic_finish_player_nosession : LangOptions.uploadmusic_drop_player_nosession).sendMsg(sender);
 				return;
 			}
-			Consumer<Boolean> consumer = new Consumer<Boolean>() {
+			Consumer<Boolean> consumer = save ? new Consumer<Boolean>() {
 				@Override
 				public void accept(Boolean t) {
-					if(!t) {
-						LangOptions.uploadmusic_finish_player_nosession.sendMsg(sender);
-						return;
-					}
-					LangOptions.uploadmusic_finish_player_success.sendMsg(sender);
+					(t.booleanValue() ? LangOptions.uploadmusic_finish_player_success : LangOptions.uploadmusic_finish_player_nosession).sendMsg(sender);
+				}
+			} : new Consumer<Boolean>() {
+				@Override
+				public void accept(Boolean t) {
+					(t.booleanValue() ? LangOptions.uploadmusic_drop_player_success : LangOptions.uploadmusic_drop_player_nosession).sendMsg(sender);
 				}
 			};
 			amusic.closeUploadSession(token, save, consumer);
@@ -104,15 +105,20 @@ public final class UploadmusicCommand implements SimpleCommand {
 			}
 			try {
 				final UUID token = UUID.fromString(args[1]);
-				Consumer<Boolean> consumer = new Consumer<Boolean>() {
+				Consumer<Boolean> consumer = save ? new Consumer<Boolean>() {
 					@Override
 					public void accept(Boolean t) {
-						(t ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+						(t.booleanValue() ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+					}
+				} : new Consumer<Boolean>() {
+					@Override
+					public void accept(Boolean t) {
+						(t.booleanValue() ? LangOptions.uploadmusic_drop_token_success : LangOptions.uploadmusic_drop_token_nosession).sendMsg(sender);
 					}
 				};
 				amusic.closeUploadSession(token, save, consumer);
 			} catch(IllegalArgumentException ex) {
-				LangOptions.uploadmusic_finish_token_invalid.sendMsg(sender);
+				(save ? LangOptions.uploadmusic_finish_token_invalid : LangOptions.uploadmusic_drop_token_invalid).sendMsg(sender);
 			}
 			return;
 		}

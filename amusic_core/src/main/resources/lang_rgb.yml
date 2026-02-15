@@ -50,7 +50,7 @@ localisation:
     random: {"color":"#ee2222","text":"Selector @r unavilable for this source"}
     all: {"color":"#ee2222","text":"Selector @a unavilable for this source"}
   uploadmusic:
-   usage: [{"color":"#cccccc","text":"Usage: "},{"color":"#cccccc","italic":true,"text":"Usage: /uploadmusic <start/finish> <playlist>/[token]"}]
+   usage: [{"color":"#cccccc","text":"Usage: "},{"color":"#cccccc","italic":true,"text":"Usage: /uploadmusic <start/finish/drop> <playlist>/[token]/[token]"}]
    nopermission: {"color":"#ee2222","text":"No permission"}
    nopermissiontoken: {"color":"#ee2222","text":"No permission"}
    disabled: {"color":"#ee2222","text":"Loader disabled"}
@@ -58,15 +58,24 @@ localisation:
     url:
      click: [{"color":"#22ee22","text":"Upload session started click "},{"color":"#eeee22","text":"HERE","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"#22ee22","text":" to open uploader page"}]
      show: [{"color":"#22ee22","text":"Upload session started: "},{"color":"#eeee22","text":"%url%","clickEvent":{"action":"open_url","value":"%url%"}}]
+   drop:
+    player:
+     notplayer: {"color":"#ee2222","text":"This command source do not support drop without token"}
+     nosession: {"color":"#ee2222","text":"No active upload session"}
+     success: {"color":"#22ee22","text":"Changes dropped successfully"}
+    token:
+     invalid: {"color":"#ee2222","text":"Token format invalid"}
+     nosession: {"color":"#ee2222","text":"No active upload session"}
+     success: {"color":"#22ee22","text":"Changes dropped successfully"}
    finish:
     player:
      notplayer: {"color":"#ee2222","text":"This command source do not support finish without token"}
      nosession: {"color":"#ee2222","text":"No active upload session"}
-     success: {"color":"#22ee22","text":"Session finished"}
+     success: {"color":"#22ee22","text":"Changes saved successfully"}
     token:
+     invalid: {"color":"#ee2222","text":"Token format invalid"}
      nosession: {"color":"#ee2222","text":"No active upload session"}
-     success: {"color":"#22ee22","text":"Session finished"}
-     invalid: {"color":"#ee2222","text":"Token format invalid!"}
+     success: {"color":"#22ee22","text":"Changes saved successfully"}
  ru_ru:
   loadmusic:
    usage: [{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"/loadmusic <player> <playlist>"}]
@@ -104,7 +113,7 @@ localisation:
    repeatone: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"повторять одну","hoverEvent":{"action":"show_text","value":{"color":"#eeee22","text":"repeatone"}}}]
    random: [{"color":"#22ee22","text":"Режим повтора установлен на: "},{"color":"#eeee22","text":"случайный","hoverEvent":{"action":"show_text","value":{"color":"#eeee22","text":"random"}}}]
   uploadmusic:
-   usage: [{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"Usage: /uploadmusic <start/finish> <playlist>/[token]"}]
+   usage: [{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"Usage: /uploadmusic <start/finish/drop> <playlist>/[token]/[token]"}]
    nopermission: {"color":"#ee2222","text":"Нет прав"}
    nopermissiontoken: {"color":"#ee2222","text":"Нет прав"}
    disabled: {"color":"#ee2222","text":"Загрузчик отключен"}
@@ -112,12 +121,21 @@ localisation:
     url:
      click: [{"color":"#22ee22","text":"Сессия загрузки начата нажмите "},{"color":"#eeee22","text":"ТУТ","clickEvent":{"action":"open_url","value":"%url%"}},{"color":"#22ee22","text":" чтобы открыть страницу загрузки"}]
      show: [{"color":"#22ee22","text":"Сессия загрузки начата: "},{"color":"#eeee22","text":"%url%","clickEvent":{"action":"open_url","value":"%url%"}}}]
+   drop:
+    player:
+     notplayer: {"color":"#ee2222","text":"Этот источник команды не поддерживает отмену изменений без токена"}
+     nosession: {"color":"#ee2222","text":"Активная сессия загрузки не найдена"}
+     success: {"color":"#22ee22","text":"Изменения успешно отменены"}
+    token:
+     invalid: {"color":"#ee2222","text":"Неверный формат токена"}
+     nosession: {"color":"#ee2222","text":"Активная сессия загрузки не найдена"}
+     success: {"color":"#22ee22","text":"Изменения успешно отменены"}
    finish:
     player:
-     notplayer: {"color":"#ee2222","text":"Этот источник команды не поддерживает закрытие сессии без токена"}
-     nosession: {"color":"#ee2222","text":"Нет активной сессии загрузки"}
-     success: {"color":"#22ee22","text":"Сессия завершена"}
+     notplayer: {"color":"#ee2222","text":"Этот источник команды не поддерживает сохранение изменений без токена"}
+     nosession: {"color":"#ee2222","text":"Активная сессия загрузки не найдена"}
+     success: {"color":"#22ee22","text":"Изменения успешно сохранены"}
     token:
-     nosession: {"color":"#ee2222","text":"Нет активной сессии загрузки"}
-     success: {"color":"#22ee22","text":"Сессия завершена"}
-     invalid: {"color":"#ee2222","text":"Неверный формат токена!"}
+     invalid: {"color":"#ee2222","text":"Неверный формат токена"}
+     nosession: {"color":"#ee2222","text":"Активная сессия загрузки не найдена"}
+     success: {"color":"#22ee22","text":"Изменения успешно сохранены"}

@@ -50,21 +50,20 @@ public class ByteArraysOutputStream extends OutputStream {
     	if(index < capacity) {
     		return;
     	}
-    	++capacity;
+    	capacity+=capacity>>1;
     	byte[][] bufs = this.bufs;
     	this.bufs = new byte[capacity][];
     	arraycopy(bufs, 0, this.bufs, 0, bufs.length);
-    	
     }
     
-    public synchronized void increaseCapacity(int count) {
+    public void increaseCapacity(int count) {
     	capacity+=count;
     	byte[][] bufs = this.bufs;
     	this.bufs = new byte[capacity][];
     	arraycopy(bufs, 0, this.bufs, 0, bufs.length);
     }
     
-    public synchronized void ensureCapacity(int count) {
+    public void ensureCapacity(int count) {
     	int remain = capacity - index;
     	if(remain > count) {
     		return;
@@ -79,7 +78,7 @@ public class ByteArraysOutputStream extends OutputStream {
      * Inefficient, should be avoided
      */
     @Override
-    public synchronized void write(int b) {
+    public void write(int b) {
     	increaseCapacity();
     	byte[] buf = new byte[] {(byte) b};
     	bufs[index] = buf;
@@ -90,29 +89,30 @@ public class ByteArraysOutputStream extends OutputStream {
      * Buffer should not be reused
      */
     @Override
-    public synchronized void write(byte buf[]) {
+    public void write(byte buf[]) {
     	increaseCapacity();
     	bufs[index] = buf;
         ++index;
     }
 
     /**
-     * Inefficient, should be avoided
+     * Buffer should not be reused, inefficient, should be avoided
      */
     @Override
-    public synchronized void write(byte b[], int off, int len) {
+    public void write(byte b[], int off, int len) {
     	increaseCapacity();
-    	byte[] buf = new byte[len - off];
-        arraycopy(b, off, buf, 0, buf.length);
-    	bufs[index] = buf;
-        ++index;
-    }
-
-    public synchronized void writeBytes(byte buf[]) {
-        write(buf, 0, buf.length);
+    	if(off == 0 && b.length == len) {
+        	bufs[index] = b;
+            ++index;
+    	} else {
+        	byte[] buf = new byte[len];
+            arraycopy(b, off, buf, 0, len);
+        	bufs[index] = buf;
+            ++index;
+    	}
     }
     
-    public synchronized void writeTo(OutputStream out) throws IOException {
+    public void writeTo(OutputStream out) throws IOException {
     	final byte[][] bufs = this.bufs;
     	final int index = this.index;
     	for(int i = 0;i < index;++i) {
@@ -120,12 +120,8 @@ public class ByteArraysOutputStream extends OutputStream {
             out.write(buf, 0, buf.length);
     	}
     }
-
-    public synchronized void reset() {
-    	index = 0;
-    }
     
-    public synchronized byte[][] toByteArrays() {
+    public byte[][] toByteArrays() {
     	int i = this.index;
     	byte[][] bufs = new byte[i][];
     	while(--i > -1) {
@@ -134,7 +130,7 @@ public class ByteArraysOutputStream extends OutputStream {
         return bufs;
     }
     
-    public synchronized byte[] toByteArray() {
+    public byte[] toByteArray() {
     	final byte[][] bufs = this.bufs;
     	final int index = this.index;
     	int i = index,pos = 0;
@@ -151,7 +147,7 @@ public class ByteArraysOutputStream extends OutputStream {
         return buf;
     }
     
-    public synchronized int size() {
+    public int size() {
     	final byte[][] bufs = this.bufs;
     	int i = this.index, size = 0;
     	while(--i > -1) {
@@ -160,11 +156,11 @@ public class ByteArraysOutputStream extends OutputStream {
     	return size;
     }
     
-    public synchronized int index() {
+    public int index() {
         return index;
     }
 
-    public synchronized int capacity() {
+    public int capacity() {
         return capacity;
     }
     

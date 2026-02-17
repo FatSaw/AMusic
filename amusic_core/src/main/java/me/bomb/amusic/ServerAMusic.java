@@ -989,6 +989,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 				Socket connected = null;
 				try {
 					connected = server.accept();
+					connected.setSoTimeout(5000);
 					InetAddress connectedaddress = connected.getInetAddress();
 					if (this.remoteip == null || this.remoteip.equals(connectedaddress)) {
 						final Socket fconnected = connected;

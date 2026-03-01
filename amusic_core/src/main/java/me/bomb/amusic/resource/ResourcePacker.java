@@ -16,7 +16,7 @@ import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
-import me.bomb.amusic.util.ByteArraysOutputStream;
+import me.bomb.amusic.util.ChunkedOutputStream;
 import me.bomb.amusic.util.HexUtils;
 
 import static java.lang.System.currentTimeMillis;
@@ -31,7 +31,6 @@ public final class ResourcePacker implements Runnable {
 	private final SoundSource soundsource;
 	private final String id;
 	private final PackSource packsource;
-	private int time = -1;
 	
 	static {
 		byte[] buf = new byte[2983];
@@ -105,11 +104,10 @@ public final class ResourcePacker implements Runnable {
 		}
 		
 		{
-			ByteArraysOutputStream baos;
+			ChunkedOutputStream cos;
 			ZipOutputStream zos;
-			int estimatedwritecount = 256 + 194 + (musiccount << 5) + (musiccount << 7);
-			baos = new ByteArraysOutputStream(estimatedwritecount);
-			zos = new ZipOutputStream(baos, Charset.defaultCharset());
+			cos = new ChunkedOutputStream();
+			zos = new ZipOutputStream(cos, Charset.defaultCharset());
 			zos.setMethod(8);
 			zos.setLevel(5);
 			boolean packmcmetafound = false, soundsjsonappended = false;
@@ -137,22 +135,12 @@ public final class ResourcePacker implements Runnable {
 							}
 							sb.insert(close, ',');
 							sb.insert(++close, soundslist);
-							int cap = (int) (close >> 9);
-							if(cap < 1) {
-								cap = 1;
-							}
-							baos.increaseCapacity(cap);
 							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
 							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
 							zos.closeEntry();
 							soundsjsonappended = true;
 							continue;
 						}
-						int cap = (int) (entry.getCompressedSize() >> 9);
-						if(cap < 1) {
-							cap = 1;
-						}
-						baos.increaseCapacity(cap);
 						entry = new ZipEntry(entryname);
 						zos.putNextEntry(entry);
 			            while ((len = zis.read(buf)) != -1) {
@@ -218,12 +206,7 @@ public final class ResourcePacker implements Runnable {
 							byte partscount = (byte) (1 << splitbitid);
 							while(--partscount > -1) {
 								byte[] part = sounddata[--partid];
-								int cap = part.length >> 9;
-								if(cap < 1) {
-									cap = 1;
-								}
 								try {
-									baos.increaseCapacity(cap);
 									zos.putNextEntry(new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg")));
 						            zos.write(part);
 						            zos.closeEntry();
@@ -247,7 +230,7 @@ public final class ResourcePacker implements Runnable {
 				zos.close();
 			} catch (IOException e) {
 			}
-			this.resourcepack = baos.toByteArray();
+			this.resourcepack = cos.toByteArray();
 		}
 		this.sha1 = sha1hash.digest(this.resourcepack);
 		short[] soundlengths = sourceentry.lengths;
@@ -261,11 +244,6 @@ public final class ResourcePacker implements Runnable {
 		if(timeelapsed > 0x7FFFFFFF) {
 			timeelapsed = 0x7FFFFFFF;
 		}
-		this.time = (int) timeelapsed;
-	}
-	
-	public int getElapsedTime() {
-		return this.time;
 	}
 
 }

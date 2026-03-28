@@ -6,30 +6,56 @@
 <meta name="color-scheme" content="light dark">
 <script src="./index.js"></script>
 <style>
-:root {
---primary:#4a90e2;--primary-hover:#357abd;
---bg:#f5f5f7;--card:#ffffff;--text:#333;
+:root{
+--font: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+--bg:#f8f8f8;
+--card:#ffffff;
+--border:#e6e6e6;
+--text:#000000;
+--text-muted:#6b6b6b;
+--shadow: 0 1px 2px rgba(0,0,0,0.05), 0 8px 24px rgba(0,0,0,0.06);
+--primary:#3b82f6;
+--play:#22b55e;
+--undo:#df4444;
+--upload:#3ba2f6;
+--rename:#f59e0b;
+--buttontext:#0f0f0f;
+--progressbarbg:#e5e7eb;
+--transcodebar:#3b82f6;
+--playbar:#22c55e;
+--uploadbar:#f59e0b;
+}
+@media (prefers-color-scheme: dark){
+:root{
+--bg:#000000;
+--card:#080808;
+--border:#161616;
+--text:#efefef;
+--text-muted:#949494;
+--play:#22753e;
+--undo:#8f3434;
+--upload:#3b6296;
+--rename:#b57e0b;
+--buttontext:#efefef;
+--progressbarbg:#2a2f39;
+--shadow:none;
+}
 }
 body {
 display:flex;flex-direction:column;align-items:center;
-min-height:100vh;font-family:'Segoe UI',Roboto,sans-serif;
+min-height:100vh;font-family:var(--font);
 margin:0;padding:20px;background:var(--bg);color:var(--text);
 }
-.upload-label {
-display:inline-block;padding:12px 24px;background:var(--primary);
-color:white;border-radius:6px;cursor:pointer;transition:background 0.2s;font-weight:600;
-}
-.upload-label:hover{background:var(--primary-hover);}
-.upload-label.disabled{background:#ccc;cursor:not-allowed;}
 #uploader{display:none;}
 #file-list{
 width:100%;max-width:700px;margin-top:30px;
 background:var(--card);border-radius:12px;
-box-shadow:0 4px 6px rgba(0,0,0,0.1);overflow:hidden;
+box-shadow:var(--shadow);
+overflow:hidden;
 }
 .file-item{
 display:flex;flex-direction:column;padding:10px 15px;
-border-bottom:1px solid #eee;
+border-bottom:1px solid var(--border);
 }
 .file-header{
 display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;
@@ -38,40 +64,39 @@ display:flex;width:100%;align-items:center;justify-content:space-between;gap:10p
 font-weight:500;flex-grow:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .file-size{
-font-size:0.8em;color:#666;margin-left:8px;flex-shrink:0;
+font-size:0.8em;color:var(--text-muted);margin-left:8px;flex-shrink:0;
 }
 .controls{display:flex;gap:6px;align-items:center;flex-shrink:0;margin-top:4px;}
-.btn{padding:6px 14px;border:none;border-radius:4px;cursor:pointer;font-size:14px;transition:opacity 0.2s;}
-.btn-play{background:#2ecc71;color:white;}
-.btn-confirm{background:var(--primary);color:white;}
-.btn-undo{background:#e74c3c;color:white;}
-.btn-rename{background:#f39c12;color:white;}
-.status{font-size:0.85em;color:#888;}
-.progress-container{
-width:100%;height:8px;background:#eee;border-radius:4px;margin-top:6px;overflow:hidden;
-display:none;cursor:pointer;
-}
-.progress-bar{width:0%;height:100%;background:var(--primary);transition:width 0.1s linear;}
-.progress-container.transcoding .progress-bar{background:#4a90e2;}
-.progress-container.playing .progress-bar{background:#2ecc71;}
-.progress-container.uploading .progress-bar{background:#f39c12;}
-@media(prefers-color-scheme:dark){
-:root{--primary:#5aa2ff;--primary-hover:#3d82d6;--bg:#121212;--card:#1e1e1e;--text:#e5e5e5;}
-.file-item{border-bottom:1px solid #2a2a2a;}
-#file-list{box-shadow:0 6px 16px rgba(0,0,0,0.6);}
-.status{color:#aaa;}
-.progress-container{background:#2a2a2a;}
-.upload-label.disabled{background:#555;}
-}
-.byte-counter{font-size:0.8em;color:#888;margin-left:6px;flex-shrink:0;}
+
+.upload-label {--bg:var(--primary);background:var(--bg);--shadow:color-mix(in srgb, var(--bg), black 35%);box-shadow: 0 4px 0 var(--shadow);color:var(--buttontext);display:inline-block;padding:12px 24px;border-radius:6px;cursor:pointer;transition:background 0.2s;font-weight:bold;}
+.upload-label.disabled{opacity: 0.5;cursor:default;box-shadow:none;transform:translateY(3px);}
+.upload-label:not(.upload-label.disabled):hover{filter:brightness(1.1);}
+.upload-label:not(.upload-label.disabled):active{transform:translateY(3px);box-shadow: 0 1px 0 var(--shadow)}
+.btn{background:var(--bg);--shadow:color-mix(in srgb, var(--bg), black 35%);box-shadow: 0 4px 0 var(--shadow);color:var(--buttontext);padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;transition: all 0.1s ease;position:relative;}
+.btn:disabled{opacity: 0.5;cursor:default;box-shadow:none;transform:translateY(3px);}
+.btn:not(:disabled):hover{filter:brightness(1.1);}
+.btn:not(:disabled):active{transform:translateY(3px);box-shadow: 0 1px 0 var(--shadow)}
+.btn-play{--bg:var(--play);}
+.btn-confirm{--bg:var(--upload);}
+.btn-undo{--bg:var(--undo);}
+.btn-rename{--bg:var(--rename);}
+
+.status{font-size:0.85em;color:var(--text-muted)}
+.byte-counter{font-size:0.8em;color:var(--text-muted);margin-left:6px;flex-shrink:0;}
 #storage-info{
 margin-top:10px;
 font-size:0.9em;
-color:#666;
+color:var(--text-muted);
 }
-@media(prefers-color-scheme:dark){
-#storage-info{color:#aaa;}
+
+.progress-container{
+width:100%;height:8px;background:var(--progressbarbg);border-radius:4px;margin-top:6px;overflow:hidden;
+display:none;cursor:pointer;
 }
+.progress-bar{width:0%;height:100%;background:var(--primary);transition:width 0.1s linear;}
+.progress-container.transcoding .progress-bar{background:var(--transcodebar);}
+.progress-container.playing .progress-bar{background:var(--playbar);}
+.progress-container.uploading .progress-bar{background:var(--uploadbar);}
 </style>
 </head>
 <body>
@@ -165,111 +190,83 @@ function renderFile(file){
 function updateUI(file){
 	const ctrl=document.getElementById('ctrl-'+file.id);
 	if(!ctrl) return;
-	function generatePlayButton(id){
-		const playBtn=document.createElement('button');
-		playBtn.className='btn btn-play';
-		playBtn.onclick=()=>togglePlay(playBtn,id);
-		if(currentAudio && playingFileId===id && !currentAudio.paused){
+	ctrl.innerHTML='';
+	
+	const statusSpan=document.createElement('span');
+	if(file.status==='pending'){
+		statusSpan.className='status';
+		statusSpan.textContent='Pending...';
+		ctrl.appendChild(statusSpan);
+		return;
+	}
+	if(file.status==='transcoding'){
+		setProgress(file.id,0,'transcoding');
+		statusSpan.className='status';
+		statusSpan.textContent='Transcoding...';
+		ctrl.appendChild(statusSpan);
+		return;
+	}
+	statusSpan.className='file-size';
+	statusSpan.textContent=formatSize(file.size);
+	const renameBtn = document.createElement('button');
+	renameBtn.className='btn btn-rename';
+	renameBtn.textContent='Rename';
+	if(file.status==='converted') {
+		renameBtn.onclick=()=>startRename(file.id);
+	} else {
+		renameBtn.disabled = true;
+	}
+	const playBtn=document.createElement('button');
+	playBtn.className='btn btn-play';
+	if(file.status==='converted' || file.status==='uploading' || file.status==='uploaded'){
+		playBtn.onclick=()=>togglePlay(playBtn,file.id);
+		if(currentAudio && playingFileId===file.id && !currentAudio.paused){
 			playBtn.textContent='Pause';
 		} else {
 			playBtn.textContent='Play';
 		}
-		return playBtn;
+	} else {
+		playBtn.textContent='Play';
+		playBtn.disabled = true;
 	}
-	function generateRenameButton(id){
-		const renameBtn=document.createElement('button'); renameBtn.className='btn btn-rename'; renameBtn.textContent='Rename';
-		renameBtn.onclick=()=>startRename(id);
-		return renameBtn;
-	}
-	function generateFileSize(size) {
-		const sizeSpan=document.createElement('span'); sizeSpan.className='file-size';
-		if(size) sizeSpan.textContent=formatSize(size);
-		return sizeSpan;
-	}
-	function generateStatus(text){
-		const statusSpan=document.createElement('span');
-		statusSpan.className='status';
-		statusSpan.textContent=text;
-		return statusSpan;
-	}
-	ctrl.innerHTML='';
+	const pushchangeBtn=document.createElement('button');
 	if(file.status==='converted'){
-		const sizeSpan=generateFileSize(file.size);
-		const playBtn=generatePlayButton(file.id);
-		const confirmBtn=document.createElement('button');
-		confirmBtn.className='btn btn-confirm';
-		confirmBtn.textContent='Upload';
+		pushchangeBtn.className='btn btn-confirm';
+		pushchangeBtn.textContent='Upload';
 		const fits = calculateFreeSize() - file.size >= 0;
-		confirmBtn.disabled = !fits;
-		confirmBtn.style.opacity = fits ? '' : '0.5';
-		confirmBtn.onclick = ()=>confirmUpload(file.id);
-		const renameBtn=generateRenameButton(file.id);
-		ctrl.appendChild(sizeSpan);
-		ctrl.appendChild(playBtn);
-		ctrl.appendChild(confirmBtn);
-		ctrl.appendChild(renameBtn);
+		pushchangeBtn.disabled = !fits;
+		pushchangeBtn.onclick = ()=>confirmUpload(file.id);
 	}else if(file.status==='uploading'){
-		const sizeSpan=generateFileSize(file.size);
-		const statusSpan=generateStatus('Uploading...');
-		const playBtn=generatePlayButton(file.id);
-		ctrl.appendChild(sizeSpan);
-		ctrl.appendChild(statusSpan);
-		ctrl.appendChild(playBtn);
+		pushchangeBtn.className='btn btn-confirm';
+		pushchangeBtn.textContent='Uploading...';
+		pushchangeBtn.disabled = true;
 	}else if(file.status==='uploaded'){
-		const sizeSpan=generateFileSize(file.size);
-		const statusSpan=generateStatus('Uploaded');
-		const playBtn=generatePlayButton(file.id);
-		const undoBtn=document.createElement('button');
-		undoBtn.className='btn btn-undo';
-		undoBtn.textContent='Undo';
-		undoBtn.onclick=()=>undoUpload(file.id);
-		ctrl.appendChild(sizeSpan);
-		ctrl.appendChild(statusSpan);
-		ctrl.appendChild(playBtn);
-		ctrl.appendChild(undoBtn);
+		pushchangeBtn.className='btn btn-undo';
+		pushchangeBtn.textContent='Undo upload';
+		pushchangeBtn.onclick=()=>undoUpload(file.id);
 	}else if(file.status==='onserver') {
 		if(file.added) {
-			const sizeSpan=generateFileSize(file.size);
-			const statusSpan=generateStatus('On Server');
-			const undoBtn=document.createElement('button');
-			undoBtn.className='btn btn-undo';
-			undoBtn.textContent='Undo';
-			undoBtn.onclick=()=>undoUpload(file.id);
-			ctrl.appendChild(sizeSpan);
-			ctrl.appendChild(statusSpan);
-			ctrl.appendChild(undoBtn);
+			pushchangeBtn.className='btn btn-undo';
+			pushchangeBtn.textContent='Undo upload';
+			pushchangeBtn.onclick=()=>undoUpload(file.id);
 		} else {
 			if(file.size < 0) {
-				const sizeSpan=generateFileSize(file.size);
-				const statusSpan=generateStatus('Removed');
-				const undoBtn=document.createElement('button');
-				undoBtn.className='btn btn-undo';
-				undoBtn.textContent='Undo';
+				pushchangeBtn.className='btn btn-undo';
+				pushchangeBtn.textContent='Undo remove';
 				const fits = calculateFreeSize() - (file.size & 0x7fffffff) >= 0;
-				undoBtn.disabled = !fits;
-				undoBtn.style.opacity = fits ? '' : '0.5';
-				undoBtn.onclick = ()=>undoUpload(file.id);
-				ctrl.appendChild(sizeSpan);
-				ctrl.appendChild(statusSpan);
-				ctrl.appendChild(undoBtn);
+				pushchangeBtn.disabled = !fits;
+				pushchangeBtn.onclick = ()=>undoUpload(file.id);
 			} else {
-				const sizeSpan=generateFileSize(file.size);
-				const statusSpan=generateStatus('On Server');
-				const removeBtn=document.createElement('button');
-				removeBtn.className='btn btn-undo';
-				removeBtn.textContent='Remove';
-				removeBtn.onclick=()=>confirmUpload(file.id);
-				ctrl.appendChild(sizeSpan); ctrl.appendChild(statusSpan); ctrl.appendChild(removeBtn);
+				pushchangeBtn.className='btn btn-confirm';
+				pushchangeBtn.textContent='Remove';
+				pushchangeBtn.onclick=()=>confirmUpload(file.id);
 			}
 		}
-	}else if(file.status==='transcoding'){
-		setProgress(file.id,0,'transcoding');
-		const statusSpan=generateStatus('Transcoding...');
-		ctrl.appendChild(statusSpan);
-	}else if(file.status==='pending'){
-		const statusSpan=generateStatus('Pending...');
-		ctrl.appendChild(statusSpan);
 	}
+	ctrl.appendChild(statusSpan);
+	ctrl.appendChild(renameBtn);
+	ctrl.appendChild(playBtn);
+	ctrl.appendChild(pushchangeBtn);
 }
 function refreshAllUI(){
 	for(const file of files.values()){
@@ -514,7 +511,25 @@ async function undoUpload(id){
 	if(file.added) {
 		xhr.onload=()=>{
 			if(xhr.status===204){
+				if(playingFileId===id){
+					transitioning = true;
+					if(currentAudio) {
+						currentAudio.onended = null;
+						currentAudio.onloadedmetadata = null;
+						currentAudio.pause();
+						currentAudio.removeAttribute('src'); 
+						currentAudio.load();
+						currentAudio = null;
+					}
+					if (currentProgressUpdate) {
+						clearInterval(currentProgressUpdate);
+						currentProgressUpdate = null;
+					}
+					playingFileId = null;
+					transitioning = false;
+				}
 				if(file.url) URL.revokeObjectURL(file.url);
+				if(file.blob) file.blob = null;
 				files.delete(id);
 				const div=document.getElementById('item-'+id);
 				if(div) div.remove();
@@ -582,7 +597,7 @@ async function loadUploadedFiles(){
 			files.set(value.id, value);
 			renderFile(value);
 		}
-		updateStorageInfo();
+		refreshAllUI();
 	} catch(e){
 		console.log('Failed to load uploaded files', e);
 	}

@@ -277,8 +277,8 @@ public final class Crc {
 					| (((int)buffer[ off + 2 ] & 0xff) << 8)
 					| ((int)buffer[ off + 3 ] & 0xff);
 
-			crc =   crc_lookup[ 7 ][ crc >>> 24               ] ^ crc_lookup[ 6 ][ (crc >> 16) & 0xFF        ] ^
-					crc_lookup[ 5 ][ (crc >> 8) & 0xFF        ] ^ crc_lookup[ 4 ][  crc     & 0xFF           ] ^
+			crc =   crc_lookup[ 7 ][ crc >>> 24               ] ^ crc_lookup[ 6 ][ (crc >>> 16) & 0xFF        ] ^
+					crc_lookup[ 5 ][ (crc >>> 8) & 0xFF        ] ^ crc_lookup[ 4 ][  crc     & 0xFF           ] ^
 					crc_lookup[ 3 ][ buffer[ off + 4 ] & 0xFF ] ^ crc_lookup[ 2 ][ buffer[ off + 5 ] & 0xFF  ] ^
 					crc_lookup[ 1 ][ buffer[ off + 6 ] & 0xFF ] ^ crc_lookup[ 0 ][ buffer[ off + 7 ] & 0xFF  ];
 

@@ -154,11 +154,11 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			int entryfilesize = size;
 			//fos.write(dataentry.size);
 			os.write((byte)entryfilesize); //FILESIZE
-			entryfilesize>>=8;
+			entryfilesize>>>=8;
 			os.write((byte)entryfilesize); //FILESIZE
-			entryfilesize>>=8;
+			entryfilesize>>>=8;
 			os.write((byte)entryfilesize); //FILESIZE
-			entryfilesize>>=8;
+			entryfilesize>>>=8;
 			os.write((byte)entryfilesize); //FILESIZE
 			os.write(sha1); //SHA1
 			byte[] packednamebytes = name.getBytes(StandardCharsets.UTF_8);
@@ -177,7 +177,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			}
 			byte[] soundcountb = new byte[2];
 			soundcountb[0] = (byte) soundcount;
-			soundcountb[1] = (byte) (soundcount>>8);
+			soundcountb[1] = (byte) (soundcount>>>8);
 			os.write(soundcountb);
 			int lengthscount = soundcount<<1;
 			skip += soundcount<<2;
@@ -201,7 +201,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				short length = sounds[i].length;
 				++i;
 				lengths[j] = (byte) length;
-				length >>= 8;
+				length >>>= 8;
 				++j;
 				lengths[j] = (byte) length;
 				++j;

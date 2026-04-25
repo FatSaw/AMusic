@@ -53,39 +53,39 @@ public final class ResourceManager {
 			} catch (NoSuchAlgorithmException e) {
 				return null;
 			}
+			byte[] hash = new byte[0x10];
 			while(--i > -1) {
 				UUID targetplayer = targetplayers[i];
 				long msb = targetplayer.getMostSignificantBits(), lsb = targetplayer.getLeastSignificantBits();
-				byte[] hash = new byte[0x10];
 				hash[0x00] = (byte) msb;
-				msb>>=8;
+				msb>>>=8;
 				hash[0x01] = (byte) msb;
-				msb>>=8;
+				msb>>>=8;
 				hash[0x02] = (byte) msb;
-				msb>>=8;
+				msb>>>=8;
 				hash[0x03] = (byte) msb;
-				msb>>=8;
+				msb>>>=8;
 				hash[0x04] = (byte) msb;
-				msb>>=8;
+				msb>>>=8;
 				hash[0x05] = (byte) msb;
-				msb>>=8;
+				msb>>>=8;
 				hash[0x06] = (byte) msb;
-				msb>>=8;
+				msb>>>=8;
 				hash[0x07] = (byte) msb;
 				hash[0x08] = (byte) lsb;
-				lsb>>=8;
+				lsb>>>=8;
 				hash[0x09] = (byte) lsb;
-				lsb>>=8;
+				lsb>>>=8;
 				hash[0x0A] = (byte) lsb;
-				lsb>>=8;
+				lsb>>>=8;
 				hash[0x0B] = (byte) lsb;
-				lsb>>=8;
+				lsb>>>=8;
 				hash[0x0C] = (byte) lsb;
-				lsb>>=8;
+				lsb>>>=8;
 				hash[0x0D] = (byte) lsb;
-				lsb>>=8;
+				lsb>>>=8;
 				hash[0x0E] = (byte) lsb;
-				lsb>>=8;
+				lsb>>>=8;
 				hash[0x0F] = (byte) lsb;
 				
 				md5hash.reset();

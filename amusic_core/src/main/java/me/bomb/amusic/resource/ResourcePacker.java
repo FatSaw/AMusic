@@ -7,7 +7,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -125,9 +124,8 @@ public final class ResourcePacker implements Runnable {
 							packmcmetafound = true;
 						} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
 							StringBuilder sb = new StringBuilder();
-							while ((len = zis.read(buf)) != -1) {
-								if(len<0x2000) buf = Arrays.copyOf(buf, len);
-				            	sb.append(new String(buf, StandardCharsets.US_ASCII));
+							while ((len = zis.read(buf, 0, buf.length)) != -1) {
+								sb.append(new String(buf, 0, len, StandardCharsets.US_ASCII));
 				            }
 							int open = sb.indexOf("{"),close = sb.lastIndexOf("}");
 							if(open==-1||close==-1) {
@@ -135,13 +133,16 @@ public final class ResourcePacker implements Runnable {
 							}
 							sb.insert(close, ',');
 							sb.insert(++close, soundslist);
-							zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+							entry = new ZipEntry("assets/minecraft/sounds.json");
+							entry.setTime(0L);
+							zos.putNextEntry(entry);
 							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
 							zos.closeEntry();
 							soundsjsonappended = true;
 							continue;
 						}
 						entry = new ZipEntry(entryname);
+						entry.setTime(0L);
 						zos.putNextEntry(entry);
 			            while ((len = zis.read(buf)) != -1) {
 			            	zos.write(buf, 0, len);
@@ -160,21 +161,27 @@ public final class ResourcePacker implements Runnable {
 			}
 			try {
 				if(!soundsjsonappended) {
-					zos.putNextEntry(new ZipEntry("assets/minecraft/sounds.json"));
+					ZipEntry entry = new ZipEntry("assets/minecraft/sounds.json");
+					entry.setTime(0L);
+					zos.putNextEntry(entry);
 					zos.write("{".getBytes());
 					zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
 					zos.write("}".getBytes());
 					zos.closeEntry();
 				}
 				if(!packmcmetafound) {
-					zos.putNextEntry(new ZipEntry("pack.mcmeta"));
+					ZipEntry entry = new ZipEntry("pack.mcmeta");
+					entry.setTime(0L);
+					zos.putNextEntry(entry);
 					zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"AMusic resourcepack\"\n\t}\n}".getBytes());
 					zos.closeEntry();
 				}
 			} catch (IOException e) {
 			}
 			try {
-				zos.putNextEntry(new ZipEntry("assets/minecraft/sounds/amusic/silence.ogg"));
+				ZipEntry entry = new ZipEntry("assets/minecraft/sounds/amusic/silence.ogg");
+				entry.setTime(0L);
+				zos.putNextEntry(entry);
 				zos.write(silencesound);
 				zos.closeEntry();
 			} catch (IOException e) {
@@ -207,7 +214,9 @@ public final class ResourcePacker implements Runnable {
 							while(--partscount > -1) {
 								byte[] part = sounddata[--partid];
 								try {
-									zos.putNextEntry(new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg")));
+									ZipEntry entry = new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg"));
+									entry.setTime(0L);
+									zos.putNextEntry(entry);
 						            zos.write(part);
 						            zos.closeEntry();
 								} catch (IOException e) {

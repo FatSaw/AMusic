@@ -51,14 +51,7 @@ public class ReadSound implements Runnable {
 					ByteArraysOutputStream baos = new ByteArraysOutputStream(maxsoundsize >> 14);
 					byte[] buff;
 					int b;
-					while((b = is.read(buff = new byte[16384])) != -1) {
-						if(b < 16384) {
-							byte[] nbuff = new byte[b];
-							System.arraycopy(buff, 0, nbuff, 0, b);
-							buff = nbuff;
-						}
-						baos.write(buff);
-					}
+					while((b = is.read(buff = new byte[16384])) != -1) baos.write(buff, 0, b);
 					buf = baos.toByteArray();
 					baos.close();
 				}

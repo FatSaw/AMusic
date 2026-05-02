@@ -17,7 +17,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.Arrays;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
@@ -117,6 +116,7 @@ public final class Configuration {
 		final StringBuilder errors = new StringBuilder();
 		InputStream is = null;
 		FileSystemProvider fsp = fs.provider();
+		int size = 0;
 		try {
 			BasicFileAttributes attributes = fsp.readAttributes(configfile, BasicFileAttributes.class);
 			is = fsp.newInputStream(configfile);
@@ -125,10 +125,7 @@ public final class Configuration {
 				filesize = 0x00010000;
 			}
 			bytes = new byte[(int)filesize];
-			int size = is.read(bytes);
-			if(size < filesize) {
-				bytes = Arrays.copyOf(bytes, size);
-			}
+			size = is.read(bytes, 0, bytes.length);
 			is.close();
 		} catch (IOException e1) {
 			if(is != null) {
@@ -140,12 +137,12 @@ public final class Configuration {
 			try {
 				is = Configuration.class.getClassLoader().getResourceAsStream("config.yml");
 				bytes = new byte[0x1000];
-				bytes = Arrays.copyOf(bytes, is.read(bytes));
+				size = is.read(bytes, 0, bytes.length);
 				is.close();
 				OutputStream os = null;
 				try {
 					os = fsp.newOutputStream(configfile);
-					os.write(bytes);
+					os.write(bytes, 0, size);
 					os.close();
 				} catch (IOException e3) {
 					appendError("Filed to write default config", errors);
@@ -167,7 +164,7 @@ public final class Configuration {
 			}
 		}
 		SimpleConfiguration sc;
-		if(bytes != null && (sc = new SimpleConfiguration(bytes)).getBooleanOrError("amusic\0use", errors)) {
+		if(bytes != null && (sc = new SimpleConfiguration(bytes, size)).getBooleanOrError("amusic\0use", errors)) {
 			this.use = true;
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;

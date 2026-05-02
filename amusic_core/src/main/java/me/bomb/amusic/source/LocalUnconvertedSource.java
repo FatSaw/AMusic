@@ -60,7 +60,6 @@ public final class LocalUnconvertedSource extends SoundSource {
 
 	@Override
 	public SourceEntry get(String entrykey) {
-		String[] args = new String[] {fmpegbinary.toAbsolutePath().toString(), "-i", null, "-strict", "-2", "-acodec", "vorbis", "-ab", Integer.toString(bitrate), "-ac", Byte.toString(channels), "-ar", Integer.toString(samplingrate), "-f", "ogg", "-vn", "-y", "pipe:1"};
 		Path musicdir = this.musicdir.resolve(entrykey);
 		if(musicdir == null) return null;
 		DirectoryStream<Path> ds = null;
@@ -138,10 +137,10 @@ public final class LocalUnconvertedSource extends SoundSource {
 				if(--remain > -1) {
 					++nums;
 				}
-				new Thread(new ConvertSound(runtime, args, maxsoundsize, splits, null, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
+				new Thread(new ConvertSound(runtime, fmpegbinary, bitrate, channels, samplingrate, maxsoundsize, splits, null, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
 			}
 		} else {
-			new ConvertSound(runtime, args, maxsoundsize, splits, null, files, data, lengths, finished, success, 0, files.length).run();
+			new ConvertSound(runtime, fmpegbinary, bitrate, channels, samplingrate, maxsoundsize, splits, null, files, data, lengths, finished, success, 0, files.length).run();
 		}
 		return source;
 	}

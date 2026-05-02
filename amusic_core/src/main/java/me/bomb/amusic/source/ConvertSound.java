@@ -3,7 +3,6 @@ package me.bomb.amusic.source;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import me.bomb.amusic.util.ByteArraysOutputStream;
@@ -12,10 +11,10 @@ public class ConvertSound extends ReadSound {
 	protected final Runtime runtime;
 	protected final String[] args;
 
-	public ConvertSound(Runtime runtime, String[] args, int maxsoundsize, byte[] splits, int[] sizes, Path[] files, byte[][][] data, short[] lengths, AtomicBoolean[] finished, boolean[] success, int start, int end) {
+	public ConvertSound(Runtime runtime, Path fmpegbinary, int bitrate, byte channels, int samplingrate, int maxsoundsize, byte[] splits, int[] sizes, Path[] files, byte[][][] data, short[] lengths, AtomicBoolean[] finished, boolean[] success, int start, int end) {
 		super(maxsoundsize, splits, sizes, files, data, lengths, finished, success, start, end);
 		this.runtime = runtime;
-		this.args = Arrays.copyOf(args, args.length);
+		this.args = new String[] {fmpegbinary.toAbsolutePath().toString(), "-i", null, "-strict", "-2", "-acodec", "vorbis", "-ab", Integer.toString(bitrate), "-ac", Byte.toString(channels), "-ar", Integer.toString(samplingrate), "-f", "ogg", "-vn", "-y", "pipe:1"};
 	}
 	
 	@Override
@@ -50,14 +49,7 @@ public class ConvertSound extends ReadSound {
 					ByteArraysOutputStream baos = new ByteArraysOutputStream(maxsoundsize >> 14);
 					byte[] buff;
 					int b;
-					while((b = is.read(buff = new byte[16384])) != -1) {
-						if(b < 16384) {
-							byte[] nbuff = new byte[b];
-							System.arraycopy(buff, 0, nbuff, 0, b);
-							buff = nbuff;
-						}
-						baos.write(buff);
-					}
+					while((b = is.read(buff = new byte[16384])) != -1) baos.write(buff, 0, b);
 					buf = baos.toByteArray();
 					baos.close();
 				}

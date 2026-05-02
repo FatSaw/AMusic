@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +24,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 		byte[] buf = null;
 		InputStream is = null;
 		FileSystemProvider fs = langfile.getFileSystem().provider();
+		int size = 0;
 		try {
 			BasicFileAttributes attributes = fs.readAttributes(langfile, BasicFileAttributes.class);
 			is = fs.newInputStream(langfile);
@@ -33,10 +33,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 				filesize = 0x7FFFFFFD;
 			}
 			buf = new byte[(int)filesize];
-			int size = is.read(buf);
-			if(size < filesize) {
-				buf = Arrays.copyOf(buf, size);
-			}
+			size = is.read(buf, 0, buf.length);
 			is.close();
 		} catch (IOException e1) {
 			if(is != null) {
@@ -48,7 +45,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			try {
 				is = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
 				buf = new byte[0x3000];
-				buf = Arrays.copyOf(buf, is.read(buf));
+				size = is.read(buf, 0, buf.length);
 				is.close();
 				OutputStream os = null;
 				try {
@@ -72,7 +69,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 				}
 			}
 		}
-		SimpleConfiguration sc = new SimpleConfiguration(buf);
+		SimpleConfiguration sc = new SimpleConfiguration(buf, size);
 		String replacelangkey = "replacelang\0", localisationkey = "localisation\0", localisation = "default", localisation0 = localisationkey.concat(localisation).concat("\0");
 		LangOptions[] values = values();
 		final int valuescount = values.length;

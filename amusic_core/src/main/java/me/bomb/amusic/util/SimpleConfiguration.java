@@ -1,7 +1,6 @@
 package me.bomb.amusic.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Decoder;
 import java.util.HashMap;
@@ -20,9 +19,9 @@ public final class SimpleConfiguration {
 	
 	private final HashMap<String,String> kv;
 	
-	public SimpleConfiguration(byte[] bytes) {
+	public SimpleConfiguration(final byte[] bytes, final int length) {
 		HashMap<String,String> kv = new HashMap<>();
-		int i = bytes.length;
+		int i = length;
 		byte level = 0, maxlevel = 0;
 		ArrayList<Integer> intlist = new ArrayList<Integer>();
 		while(--i>-1) {
@@ -76,7 +75,7 @@ public final class SimpleConfiguration {
 			}
 			if(str.length == 0 || str[0] == 0x23) continue;
 			if(valuekeysplit != str.length) {
-				String key = new String(Arrays.copyOf(str, valuekeysplit));
+				String key = new String(str, 0, valuekeysplit);
 				StringBuilder fullkey = new StringBuilder();
 				if(level>plevel) {
 					pkey[level] = key;
@@ -100,7 +99,7 @@ public final class SimpleConfiguration {
 				fullkey.delete(0, 1);
 				++valuekeysplit;
 				boolean hasvalue = valuekeysplit < str.length && str[valuekeysplit] == 0x20;
-				String value = hasvalue&&++valuekeysplit != str.length ? new String(Arrays.copyOfRange(str, valuekeysplit, str.length)) : "";
+				String value = hasvalue&&++valuekeysplit != str.length ? new String(str, valuekeysplit, str.length - valuekeysplit) : "";
 				kv.put(fullkey.toString(), value);
 			}
 		}

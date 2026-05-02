@@ -110,12 +110,12 @@ public final class AMusicVelocity {
 			}
 			this.useexternallib = useprotocolize;
 			if(config.connectuse) {
-				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseSoundStarter() : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
+				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseFVelocitySoundStarter(server) : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
 			} else {
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseSoundStarter() : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
+				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseFVelocitySoundStarter(server) : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

@@ -64,9 +64,9 @@ public final class NamedSoundEffectPacket extends AbstractPacket {
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_3, MINECRAFT_1_20_4, 0x66),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_5, MINECRAFT_1_21_1, 0x68),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_2, MINECRAFT_1_21_4, 0x6F),
-        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_5, MINECRAFT_1_21_8, 0x6E),
-		AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_9, MINECRAFT_1_21_9, 0x73),
-		AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_11, MINECRAFT_1_21_11, 0x73)
+        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_5, MINECRAFT_1_21_8, 0x6E), //TODO: FIX
+		AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_9, MINECRAFT_1_21_9, 0x73), //TODO: FIX
+		AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_11, MINECRAFT_1_21_11, 0x73) //TODO: FIX
     );
     protected int soundid = 0;
     protected String sound;

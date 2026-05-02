@@ -200,7 +200,6 @@ function updateUI(file){
 		return;
 	}
 	if(file.status==='transcoding'){
-		setProgress(file.id,0,'transcoding');
 		statusSpan.className='status';
 		statusSpan.textContent='Transcoding...';
 		ctrl.appendChild(statusSpan);
@@ -410,6 +409,7 @@ async function transcodeFiles(filesToTranscode){
 	for(const file of filesToTranscode){
 		file.status='transcoding';
 		updateUI(file);
+		setProgress(file.id,0,'transcoding');
 		controlledProgressId=file.id;
 		const inName='input_'+file.id; const outName='output_'+file.id+'.ogg';
 		await ffmpeg.writeFile(inName,await FFmpegUtil.fetchFile(file.file));

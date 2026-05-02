@@ -29,8 +29,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 		final int version = player.getProtocolVersion().getProtocol();
 		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Sound sound = Sound.sound(Key.key(musicid), Sound.Source.VOICE, version < 393 ? 1.0E9f : 1.0f, 1.0f);
-		player.playSound(sound); //Velocity playSound not implemented
-		
+		player.playSound(sound, player);
 	}
 
 }

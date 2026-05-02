@@ -21,6 +21,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 	private final ProxyServer server;
 	private final AMusic amusic;
 	private final boolean trackable;
+	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
 	public PlaymusicCommand(ProxyServer server, AMusic amusic, boolean trackable) {
 		this.server = server;
@@ -125,6 +126,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 						
 					}
 				};
+				amusic.getPlaylistSoundnames(targetuuid, false, consumer);
 				return;
 			}
 			Optional<Player> otarget = server.getPlayer(args[0]);
@@ -178,7 +180,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 	public List<String> suggest(Invocation invocation) {
 		CommandSource sender = invocation.source();
 		if (!sender.hasPermission("amusic.playmusic")) {
-			return null;
+			return emptytab;
 		}
 		String[] args = invocation.arguments();
 		List<String> tabcomplete = new ArrayList<String>();
@@ -187,9 +189,15 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				tabcomplete.add("@s");
 			}
 			if (sender.hasPermission("amusic.playmusic.other")) {
-				for (Player player : server.getAllPlayers()) {
-					if (player.getUsername().toLowerCase().startsWith(args[0].toLowerCase())) {
+				if(args.length == 0) {
+					for (Player player : server.getAllPlayers()) {
 						tabcomplete.add(player.getUsername());
+					}
+				} else {
+					for (Player player : server.getAllPlayers()) {
+						if (player.getUsername().toLowerCase().startsWith(args[0].toLowerCase())) {
+							tabcomplete.add(player.getUsername());
+						}
 					}
 				}
 			}

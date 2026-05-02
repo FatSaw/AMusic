@@ -19,6 +19,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 	private final AMusic amusic;
 	private final String uploaderhost;
 	private final ConcurrentHashMap<Player, UUID> uploaders = new ConcurrentHashMap<Player, UUID>();
+	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
 	public UploadmusicCommand(AMusic amusic, String uploaderhost) {
 		this.amusic = amusic;
@@ -130,7 +131,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 	public List<String> suggest(Invocation invocation) {
 		CommandSource sender = invocation.source();
 		if (!sender.hasPermission("amusic.uploadmusic")) {
-			return null;
+			return emptytab;
 		}
 		String[] args = invocation.arguments();
 		ArrayList<String> tabcomplete = new ArrayList<String>();
@@ -138,8 +139,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			tabcomplete.add("start");
 			tabcomplete.add("finish");
 			tabcomplete.add("drop");
-		}
-		if (args.length == 1) {
+		} else if (args.length == 1) {
 			String arg0 = args[0].toLowerCase();
 			if ("start".startsWith(arg0)) {
 				tabcomplete.add("start");
@@ -150,8 +150,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			if ("drop".startsWith(arg0)) {
 				tabcomplete.add("drop");
 			}
-		}
-		if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
+		} else if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0) || "drop".equals(arg0)) {
 				Consumer<UUID[]> consumer = new Consumer<UUID[]>() {

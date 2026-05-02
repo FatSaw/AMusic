@@ -17,6 +17,7 @@ public final class RepeatCommand implements SimpleCommand {
 	
 	private final ProxyServer server;
 	private final AMusic amusic;
+	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
 	public RepeatCommand(ProxyServer server, AMusic amusic) {
 		this.server = server;
@@ -82,7 +83,7 @@ public final class RepeatCommand implements SimpleCommand {
 	public List<String> suggest(Invocation invocation) {
 		CommandSource sender = invocation.source();
 		if (!sender.hasPermission("amusic.repeat")) {
-			return null;
+			return emptytab;
 		}
 		String[] args = invocation.arguments();
 		ArrayList<String> tabcomplete = new ArrayList<String>();
@@ -91,9 +92,15 @@ public final class RepeatCommand implements SimpleCommand {
 				tabcomplete.add("@s");
 			}
 			if (sender.hasPermission("amusic.repeat.other")) {
-				for (Player player : server.getAllPlayers()) {
-					if (player.getUsername().toLowerCase().startsWith(args[0].toLowerCase())) {
+				if(args.length == 0) {
+					for (Player player : server.getAllPlayers()) {
 						tabcomplete.add(player.getUsername());
+					}
+				} else {
+					for (Player player : server.getAllPlayers()) {
+						if (player.getUsername().toLowerCase().startsWith(args[0].toLowerCase())) {
+							tabcomplete.add(player.getUsername());
+						}
 					}
 				}
 			}

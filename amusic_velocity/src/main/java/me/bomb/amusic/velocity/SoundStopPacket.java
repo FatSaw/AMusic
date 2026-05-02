@@ -39,7 +39,7 @@ import static dev.simplix.protocolize.api.util.ProtocolUtil.writeString;
 
 public final class SoundStopPacket extends AbstractPacket {
 	
-	private final static int MINECRAFT_1_21_4 = 769;
+	private final static int MINECRAFT_1_21_4 = 769, MINECRAFT_1_21_5 = 770, MINECRAFT_1_21_8 = 772, MINECRAFT_1_21_9 = 773, MINECRAFT_1_21_11 = 774;
 
 	public static final List<ProtocolIdMapping> MAPPINGS = Arrays.asList(
 			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_13, MINECRAFT_1_13_2, 0x4C),
@@ -54,7 +54,10 @@ public final class SoundStopPacket extends AbstractPacket {
 			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_2, MINECRAFT_1_20_2, 0x66),
 			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_3, MINECRAFT_1_20_5, 0x68),
 			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_6, MINECRAFT_1_21_1, 0x6A),
-			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_2, MINECRAFT_1_21_4, 0x71)
+			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_2, MINECRAFT_1_21_4, 0x71),
+			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_5, MINECRAFT_1_21_8, 0x70),
+			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_9, MINECRAFT_1_21_9, 0x75),
+			AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_11, MINECRAFT_1_21_11, 0x75)
 	);
 	
 	protected byte flags;

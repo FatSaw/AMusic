@@ -45,7 +45,7 @@ import static dev.simplix.protocolize.api.util.ProtocolUtil.writeString;
 
 public final class NamedSoundEffectPacket extends AbstractPacket {
 	
-	private final static int MINECRAFT_1_7_10 = 5, MINECRAFT_1_21_4 = 769;
+	private final static int MINECRAFT_1_7_10 = 5, MINECRAFT_1_21_4 = 769, MINECRAFT_1_21_5 = 770, MINECRAFT_1_21_8 = 772, MINECRAFT_1_21_9 = 773, MINECRAFT_1_21_11 = 774;
 
     public static final List<ProtocolIdMapping> MAPPINGS = Arrays.asList(
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_7_10, MINECRAFT_1_8, 0x29),
@@ -63,7 +63,10 @@ public final class NamedSoundEffectPacket extends AbstractPacket {
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_2, MINECRAFT_1_20_2, 0x64),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_3, MINECRAFT_1_20_4, 0x66),
         AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_20_5, MINECRAFT_1_21_1, 0x68),
-        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_2, MINECRAFT_1_21_4, 0x6F)
+        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_2, MINECRAFT_1_21_4, 0x6F),
+        AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_5, MINECRAFT_1_21_8, 0x6E),
+		AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_9, MINECRAFT_1_21_9, 0x73),
+		AbstractProtocolMapping.rangedIdMapping(MINECRAFT_1_21_11, MINECRAFT_1_21_11, 0x73)
     );
     protected int soundid = 0;
     protected String sound;

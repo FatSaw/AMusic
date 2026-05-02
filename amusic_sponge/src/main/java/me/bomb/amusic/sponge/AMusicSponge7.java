@@ -51,7 +51,7 @@ public final class AMusicSponge7 {
 	private AMusic amusic;
 	private ConcurrentHashMap<Object,InetAddress> playerips;
 	private boolean waitacception, usecmd;
-	private String configerrors, uploaderhost;
+	private String configerrors, uploaderhost, joinplaylist;
 	private ResourceManager resourcemanager;
 	private PositionTracker positiontracker;
 	
@@ -112,6 +112,7 @@ public final class AMusicSponge7 {
 			}
 			this.usecmd = config.usecmd;
 			this.uploaderhost = config.uploadhost;
+			this.joinplaylist = config.joinplaylist;
 			if(config.connectuse) {
 				this.waitacception = false;
 				this.playerips = null;
@@ -145,6 +146,7 @@ public final class AMusicSponge7 {
 			this.usecmd = false;
 			this.playerips = null;
 			this.uploaderhost = null;
+			this.joinplaylist = null;
 			this.resourcemanager = null;
 			this.positiontracker = null;
 			this.amusic = null;
@@ -175,7 +177,7 @@ public final class AMusicSponge7 {
 		}
 		
 		EventManager eventmanager =  Sponge.getEventManager();
-		eventmanager.registerListeners(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusiccommand));
+		eventmanager.registerListeners(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusiccommand, joinplaylist));
 		if(this.waitacception) {
 			eventmanager.registerListeners(this, new PackStatusEventListener(resourcemanager));
 		}

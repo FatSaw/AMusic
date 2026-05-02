@@ -18,10 +18,6 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 
-import dev.simplix.protocolize.api.PacketDirection;
-import dev.simplix.protocolize.api.Protocol;
-import dev.simplix.protocolize.api.Protocolize;
-import dev.simplix.protocolize.api.providers.ProtocolRegistrationProvider;
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.Configuration;
 import me.bomb.amusic.LocalAMusic;
@@ -44,18 +40,18 @@ import me.bomb.amusic.velocity.command.RepeatCommand;
 import me.bomb.amusic.velocity.command.UploadmusicCommand;
 
 public final class AMusicVelocity {
-	
 	private static AMusic instance = null;
 	
 	private final ProxyServer server;
+	private final boolean useexternallib;
     private final Logger logger;
 	private final AMusic amusic;
 	private final ResourceManager resourcemanager;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final boolean usecmd;
 	private final PositionTracker positiontracker;
-	private final String configerrors, uploaderhost;
-    
+	private final String configerrors, uploaderhost, joinplaylist;
+	
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
 		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
@@ -95,6 +91,7 @@ public final class AMusicVelocity {
 			}
 			this.usecmd = config.usecmd;
 			this.uploaderhost = config.uploadhost;
+			this.joinplaylist = config.joinplaylist;
 			playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 
 			PackSender packsender = new VelocityPackSender(server);
@@ -102,13 +99,23 @@ public final class AMusicVelocity {
 			Runtime runtime = Runtime.getRuntime();
 			SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 			PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
+			boolean useprotocolize = false;
+			if(config.useexternallib) {
+				try {
+					Class.forName("dev.simplix.protocolize.api.Protocolize");
+					useprotocolize = true;
+				} catch (ClassNotFoundException e) {
+				} catch (Exception e) {
+				}
+			}
+			this.useexternallib = useprotocolize;
 			if(config.connectuse) {
-				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips == null ? null : playerips.values());
+				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseSoundStarter() : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
 			} else {
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, new ProtocoliseSoundStarter(), new ProtocoliseSoundStopper(server, true), playerips == null ? null : playerips.values());
+				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseSoundStarter() : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
@@ -123,6 +130,8 @@ public final class AMusicVelocity {
 			this.usecmd = false;
 			this.playerips = null;
 			this.uploaderhost = null;
+			this.joinplaylist = null;
+			this.useexternallib = false;
 			this.resourcemanager = null;
 			this.positiontracker = null;
 			this.server = null;
@@ -144,9 +153,25 @@ public final class AMusicVelocity {
 		if(this.amusic == null) {
 			return;
 		}
-		ProtocolRegistrationProvider protocolregistration = Protocolize.protocolRegistration();
-		protocolregistration.registerPacket(SoundStopPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, SoundStopPacket.class);
-		protocolregistration.registerPacket(NamedSoundEffectPacket.MAPPINGS, Protocol.PLAY, PacketDirection.CLIENTBOUND, NamedSoundEffectPacket.class);
+		
+		if(this.useexternallib) {
+			try {
+				Class<?> protocolizeClass = Class.forName("dev.simplix.protocolize.api.Protocolize");
+				Class<?> protocolClass = Class.forName("dev.simplix.protocolize.api.Protocol");
+				Class<?> packetDirectionClass = Class.forName("dev.simplix.protocolize.api.PacketDirection");
+				Class<?> registrationProviderClass = Class.forName("dev.simplix.protocolize.api.providers.ProtocolRegistrationProvider");
+				Object protocolRegistration = protocolizeClass.getMethod("protocolRegistration").invoke(null);
+				Object playProtocol = protocolClass.getField("PLAY").get(null);
+				Object clientboundDirection = packetDirectionClass.getField("CLIENTBOUND").get(null);
+				java.lang.reflect.Method registerMethod = registrationProviderClass.getMethod("registerPacket", java.util.List.class, protocolClass, packetDirectionClass, Class.class);
+				registerMethod.invoke(protocolRegistration, SoundStopPacket.MAPPINGS, playProtocol, clientboundDirection, SoundStopPacket.class);
+				registerMethod.invoke(protocolRegistration, NamedSoundEffectPacket.MAPPINGS, playProtocol, clientboundDirection, NamedSoundEffectPacket.class);
+			} catch (ClassNotFoundException e) {
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
 		UploadmusicCommand uploadmusic = null;
 		if(this.usecmd) {
 			LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic);
@@ -163,7 +188,7 @@ public final class AMusicVelocity {
 		}
 		
 		if(this.resourcemanager != null) {
-			this.server.getEventManager().register(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusic));
+			this.server.getEventManager().register(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusic, joinplaylist));
 		}
 		this.amusic.enable();
 	}

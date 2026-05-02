@@ -22,18 +22,20 @@ public final class EventListener {
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final UploadmusicCommand uploadmusic;
-	protected EventListener(AMusic amusic, ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic) {
+	private final String joinplaylist;
+	protected EventListener(AMusic amusic, ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic, String joinplaylist) {
 		this.amusic = amusic;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
 		this.uploadmusic = uploadmusic;
+		this.joinplaylist = joinplaylist;
 	}
 	@Subscribe
 	public void onLoginEvent(LoginEvent event) {
-		if(playerips == null) return;
 		Player player = event.getPlayer();
-		playerips.put(player, player.getRemoteAddress().getAddress());
+		if(playerips != null) playerips.put(player, player.getRemoteAddress().getAddress());
+		if(joinplaylist != null) amusic.loadPack(new UUID[] {player.getUniqueId()}, joinplaylist, false, null);
 	}
 	@Subscribe
 	public void onDisconnectEvent(DisconnectEvent event) {

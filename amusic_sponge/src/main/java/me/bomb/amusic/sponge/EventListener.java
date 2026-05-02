@@ -15,26 +15,26 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.sponge.command.UploadmusicCommand;
 
-
-
 public final class EventListener {
 	private final AMusic amusic;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final UploadmusicCommand uploadmusiccmd;
-	protected EventListener(AMusic amusic, ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd) {
+	private final String joinplaylist;
+	protected EventListener(AMusic amusic, ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd, String joinplaylist) {
 		this.amusic = amusic;
 		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
 		this.uploadmusiccmd = uploadmusiccmd;
+		this.joinplaylist = joinplaylist;
 	}
 	@Listener
 	public void playerJoin(ClientConnectionEvent.Join event) {
-		if(playerips == null) return;
 		Player player = event.getTargetEntity();
-		playerips.put(player, player.getConnection().getAddress().getAddress());
+		if(playerips != null) playerips.put(player, player.getConnection().getAddress().getAddress());
+		if(joinplaylist != null) amusic.loadPack(new UUID[] {player.getUniqueId()}, joinplaylist, false, null);
 	}
 	@Listener
 	public void playerDisconnect(ClientConnectionEvent.Disconnect event) {

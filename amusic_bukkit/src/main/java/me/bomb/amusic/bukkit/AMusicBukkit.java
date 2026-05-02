@@ -66,7 +66,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final AMusic amusic;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final boolean waitacception, usecmd;
-	private final String configerrors, uploaderhost;
+	private final String configerrors, uploaderhost, joinplaylist;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 
@@ -117,6 +117,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			}
 			this.usecmd = config.usecmd;
 			this.uploaderhost = config.uploadhost;
+			this.joinplaylist = config.joinplaylist;
 			if(config.connectuse) {
 				this.waitacception = false;
 				this.playerips = null;
@@ -204,6 +205,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			this.usecmd = false;
 			this.playerips = null;
 			this.uploaderhost = null;
+			this.joinplaylist = null;
 			this.resourcemanager = null;
 			this.positiontracker = null;
 			this.amusic = null;
@@ -253,7 +255,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		PluginManager pluginmanager = server.getPluginManager();
 		if(this.resourcemanager != null) {
-			pluginmanager.registerEvents(new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusiccmd), this);
+			pluginmanager.registerEvents(new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusiccmd, joinplaylist), this);
 			if(waitacception) {
 				pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
 			}

@@ -38,9 +38,9 @@ public final class Configuration {
 	public final String errors;
 	public final Path musicdir, packeddir;
 	
-	public final boolean use, usecmd, uploaduse, connectuse, encoderuse, uploadhttps, connecttls;
+	public final boolean use, useexternallib, usecmd, uploaduse, connectuse, encoderuse, uploadhttps, connecttls;
 	
-	public final String uploadhost, sendpackhost;
+	public final String uploadhost, sendpackhost, joinplaylist;
 	public final InetAddress sendpackifip, uploadifip, connectifip, connectremoteip;
 	public final int sendpackport, uploadport, connectport;
 	public final int sendpackbacklog, uploadbacklog, connectbacklog;
@@ -62,11 +62,12 @@ public final class Configuration {
 	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
 	protected final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Path musicdir, Path packeddir, boolean useexternallib, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
+		this.useexternallib = useexternallib;
 		this.usecmd = usecmd;
 		this.uploaduse = uploaduse;
 		this.connectuse = connectuse;
@@ -75,6 +76,7 @@ public final class Configuration {
 		this.connecttls = connecthttps;
 		this.uploadhost = uploadhost;
 		this.sendpackhost = sendpackhost;
+		this.joinplaylist = joinplaylist;
 		this.sendpackifip = sendpackifip;
 		this.uploadifip = uploadifip;
 		this.connectifip = connectifip;
@@ -169,6 +171,7 @@ public final class Configuration {
 			this.use = true;
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;
+			this.useexternallib = sc.getBooleanOrError("amusic\0useexternallib", errors);
 			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
@@ -481,6 +484,7 @@ public final class Configuration {
 			}
 			this.processpack = sc.getBooleanOrError("amusic\0resourcepack\0processpack", errors);
 			this.packsizelimit = sc.getIntOrError("amusic\0resourcepack\0sizelimit", errors);
+			this.joinplaylist = sc.getStringOrDefault("amusic\0resourcepack\0joinplaylist", null);
 			int packthreadlimitcount = sc.getIntOrError("amusic\0resourcepack\0packthread\0limitcount", errors);
 			if(packthreadlimitcount > 32767) {
 				packthreadlimitcount = 32767;
@@ -493,6 +497,7 @@ public final class Configuration {
 			
 		} else {
 			this.use = false;
+			this.useexternallib = false;
 			this.usecmd = false;
 			this.musicdir = null;
 			this.packeddir = null;
@@ -532,6 +537,7 @@ public final class Configuration {
 			this.encodersamplingrate = 0;
 			this.processpack = false;
 			this.packsizelimit = 0;
+			this.joinplaylist = null;
 			this.packthreadlimitcount = 0;
 			this.packthreadcoefficient = 0;
 			this.servercache = false;

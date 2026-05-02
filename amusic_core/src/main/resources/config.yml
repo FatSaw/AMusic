@@ -1,6 +1,8 @@
 amusic:
  #Use - set it to false if api mode used
  use: true
+ #Useexternallib - use protocolize on Velocity
+ useexternallib: true
  #Usecmd - register commands
  usecmd: true
  server:
@@ -67,6 +69,8 @@ amusic:
  resourcepack:
   #Processpack - if false resourcepack modification not allowed
   processpack: true
+  #Joinplaylist - apply resourcepack on join
+  #joinplaylist: playlistname
   #Size limit - max packed resourcepack size recomended values for specific versions (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 '52428800', 1.16-1.17.1 '104857600', 1.18+ '262144000'
   sizelimit: 262144000
   packthread:

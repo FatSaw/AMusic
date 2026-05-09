@@ -5,7 +5,7 @@ Music through resource pack
 - Addition to exsisting resourcepack
 - 5 repeat types (repeatone,repeatall,playone,playall,random)
 - Web sound uploader with clientside convertation
-- Large number of supported versions `1.7.10` - `1.21.5`
+- Large number of supported versions `1.7.10` - `1.21.11`
 - Position and count selectors (bukkit only)
 - Volume control option `Voice` only `1.13+`
 

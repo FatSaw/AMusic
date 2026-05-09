@@ -1,5 +1,8 @@
 package me.bomb.amusic.velocity;
 
+import static me.bomb.amusic.util.HexUtils.fromBytesToHex;
+
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,6 +13,8 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
 
 import me.bomb.amusic.PackSender;
+import net.kyori.adventure.resource.ResourcePackInfo;
+import net.kyori.adventure.resource.ResourcePackRequest;
 
 public final class VelocityPackSender implements PackSender {
 
@@ -33,13 +38,15 @@ public final class VelocityPackSender implements PackSender {
 			short length = (short) urlb.length;
 			System.arraycopy(urlb, 0, buf, 2, length);
 			urlb[0] = (byte) length;
-			length >>= 8;
+			length >>>= 8;
 			urlb[1] = (byte) length;
 			player.sendPluginMessage(identifier, buf);
 			return;
 		}
+		ResourcePackInfo info = ResourcePackInfo.resourcePackInfo(UUID.nameUUIDFromBytes(url.getBytes(StandardCharsets.UTF_8)), URI.create(url), fromBytesToHex(sha1));
+		ResourcePackRequest request = ResourcePackRequest.resourcePackRequest().packs(info).build();
 		try {
-			player.sendResourcePack(url, sha1);
+			player.sendResourcePacks(request);
 		} catch (IllegalStateException e) {
 		}
 	}

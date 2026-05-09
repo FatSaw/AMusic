@@ -1,0 +1,11 @@
+executor:
+ queue:
+  #Type - LINKED,ARRAY
+  type: LINKED
+  size: 1024
+ poolsize:
+  core: 4
+  maximum: 8
+ keepalive:
+  timeunit: SECONDS
+  value: 10

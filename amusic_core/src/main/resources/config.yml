@@ -3,8 +3,6 @@ amusic:
  use: true
  #Executor - api call executor configuration preset
  executor: apicall
- #Useexternallib - use protocolize on Velocity
- useexternallib: true
  #Usecmd - register commands
  usecmd: true
  server:

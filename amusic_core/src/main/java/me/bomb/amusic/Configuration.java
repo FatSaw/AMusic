@@ -40,7 +40,7 @@ public final class Configuration {
 	
 	public final Executor executor, serverexecutor, sendpackexecutorchecker, sendpackexecutorsender;
 	
-	public final boolean use, useexternallib, usecmd, uploaduse, connectuse, encoderuse, uploadhttps, connecttls;
+	public final boolean use, usecmd, uploaduse, connectuse, encoderuse, uploadhttps, connecttls;
 	
 	public final String uploadhost, sendpackhost, joinplaylist;
 	public final InetAddress sendpackifip, uploadifip, connectifip, connectremoteip;
@@ -64,7 +64,7 @@ public final class Configuration {
 	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
 	protected final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean useexternallib, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -73,7 +73,6 @@ public final class Configuration {
 		this.serverexecutor = serverexecutor;
 		this.sendpackexecutorchecker = sendpackexecutorchecker;
 		this.sendpackexecutorsender = sendpackexecutorsender;
-		this.useexternallib = useexternallib;
 		this.usecmd = usecmd;
 		this.uploaduse = uploaduse;
 		this.connectuse = connectuse;
@@ -175,7 +174,6 @@ public final class Configuration {
 			this.use = true;
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;
-			this.useexternallib = sc.getBooleanOrError("amusic\0useexternallib", errors);
 			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
@@ -533,7 +531,6 @@ public final class Configuration {
 			
 		} else {
 			this.use = false;
-			this.useexternallib = false;
 			this.usecmd = false;
 			this.musicdir = null;
 			this.packeddir = null;

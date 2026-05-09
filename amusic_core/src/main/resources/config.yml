@@ -1,6 +1,8 @@
 amusic:
  #Use - set it to false if api mode used
  use: true
+ #Executor - api call executor configuration preset
+ executor: apicall
  #Useexternallib - use protocolize on Velocity
  useexternallib: true
  #Usecmd - register commands
@@ -32,6 +34,11 @@ amusic:
     #Limit upload count
     count: 65535
   sendpack:
+   executor:
+    #Executor - resourcepack checker executor configuration preset
+    checker: sendpackchecker
+    #Executor - resourcepack sender executor configuration preset
+    sender: sendpacksender
    #Host - '<protocol>://<ip or hostname>:<port>/'
    host: http://127.0.0.1:25530/
    #Interface ip
@@ -62,6 +69,8 @@ amusic:
     port: 25534
    #Server used on velocity by default
    server:
+    #Executor - api call (for remote requests) executor configuration preset
+    executor: apicallremote
     #Remote client ip
     clientip: 0.0.0.0
     port: 25534

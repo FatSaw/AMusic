@@ -9,9 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -34,7 +31,7 @@ public final class ClientAMusic extends Thread implements AMusic {
 		this.remoteip = config.connectremoteip;
 		this.port = config.connectport;
 		this.socketfactory = config.connectsocketfactory;
-		this.executor = new ThreadPoolExecutor(1, 2, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1024));
+		this.executor = config.executor;
 	}
 	
 	private byte[] sendPacket(byte packetid, byte[] buf, boolean sendsize, int responsesize, boolean remotesize) {

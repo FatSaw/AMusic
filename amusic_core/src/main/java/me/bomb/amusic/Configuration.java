@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.concurrent.Executor;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
@@ -36,6 +37,8 @@ public final class Configuration {
 	
 	public final String errors;
 	public final Path musicdir, packeddir;
+	
+	public final Executor executor, serverexecutor, sendpackexecutorchecker, sendpackexecutorsender;
 	
 	public final boolean use, useexternallib, usecmd, uploaduse, connectuse, encoderuse, uploadhttps, connecttls;
 	
@@ -61,11 +64,15 @@ public final class Configuration {
 	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
 	protected final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, boolean useexternallib, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean useexternallib, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
 		this.packeddir = packeddir;
+		this.executor = executor;
+		this.serverexecutor = serverexecutor;
+		this.sendpackexecutorchecker = sendpackexecutorchecker;
+		this.sendpackexecutorsender = sendpackexecutorsender;
 		this.useexternallib = useexternallib;
 		this.usecmd = usecmd;
 		this.uploaduse = uploaduse;
@@ -173,6 +180,13 @@ public final class Configuration {
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			this.encoderuse = sc.getBooleanOrError("amusic\0encoder\0use", errors);
+			String executorcfg = sc.getStringOrDefault("amusic\0executor", "apicall");
+			ExecutorConfiguration executorconfig = new ExecutorConfiguration("executor_".concat(executorcfg).concat(".yml"));
+			if(executorconfig.errors.length() != 0) {
+				appendError("Filed to load executor configuration", errors);
+				errors.append(executorconfig.errors);
+			}
+			this.executor = executorconfig.executor;
 			if(defaultremoteclient && connectuse) {
 				this.uploadhost = sc.getStringOrError("amusic\0server\0upload\0host", errors);
 				this.uploadhttps = false;
@@ -276,6 +290,22 @@ public final class Configuration {
 				this.uploadlimitsize = 0;
 				this.uploadlimitcount = 0;
 			}
+			
+			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0checker", "sendpackchecker");
+			ExecutorConfiguration sendpackexecutorconfig = new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
+			if(sendpackexecutorconfig.errors.length() != 0) {
+				appendError("Filed to load sendpack executor checker configuration", errors);
+				errors.append(sendpackexecutorconfig.errors);
+			}
+			this.sendpackexecutorchecker = sendpackexecutorconfig.executor;
+			sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0sender", "sendpacksender");
+			sendpackexecutorconfig = new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
+			if(sendpackexecutorconfig.errors.length() != 0) {
+				appendError("Filed to load sendpack executor sender configuration", errors);
+				errors.append(sendpackexecutorconfig.errors);
+			}
+			this.sendpackexecutorsender = sendpackexecutorconfig.executor;
+			
 			this.sendpackhost = sc.getStringOrError("amusic\0server\0sendpack\0host", errors);
 			InetAddress sendpackifip = null;
 			String sendpackipstr = sc.getStringOrError("amusic\0server\0sendpack\0ip", errors);
@@ -309,6 +339,7 @@ public final class Configuration {
 				this.connecttls = sc.getBooleanOrError("amusic\0server\0connect\0tls\0use", errors);
 				
 				if(defaultremoteclient) {
+					this.serverexecutor = null;
 					InetAddress connectserverip = null;
 					String connectserveripstr = sc.getStringOrError("amusic\0server\0connect\0client\0serverip", errors);
 					if(connectserveripstr != null && !connectserveripstr.equals("0.0.0.0")) {
@@ -380,6 +411,13 @@ public final class Configuration {
 						this.connectsocketfactory = new SimpleSocketFactory();
 					}
 				} else {
+					String serverexecutorcfg = sc.getStringOrDefault("amusic\0server\0connect\0server\0executor", "apicallremote");
+					ExecutorConfiguration serverexecutorconfig = new ExecutorConfiguration("executor_".concat(serverexecutorcfg).concat(".yml"));
+					if(serverexecutorconfig.errors.length() != 0) {
+						appendError("Filed to load server executor configuration", errors);
+						errors.append(serverexecutorconfig.errors);
+					}
+					this.serverexecutor = serverexecutorconfig.executor;
 					InetAddress connectclientip = null;
 					String connectclientipstr = sc.getStringOrError("amusic\0server\0connect\0server\0clientip", errors);
 					if(connectclientipstr != null && !connectclientipstr.equals("0.0.0.0")) {
@@ -452,6 +490,7 @@ public final class Configuration {
 					}
 				}
 			} else {
+				this.serverexecutor = null;
 				this.connectifip = null;
 				this.connecttls = false;
 				this.connectremoteip = null;
@@ -498,6 +537,8 @@ public final class Configuration {
 			this.usecmd = false;
 			this.musicdir = null;
 			this.packeddir = null;
+			this.executor = null;
+			this.serverexecutor = null;
 			this.uploaduse = false;
 			this.connectuse = false;
 			this.encoderuse = false;
@@ -513,6 +554,8 @@ public final class Configuration {
 			this.uploadlifetime = 0;
 			this.uploadlimitsize = 0;
 			this.uploadlimitcount = 0;
+			this.sendpackexecutorchecker = null;
+			this.sendpackexecutorsender = null;
 			this.sendpackhost = null;
 			this.sendpackifip = null;
 			this.sendpackport = 0;

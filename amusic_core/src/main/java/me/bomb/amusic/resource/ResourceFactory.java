@@ -18,7 +18,7 @@ public final class ResourceFactory implements Runnable {
 	private final boolean update;
 	private final StatusReport statusreport;
 	
-	public ResourceFactory(String id, UUID[] targets, Data datamanager, ResourceDispatcher dispatcher, SoundSource soundsource, PackSource packsource, boolean update, StatusReport statusreport, boolean async) {
+	public ResourceFactory(String id, UUID[] targets, Data datamanager, ResourceDispatcher dispatcher, SoundSource soundsource, PackSource packsource, boolean update, StatusReport statusreport) {
 		this.id = id;
 		this.targets = targets;
 		this.datamanager = datamanager;
@@ -27,11 +27,6 @@ public final class ResourceFactory implements Runnable {
 		this.packsource = packsource;
 		this.update = update;
 		this.statusreport = statusreport;
-		if(async) {
-			new Thread(this).start();
-		} else {
-			run();
-		}
 	}
 
 	@Override

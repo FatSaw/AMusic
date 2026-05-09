@@ -3,6 +3,7 @@ package me.bomb.amusic;
 import java.net.InetAddress;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 import me.bomb.amusic.packedinfo.Data;
@@ -23,15 +24,17 @@ public class LocalAMusic implements AMusic {
 	public final ResourceDispatcher dispatcher;
 	public final Data datamanager;
 	public final UploadManager uploadermanager;
+	private final Executor executor;
 	
 	public LocalAMusic(Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
 		this.soundsource = soundsource;
 		this.packsource = packsource;
-		this.resourcemanager = new ResourceManager(config.packsizelimit, config.servercache, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2);
+		this.resourcemanager = new ResourceManager(config.packsizelimit, config.servercache, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, config.sendpackhost);
 		this.datamanager = Data.getDefault(config.packeddir, !config.processpack);
 		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
+		this.executor = config.executor;
 	}
 	
 	public void enable() {
@@ -62,8 +65,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(positiontracker.getPlayersLoaded(playlistname));
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
@@ -72,8 +75,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(packed ? datamanager.getPlaylists() : soundsource.getPlaylists());
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
@@ -100,8 +103,8 @@ public class LocalAMusic implements AMusic {
 				}
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer) {
@@ -123,8 +126,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(soundnames);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer) {
@@ -146,8 +149,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(soundlengths);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer) {
@@ -169,8 +172,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(soundlengths);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean setRepeatMode(UUID playeruuid, RepeatType repeattype) {
@@ -182,8 +185,8 @@ public class LocalAMusic implements AMusic {
 				positiontracker.setRepeater(playeruuid, repeattype);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer) {
@@ -195,8 +198,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(positiontracker.getPlaying(playeruuid));
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer) {
@@ -208,8 +211,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(positiontracker.getPlayingSize(playeruuid));
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer) {
@@ -221,18 +224,14 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(positiontracker.getPlayingRemain(playeruuid));
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
-		Runnable r = new Runnable() {
-			public void run() {
-				new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport, true);
-			}
-		};
-		r.run();
-		return false;
+		Runnable r = new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport);
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer) {
@@ -244,8 +243,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(positiontracker.getPlaylistName(playeruuid));
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean stopSound(UUID playeruuid) {
@@ -257,8 +256,8 @@ public class LocalAMusic implements AMusic {
 				positiontracker.stopMusic(playeruuid);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean stopSoundUntrackable(UUID playeruuid) {
@@ -270,8 +269,8 @@ public class LocalAMusic implements AMusic {
 				positiontracker.stopMusicUntrackable(playeruuid);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean playSound(UUID playeruuid, String name) {
@@ -283,8 +282,8 @@ public class LocalAMusic implements AMusic {
 				positiontracker.playMusic(playeruuid, name);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean playSoundUntrackable(UUID playeruuid, String name) {
@@ -296,8 +295,8 @@ public class LocalAMusic implements AMusic {
 				positiontracker.playMusicUntrackable(playeruuid, name);
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean openUploadSession(String playlistname, Consumer<UUID> resultConsumer) {
@@ -309,8 +308,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.startSession(playlistname));
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean getUploadSessions(Consumer<UUID[]> resultConsumer) {
@@ -319,8 +318,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.getSessions());
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final boolean closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer) {
@@ -332,8 +331,8 @@ public class LocalAMusic implements AMusic {
 				resultConsumer.accept(uploadermanager == null ? false : uploadermanager.endSession(token, save));
 			}
 		};
-		r.run();
-		return false;
+		executor.execute(r);
+		return true;
 	}
 	
 	public final void closeUploadSession(UUID token, boolean save) {

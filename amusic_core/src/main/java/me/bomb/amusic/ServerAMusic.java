@@ -10,6 +10,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLException;
@@ -26,6 +27,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
 	private final int port, backlog;
 	private final ServerSocketFactory connectserverfactory;
+	private final Executor serverexecutor;
 	private volatile boolean run;
 	private ServerSocket server;
 
@@ -36,6 +38,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		this.port = config.connectport;
 		this.backlog = config.connectbacklog;
 		this.connectserverfactory = config.connectserverfactory;
+		this.serverexecutor = config.serverexecutor;
 	}
 	
 	@Override
@@ -635,11 +638,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 					}
 				}
 			};
-			new ResourceFactory(name, playeruuids, datamanager, dispatcher, soundsource, packsource, update, statusreport, false);
+			new ResourceFactory(name, playeruuids, datamanager, dispatcher, soundsource, packsource, update, statusreport).run();
 			
 			return statusb;
 		}
-		new ResourceFactory(name, playeruuids, datamanager, dispatcher, soundsource, packsource, update, null, true);
+		this.serverexecutor.execute(new ResourceFactory(name, playeruuids, datamanager, dispatcher, soundsource, packsource, update, null));
 		return new byte[0];
 	}
 	
@@ -993,7 +996,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 					InetAddress connectedaddress = connected.getInetAddress();
 					if (this.remoteip == null || this.remoteip.equals(connectedaddress)) {
 						final Socket fconnected = connected;
-						new Thread() {
+						Runnable r = new Runnable() {
 							@Override
 							public void run() {
 								try {
@@ -1004,7 +1007,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 									e.printStackTrace();
 								}
 							}
-						}.start();
+						};
+						this.serverexecutor.execute(r);
 					}
 				} catch (SocketTimeoutException e) {
 					continue;

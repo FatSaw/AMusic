@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.Executor;
 
 import javax.net.ServerSocketFactory;
 
@@ -24,12 +25,12 @@ public final class ResourceManager {
 	private final byte[] salt;
 	private final ServerManager server;
 	
-	public ResourceManager(int maxbuffersize, boolean servercache, byte[] salt, boolean waitacception, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount) {
+	public ResourceManager(int maxbuffersize, boolean servercache, byte[] salt, boolean waitacception, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount, Executor executorchecker, Executor executorsender) {
 		this.maxbuffersize = maxbuffersize;
 		resources = servercache ? new ConcurrentHashMap<String, byte[]>() : null;
 		this.salt = salt;
 		accepted = waitacception ? new ConcurrentSkipListSet<UUID>() : null;
-		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new ResourceSender(this), connectcount);
+		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new ResourceSender(this, executorchecker, executorsender), connectcount);
 	}
 	
 	public void start() {

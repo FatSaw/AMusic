@@ -111,7 +111,7 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
 			byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 			boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 			if(!bytesoundnamelength) ++packetsize;
-			
+			packetsize+=songidb.length;
 			ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
 			if(version > -1 && packetid.length > version) {
 				int pid = packetid[version];

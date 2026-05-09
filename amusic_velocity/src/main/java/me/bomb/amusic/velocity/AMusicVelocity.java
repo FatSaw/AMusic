@@ -43,7 +43,6 @@ public final class AMusicVelocity {
 	private static AMusic instance = null;
 	
 	private final ProxyServer server;
-	private final boolean useexternallib;
     private final Logger logger;
 	private final AMusic amusic;
 	private final ResourceManager resourcemanager;
@@ -99,23 +98,13 @@ public final class AMusicVelocity {
 			Runtime runtime = Runtime.getRuntime();
 			SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 			PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
-			boolean useprotocolize = false;
-			if(config.useexternallib) {
-				try {
-					Class.forName("dev.simplix.protocolize.api.Protocolize");
-					useprotocolize = true;
-				} catch (ClassNotFoundException e) {
-				} catch (Exception e) {
-				}
-			}
-			this.useexternallib = useprotocolize;
 			if(config.connectuse) {
-				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseFVelocitySoundStarter(server) : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
+				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, new VelocitySoundStarter(server), new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
 			} else {
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, useprotocolize ? new ProtocoliseFVelocitySoundStarter(server) : new VelocitySoundStarter(server), useprotocolize ? new ProtocoliseSoundStopper(server, true) : new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
+				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, new VelocitySoundStarter(server), new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
@@ -131,7 +120,6 @@ public final class AMusicVelocity {
 			this.playerips = null;
 			this.uploaderhost = null;
 			this.joinplaylist = null;
-			this.useexternallib = false;
 			this.resourcemanager = null;
 			this.positiontracker = null;
 			this.server = null;
@@ -152,24 +140,6 @@ public final class AMusicVelocity {
 		}
 		if(this.amusic == null) {
 			return;
-		}
-		
-		if(this.useexternallib) {
-			try {
-				Class<?> protocolizeClass = Class.forName("dev.simplix.protocolize.api.Protocolize");
-				Class<?> protocolClass = Class.forName("dev.simplix.protocolize.api.Protocol");
-				Class<?> packetDirectionClass = Class.forName("dev.simplix.protocolize.api.PacketDirection");
-				Class<?> registrationProviderClass = Class.forName("dev.simplix.protocolize.api.providers.ProtocolRegistrationProvider");
-				Object protocolRegistration = protocolizeClass.getMethod("protocolRegistration").invoke(null);
-				Object playProtocol = protocolClass.getField("PLAY").get(null);
-				Object clientboundDirection = packetDirectionClass.getField("CLIENTBOUND").get(null);
-				java.lang.reflect.Method registerMethod = registrationProviderClass.getMethod("registerPacket", java.util.List.class, protocolClass, packetDirectionClass, Class.class);
-				registerMethod.invoke(protocolRegistration, SoundStopPacket.MAPPINGS, playProtocol, clientboundDirection, SoundStopPacket.class);
-				registerMethod.invoke(protocolRegistration, NamedSoundEffectPacket.MAPPINGS, playProtocol, clientboundDirection, NamedSoundEffectPacket.class);
-			} catch (ClassNotFoundException e) {
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 		
 		UploadmusicCommand uploadmusic = null;

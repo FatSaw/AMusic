@@ -3,6 +3,6 @@
     "name": "AMusic",
     "version": "${revision}",
     "authors": ["Bomb"],
-    "dependencies": [{"id": "protocolize","optional": true}],
+    "dependencies": [],
     "main": "me.bomb.amusic.velocity.AMusicVelocity"
 }

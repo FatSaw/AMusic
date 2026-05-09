@@ -107,12 +107,22 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
 		}
 		
 		if(version > 388) {
-			int packetsize = 3;
+			int packetsize = 4;
 			byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 			boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 			if(!bytesoundnamelength) ++packetsize;
 			
 			ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
+			if(version > -1 && packetid.length > version) {
+				int pid = packetid[version];
+				if(pid != -1) {
+					buf.writeByte(pid);
+				} else {
+					throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
+				}
+			} else {
+				throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
+			}
 			buf.writeByte(0x03);
 			buf.writeByte(9);
 			if (bytesoundnamelength) {

@@ -1,5 +1,7 @@
 package me.bomb.amusic.bukkit.legacy;
 
+import static me.bomb.amusic.util.HexUtils.fromBytesToHex;
+
 import java.util.UUID;
 
 import org.bukkit.Server;
@@ -23,15 +25,7 @@ public final class LegacyPackSender_1_10_R1 implements PackSender {
 			return;
 		}
 		Player player = server.getPlayer(uuid);
-		StringBuilder sb = new StringBuilder();
-		for (byte b : sha1) {
-			int value = b & 0xFF;
-			if (value < 16) {
-				sb.append("0");
-			}
-			sb.append(Integer.toHexString(value).toLowerCase());
-		}
-		((CraftPlayer)player).getHandle().playerConnection.sendPacket(new PacketPlayOutResourcePackSend(url, sb.toString()));
+		((CraftPlayer)player).getHandle().playerConnection.sendPacket(new PacketPlayOutResourcePackSend(url, fromBytesToHex(sha1)));
 	}
 
 }

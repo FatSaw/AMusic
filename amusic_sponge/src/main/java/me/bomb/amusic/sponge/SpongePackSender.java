@@ -1,7 +1,8 @@
 package me.bomb.amusic.sponge;
 
+import static me.bomb.amusic.util.HexUtils.fromBytesToHex;
+
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public final class SpongePackSender implements PackSender {
 			Player player = oplayer.get();
 			SpongeURIResourcePack rp;
 			try {
-				rp = new SpongeURIResourcePack(url, bytesToHex(sha1));
+				rp = new SpongeURIResourcePack(url, fromBytesToHex(sha1));
 			} catch (URISyntaxException e) {
 				return;
 			}
@@ -59,17 +60,6 @@ public final class SpongePackSender implements PackSender {
 				}
 			});*/
 		}
-	}
-	private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);
-	private static String bytesToHex(byte[] bytes) {
-		int i = bytes.length, j = i << 1;
-	    byte[] hexChars = new byte[j];
-	    while(--i > -1) {
-	    	int v = bytes[i] & 0xFF;
-	        hexChars[--j] = HEX_ARRAY[v & 0x0F];
-	    	hexChars[--j] = HEX_ARRAY[v >>> 4];
-	    }
-	    return new String(hexChars, StandardCharsets.US_ASCII);
 	}
 	
 }

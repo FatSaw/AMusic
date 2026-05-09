@@ -78,13 +78,8 @@ Description: `Limits player count`
 
 ## Dependencies
 
-### Ffmpeg
+### Ffmpeg (optional)
 [Size reduced ffmpeg 7.0.1 building arguments Linux](/FFMPEG_BUILD.md)
-
-### Bukkit
-`...`
-### Velocity
-`Protocolize`
 
 ## BUILD:
 

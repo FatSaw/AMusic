@@ -199,6 +199,34 @@ public final class SimpleConfiguration {
 		}
 	}
 	
+	public long getLongOrDefault(String key, long defaultvalue) {
+		String value = kv.get(key);
+		if(value==null) return defaultvalue;
+		try {
+			return Long.parseLong(value);
+		} catch (NumberFormatException e) {
+			return defaultvalue;
+		}
+	}
+	public long getLong(String key) throws NullPointerException, NumberFormatException {
+		String value = kv.get(key);
+		if(value==null) throw new NullPointerException();
+		return Long.parseLong(value);
+	}
+	public long getLongOrError(String key, StringBuilder sb) {
+		String value = kv.get(key);
+		if(value==null) {
+			appendKey(key, sb);
+			return 0L;
+		}
+		try {
+			return Long.parseLong(value);
+		} catch (NumberFormatException e) {
+			appendKey(key, sb);
+			return 0L;
+		}
+	}
+	
 	public float getFloatOrDefault(String key, float defaultvalue) {
 		String value = kv.get(key);
 		if(value==null) return defaultvalue;

@@ -18,7 +18,7 @@ import net.kyori.adventure.sound.Sound;
 
 public final class VelocitySoundStarter implements SoundStarter {
 	
-	static byte[] packetid;
+	final static byte[] packetid;
 	
 	static {
     	int i = 760;
@@ -70,16 +70,15 @@ public final class VelocitySoundStarter implements SoundStarter {
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
 		
-		int protocolVersion = version;
-		if(protocolVersion > -1 && packetid.length > protocolVersion) {
-			int pid = packetid[protocolVersion];
+		if(version > -1 && packetid.length > version) {
+			int pid = packetid[version];
 			if(pid != -1) {
 				buf.writeByte(pid);
 			} else {
-				throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(protocolVersion)));
+				throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 			}
 		} else {
-			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(protocolVersion)));
+			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);
@@ -88,17 +87,17 @@ public final class VelocitySoundStarter implements SoundStarter {
             buf.writeShort(w);
         }
 		buf.writeBytes(songidb);
-		if (protocolVersion > 47) buf.writeByte(9);
+		if (version > 47) buf.writeByte(9);
         buf.writeInt(0);
         buf.writeInt(Integer.MIN_VALUE);
         buf.writeInt(0);
         buf.writeFloat(version < 393 ? 1.0E9f : 1.0f);
-        if (protocolVersion < 210) {
+        if (version < 210) {
             buf.writeByte(63);
         } else {
             buf.writeFloat(1.0F);
         }
-        if (protocolVersion >= 759) {
+        if (version >= 759) {
             buf.writeLong(0L);
         }
 		((ConnectedPlayer) player).getConnection().write(buf);

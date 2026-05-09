@@ -56,7 +56,7 @@ public final class ResourceDispatcher {
 			System.arraycopy(tokenbytes, 0, host, this.end, 36);
 			positiontracker.stopMusic(target);
 			positiontracker.removePlaylistInfo(target);
-			packsender.send(target, new String(host, StandardCharsets.UTF_8), sha1);
+			packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), sha1);
 			positiontracker.setPlaylistInfo(target, id, sounds);
 		}
 	}

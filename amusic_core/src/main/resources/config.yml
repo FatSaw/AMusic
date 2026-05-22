@@ -86,8 +86,10 @@ amusic:
    #Coefficient - allowed value range 0.0 - 1.0, calculates thread count, works if limitcount greater than 1
    coefficient: 0.5
   cache:
+   #Storepacked caching - store packed resourcepacks on disk
+   storepacked: true
    #Serverside caching - store all packed resourcepacks in ram
-   server: true
+   server: false
    #Clientside caching - store resourcepacks clientside (up to 10)
    client: true
  #Serverside encoder, not recommended to use since web uploader with clientside convertation exists

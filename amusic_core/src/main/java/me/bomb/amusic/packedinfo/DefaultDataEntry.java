@@ -7,13 +7,14 @@ import java.nio.file.spi.FileSystemProvider;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import me.bomb.amusic.util.AMusicLogger;
+
 public final class DefaultDataEntry extends DataEntry {
 	
 
 	private final FileSystemProvider fs;
 	protected final int skip;
 	protected final Path datapath;
-	protected boolean saved;
 
 	protected DefaultDataEntry(int skip, Path datapath, String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1) {
 		super(storeid, size, name, sounds, sha1);
@@ -44,9 +45,13 @@ public final class DefaultDataEntry extends DataEntry {
 				} catch (IOException e2) {
 				}
 			}
+			return null;
 		}
 		byte[] filesha1 = sha1hash.digest(buf);
-		if (!MessageDigest.isEqual(filesha1, sha1)) return null;
+		if (!MessageDigest.isEqual(filesha1, sha1)) {
+			AMusicLogger.warn("Packed resourcepack \"".concat(storeid).concat("\" load fail (invalid checksum)"));
+			return null;
+		}
 		return buf;
 	}
 

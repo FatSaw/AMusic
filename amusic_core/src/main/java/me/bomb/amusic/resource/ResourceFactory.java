@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.DataEntry;
+import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 
@@ -12,17 +13,17 @@ public final class ResourceFactory implements Runnable {
 	private final String id;
 	private final UUID[] targets;
 	private final Data datamanager;
-	private final ResourceDispatcher dispatcher;
+	private final ResourceManager resourcemanager;
 	private final SoundSource soundsource;
 	private final PackSource packsource;
 	private final boolean update;
 	private final StatusReport statusreport;
 	
-	public ResourceFactory(String id, UUID[] targets, Data datamanager, ResourceDispatcher dispatcher, SoundSource soundsource, PackSource packsource, boolean update, StatusReport statusreport) {
+	public ResourceFactory(String id, UUID[] targets, Data datamanager, ResourceManager resourcemanager, SoundSource soundsource, PackSource packsource, boolean update, StatusReport statusreport) {
 		this.id = id;
 		this.targets = targets;
 		this.datamanager = datamanager;
-		this.dispatcher = dispatcher;
+		this.resourcemanager = resourcemanager;
 		this.soundsource = soundsource;
 		this.packsource = packsource;
 		this.update = update;
@@ -31,7 +32,6 @@ public final class ResourceFactory implements Runnable {
 
 	@Override
 	public void run() {
-		DataEntry dataentry = datamanager.getPlaylist(this.id);
 		if(update) {
 			if(datamanager.lockwrite) {
 				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
@@ -47,7 +47,6 @@ public final class ResourceFactory implements Runnable {
 				statusreport.onStatusResponse(updated ? EnumStatus.REMOVED : EnumStatus.NOTEXSIST);
 				return;
 			}
-			dispatcher.resourcemanager.putCache(this.id, resourcepacker.resourcepack);
 			if(targets == null) {
 				if(statusreport == null) {
 					return;
@@ -55,13 +54,15 @@ public final class ResourceFactory implements Runnable {
 				statusreport.onStatusResponse(EnumStatus.PACKED);
 				return;
 			}
-			dispatcher.dispatch(this.id, this.targets, resourcepacker.sounds, resourcepacker.resourcepack, resourcepacker.sha1);
+			DataEntry dataentry = datamanager.getPlaylist(this.id);
+			resourcemanager.dispatch(dataentry, this.targets);
 			if(statusreport == null) {
 				return;
 			}
 			statusreport.onStatusResponse(EnumStatus.DISPATCHED);
 			return;
 		}
+		DataEntry dataentry = datamanager.getPlaylist(this.id);
 		if(dataentry == null) {
 			if(statusreport == null) {
 				return;
@@ -76,7 +77,7 @@ public final class ResourceFactory implements Runnable {
 			statusreport.onStatusResponse(EnumStatus.PACKED);
 			return;
 		}
-		if(dispatcher.dispatch(dataentry, this.targets)) {
+		if(resourcemanager.dispatch(dataentry, this.targets)) {
 			if(statusreport == null) {
 				return;
 			}

@@ -52,7 +52,7 @@ public final class Configuration {
 	
 	public final Path encoderbinary;
 	
-	public final boolean processpack, servercache, clientcache, waitacception;
+	public final boolean processpack, storepacked, servercache, clientcache, waitacception;
 	public final int uploadlifetime, uploadlimitsize, uploadlimitcount, packsizelimit;
 	public final short packthreadlimitcount;
 	public final float packthreadcoefficient;
@@ -64,7 +64,7 @@ public final class Configuration {
 	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
 	protected final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean storepacked, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -98,6 +98,7 @@ public final class Configuration {
 		this.sendpackstrictaccess = sendpackstrictaccess;
 		this.encoderbinary = encoderbinary;
 		this.processpack = processpack;
+		this.storepacked = storepacked;
 		this.servercache = servercache;
 		this.clientcache = clientcache;
 		this.waitacception = waitacception;
@@ -525,7 +526,7 @@ public final class Configuration {
 			}
 			this.packthreadlimitcount = (short) packthreadlimitcount;
 			this.packthreadcoefficient = sc.getFloatOrError("amusic\0resourcepack\0packthread\0coefficient", errors);
-			
+			this.storepacked = sc.getBooleanOrError("amusic\0resourcepack\0cache\0storepacked", errors);
 			this.servercache = sc.getBooleanOrError("amusic\0resourcepack\0cache\0server", errors);
 			this.clientcache = sc.getBooleanOrError("amusic\0resourcepack\0cache\0client", errors);
 			
@@ -577,6 +578,7 @@ public final class Configuration {
 			this.joinplaylist = null;
 			this.packthreadlimitcount = 0;
 			this.packthreadcoefficient = 0;
+			this.storepacked = false;
 			this.servercache = false;
 			this.clientcache = false;
 		}

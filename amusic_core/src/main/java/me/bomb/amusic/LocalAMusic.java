@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.SoundInfo;
-import me.bomb.amusic.resource.ResourceDispatcher;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
@@ -21,7 +20,6 @@ public class LocalAMusic implements AMusic {
 	public final PackSource packsource;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
-	public final ResourceDispatcher dispatcher;
 	public final Data datamanager;
 	public final UploadManager uploadermanager;
 	private final Executor executor;
@@ -29,10 +27,11 @@ public class LocalAMusic implements AMusic {
 	public LocalAMusic(Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
 		this.soundsource = soundsource;
 		this.packsource = packsource;
-		this.resourcemanager = new ResourceManager(config.packsizelimit, config.servercache, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
-		this.dispatcher = new ResourceDispatcher(packsender, resourcemanager, positiontracker, config.sendpackhost);
-		this.datamanager = Data.getDefault(config.packeddir, !config.processpack);
+		ResourceManager rm = new ResourceManager(packsender, this.positiontracker, config.sendpackhost, config.packsizelimit, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+		this.resourcemanager = rm;
+		boolean storage = false;
+		this.datamanager = config.storepacked ? Data.getDefault(config.packeddir, !config.processpack, config.servercache) : Data.getNoStorage(this.soundsource, this.packsource, !config.processpack, config.servercache);
 		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 		this.executor = config.executor;
 	}
@@ -229,7 +228,7 @@ public class LocalAMusic implements AMusic {
 	}
 	
 	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
-		Runnable r = new ResourceFactory(name, playeruuid, datamanager, dispatcher, soundsource, packsource, update, statusreport);
+		Runnable r = new ResourceFactory(name, playeruuid, datamanager, resourcemanager, soundsource, packsource, update, statusreport);
 		executor.execute(r);
 		return true;
 	}

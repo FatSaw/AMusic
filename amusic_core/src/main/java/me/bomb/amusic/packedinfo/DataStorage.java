@@ -5,14 +5,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.UUID;
 
 import me.bomb.amusic.resource.ResourcePacker;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.util.AMusicLogger;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
@@ -32,8 +36,8 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
     private final FileSystemProvider fs;
     private final Path datadirectory;
 	
-	protected DataStorage(Path datadirectory, boolean lockwrite) {
-		super(lockwrite);
+	protected DataStorage(Path datadirectory, boolean lockwrite, boolean storeinram) {
+		super(lockwrite, storeinram);
 		this.datadirectory = datadirectory;
 		this.fs = datadirectory.getFileSystem().provider();
 	}
@@ -54,73 +58,16 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			final Iterator<Path> it = ds.iterator();
 			while(it.hasNext()) {
 				final Path ampifile = it.next();
-				String id = ampifile.getFileName().toString();
-				id = id.substring(0, id.length() - FORMATSIZE);
-				InputStream is = null;
-				try {
-					int skip = 36;
-					is = fs.newInputStream(ampifile);
-					byte[] buf = new byte[8];
-					if(is.read(buf) != 8 || buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'p' || buf[3] != 'i' || buf[4] != 0 || buf[7] != 0) {
-						is.close();
-						continue;
-					}
-					byte version = (byte) is.read();
-					buf = new byte[4];
-					byte[] sha1 = new byte[20];
-					int packednamelength;
-					is.read(buf);
-					is.read(sha1);
-					if(version != VERSION || (packednamelength = is.read()) == -1) {
-						is.close();
-						continue;
-					}
-					skip+=packednamelength;
-					int packedsize = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0];
-					buf = new byte[packednamelength];
-					is.read(buf);
-					String packedname = new String(buf, StandardCharsets.UTF_8);
-					buf = new byte[2];
-					if(is.read(buf) != 2) {
-						is.close();
-						continue;
-					}
-					int soundcount = 0x0000FFFF;
-					soundcount &= 0xFF & buf[0] | buf[1] << 8;
-					skip+=soundcount<<2;
-					byte[] namelengths = new byte[soundcount], splits = new byte[soundcount];
-					buf = new byte[soundcount<<1];
-					is.read(namelengths);
-					is.read(splits);
-					short[] lengths = new short[soundcount];
-					is.read(buf);
-					for(int k = 0,j = 0; k < soundcount; ++k, ++j) {
-						lengths[k] = (short) (buf[j] & 0xFF | buf[++j]<<8);
-					}
-					soundcount = (short) lengths.length;
-					SoundInfo[] sounds = new SoundInfo[soundcount];
-					int j = 0;
-					while(j < soundcount) {
-						buf = new byte[0xFF & namelengths[j]];
-						is.read(buf);
-						skip+=buf.length;
-						sounds[j] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[j], splits[j]);
-						++j;
-					}
-					is.close();
-					DefaultDataEntry dataentry = new DefaultDataEntry(skip, ampifile, id, packedsize, packedname, sounds, sha1);
-					dataentry.saved = true;
-					options.put(packedname, dataentry);
-				} catch (IOException e1) {
-					if (is != null) {
-						try {
-							is.close();
-						} catch (IOException e2) {
-						}
-					}
+				String storeid = ampifile.getFileName().toString();
+				storeid = storeid.substring(0, storeid.length() - FORMATSIZE);
+				DataEntry entry = loadAmp(storeid);
+				if(entry == null) {
 					continue;
 				}
+				options.put(entry.name, entry);
+				AMusicLogger.info("Pack \"".concat(storeid).concat("\" load success"));
 			}
+			this.printRamUsage();
 		} catch (IOException e) {
 		} finally {
 			if (ds != null) {
@@ -132,12 +79,129 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 	}
 	
-	private void saveAmp(String id, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] resource) {
-		if(size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20) {
-			return;
+	private DataEntry loadAmp(String storeid) {
+		if(storeid == null) {
+			AMusicLogger.warn("Pack load fail (invalid values)");
+			return null;
+		}
+		Path ampifile;
+		try {
+			ampifile = datadirectory.resolve(storeid.concat(FORMAT));
+		} catch (InvalidPathException e) {
+			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid path)"));
+			return null;
+		}
+		InputStream is = null;
+		try {
+			int skip = 36;
+			is = fs.newInputStream(ampifile);
+			byte[] buf = new byte[8];
+			if(is.read(buf) != 8 || buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'p' || buf[3] != 'i' || buf[4] != 0 || buf[7] != 0) {
+				is.close();
+				AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid header)"));
+				return null;
+			}
+			byte version = (byte) is.read();
+			buf = new byte[4];
+			byte[] sha1 = new byte[20];
+			int packednamelength;
+			is.read(buf);
+			is.read(sha1);
+			if(version != VERSION || (packednamelength = is.read()) == -1) {
+				is.close();
+				AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid version)"));
+				return null;
+			}
+			skip+=packednamelength;
+			int packedsize = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0];
+			buf = new byte[packednamelength];
+			is.read(buf);
+			String packedname = new String(buf, StandardCharsets.UTF_8);
+			buf = new byte[2];
+			is.read(buf);
+			int soundcount = 0x0000FFFF;
+			soundcount &= 0xFF & buf[0] | buf[1] << 8;
+			skip+=soundcount<<2;
+			byte[] namelengths = new byte[soundcount], splits = new byte[soundcount];
+			buf = new byte[soundcount<<1];
+			is.read(namelengths);
+			is.read(splits);
+			short[] lengths = new short[soundcount];
+			is.read(buf);
+			for(int k = 0,j = 0; k < soundcount; ++k, ++j) {
+				lengths[k] = (short) (buf[j] & 0xFF | buf[++j]<<8);
+			}
+			soundcount = (short) lengths.length;
+			SoundInfo[] sounds = new SoundInfo[soundcount];
+			int j = 0;
+			while(j < soundcount) {
+				buf = new byte[0xFF & namelengths[j]];
+				is.read(buf);
+				skip+=buf.length;
+				sounds[j] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[j], splits[j]);
+				++j;
+			}
+			if(this.storeinram) {
+				buf = new byte[packedsize];
+				is.read(buf, 0, buf.length);
+				RamDataEntry dataentry = new RamDataEntry(storeid, packedsize, packedname, sounds, sha1, buf);
+				is.close();
+				final MessageDigest sha1hash;
+				try {
+					sha1hash = MessageDigest.getInstance("SHA-1");
+				} catch (NoSuchAlgorithmException e) {
+					AMusicLogger.warn("Pack load fail (can not initialize SHA-1)");
+					return null;
+				}
+				byte[] filesha1 = sha1hash.digest(buf);
+				if(MessageDigest.isEqual(filesha1, sha1)) {
+					return dataentry;
+				} else {
+					AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid checksum)"));
+					return null;
+				}
+			}
+			is.close();
+			DefaultDataEntry dataentry = new DefaultDataEntry(skip, ampifile, storeid, packedsize, packedname, sounds, sha1);
+			return dataentry;
+		} catch (IOException e1) {
+			if (is != null) {
+				try {
+					is.close();
+				} catch (IOException e2) {
+				}
+			}
+			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (IO exception)"));
+			AMusicLogger.error(e1.getMessage());
+			return null;
+		}
+	}
+	
+	private DataEntry saveAmp(String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] resource) {
+		if(storeid == null || size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20) {
+			AMusicLogger.warn("Pack save fail (invalid values)");
+			return null;
+		}
+		final MessageDigest sha1hash;
+		try {
+			sha1hash = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			AMusicLogger.warn("Pack save fail (can not initialize SHA-1)");
+			return null;
+		}
+		byte[] filesha1 = sha1hash.digest(resource);
+		if(!MessageDigest.isEqual(filesha1, sha1)) {
+			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid checksum)"));
+			return null;
+		}
+		Path ampifile;
+		try {
+			ampifile = datadirectory.resolve(storeid.concat(FORMAT));
+		} catch (InvalidPathException e) {
+			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid path)"));
+			return null;
 		}
 		int skip = 36;
-		Path ampifile = datadirectory.resolve(id.concat(FORMAT));
 		OutputStream os = null;
 		try {
 			int soundcount = sounds.length;
@@ -230,10 +294,16 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				} catch (IOException e2) {
 				}
 			}
+			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (IO exception)"));
+			AMusicLogger.error(e1.getMessage());
+			return null;
 		}
-		DefaultDataEntry entry = new DefaultDataEntry(skip, ampifile, id, size, name, sounds, sha1);
-		entry.saved = true;
-		options.put(name, entry);
+		if(this.storeinram) {
+			RamDataEntry dataentry = new RamDataEntry(storeid, size, name, sounds, sha1, resource);
+			return dataentry;
+		}
+		DefaultDataEntry entry = new DefaultDataEntry(skip, ampifile, storeid, size, name, sounds, sha1);
+		return entry;
 	}
 	
 	public ResourcePacker createPacker(final String id, final SoundSource soundsource, final PackSource packsource) {
@@ -251,14 +321,29 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 		if(packer == null) {
 			final boolean deleted;
-			DefaultDataEntry data = (DefaultDataEntry) options.remove(name);
+			DataEntry data = options.remove(name);
 			if(data == null) {
 				return false;
 			}
+			Path ampifile;
 			try {
-				deleted = fs.deleteIfExists(data.datapath);
-			} catch (IOException e) {
+				ampifile = datadirectory.resolve(data.storeid.concat(FORMAT));
+			} catch (InvalidPathException e) {
+				AMusicLogger.warn("Pack \"".concat(data.storeid).concat("\" save fail (invalid path)"));
 				return false;
+			}
+			try {
+				deleted = fs.deleteIfExists(ampifile);
+			} catch (IOException e) {
+				AMusicLogger.warn("Pack \"".concat(data.storeid).concat("\" remove fail (IO exception)"));
+				AMusicLogger.error(e.getMessage());
+				return false;
+			}
+			if(deleted) {
+				AMusicLogger.info("Pack \"".concat(data.storeid).concat("\" remove success"));
+				this.printRamUsage();
+			} else {
+				AMusicLogger.warn("Pack \"".concat(data.storeid).concat("\" remove fail (not exsist)"));
 			}
 			return deleted;
 		}
@@ -267,10 +352,38 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		if((resourcepack = packer.resourcepack) == null) {
 			return false;
 		}
-		DataEntry entry = options.remove(name);
-		String id = entry == null ? UUID.randomUUID().toString() : entry.storeid;
-		saveAmp(id, resourcepack.length, name, packer.sounds, packer.sha1, resourcepack);
+		DataEntry oentry = options.remove(name);
+		String storeid = oentry == null ? UUID.randomUUID().toString() : oentry.storeid;
+		DataEntry entry = saveAmp(storeid, resourcepack.length, name, packer.sounds, packer.sha1, resourcepack);
+		if(entry == null) {
+			return false;
+		}
+		options.put(entry.name, entry);
+		AMusicLogger.info("Pack \"".concat(storeid).concat("\" save success"));
+		this.printRamUsage();
 		return true;
+	}
+	
+	private void printRamUsage() {
+		if(storeinram) {
+			long rambytesused = 0;
+			for(DataEntry optionentry : options.values()) {
+				rambytesused += optionentry.size;
+			}
+			String unit;
+			if(rambytesused<0x800L) {
+				unit = Long.toString(rambytesused).concat(" B");
+			} else if(rambytesused<0x200000L) {
+				unit = Long.toString((rambytesused>>>10)).concat(" KiB");
+			} else if(rambytesused<0x80000000L) {
+				unit = Long.toString((rambytesused>>>20)).concat(" MiB");
+			} else if(rambytesused<0x20000000000L) {
+				unit = Long.toString((rambytesused>>>30)).concat(" GiB");
+			} else {
+				unit = Long.toString((rambytesused>>>40)).concat(" TiB");
+			}
+			AMusicLogger.info("RAM used: ".concat(unit));
+		}
 	}
 	
 	/**

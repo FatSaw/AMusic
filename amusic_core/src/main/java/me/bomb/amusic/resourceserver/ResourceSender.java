@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import me.bomb.amusic.http.ServerWorker;
+import me.bomb.amusic.packedinfo.DataEntry;
 
 final class ResourceSender implements ServerWorker {
 	
@@ -48,8 +49,9 @@ final class ResourceSender implements ServerWorker {
 						} catch (InterruptedException e) {
 						}
 					}
+					DataEntry entry;
 					byte[] buf;
-					if (resourcemanager.waitAcception(token) || (buf = resourcemanager.get(token)) == null) {
+					if (resourcemanager.waitAcception(token) || (entry = resourcemanager.get(token)) == null || (buf = entry.getPack()) == null) {
 						connected.close();
 						return;
 					}

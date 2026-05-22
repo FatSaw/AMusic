@@ -1,6 +1,7 @@
 package me.bomb.amusic.resourceserver;
 
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -11,28 +12,53 @@ import java.util.concurrent.Executor;
 
 import javax.net.ServerSocketFactory;
 
+import me.bomb.amusic.PackSender;
+import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.http.ServerManager;
+import me.bomb.amusic.packedinfo.DataEntry;
 
 public final class ResourceManager {
 	
-	
 	private final ConcurrentSkipListSet<UUID> accepted;
 	private final ConcurrentHashMap<UUID, UUID> targets = new ConcurrentHashMap<UUID, UUID>();
-	private final ConcurrentHashMap<UUID, byte[]> tokenres = new ConcurrentHashMap<UUID, byte[]>();
-	private final ConcurrentHashMap<String, byte[]> resources;
+	private final ConcurrentHashMap<UUID, DataEntry> tokenres = new ConcurrentHashMap<UUID, DataEntry>();
 
 	public final int maxbuffersize;
 	private final byte[] salt;
 	private final ServerManager server;
 	
-	public ResourceManager(int maxbuffersize, boolean servercache, byte[] salt, boolean waitacception, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount, Executor executorchecker, Executor executorsender) {
+	private final PackSender packsender;
+	private final PositionTracker positiontracker;
+	private final byte[] host;
+	private final int end;
+	
+	public ResourceManager(PackSender packsender, PositionTracker positiontracker, String host, int maxbuffersize, byte[] salt, boolean waitacception, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount, Executor executorchecker, Executor executorsender) {
+		if(packsender == null || positiontracker == null || host == null) {
+			throw new NullPointerException();
+		}
+		this.packsender = packsender;
+		this.positiontracker = positiontracker;
+		this.end = host.length();
+		int i = this.end + 40;
+		this.host = new byte[i];
+		this.host[--i] = 'p';
+		this.host[--i] = 'i';
+		this.host[--i] = 'z';
+		this.host[--i] = '.';
+		i-=36;
+		byte[] hostb = host.getBytes(StandardCharsets.UTF_8);
+		while(--i > -1) {
+			this.host[i] = hostb[i];
+		}
+		
 		this.maxbuffersize = maxbuffersize;
-		resources = servercache ? new ConcurrentHashMap<String, byte[]>() : null;
 		this.salt = salt;
 		accepted = waitacception ? new ConcurrentSkipListSet<UUID>() : null;
 		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new ResourceSender(this, executorchecker, executorsender), connectcount);
 	}
 	
+	
+
 	public void start() {
 		server.start();
 	}
@@ -42,9 +68,29 @@ public final class ResourceManager {
 	}
 	
 	/**
+	 * Dispatch resourcepack file to targets
+	 */
+	public final boolean dispatch(final DataEntry dataentry, final UUID[] targets) {
+		UUID[] tokens = this.generateTokens(dataentry, targets);
+		int i = tokens.length;
+		byte[] host = new byte[this.host.length];
+		System.arraycopy(this.host, 0, host, 0, this.host.length);
+		while(--i > -1) {
+			final UUID target = targets[i], token = tokens[i];
+			final byte[] tokenbytes = token.toString().getBytes(StandardCharsets.US_ASCII);
+			System.arraycopy(tokenbytes, 0, host, this.end, 36);
+			positiontracker.stopMusic(target);
+			positiontracker.removePlaylistInfo(target);
+			packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.sha1);
+			positiontracker.setPlaylistInfo(target, dataentry.name, dataentry.sounds);
+		}
+		return true;
+	}
+	
+	/**
 	 * Generate tokens
 	 */
-	public UUID[] generateTokens(byte[] resource, UUID... targetplayers) {
+	private UUID[] generateTokens(DataEntry data, UUID... targetplayers) {
 		int i = targetplayers.length;
 		UUID[] tokens = new UUID[i];
 		if(salt != null) {
@@ -90,7 +136,7 @@ public final class ResourceManager {
 				hash[0x0F] = (byte) lsb;
 				
 				md5hash.reset();
-				md5hash.update(resource);
+				md5hash.update(data.sha1);
 				md5hash.update(hash);
 				md5hash.update(this.salt);
 				hash = md5hash.digest();
@@ -127,7 +173,7 @@ public final class ResourceManager {
 				msb |= hash[0x00] & 0xFF;
 				final UUID token = new UUID(msb, lsb);
 				tokens[i] = token;
-				tokenres.put(token, resource);
+				tokenres.put(token, data);
 				targets.put(targetplayer, token);
 			}
 			return tokens;
@@ -135,7 +181,7 @@ public final class ResourceManager {
 		while(--i > -1) {
 			final UUID token = UUID.randomUUID();
 			tokens[i] = token;
-			tokenres.put(token, resource);
+			tokenres.put(token, data);
 			targets.put(targetplayers[i], token);
 		}
 		return tokens;
@@ -168,7 +214,7 @@ public final class ResourceManager {
 	 * Clears accept status
 	 * @return null if token invalid
 	 */
-	protected byte[] get(UUID token) {
+	protected DataEntry get(UUID token) {
 		if (token == null) {
 			return null;
 		}
@@ -201,50 +247,5 @@ public final class ResourceManager {
 		}
 		accepted.remove(token);
 		return true;
-	}
-	
-	/**
-	 * Get resource from cache
-	 */
-	public byte[] getCached(String id) {
-		return resources == null ? null : resources.get(id);
-	}
-	
-	/**
-	 * Put resource into cache
-	 */
-	public void putCache(String id, byte[] resource) {
-		if(resources == null) {
-			return;
-		}
-		resources.put(id, resource);
-			
-	}
-
-	/**
-	 * Remove resource from cache
-	 */
-	public void removeCache(String id) {
-		if(resources == null) {
-			return;
-		}
-		resources.remove(id);
-	}
-	
-	/**
-	 * Clear resource cache
-	 */
-	public void clearCache() {
-		if(resources == null) {
-			return;
-		}
-		resources.clear();
-	}
-	
-	/**
-	 * Checks resource cached
-	 */
-	public boolean isCached(String id) {
-		return resources != null && resources.containsKey(id);
 	}
 }

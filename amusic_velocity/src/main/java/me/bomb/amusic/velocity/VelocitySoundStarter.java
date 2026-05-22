@@ -69,17 +69,11 @@ public final class VelocitySoundStarter implements SoundStarter {
 		if(!bytesoundnamelength) ++packetsize;
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
-		
-		if(version > -1 && packetid.length > version) {
-			int pid = packetid[version];
-			if(pid != -1) {
-				buf.writeByte(pid);
-			} else {
-				throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
-			}
-		} else {
+		int pid;
+		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
+		buf.writeByte(pid);
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);
         } else {

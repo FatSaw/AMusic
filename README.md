@@ -2,21 +2,20 @@
 Music through resource pack
 ## Features:
 - Clientside, serverside caching
-- Addition to exsisting resourcepack
-- 5 repeat types (repeatone,repeatall,playone,playall,random)
-- Web sound uploader with clientside convertation
+- Addition to existing resourcepack
+- 5 repeat types (repeatone, repeatall, playone, playall, random)
+- Web sound uploader with clientside transcoding
 - Large number of supported versions `1.7.10` - `1.21.11`
 - Position and count selectors (bukkit only)
 - Volume control option `Voice` only `1.13+`
 
 ## Files and directories
 - `./config.yml` - configuration file
-- `./lang.yml` - localisation file
+- `./lang.yml` - localization file
 - `./resourcepack.zip` - default parent resourcepack file
 - `./Music/` - music directory
 - `./Music/<playlist_name>/` - playlist directory
-- `./Music/<playlist_name>/<sound_name>` - converted sound
-- `./Music/<playlist_name>/<sound_name>.<!ogg>` - not converted sound (Ignored if serverside encoder disabled)
+- `./Music/<playlist_name>/<sound_name>` - sound
 - `./Music/<playlist_name>.zip` - playlist specific parent resourcepack file
 - `./Packed/` - packed resourcepacks directory
 - `./Packed/<uuid>.ampi` - packed resourcepack with info
@@ -24,7 +23,7 @@ Music through resource pack
 ## Commands:
 - `/loadmusic @n <playlistname>` - update playlist
 - `/loadmusic <playername> <playlistname>` - loads playlist(resourcepack) to player, update flag true if playlist not loaded before or used null target `@n`
-- `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname stop sound
+- `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname, stop sound
 - `/repeat <playername> <repeat type>` - set repeat type
 - `/uploadmusic <start/finish/drop> <playlist>/[token]/[token]` - upload sound
 
@@ -36,8 +35,8 @@ Music through resource pack
 - `amusic.playmusic.other` - start/stop sound for other players
 - `amusic.repeat.other` - set repeat for other players
 - `amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
-- `amusic.uploadmusic` - start stop upload session
-- `amusic.uploadmusic.token` - allows finish session by token
+- `amusic.uploadmusic` - start/finish/drop upload session
+- `amusic.uploadmusic.token` - allows start/finish/drop session by token
 
 ### Selectors <playername>:
 - `@n` - update playlist
@@ -57,8 +56,8 @@ Args:
 - `z`
 
 Format: `<arg><operation><double_value>`
-Avilable operations: `<=`, `<`, `>=`, `>`
-Description: `Distance and postition`
+Available operations: `<=`, `<`, `>=`, `>`
+Description: `Distance and position`
 
 #### Selector `@a` arguments
 ##### closer, further, random
@@ -68,7 +67,7 @@ Args:
 - `random`
 
 Format: `<arg><operation><int_value>`
-Avilable operations: `=`
+Available operations: `=`
 Description: `Limits player count`
 
 ### Commands for console without tab complete:
@@ -101,12 +100,12 @@ api.logout(UUID playeruuid); //Handle logout.
 api.getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer); //get playlists(resourcepacks)
 api.getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer); //get list of sounds in playlist "playlistname"
 api.getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer); //get list of sounds loaded to player with uuid "playeruuid"
-api.getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer); //get list of sounds length in playlist "playlistname"
-api.getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer); //get list of sounds length loaded to player with uuid "playeruuid"
-api.loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid null not send)
+api.getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer); //get a list of sound lengths in playlist "playlistname"
+api.getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer); //get a list of sound lengths loaded to player with uuid "playeruuid"
+api.loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid is null, do not send)
 api.getPackName(UUID playeruuid, Consumer<String> resultConsumer); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
 api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //set repeat mode "repeattype" to player with uuid "playeruuid"
-api.stopSound(UUID playeruuid); //stop sound to player with uuid "playeruuid"
+api.stopSound(UUID playeruuid); //stop sound for player with uuid "playeruuid"
 api.playSound(UUID playeruuid, String name); //start sound "name" to player with uuid "playeruuid"
 api.getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer); //get currently playing sound of player with uuid "playeruuid"
 api.getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer); //get currently playing sound size of player with uuid "playeruuid"

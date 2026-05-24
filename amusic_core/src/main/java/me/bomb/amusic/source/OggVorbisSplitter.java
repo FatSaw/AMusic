@@ -23,7 +23,7 @@ public class OggVorbisSplitter implements Runnable {
         final int bof = pagestarts[pagecount-1];
 
         final int eof = pagestarts[0] + pagesizes[0];
-        final int eof2 = srcOggVorbis.length;
+        //final int eof2 = srcOggVorbis.length;
         final int center = pagestarts[pagecount >>> 1];
         
         final int vorbisHeaderEnd = pagestarts[pagecount-3]; //Lets hope that vorbis header in first 2 ogg pages

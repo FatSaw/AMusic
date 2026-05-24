@@ -189,7 +189,7 @@ public final class ResourcePacker implements Runnable {
 			byte sleepcount = 0;
 			boolean processing = true;
 			byte[][][] ntopack = sourceentry.data;
-			boolean[] success = sourceentry.success, processed = new boolean[musiccount];
+			boolean[] processed = new boolean[musiccount];
 			while(processing && --sleepcount != 0) {
 				processing = false;
 				int i = musiccount;

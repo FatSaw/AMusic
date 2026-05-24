@@ -28,10 +28,8 @@ public class LocalAMusic implements AMusic {
 		this.soundsource = soundsource;
 		this.packsource = packsource;
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
-		ResourceManager rm = new ResourceManager(packsender, this.positiontracker, config.sendpackhost, config.packsizelimit, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
-		this.resourcemanager = rm;
-		boolean storage = false;
-		this.datamanager = config.storepacked ? Data.getDefault(config.packeddir, !config.processpack, config.servercache) : Data.getNoStorage(this.soundsource, this.packsource, !config.processpack, config.servercache);
+		this.resourcemanager = new ResourceManager(packsender, this.positiontracker, config.sendpackhost, config.packsizelimit, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+		this.datamanager = config.storepacked ? Data.getDefault(soundsource, packsource, !config.processpack, config.servercache, config.packeddir) : Data.getNoStorage(this.soundsource, this.packsource, !config.processpack, config.servercache);
 		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 		this.executor = config.executor;
 	}
@@ -228,7 +226,7 @@ public class LocalAMusic implements AMusic {
 	}
 	
 	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
-		Runnable r = new ResourceFactory(name, playeruuid, datamanager, resourcemanager, soundsource, packsource, update, statusreport);
+		Runnable r = new ResourceFactory(name, playeruuid, datamanager, resourcemanager, update, statusreport);
 		executor.execute(r);
 		return true;
 	}

@@ -2,8 +2,6 @@ package me.bomb.amusic.packedinfo;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
-import java.util.UUID;
-
 import me.bomb.amusic.resource.ResourcePacker;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
@@ -11,13 +9,10 @@ import me.bomb.amusic.util.AMusicLogger;
 
 public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	
-	private final SoundSource soundsource;
-	private final PackSource packsource;
+	
 
 	protected NoStorage(SoundSource soundsource, PackSource packsource, boolean lockwrite, boolean storeinram) {
-		super(lockwrite, storeinram);
-		this.soundsource = soundsource;
-		this.packsource = packsource;
+		super(soundsource, packsource, lockwrite, storeinram);
 	}
 	
 	/**
@@ -27,23 +22,27 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	protected void save() {
 	}
 	
-	/**
-	 * Ignored.
-	 */
 	@Override
 	public void load() {
+		options.clear();
 		String[] playlists = this.soundsource.getPlaylists();
 		int i = playlists.length;
 		while(--i > -1) {
 			String playlist = playlists[i];
-			ResourcePacker packer = this.createPacker(playlist, this.soundsource, this.packsource);
-			if(packer == null) {
+			if(playlist == null) {
 				continue;
 			}
-			if(!this.update(playlist, packer)) {
+			final String filteredid = filterName(playlist);
+			ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource);
+			packer.run();
+			final byte[] resourcepack;
+			if((resourcepack = packer.resourcepack) == null) {
 				continue;
 			}
+			options.put(playlist, new RamDataEntry(null, resourcepack.length, playlist, packer.sounds, packer.sha1, resourcepack));
 		}
+		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
+		this.printRamUsage();
 	}
 
 	/**
@@ -60,13 +59,9 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	public void end() {
 	}
 
-	/**
-	 * SoundSource ignored
-	 * PackSource ignored
-	 */
 	@Override
-	public ResourcePacker createPacker(String id, SoundSource soundsource, PackSource packsource) {
-		if(id == null || this.soundsource == null || !this.soundsource.exists(id)) {
+	public ResourcePacker createPacker(String id) {
+		if(this.lockwrite || id == null || this.soundsource == null || !this.soundsource.exists(id)) {
 			return null;
 		}
 		final String filteredid = filterName(id);
@@ -84,7 +79,6 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 			if(data == null) {
 				return false;
 			}
-			AMusicLogger.info("Pack \"".concat(data.storeid).concat("\" temp remove success"));
 			this.printRamUsage();
 			return true;
 		}
@@ -93,11 +87,7 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 		if((resourcepack = packer.resourcepack) == null) {
 			return false;
 		}
-		DataEntry oentry = options.remove(name);
-		String storeid = oentry == null ? UUID.randomUUID().toString() : oentry.storeid;
-		DataEntry entry = new RamDataEntry(storeid, resourcepack.length, name, packer.sounds, packer.sha1, resourcepack);
-		options.put(entry.name, entry);
-		AMusicLogger.info("Pack \"".concat(storeid).concat("\" temp save success"));
+		options.put(name, new RamDataEntry(null, resourcepack.length, name, packer.sounds, packer.sha1, resourcepack));
 		this.printRamUsage();
 		return true;
 	}

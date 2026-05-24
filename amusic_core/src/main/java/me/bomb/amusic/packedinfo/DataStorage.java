@@ -36,8 +36,8 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
     private final FileSystemProvider fs;
     private final Path datadirectory;
 	
-	protected DataStorage(Path datadirectory, boolean lockwrite, boolean storeinram) {
-		super(lockwrite, storeinram);
+	protected DataStorage(SoundSource soundsource, PackSource packsource, boolean lockwrite, boolean storeinram, Path datadirectory) {
+		super(soundsource, packsource, lockwrite, storeinram);
 		this.datadirectory = datadirectory;
 		this.fs = datadirectory.getFileSystem().provider();
 	}
@@ -67,6 +67,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				options.put(entry.name, entry);
 				AMusicLogger.info("Pack \"".concat(storeid).concat("\" load success"));
 			}
+			AMusicLogger.info("Loaded ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
 			this.printRamUsage();
 		} catch (IOException e) {
 		} finally {
@@ -306,12 +307,12 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		return entry;
 	}
 	
-	public ResourcePacker createPacker(final String id, final SoundSource soundsource, final PackSource packsource) {
-		if(this.lockwrite || id == null || soundsource == null || !soundsource.exists(id)) {
+	public ResourcePacker createPacker(final String id) {
+		if(this.lockwrite || id == null || this.soundsource == null || !this.soundsource.exists(id)) {
 			return null;
 		}
 		final String filteredid = filterName(id);
-		ResourcePacker packer = new ResourcePacker(soundsource, filteredid, packsource);
+		ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource);
 		return packer;
 	}
 	

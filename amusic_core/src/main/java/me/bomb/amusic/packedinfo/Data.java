@@ -12,9 +12,14 @@ import me.bomb.amusic.source.SoundSource;
 public abstract class Data {
 	
 	protected final Map<String,DataEntry> options = new HashMap<>();
+	public final SoundSource soundsource;
+	public final PackSource packsource;
 	public final boolean lockwrite, storeinram;
 	
-	protected Data(boolean lockwrite, boolean storeinram) {
+	
+	protected Data(SoundSource soundsource, PackSource packsource, boolean lockwrite, boolean storeinram) {
+		this.soundsource = soundsource;
+		this.packsource = packsource;
 		this.lockwrite = lockwrite;
 		this.storeinram = storeinram;
 	}
@@ -33,8 +38,8 @@ public abstract class Data {
 	 * @param id
 	 * @return default data storage
 	 */
-	public static Data getDefault(Path datadirectory, boolean lockwrite, boolean storeinram) {
-		return new DataStorage(datadirectory, lockwrite, storeinram);
+	public static Data getDefault(SoundSource soundsource, PackSource packsource, boolean lockwrite, boolean storeinram, Path datadirectory) {
+		return new DataStorage(soundsource, packsource, lockwrite, storeinram, datadirectory);
 	}
 	
 	/**
@@ -54,10 +59,9 @@ public abstract class Data {
 	/**
 	 * Update packed info
 	 * @param id
-	 * @param source
 	 * @return ResourcePacker if write allowed
 	 */
-	public abstract ResourcePacker createPacker(final String id, final SoundSource source,  final PackSource packsource);
+	public abstract ResourcePacker createPacker(final String id);
 	
 	/**
 	 * Update packed info

@@ -638,11 +638,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 					}
 				}
 			};
-			new ResourceFactory(name, playeruuids, datamanager, resourcemanager, soundsource, packsource, update, statusreport).run();
+			new ResourceFactory(name, playeruuids, datamanager, resourcemanager, update, statusreport).run();
 			
 			return statusb;
 		}
-		this.serverexecutor.execute(new ResourceFactory(name, playeruuids, datamanager, resourcemanager, soundsource, packsource, update, null));
+		this.serverexecutor.execute(new ResourceFactory(name, playeruuids, datamanager, resourcemanager, update, null));
 		return new byte[0];
 	}
 	

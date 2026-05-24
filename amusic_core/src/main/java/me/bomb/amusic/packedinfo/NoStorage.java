@@ -6,6 +6,7 @@ import me.bomb.amusic.resource.ResourcePacker;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.util.AMusicLogger;
+import me.bomb.amusic.util.HexUtils;
 
 public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	
@@ -33,13 +34,14 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 				continue;
 			}
 			final String filteredid = filterName(playlist);
-			ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource);
+			ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource, true);
 			packer.run();
 			final byte[] resourcepack;
 			if((resourcepack = packer.resourcepack) == null) {
 				continue;
 			}
 			options.put(playlist, new RamDataEntry(null, resourcepack.length, playlist, packer.sounds, packer.sha1, resourcepack));
+			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(packer.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
 		this.printRamUsage();
@@ -65,7 +67,7 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 			return null;
 		}
 		final String filteredid = filterName(id);
-		ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource);
+		ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource, true);
 		return packer;
 	}
 

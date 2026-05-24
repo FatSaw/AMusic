@@ -3,7 +3,6 @@ package me.bomb.amusic.resource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -30,6 +29,7 @@ public final class ResourcePacker implements Runnable {
 	private final SoundSource soundsource;
 	private final String id;
 	private final PackSource packsource;
+	private final boolean reproducible;
 	
 	static {
 		byte[] buf = new byte[2983];
@@ -48,10 +48,11 @@ public final class ResourcePacker implements Runnable {
 		silencesound = buf;
 	}
 	
-	public ResourcePacker(SoundSource source, String id, PackSource packsource) {
+	public ResourcePacker(SoundSource source, String id, PackSource packsource, boolean reproducible) {
 		this.soundsource = source;
 		this.id = id;
 		this.packsource = packsource;
+		this.reproducible = reproducible;
 	}
 	
 	public void run() {
@@ -106,7 +107,7 @@ public final class ResourcePacker implements Runnable {
 			ChunkedOutputStream cos;
 			ZipOutputStream zos;
 			cos = new ChunkedOutputStream();
-			zos = new ZipOutputStream(cos, Charset.defaultCharset());
+			zos = new ZipOutputStream(cos, StandardCharsets.UTF_8);
 			zos.setMethod(8);
 			zos.setLevel(5);
 			boolean packmcmetafound = false, soundsjsonappended = false;
@@ -114,7 +115,7 @@ public final class ResourcePacker implements Runnable {
 			if(packsource != null && (srcbuf = packsource.get(id)) != null) {
 				ZipInputStream zis = null;
 				try {
-					zis = new ZipInputStream(new ByteArrayInputStream(srcbuf), Charset.defaultCharset());
+					zis = new ZipInputStream(new ByteArrayInputStream(srcbuf), StandardCharsets.UTF_8);
 					ZipEntry entry;
 					int len;
 					byte[] buf = new byte[0x2000];
@@ -186,52 +187,118 @@ public final class ResourcePacker implements Runnable {
 				zos.closeEntry();
 			} catch (IOException e) {
 			}
-			byte sleepcount = 0;
-			boolean processing = true;
-			byte[][][] ntopack = sourceentry.data;
-			boolean[] processed = new boolean[musiccount];
-			while(processing && --sleepcount != 0) {
-				processing = false;
-				int i = musiccount;
-				while(--i > -1) {
-					if(processed[i]) {
-						continue;
+			if(this.reproducible) {
+				byte sleepcount = 0;
+				boolean processing = true;
+				boolean[] processed = new boolean[musiccount];
+				while(processing && --sleepcount != 0) {
+					processing = false;
+					int i = musiccount;
+					while(--i > -1) {
+						if(processed[i]) {
+							continue;
+						}
+						if(!sourceentry.finished(i)) {
+							processing = true;
+							continue;
+						}
+						sleepcount = -1; //reset inactivity timer
+						processed[i] = true;
 					}
-					if(!sourceentry.finished(i)) {
-						processing = true;
-						continue;
+					if(processing) {
+						try {
+							Thread.sleep(250);
+						} catch (InterruptedException e) {
+						}
 					}
-					final byte split = splits[i];
-					String entryid = "assets/minecraft/sounds/amusic/music".concat(HexUtils.shortToHex((short)i));
-					
-					byte[][] sounddata = ntopack[i];
-					short partid = (short) (split & 0xFF);
-					byte splitbitid = 8;
-					while(--splitbitid > -1) {
-						boolean splitpresent = ((split >> splitbitid) & 0x01) == 0x01;
-						if(splitpresent) {
-							byte partscount = (byte) (1 << splitbitid);
-							while(--partscount > -1) {
-								byte[] part = sounddata[--partid];
-								try {
-									ZipEntry entry = new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg"));
-									entry.setTime(0L);
-									zos.putNextEntry(entry);
-						            zos.write(part);
-						            zos.closeEntry();
-								} catch (IOException e) {
+				}
+				if(sleepcount != 0) {
+					processing = true;
+					int i = musiccount;
+					while(--i > -1) {
+						if(!processed[i]) {
+							break;
+						}
+					}
+					if(i == -1) {
+						i = musiccount;
+						byte[][][] ntopack = sourceentry.data;
+						while(--i > -1) {
+							final byte split = splits[i];
+							String entryid = "assets/minecraft/sounds/amusic/music".concat(HexUtils.shortToHex((short)i));
+							
+							byte[][] sounddata = ntopack[i];
+							short partid = (short) (split & 0xFF);
+							byte splitbitid = 8;
+							while(--splitbitid > -1) {
+								boolean splitpresent = ((split >> splitbitid) & 0x01) == 0x01;
+								if(splitpresent) {
+									byte partscount = (byte) (1 << splitbitid);
+									while(--partscount > -1) {
+										byte[] part = sounddata[--partid];
+										try {
+											ZipEntry entry = new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg"));
+											entry.setTime(0L);
+											zos.putNextEntry(entry);
+								            zos.write(part);
+								            zos.closeEntry();
+										} catch (IOException e) {
+										}
+									}
+								}
+							}
+							ntopack[i] = null;
+						}
+					}
+				}
+			} else {
+				byte sleepcount = 0;
+				boolean processing = true;
+				byte[][][] ntopack = sourceentry.data;
+				boolean[] processed = new boolean[musiccount];
+				while(processing && --sleepcount != 0) {
+					processing = false;
+					int i = musiccount;
+					while(--i > -1) {
+						if(processed[i]) {
+							continue;
+						}
+						if(!sourceentry.finished(i)) {
+							processing = true;
+							continue;
+						}
+						final byte split = splits[i];
+						String entryid = "assets/minecraft/sounds/amusic/music".concat(HexUtils.shortToHex((short)i));
+						
+						byte[][] sounddata = ntopack[i];
+						short partid = (short) (split & 0xFF);
+						byte splitbitid = 8;
+						while(--splitbitid > -1) {
+							boolean splitpresent = ((split >> splitbitid) & 0x01) == 0x01;
+							if(splitpresent) {
+								byte partscount = (byte) (1 << splitbitid);
+								while(--partscount > -1) {
+									byte[] part = sounddata[--partid];
+									try {
+										ZipEntry entry = new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg"));
+										entry.setTime(0L);
+										zos.putNextEntry(entry);
+							            zos.write(part);
+							            zos.closeEntry();
+									} catch (IOException e) {
+									}
 								}
 							}
 						}
+						ntopack[i] = null;
+						sleepcount = 0; //reset inactivity timer
+						processed[i] = true;
 					}
-					ntopack[i] = null;
-					sleepcount = 0; //reset inactivity timer
-					processed[i] = true;
-				}
-				if(processing) {
-					try {
-						Thread.sleep(250);
-					} catch (InterruptedException e) {
+					if(processing) {
+						try {
+							Thread.sleep(250);
+						} catch (InterruptedException e) {
+						}
 					}
 				}
 			}

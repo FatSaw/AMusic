@@ -312,7 +312,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			return null;
 		}
 		final String filteredid = filterName(id);
-		ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource);
+		ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource, false);
 		return packer;
 	}
 	

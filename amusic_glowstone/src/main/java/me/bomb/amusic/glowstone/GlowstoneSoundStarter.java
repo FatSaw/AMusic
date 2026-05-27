@@ -19,11 +19,11 @@ public final class GlowstoneSoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, short id, byte partid) {
+	public void startSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		GlowPlayer player = (GlowPlayer) server.getPlayer(uuid);
 		player.getSession().send(new NamedSoundEffectMessage(musicid, SoundCategory.VOICE, 0, 0, 0, 1.0f, 1.0f));
 	}

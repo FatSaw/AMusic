@@ -6,6 +6,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import me.bomb.amusic.util.ByteArraysOutputStream;
@@ -16,29 +19,39 @@ public class ReadSound implements Runnable {
 	protected final byte[] splits;
 	protected final int[] sizes;
 	protected final Path[] files;
+	protected final UUID[] soundhashs;
 	protected final byte[][][] data;
 	protected final short[] lengths;
 	protected final AtomicBoolean[] finished;
 	protected final boolean[] success;
 	protected final int start, end;
+	protected final MessageDigest md5hash;
 	
-	public ReadSound(int maxsoundsize, byte[] splits, int[] sizes, Path[] files, byte[][][] data, short[] lengths, AtomicBoolean[] finished , boolean[] success, int start, int end) {
+	public ReadSound(int maxsoundsize, byte[] splits, int[] sizes, Path[] files, UUID[] soundhashs, byte[][][] data, short[] lengths, AtomicBoolean[] finished , boolean[] success, int start, int end) {
 		this.maxsoundsize = maxsoundsize;
 		this.splits = splits;
 		this.sizes = sizes;
 		this.files = files;
 		this.data = data;
+		this.soundhashs = soundhashs;
 		this.lengths = lengths;
 		this.finished = finished;
 		this.success = success;
 		this.start = start;
 		this.end = end;
+		MessageDigest md5hash;
+		try {
+			md5hash = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			md5hash = null;
+		}
+		this.md5hash = md5hash;
 	}
 
 	@Override
 	public void run() {
 		final boolean sizesknown = sizes != null;
-
+		
 		for(int i = this.start; i < this.end;++i) {
 			byte[] buf = sizesknown ? new byte[sizes[i]] : null;
 			InputStream is = null;
@@ -65,6 +78,7 @@ public class ReadSound implements Runnable {
 					}
 				}
 			}
+			
 			final byte split = splits[i];
 			
 			byte lastsplitbitid = 8;
@@ -80,9 +94,44 @@ public class ReadSound implements Runnable {
 			if((split & 0x01) == 0x01) {
 				parts[++partid] = buf;
 			}
-
+			
 			byte[][] allparts = new byte[1][];
 			allparts[0] = buf;
+
+			lengths[i] = calculateDuration(buf);
+			buf = md5hash.digest(buf);
+			long lsb = 0L, msb = 0L;
+			lsb = buf[0x0F] & 0xFF;
+			lsb<<=8;
+			lsb |= buf[0x0E] & 0xFF;
+			lsb<<=8;
+			lsb |= buf[0x0D] & 0xFF;
+			lsb<<=8;
+			lsb |= buf[0x0C] & 0xFF;
+			lsb<<=8;
+			lsb |= buf[0x0B] & 0xFF;
+			lsb<<=8;
+			lsb |= buf[0x0A] & 0xFF;
+			lsb<<=8;
+			lsb |= buf[0x09] & 0xFF;
+			lsb<<=8;
+			lsb |= buf[0x08] & 0xFF;
+			msb = buf[0x07] & 0xFF;
+			msb<<=8;
+			msb |= buf[0x06] & 0xFF;
+			msb<<=8;
+			msb |= buf[0x05] & 0xFF;
+			msb<<=8;
+			msb |= buf[0x04] & 0xFF;
+			msb<<=8;
+			msb |= buf[0x03] & 0xFF;
+			msb<<=8;
+			msb |= buf[0x02] & 0xFF;
+			msb<<=8;
+			msb |= buf[0x01] & 0xFF;
+			msb<<=8;
+			msb |= buf[0x00] & 0xFF;
+			soundhashs[i] = new UUID(msb, lsb);
 			
 			byte splitbitid = 0;
 			while(++splitbitid < lastsplitbitid) {
@@ -102,9 +151,7 @@ public class ReadSound implements Runnable {
 				allparts = newallpart;
 				newallpartid = -1;
 			}
-			
 			data[i] = parts;
-			lengths[i] = calculateDuration(buf);
 			success[i] = true;
 			
 			if(finished == null) {

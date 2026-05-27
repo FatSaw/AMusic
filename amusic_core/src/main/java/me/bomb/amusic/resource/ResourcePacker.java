@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -35,7 +36,7 @@ public final class ResourcePacker implements Runnable {
 		byte[] buf = new byte[2983];
 		InputStream is = ResourcePacker.class.getClassLoader().getResourceAsStream("silence.ogg");
 		try {
-			is.read(buf);
+			is.read(buf, 0, buf.length);
 			is.close();
 		} catch (IOException e1) {
 			if(is != null) {
@@ -76,32 +77,8 @@ public final class ResourcePacker implements Runnable {
 		} catch (NoSuchAlgorithmException e) {
 			return;
 		}
-		String soundslist;
-		{
-			StringBuffer sounds = new StringBuffer("\n");
-			int i = musiccount;
-			while(--i > -1) {
-				final byte split = splits[i];
-				short partid = (short) (split & 0xFF);
-				byte splitbitid = 8;
-				while(--splitbitid > -1) {
-					boolean splitpresent = ((split >>> splitbitid) & 0x01) == 0x01;
-					if(splitpresent) {
-						byte partscount = (byte) (1 << splitbitid);
-						while(--partscount > -1) {
-							String musicid = new StringBuilder("music").append(HexUtils.shortToHex((short) i)).append(HexUtils.byteToHex((byte) --partid)).toString();
-							sounds.append("\t\"amusic.");
-							sounds.append(musicid);
-							sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/");
-							sounds.append(musicid);
-							sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
-						}
-					}
-				}
-			}
-			sounds.append("\t\"amusic.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n");
-			soundslist = sounds.toString();
-		}
+		
+		UUID[] soundhashs = sourceentry.soundhashs;
 		
 		{
 			ChunkedOutputStream cos;
@@ -110,8 +87,9 @@ public final class ResourcePacker implements Runnable {
 			zos = new ZipOutputStream(cos, StandardCharsets.UTF_8);
 			zos.setMethod(8);
 			zos.setLevel(5);
-			boolean packmcmetafound = false, soundsjsonappended = false;
+			boolean packmcmetafound = false;
 			byte[] srcbuf = null;
+			StringBuilder parentsoundsjson = null;
 			if(packsource != null && (srcbuf = packsource.get(id)) != null) {
 				ZipInputStream zis = null;
 				try {
@@ -123,7 +101,7 @@ public final class ResourcePacker implements Runnable {
 						String entryname = entry.getName();
 						if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
 							packmcmetafound = true;
-						} else if(!soundsjsonappended && entryname.equals("assets/minecraft/sounds.json")) {
+						} else if(entryname.equals("assets/minecraft/sounds.json")) {
 							StringBuilder sb = new StringBuilder();
 							while ((len = zis.read(buf, 0, buf.length)) != -1) {
 								sb.append(new String(buf, 0, len, StandardCharsets.US_ASCII));
@@ -132,14 +110,7 @@ public final class ResourcePacker implements Runnable {
 							if(open==-1||close==-1) {
 								continue;
 							}
-							sb.insert(close, ',');
-							sb.insert(++close, soundslist);
-							entry = new ZipEntry("assets/minecraft/sounds.json");
-							entry.setTime(0L);
-							zos.putNextEntry(entry);
-							zos.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
-							zos.closeEntry();
-							soundsjsonappended = true;
+							parentsoundsjson = sb;
 							continue;
 						}
 						entry = new ZipEntry(entryname);
@@ -161,15 +132,6 @@ public final class ResourcePacker implements Runnable {
 				}
 			}
 			try {
-				if(!soundsjsonappended) {
-					ZipEntry entry = new ZipEntry("assets/minecraft/sounds.json");
-					entry.setTime(0L);
-					zos.putNextEntry(entry);
-					zos.write("{".getBytes());
-					zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
-					zos.write("}".getBytes());
-					zos.closeEntry();
-				}
 				if(!packmcmetafound) {
 					ZipEntry entry = new ZipEntry("pack.mcmeta");
 					entry.setTime(0L);
@@ -213,7 +175,6 @@ public final class ResourcePacker implements Runnable {
 					}
 				}
 				if(sleepcount != 0) {
-					processing = true;
 					int i = musiccount;
 					while(--i > -1) {
 						if(!processed[i]) {
@@ -225,7 +186,7 @@ public final class ResourcePacker implements Runnable {
 						byte[][][] ntopack = sourceentry.data;
 						while(--i > -1) {
 							final byte split = splits[i];
-							String entryid = "assets/minecraft/sounds/amusic/music".concat(HexUtils.shortToHex((short)i));
+							String entryid = "assets/minecraft/sounds/amusic/music".concat(soundhashs[i].toString()).concat(HexUtils.shortToHex((short)i));
 							
 							byte[][] sounddata = ntopack[i];
 							short partid = (short) (split & 0xFF);
@@ -268,7 +229,7 @@ public final class ResourcePacker implements Runnable {
 							continue;
 						}
 						final byte split = splits[i];
-						String entryid = "assets/minecraft/sounds/amusic/music".concat(HexUtils.shortToHex((short)i));
+						String entryid = "assets/minecraft/sounds/amusic/music".concat(soundhashs[i].toString()).concat(HexUtils.shortToHex((short)i));
 						
 						byte[][] sounddata = ntopack[i];
 						short partid = (short) (split & 0xFF);
@@ -302,6 +263,53 @@ public final class ResourcePacker implements Runnable {
 					}
 				}
 			}
+			
+			String soundslist;
+			{
+				StringBuffer sounds = new StringBuffer("\n");
+				int i = musiccount;
+				while(--i > -1) {
+					final byte split = splits[i];
+					short partid = (short) (split & 0xFF);
+					byte splitbitid = 8;
+					while(--splitbitid > -1) {
+						boolean splitpresent = ((split >>> splitbitid) & 0x01) == 0x01;
+						if(splitpresent) {
+							byte partscount = (byte) (1 << splitbitid);
+							while(--partscount > -1) {
+								String musicid = new StringBuilder("music").append(soundhashs[i].toString()).append(HexUtils.shortToHex((short) i)).append(HexUtils.byteToHex((byte) --partid)).toString();
+								sounds.append("\t\"amusic.");
+								sounds.append(musicid);
+								sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/");
+								sounds.append(musicid);
+								sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+							}
+						}
+					}
+				}
+				sounds.append("\t\"amusic.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n");
+				soundslist = sounds.toString();
+			}
+			
+			
+			try {
+				ZipEntry entry = new ZipEntry("assets/minecraft/sounds.json");
+				entry.setTime(0L);
+				zos.putNextEntry(entry);
+				if(parentsoundsjson != null) {
+					int close = parentsoundsjson.lastIndexOf("}");
+					parentsoundsjson.insert(close, ',');
+					parentsoundsjson.insert(++close, soundslist);
+					zos.write(parentsoundsjson.toString().getBytes(StandardCharsets.US_ASCII));
+				} else {
+					zos.write("{".getBytes());
+					zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
+					zos.write("}".getBytes());
+				}
+				zos.closeEntry();
+			} catch (IOException e) {
+			}
+			
 			try {
 				zos.close();
 			} catch (IOException e) {
@@ -313,7 +321,7 @@ public final class ResourcePacker implements Runnable {
 		int i = musiccount;
 		this.sounds = new SoundInfo[i];
 		while(--i > -1) {
-			this.sounds[i] = new SoundInfo(soundnames[i], soundlengths[i], splits[i]);
+			this.sounds[i] = new SoundInfo(soundnames[i], sourceentry.soundhashs[i], soundlengths[i], splits[i]);
 		}
 
 		long timeelapsed = currentTimeMillis() - timestart;

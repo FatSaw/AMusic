@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
@@ -63,6 +64,7 @@ public final class LocalConvertedSource extends SoundSource {
 		final String[] names;
 		final byte[] splits;
 		final short[] lengths;
+		final UUID[] soundhashs;
 		final byte[][][] data;
 		final AtomicBoolean[] finished;
 		final boolean[] success;
@@ -91,11 +93,12 @@ public final class LocalConvertedSource extends SoundSource {
 			names = new String[i];
 			splits = new byte[i];
 			lengths = new short[i];
+			soundhashs = new UUID[i];
 			data = new byte[i][][];
 			finished = usemt ? new AtomicBoolean[i] : null;
 			success = new boolean[i];
 			sizes = new int[i];
-			source = new SourceEntry(names, splits, lengths, data, finished, success);
+			source = new SourceEntry(names, splits, lengths, soundhashs, data, finished, success);
 			Iterator<Entry<Path, Integer>> fiterator = filesm.entrySet().iterator();
 			while(--i > -1) {
 				final Entry<Path, Integer> filee = fiterator.next();
@@ -145,10 +148,10 @@ public final class LocalConvertedSource extends SoundSource {
 				if(--remain > -1) {
 					++nums;
 				}
-				new Thread(new ReadSound(maxsoundsize, splits, sizes, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
+				new Thread(new ReadSound(maxsoundsize, splits, sizes, files, soundhashs, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
 			}
 		} else {
-			ReadSound sr = new ReadSound(maxsoundsize, splits, sizes, files, data, lengths, finished, success, 0, files.length);
+			ReadSound sr = new ReadSound(maxsoundsize, splits, sizes, files, soundhashs, data, lengths, finished, success, 0, files.length);
 			sr.run();
 		}
 		return source;

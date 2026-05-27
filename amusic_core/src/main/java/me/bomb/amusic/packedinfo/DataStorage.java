@@ -24,7 +24,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 	
 	private static final String FORMAT = ".ampi";
 	private static final byte FORMATSIZE = 5;
-	private static final byte VERSION = 4;
+	private static final byte VERSION = 5;
 	private static final DirectoryStream.Filter<Path> ampifilter = new DirectoryStream.Filter<Path>() {
 		@Override
 		public boolean accept(Path path) throws IOException {
@@ -122,25 +122,36 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			is.read(buf);
 			int soundcount = 0x0000FFFF;
 			soundcount &= 0xFF & buf[0] | buf[1] << 8;
+			skip+=soundcount<<4; //SOUND HASH
 			skip+=soundcount<<2;
+			buf = new byte[soundcount<<4];
+			is.read(buf);
+			UUID[] soundhashs = new UUID[soundcount];
+			int i = soundcount, j = soundcount << 4;
+			//--j;
+			while(--i > -1) {
+				long msb = (buf[--j] & 0xFFL) | (buf[--j] & 0xFFL) << 8 | (buf[--j] & 0xFFL) << 16 | (buf[--j] & 0xFFL) << 24 | (buf[--j] & 0xFFL) << 32 | (buf[--j] & 0xFFL) << 40 | (buf[--j] & 0xFFL) << 48 | (buf[--j] & 0xFFL) << 56, lsb = (buf[--j] & 0xFFL) | (buf[--j] & 0xFFL) << 8 | (buf[--j] & 0xFFL) << 16 | (buf[--j] & 0xFFL) << 24 | (buf[--j] & 0xFFL) << 32 | (buf[--j] & 0xFFL) << 40 | (buf[--j] & 0xFFL) << 48 | (buf[--j] & 0xFFL) << 56;
+				soundhashs[i] = new UUID(msb, lsb);
+			}
 			byte[] namelengths = new byte[soundcount], splits = new byte[soundcount];
 			buf = new byte[soundcount<<1];
 			is.read(namelengths);
 			is.read(splits);
 			short[] lengths = new short[soundcount];
 			is.read(buf);
-			for(int k = 0,j = 0; k < soundcount; ++k, ++j) {
-				lengths[k] = (short) (buf[j] & 0xFF | buf[++j]<<8);
+			i = soundcount;
+			j = soundcount<<1;
+			while(--i > -1) {
+				lengths[i] = (short) (buf[--j] & 0xFF | buf[--j]<<8);
 			}
 			soundcount = (short) lengths.length;
 			SoundInfo[] sounds = new SoundInfo[soundcount];
-			int j = 0;
-			while(j < soundcount) {
-				buf = new byte[0xFF & namelengths[j]];
+			i = soundcount;
+			while(--i > -1) {
+				buf = new byte[0xFF & namelengths[i]];
 				is.read(buf);
 				skip+=buf.length;
-				sounds[j] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), lengths[j], splits[j]);
-				++j;
+				sounds[i] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), soundhashs[i], lengths[i], splits[i]);
 			}
 			if(this.storeinram) {
 				buf = new byte[packedsize];
@@ -245,13 +256,48 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			soundcountb[1] = (byte) (soundcount>>>8);
 			os.write(soundcountb);
 			int lengthscount = soundcount<<1;
+			skip += soundcount<<4; //SOUND HASH
 			skip += soundcount<<2;
-			byte[] namelengths = new byte[soundcount], splits = new byte[soundcount],lengths = new byte[lengthscount];
-			short i = 0, j = 0;
+			byte[] soundhashs = new byte[soundcount<<4], namelengths = new byte[soundcount], splits = new byte[soundcount],lengths = new byte[lengthscount];
+			int i = soundcount, j = soundcount<<1, k = soundcount<<4;
 			int totalsoundnamelength = 0;
 			byte[][] anames = new byte[soundcount][];
-			while(i < soundcount) {
-				byte[] soundnamebytes = sounds[i].name.getBytes(StandardCharsets.UTF_8);
+			while(--i > -1) {
+				SoundInfo info = sounds[i];
+				UUID hash = info.hash;
+				long msb = hash.getMostSignificantBits(), lsb = hash.getLeastSignificantBits();
+				soundhashs[--k] = (byte) msb;
+				msb>>>=8;
+				soundhashs[--k] = (byte) msb;
+				msb>>>=8;
+				soundhashs[--k] = (byte) msb;
+				msb>>>=8;
+				soundhashs[--k] = (byte) msb;
+				msb>>>=8;
+				soundhashs[--k] = (byte) msb;
+				msb>>>=8;
+				soundhashs[--k] = (byte) msb;
+				msb>>>=8;
+				soundhashs[--k] = (byte) msb;
+				msb>>>=8;
+				soundhashs[--k] = (byte) msb;
+				soundhashs[--k] = (byte) lsb;
+				lsb>>>=8;
+				soundhashs[--k] = (byte) lsb;
+				lsb>>>=8;
+				soundhashs[--k] = (byte) lsb;
+				lsb>>>=8;
+				soundhashs[--k] = (byte) lsb;
+				lsb>>>=8;
+				soundhashs[--k] = (byte) lsb;
+				lsb>>>=8;
+				soundhashs[--k] = (byte) lsb;
+				lsb>>>=8;
+				soundhashs[--k] = (byte) lsb;
+				lsb>>>=8;
+				soundhashs[--k] = (byte) lsb;
+				
+				byte[] soundnamebytes = info.name.getBytes(StandardCharsets.UTF_8);
 				int soundnamelength = soundnamebytes.length;
 				if(soundnamelength > 0xFF) {
 					soundnamelength = 0xFF;
@@ -262,26 +308,23 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				totalsoundnamelength += soundnamelength;
 				anames[i] = soundnamebytes;
 				namelengths[i] = (byte) soundnamelength;
-				splits[i] = sounds[i].split;
-				short length = sounds[i].length;
-				++i;
-				lengths[j] = (byte) length;
+				splits[i] = info.split;
+				short length = info.length;
+				lengths[--j] = (byte) length;
 				length >>>= 8;
-				++j;
-				lengths[j] = (byte) length;
-				++j;
+				lengths[--j] = (byte) length;
 			}
 			skip += totalsoundnamelength;
 			byte[] names = new byte[totalsoundnamelength];
 			int namesi = 0;
-			i = 0;
-			while(i < soundcount) {
+			i = soundcount;
+			while(--i > -1) {
 				byte[] soundnamebytes = anames[i];
 				int soundnamelength = soundnamebytes.length;
 				System.arraycopy(soundnamebytes, 0, names, namesi, soundnamelength);
 				namesi+=soundnamelength;
-				++i;
 			}
+			os.write(soundhashs); //SOUND HASHS ENTRY
 			os.write(namelengths); //NAME LENGTHS ENTRY 0-255
 			os.write(splits); //SOUND SPLITS ENTRY 0-255
 			os.write(lengths); //SOUND LENGTHS ENTRY 0-65535

@@ -1,5 +1,6 @@
 package me.bomb.amusic.source;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SourceEntry {
@@ -7,14 +8,16 @@ public final class SourceEntry {
 	public final String[] names;
 	public final byte[] splits;
 	public final short[] lengths;
+	public final UUID[] soundhashs;
 	public final byte[][][] data;
 	private final AtomicBoolean[] finished;
 	public final boolean[] success;
 	
-	public SourceEntry(String[] names, byte[] splits, short[] lengths, byte[][][] data, AtomicBoolean[] finished, boolean[] success) {
+	public SourceEntry(String[] names, byte[] splits, short[] lengths, UUID[] soundhashs, byte[][][] data, AtomicBoolean[] finished, boolean[] success) {
 		this.names = names;
 		this.splits = splits;
 		this.lengths = lengths;
+		this.soundhashs = soundhashs;
 		this.data = data;
 		this.finished = finished;
 		this.success = success;

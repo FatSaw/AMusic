@@ -16,7 +16,7 @@ public final class BukkitSoundSilenceLockStopper implements SoundStopper {
 		this.server = server;
 	}
 	
-	public void stopSound(UUID uuid, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}

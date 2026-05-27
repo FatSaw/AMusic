@@ -10,6 +10,7 @@ import java.nio.file.spi.FileSystemProvider;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class LocalUnconvertedSource extends SoundSource {
@@ -69,6 +70,7 @@ public final class LocalUnconvertedSource extends SoundSource {
 		final String[] names;
 		final byte[] splits;
 		final short[] lengths;
+		final UUID[] soundhashs;
 		final byte[][][] data;
 		final AtomicBoolean[] finished;
 		final boolean[] success;
@@ -86,10 +88,11 @@ public final class LocalUnconvertedSource extends SoundSource {
 			names = new String[i];
 			splits = new byte[i];
 			lengths = new short[i];
+			soundhashs = new UUID[i];
 			data = new byte[i][][];
 			finished = usemt ? new AtomicBoolean[i] : null;
 			success = new boolean[i];
-			source = new SourceEntry(names, splits, lengths, data, finished, success);
+			source = new SourceEntry(names, splits, lengths, soundhashs, data, finished, success);
 			Iterator<Path> fiterator = filesm.iterator();
 			while(--i > -1) {
 				final Path file = fiterator.next();
@@ -137,10 +140,10 @@ public final class LocalUnconvertedSource extends SoundSource {
 				if(--remain > -1) {
 					++nums;
 				}
-				new Thread(new ConvertSound(runtime, fmpegbinary, bitrate, channels, samplingrate, maxsoundsize, splits, null, files, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
+				new Thread(new ConvertSound(runtime, fmpegbinary, bitrate, channels, samplingrate, maxsoundsize, splits, null, files, soundhashs, data, lengths, finished, success, pnums, filecount > (nums+=savecount) ? nums : filecount)).start();
 			}
 		} else {
-			new ConvertSound(runtime, fmpegbinary, bitrate, channels, samplingrate, maxsoundsize, splits, null, files, data, lengths, finished, success, 0, files.length).run();
+			new ConvertSound(runtime, fmpegbinary, bitrate, channels, samplingrate, maxsoundsize, splits, null, files, soundhashs, data, lengths, finished, success, 0, files.length).run();
 		}
 		return source;
 	}

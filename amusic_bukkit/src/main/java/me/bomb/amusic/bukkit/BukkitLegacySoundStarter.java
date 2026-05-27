@@ -17,11 +17,11 @@ public final class BukkitLegacySoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, short id, byte partid) {
+	public void startSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Player player = server.getPlayer(uuid);
 		player.playSound(player.getLocation(), musicid, 1.0E9f, 1.0f);
 	}

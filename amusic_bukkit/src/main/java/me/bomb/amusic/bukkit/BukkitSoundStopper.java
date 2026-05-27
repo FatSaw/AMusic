@@ -18,11 +18,11 @@ public final class BukkitSoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Player player = server.getPlayer(uuid);
 		player.stopSound(musicid, SoundCategory.VOICE);
 	}

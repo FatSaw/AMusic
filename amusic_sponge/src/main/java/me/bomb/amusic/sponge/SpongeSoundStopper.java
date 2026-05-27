@@ -20,11 +20,11 @@ public final class SpongeSoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
-		final String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		final String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Optional<Player> oplayer = server.getPlayer(uuid);
 		if(oplayer.isPresent()) {
 			Player player = oplayer.get();

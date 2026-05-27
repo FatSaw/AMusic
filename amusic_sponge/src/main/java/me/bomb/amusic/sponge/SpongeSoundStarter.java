@@ -21,7 +21,7 @@ public final class SpongeSoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, short id, byte partid) {
+	public void startSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}
@@ -29,7 +29,7 @@ public final class SpongeSoundStarter implements SoundStarter {
 		if(oplayer.isPresent()) {
 			Player player = oplayer.get();
 			SoundType sound = new SoundType() {
-				String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+				String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 				@Override
 				public String getName() {
 					return musicid;

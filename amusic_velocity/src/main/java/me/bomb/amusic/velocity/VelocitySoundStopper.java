@@ -68,7 +68,7 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
 	}
 	
 	@Override
-	public void stopSound(UUID uuid, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		Optional<Player> oplayer = server.getPlayer(uuid);
 		if(oplayer.isEmpty()) {
 			return;
@@ -98,7 +98,7 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
 			}
 			return;
 		}
-		String musicid = new StringBuilder("amusic.music").append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		
 		if(version > 760) {
 			SoundStop sound = SoundStop.namedOnSource(Key.key(musicid), Sound.Source.VOICE);

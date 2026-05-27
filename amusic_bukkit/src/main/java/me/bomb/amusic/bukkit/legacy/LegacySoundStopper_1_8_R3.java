@@ -34,7 +34,7 @@ public final class LegacySoundStopper_1_8_R3 implements SoundStopper {
 	}
 	
 	@Override
-	public void stopSound(UUID uuid, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
 		if(uuid == null) {
 			return;
 		}

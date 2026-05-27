@@ -181,31 +181,33 @@ public final class PositionTracker extends Thread {
 			return;
 		}
 		short soundssize = (short) soundsinfo.length, id = soundssize;
+		SoundInfo soundinfo = null;
 		while (--id > -1) {
-			if (soundsinfo[id].name.equals(name))
+			if ((soundinfo = soundsinfo[id]).name.equals(name))
 				break;
 		}
 		if (id == -1) {
 			return;
 		}
 		
-		if(trackers.containsKey(uuid)) {
-			final short fid = id;
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					soundstopper.stopSound(uuid, trackers.remove(uuid).currenttrack, (byte) 0);
-					soundstarter.startSound(uuid, fid, (byte) 0);
+		final short fid = id;
+		final UUID soundhash = soundinfo.hash;
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				Playing playing = trackers.remove(uuid);
+				if(playing != null) {
+					soundstopper.stopSound(uuid, playing.soundhash, playing.currenttrack, (byte) 0);
 				}
-			};
-			if(soundstopper.isLock()) {
-				new Thread(runnable).start();
-			} else {
-				runnable.run();
+				soundstarter.startSound(uuid, soundhash, fid, (byte) 0);
 			}
-			return;
+		};
+		
+		if(trackers.containsKey(uuid) && soundstopper.isLock()) {
+			new Thread(runnable).start();
+		} else {
+			runnable.run();
 		}
-		soundstarter.startSound(uuid, id, (byte) 0);
 	}
 	
 	public void stopMusicUntrackable(UUID uuid) {
@@ -219,18 +221,18 @@ public final class PositionTracker extends Thread {
 				Runnable runnable = new Runnable() {
 					@Override
 					public void run() {
-						soundstopper.stopSound(uuid, (short)0, (byte) 0);
+						soundstopper.stopSound(uuid, null, (short)0, (byte) 0);
 					}
 				};
 				new Thread(runnable).start();
 				return;
 			}
-			soundstopper.stopSound(uuid, (short)0, (byte) 0);
+			soundstopper.stopSound(uuid, null, (short)0, (byte) 0);
 			return;
 		}
 		short soundssize = (short) soundsinfo.length, id = soundssize;
 		while (--id > -1) {
-			soundstopper.stopSound(uuid, id, (byte) 0);
+			soundstopper.stopSound(uuid, soundsinfo[id].hash, id, (byte) 0);
 		}
 	}
 
@@ -248,29 +250,24 @@ public final class PositionTracker extends Thread {
 		if (id == -1) {
 			return;
 		}
-		if(trackers.containsKey(uuid)) {
-			final short fid = id, soundlength = soundinfo.length;
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack, (byte) 0);
-					Playing playing = new Playing(fid, soundssize, soundlength);
-					trackers.put(uuid, playing);
-
-					soundstarter.startSound(uuid, fid, (byte) 0);
+		final short fid = id, soundlength = soundinfo.length;
+		final UUID soundhash = soundinfo.hash;
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				Playing playing = trackers.put(uuid, new Playing(soundhash, fid, soundssize, soundlength));
+				if(playing != null) {
+					soundstopper.stopSound(uuid, playing.soundhash, playing.currenttrack, (byte) 0);
 				}
-			};
-			if(soundstopper.isLock()) {
-				new Thread(runnable).start();
-			} else {
-				runnable.run();
+				soundstarter.startSound(uuid, soundhash, fid, (byte) 0);
 			}
-			return;
+		};
+		
+		if(trackers.containsKey(uuid) && soundstopper.isLock()) {
+			new Thread(runnable).start();
+		} else {
+			runnable.run();
 		}
-		Playing playing = new Playing(id, soundssize, soundinfo.length);
-		trackers.put(uuid, playing);
-
-		soundstarter.startSound(uuid, id, (byte) 0);
 	}
 
 	public void playMusic(UUID uuid, short id) {
@@ -286,29 +283,21 @@ public final class PositionTracker extends Thread {
 			return;
 		}
 		SoundInfo soundinfo = soundsinfo[id];
-		if(trackers.containsKey(uuid)) {
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					soundstopper.stopSound(uuid, trackers.get(uuid).currenttrack, (byte) 0);
-					Playing playing = new Playing(id, soundssize, soundinfo.length);
-
-					trackers.put(uuid, playing);
-					soundstarter.startSound(uuid, id, (byte) 0);
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				Playing playing = trackers.put(uuid, new Playing(soundinfo.hash, id, soundssize, soundinfo.length));
+				if(playing != null) {
+					soundstopper.stopSound(uuid, playing.soundhash, playing.currenttrack, (byte) 0);
 				}
-			};
-			if(soundstopper.isLock()) {
-				new Thread(runnable).start();
-			} else {
-				runnable.run();
+				soundstarter.startSound(uuid, soundinfo.hash, id, (byte) 0);
 			}
-			return;
+		};
+		if(trackers.containsKey(uuid) && soundstopper.isLock()) {
+			new Thread(runnable).start();
+		} else {
+			runnable.run();
 		}
-
-		Playing playing = new Playing(id, soundssize, soundinfo.length);
-
-		trackers.put(uuid, playing);
-		soundstarter.startSound(uuid, id, (byte) 0);
 	}
 
 	public void stopMusic(UUID uuid) {
@@ -319,24 +308,24 @@ public final class PositionTracker extends Thread {
 					Runnable runnable = new Runnable() {
 						@Override
 						public void run() {
-							soundstopper.stopSound(uuid, (short)0, (byte) 0);
+							soundstopper.stopSound(uuid, null, (short)0, (byte) 0);
 						}
 					};
 					new Thread(runnable).start();
 				}
 				return;
 			}
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					soundstopper.stopSound(uuid, playing.soundhash, playing.currenttrack, (byte) 0);
+				}
+			};
 			if(soundstopper.isLock()) {
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						soundstopper.stopSound(uuid, playing.currenttrack, (byte) 0);
-					}
-				};
 				new Thread(runnable).start();
-				return;
+			} else {
+				runnable.run();
 			}
-			soundstopper.stopSound(uuid, playing.currenttrack, (byte) 0);
 		} catch (NoSuchMethodError e) {
 		}
 	}

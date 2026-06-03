@@ -36,9 +36,10 @@ public final class ResourceManager {
 		if(packsender == null || positiontracker == null || host == null) {
 			throw new NullPointerException();
 		}
+		byte[] hostb = host.getBytes(StandardCharsets.UTF_8);
 		this.packsender = packsender;
 		this.positiontracker = positiontracker;
-		this.end = host.length();
+		this.end = hostb.length;
 		int i = this.end + 40;
 		this.host = new byte[i];
 		this.host[--i] = 'p';
@@ -46,7 +47,6 @@ public final class ResourceManager {
 		this.host[--i] = 'z';
 		this.host[--i] = '.';
 		i-=36;
-		byte[] hostb = host.getBytes(StandardCharsets.UTF_8);
 		while(--i > -1) {
 			this.host[i] = hostb[i];
 		}

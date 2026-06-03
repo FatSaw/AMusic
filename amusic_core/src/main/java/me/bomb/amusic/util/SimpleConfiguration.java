@@ -284,7 +284,7 @@ public final class SimpleConfiguration {
 	}
 	
 	public String[] getSubKeys(String parentsection) {
-		HashSet<String> keys = new HashSet<>();
+		HashSet<String> keys = new HashSet<>(kv.size());
 		int parentsectionlength = parentsection.length();
 		for(String key : kv.keySet()) {
 			int keylength = key.length();

@@ -5,7 +5,7 @@ executor:
   size: 1024
  poolsize:
   core: 4
-  maximum: 8
+  maximum: 64
  keepalive:
   timeunit: SECONDS
   value: 10

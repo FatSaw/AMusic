@@ -2,6 +2,7 @@ package me.bomb.amusic.resourceserver;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.DigestException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -21,6 +22,7 @@ public final class ResourceManager {
 	
 	private final ConcurrentSkipListSet<UUID> accepted;
 	private final ConcurrentHashMap<UUID, UUID> targets = new ConcurrentHashMap<UUID, UUID>();
+	private final ConcurrentHashMap<UUID, UUID> tokens = new ConcurrentHashMap<UUID, UUID>();
 	private final ConcurrentHashMap<UUID, DataEntry> tokenres = new ConcurrentHashMap<UUID, DataEntry>();
 
 	public final int maxbuffersize;
@@ -71,14 +73,113 @@ public final class ResourceManager {
 	 * Dispatch resourcepack file to targets
 	 */
 	public final boolean dispatch(final DataEntry dataentry, final UUID[] targets) {
-		UUID[] tokens = this.generateTokens(dataentry, targets);
-		int i = tokens.length;
 		byte[] host = new byte[this.host.length];
 		System.arraycopy(this.host, 0, host, 0, this.host.length);
+		UUID target, token;
+		int i = targets.length;
+		if(salt == null) {
+			while(--i > -1) {
+				target = targets[i];
+				token = UUID.randomUUID();
+				this.tokenres.put(token, dataentry);
+				this.targets.put(target, token);
+				this.tokens.put(token, target);
+				System.arraycopy(token.toString().getBytes(StandardCharsets.US_ASCII), 0, host, this.end, 36);
+				positiontracker.stopMusic(target);
+				positiontracker.removePlaylistInfo(target);
+				packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.sha1);
+				positiontracker.setPlaylistInfo(target, dataentry.name, dataentry.sounds);
+			}
+			return true;
+		}
+		final MessageDigest md5hash;
+		try {
+			md5hash = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException(e);
+		}
+		long msb, lsb;
+		byte[] hash = new byte[0x10];
 		while(--i > -1) {
-			final UUID target = targets[i], token = tokens[i];
-			final byte[] tokenbytes = token.toString().getBytes(StandardCharsets.US_ASCII);
-			System.arraycopy(tokenbytes, 0, host, this.end, 36);
+			target = targets[i];
+			msb = target.getMostSignificantBits();
+			lsb = target.getLeastSignificantBits();
+			hash[0x00] = (byte) msb;
+			msb>>>=8;
+			hash[0x01] = (byte) msb;
+			msb>>>=8;
+			hash[0x02] = (byte) msb;
+			msb>>>=8;
+			hash[0x03] = (byte) msb;
+			msb>>>=8;
+			hash[0x04] = (byte) msb;
+			msb>>>=8;
+			hash[0x05] = (byte) msb;
+			msb>>>=8;
+			hash[0x06] = (byte) msb;
+			msb>>>=8;
+			hash[0x07] = (byte) msb;
+			hash[0x08] = (byte) lsb;
+			lsb>>>=8;
+			hash[0x09] = (byte) lsb;
+			lsb>>>=8;
+			hash[0x0A] = (byte) lsb;
+			lsb>>>=8;
+			hash[0x0B] = (byte) lsb;
+			lsb>>>=8;
+			hash[0x0C] = (byte) lsb;
+			lsb>>>=8;
+			hash[0x0D] = (byte) lsb;
+			lsb>>>=8;
+			hash[0x0E] = (byte) lsb;
+			lsb>>>=8;
+			hash[0x0F] = (byte) lsb;
+			
+			md5hash.reset();
+			md5hash.update(dataentry.sha1);
+			md5hash.update(hash);
+			md5hash.update(this.salt);
+			try {
+				md5hash.digest(hash, 0x00, 0x10);
+			} catch (DigestException e) {
+				continue;
+			}
+			
+			lsb = hash[0x0F] & 0xFF;
+			lsb<<=8;
+			lsb |= hash[0x0E] & 0xFF;
+			lsb<<=8;
+			lsb |= hash[0x0D] & 0xFF;
+			lsb<<=8;
+			lsb |= hash[0x0C] & 0xFF;
+			lsb<<=8;
+			lsb |= hash[0x0B] & 0xFF;
+			lsb<<=8;
+			lsb |= hash[0x0A] & 0xFF;
+			lsb<<=8;
+			lsb |= hash[0x09] & 0xFF;
+			lsb<<=8;
+			lsb |= hash[0x08] & 0xFF;
+			msb = hash[0x07] & 0xFF;
+			msb<<=8;
+			msb |= hash[0x06] & 0xFF;
+			msb<<=8;
+			msb |= hash[0x05] & 0xFF;
+			msb<<=8;
+			msb |= hash[0x04] & 0xFF;
+			msb<<=8;
+			msb |= hash[0x03] & 0xFF;
+			msb<<=8;
+			msb |= hash[0x02] & 0xFF;
+			msb<<=8;
+			msb |= hash[0x01] & 0xFF;
+			msb<<=8;
+			msb |= hash[0x00] & 0xFF;
+			token = new UUID(msb, lsb);
+			this.tokenres.put(token, dataentry);
+			this.targets.put(target, token);
+			this.tokens.put(token, target);
+			System.arraycopy(token.toString().getBytes(StandardCharsets.US_ASCII), 0, host, this.end, 36);
 			positiontracker.stopMusic(target);
 			positiontracker.removePlaylistInfo(target);
 			packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.sha1);
@@ -88,113 +189,14 @@ public final class ResourceManager {
 	}
 	
 	/**
-	 * Generate tokens
-	 */
-	private UUID[] generateTokens(DataEntry data, UUID... targetplayers) {
-		int i = targetplayers.length;
-		UUID[] tokens = new UUID[i];
-		if(salt != null) {
-			final MessageDigest md5hash;
-			try {
-				md5hash = MessageDigest.getInstance("MD5");
-			} catch (NoSuchAlgorithmException e) {
-				return null;
-			}
-			byte[] hash = new byte[0x10];
-			while(--i > -1) {
-				UUID targetplayer = targetplayers[i];
-				long msb = targetplayer.getMostSignificantBits(), lsb = targetplayer.getLeastSignificantBits();
-				hash[0x00] = (byte) msb;
-				msb>>>=8;
-				hash[0x01] = (byte) msb;
-				msb>>>=8;
-				hash[0x02] = (byte) msb;
-				msb>>>=8;
-				hash[0x03] = (byte) msb;
-				msb>>>=8;
-				hash[0x04] = (byte) msb;
-				msb>>>=8;
-				hash[0x05] = (byte) msb;
-				msb>>>=8;
-				hash[0x06] = (byte) msb;
-				msb>>>=8;
-				hash[0x07] = (byte) msb;
-				hash[0x08] = (byte) lsb;
-				lsb>>>=8;
-				hash[0x09] = (byte) lsb;
-				lsb>>>=8;
-				hash[0x0A] = (byte) lsb;
-				lsb>>>=8;
-				hash[0x0B] = (byte) lsb;
-				lsb>>>=8;
-				hash[0x0C] = (byte) lsb;
-				lsb>>>=8;
-				hash[0x0D] = (byte) lsb;
-				lsb>>>=8;
-				hash[0x0E] = (byte) lsb;
-				lsb>>>=8;
-				hash[0x0F] = (byte) lsb;
-				
-				md5hash.reset();
-				md5hash.update(data.sha1);
-				md5hash.update(hash);
-				md5hash.update(this.salt);
-				hash = md5hash.digest();
-				
-				lsb = hash[0x0F] & 0xFF;
-				lsb<<=8;
-				lsb |= hash[0x0E] & 0xFF;
-				lsb<<=8;
-				lsb |= hash[0x0D] & 0xFF;
-				lsb<<=8;
-				lsb |= hash[0x0C] & 0xFF;
-				lsb<<=8;
-				lsb |= hash[0x0B] & 0xFF;
-				lsb<<=8;
-				lsb |= hash[0x0A] & 0xFF;
-				lsb<<=8;
-				lsb |= hash[0x09] & 0xFF;
-				lsb<<=8;
-				lsb |= hash[0x08] & 0xFF;
-				msb = hash[0x07] & 0xFF;
-				msb<<=8;
-				msb |= hash[0x06] & 0xFF;
-				msb<<=8;
-				msb |= hash[0x05] & 0xFF;
-				msb<<=8;
-				msb |= hash[0x04] & 0xFF;
-				msb<<=8;
-				msb |= hash[0x03] & 0xFF;
-				msb<<=8;
-				msb |= hash[0x02] & 0xFF;
-				msb<<=8;
-				msb |= hash[0x01] & 0xFF;
-				msb<<=8;
-				msb |= hash[0x00] & 0xFF;
-				final UUID token = new UUID(msb, lsb);
-				tokens[i] = token;
-				tokenres.put(token, data);
-				targets.put(targetplayer, token);
-			}
-			return tokens;
-		}
-		while(--i > -1) {
-			final UUID token = UUID.randomUUID();
-			tokens[i] = token;
-			tokenres.put(token, data);
-			targets.put(targetplayers[i], token);
-		}
-		return tokens;
-	}
-	
-	/**
 	 * Set accept status by targetplayer uuid
 	 */
-	public void setAccepted(UUID targetplayer) {
-		if (accepted == null || !targets.containsKey(targetplayer)) {
+	public void setAccepted(UUID target) {
+		UUID token;
+		if (accepted == null || (token = targets.get(target)) == null) {
 			return;
 		}
-		accepted.add(targets.get(targetplayer));
+		accepted.add(token);
 	}
 
 	/**
@@ -202,7 +204,7 @@ public final class ResourceManager {
 	 * @return true if token valid and no accept status.
 	 */
 	protected boolean waitAcception(UUID token) {
-		if(accepted == null || !targets.containsValue(token)) {
+		if(accepted == null || !tokens.containsKey(token)) {
 			return false;
 		}
 		return !accepted.contains(token);
@@ -215,15 +217,9 @@ public final class ResourceManager {
 	 * @return null if token invalid
 	 */
 	protected DataEntry get(UUID token) {
-		if (token == null) {
+		UUID target;
+		if (token == null || (target = tokens.remove(token)) == null || !token.equals(targets.remove(target))) {
 			return null;
-		}
-		if (targets.containsValue(token)) {
-			for (UUID target : targets.keySet()) {
-				if (targets.get(target).equals(token)) {
-					targets.remove(target);
-				}
-			}
 		}
 		if(accepted != null) {
 			accepted.remove(token);
@@ -236,11 +232,12 @@ public final class ResourceManager {
 	 * Clears accept status
 	 * @return true if removed
 	 */
-	public boolean remove(UUID targetuuid) {
-		UUID token = targets.remove(targetuuid);
-		if (token == null) {
+	public boolean remove(UUID target) {
+		UUID token;
+		if (target == null || (token = targets.remove(target)) == null) {
 			return false;
 		}
+		tokens.remove(token);
 		tokenres.remove(token);
 		if(accepted == null) {
 			return true;

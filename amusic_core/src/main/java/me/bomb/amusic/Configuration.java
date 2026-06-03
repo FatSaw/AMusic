@@ -172,6 +172,7 @@ public final class Configuration {
 		}
 		SimpleConfiguration sc;
 		if(bytes != null && (sc = new SimpleConfiguration(bytes, size)).getBooleanOrError("amusic\0use", errors)) {
+			final String EMPTY = new String();
 			this.use = true;
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;
@@ -179,13 +180,13 @@ public final class Configuration {
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			this.encoderuse = sc.getBooleanOrError("amusic\0encoder\0use", errors);
-			String executorcfg = sc.getStringOrDefault("amusic\0executor", "apicall");
-			ExecutorConfiguration executorconfig = new ExecutorConfiguration("executor_".concat(executorcfg).concat(".yml"));
+			String executorcfg = sc.getStringOrDefault("amusic\0executor", EMPTY);
+			ExecutorConfiguration executorconfig = executorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0executor") : new ExecutorConfiguration("executor_".concat(executorcfg).concat(".yml"));
 			if(executorconfig.errors.length() != 0) {
 				appendError("Filed to load executor configuration", errors);
 				errors.append(executorconfig.errors);
 			}
-			this.executor = executorconfig.executor;
+			this.executor = executorconfig.createExecutor();
 			if(defaultremoteclient && connectuse) {
 				this.uploadhost = sc.getStringOrError("amusic\0server\0upload\0host", errors);
 				this.uploadhttps = false;
@@ -290,20 +291,20 @@ public final class Configuration {
 				this.uploadlimitcount = 0;
 			}
 			
-			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0checker", "sendpackchecker");
-			ExecutorConfiguration sendpackexecutorconfig = new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
+			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0checker", EMPTY);
+			ExecutorConfiguration sendpackexecutorconfig = sendpackexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0sendpack\0executor\0checker") : new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
 			if(sendpackexecutorconfig.errors.length() != 0) {
 				appendError("Filed to load sendpack executor checker configuration", errors);
 				errors.append(sendpackexecutorconfig.errors);
 			}
-			this.sendpackexecutorchecker = sendpackexecutorconfig.executor;
-			sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0sender", "sendpacksender");
-			sendpackexecutorconfig = new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
+			this.sendpackexecutorchecker = sendpackexecutorconfig.createExecutor();
+			sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0sender", EMPTY);
+			sendpackexecutorconfig = sendpackexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0sendpack\0executor\0sender") : new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
 			if(sendpackexecutorconfig.errors.length() != 0) {
 				appendError("Filed to load sendpack executor sender configuration", errors);
 				errors.append(sendpackexecutorconfig.errors);
 			}
-			this.sendpackexecutorsender = sendpackexecutorconfig.executor;
+			this.sendpackexecutorsender = sendpackexecutorconfig.createExecutor();
 			
 			this.sendpackhost = sc.getStringOrError("amusic\0server\0sendpack\0host", errors);
 			InetAddress sendpackifip = null;
@@ -410,13 +411,13 @@ public final class Configuration {
 						this.connectsocketfactory = new SimpleSocketFactory();
 					}
 				} else {
-					String serverexecutorcfg = sc.getStringOrDefault("amusic\0server\0connect\0server\0executor", "apicallremote");
-					ExecutorConfiguration serverexecutorconfig = new ExecutorConfiguration("executor_".concat(serverexecutorcfg).concat(".yml"));
+					String serverexecutorcfg = sc.getStringOrDefault("amusic\0server\0connect\0server\0executor", EMPTY);
+					ExecutorConfiguration serverexecutorconfig = serverexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0connect\0server\0executor") : new ExecutorConfiguration("executor_".concat(serverexecutorcfg).concat(".yml"));
 					if(serverexecutorconfig.errors.length() != 0) {
 						appendError("Filed to load server executor configuration", errors);
 						errors.append(serverexecutorconfig.errors);
 					}
-					this.serverexecutor = serverexecutorconfig.executor;
+					this.serverexecutor = serverexecutorconfig.createExecutor();
 					InetAddress connectclientip = null;
 					String connectclientipstr = sc.getStringOrError("amusic\0server\0connect\0server\0clientip", errors);
 					if(connectclientipstr != null && !connectclientipstr.equals("0.0.0.0")) {

@@ -43,7 +43,7 @@ final class ResourceSender implements ServerWorker {
 						}
 					}
 					byte i = 0;
-					while (resourcemanager.waitAcception(token) && 0 != ++i) {
+					while (resourcemanager.waitAcception(token) && --i != 0) {
 						try {
 							Thread.sleep(100);
 						} catch (InterruptedException e) {

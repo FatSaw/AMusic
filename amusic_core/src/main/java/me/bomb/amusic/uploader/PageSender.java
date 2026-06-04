@@ -72,7 +72,7 @@ final class PageSender implements ServerWorker {
 			System.arraycopy(headerclose, 0, buf, pos, headerclose.length);
 			pos+=headerclose.length;
 			int i;
-			while ((i = is.read(bufb)) != -1) {
+			while ((i = is.read(bufb, 0, bufb.length)) != -1) {
 				System.arraycopy(bufb, 0, buf, pos, i);
 				pos += i;
 			}

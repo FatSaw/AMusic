@@ -280,7 +280,7 @@ public final class ResourcePacker implements Runnable {
 								String musicid = new StringBuilder("music").append(soundhashs[i].toString()).append(HexUtils.shortToHex((short) i)).append(HexUtils.byteToHex((byte) --partid)).toString();
 								sounds.append("\t\"amusic.");
 								sounds.append(musicid);
-								sounds.append("\": {\n\t\t\"category\": \"voice\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/");
+								sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic/");
 								sounds.append(musicid);
 								sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
 							}

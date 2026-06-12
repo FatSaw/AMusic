@@ -22,27 +22,28 @@ public final class SpongeLegacySoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte partid) {
-		if(uuid == null) {
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+		this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, 1.0E9f, 1.0f);
+	}
+
+	@Override
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part, double x, double y, double z, float volume, float pitch) {
+		final Optional<Player> oplayer;
+		if(uuid == null || soundhash == null || !(oplayer = server.getPlayer(uuid)).isPresent()) {
 			return;
 		}
-		Optional<Player> oplayer = server.getPlayer(uuid);
-		if(oplayer.isPresent()) {
-			Player player = oplayer.get();
-			SoundType sound = new SoundType() {
-				String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
-				@Override
-				public String getName() {
-					return musicid;
-				}
-				@Override
-				public String getId() {
-					return musicid;
-				}
-			};
-			
-			player.playSound(sound, SoundCategories.VOICE, Vector3d.ZERO, 1.0E9f, 1.0f);
-		}
+		SoundType sound = new SoundType() {
+			String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+			@Override
+			public String getName() {
+				return musicid;
+			}
+			@Override
+			public String getId() {
+				return musicid;
+			}
+		};
+		oplayer.get().playSound(sound, SoundCategories.MASTER, new Vector3d(x, y, z), volume, pitch);
 	}
 
 }

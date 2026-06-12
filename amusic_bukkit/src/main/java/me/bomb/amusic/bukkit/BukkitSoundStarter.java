@@ -2,6 +2,7 @@ package me.bomb.amusic.bukkit;
 
 import java.util.UUID;
 
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
@@ -18,13 +19,18 @@ public final class BukkitSoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte partid) {
-		if(uuid == null) {
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+		this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, 1.0f, 1.0f);
+	}
+	
+	@Override
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part, double x, double y, double z, float volume, float pitch) {
+		if(uuid == null || soundhash == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		Player player = server.getPlayer(uuid);
-		player.playSound(player.getLocation(), musicid, SoundCategory.VOICE, 1.0f, 1.0f);
+		player.playSound(new Location(player.getWorld(), x, y, z), musicid, SoundCategory.VOICE, volume, pitch);
 	}
 
 }

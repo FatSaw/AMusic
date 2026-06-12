@@ -132,7 +132,7 @@ public interface AMusic {
 	 * 
 	 * @return true if async used.
 	 */
-	public boolean playSoundUntrackable(UUID playeruuid, String name);
+	public boolean playSoundUntrackable(UUID playeruuid, String name, double x, double y, double z, float volume, float pitch);
 	
 	/**
 	 * Open upload session.

@@ -158,7 +158,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 							if(trackable) {
 								amusic.playSound(target.getUniqueId(),args[1]);
 							} else {
-								amusic.playSoundUntrackable(target.getUniqueId(),args[1]);
+								amusic.playSoundUntrackable(target.getUniqueId(),args[1],0d,0d,0d,1.0f,1.0f);
 							}
 							LangOptions.playmusic_success.sendMsg(sender,placeholders);
 							return;

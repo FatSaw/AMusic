@@ -24,7 +24,7 @@ public final class SpongeSoundStopper implements SoundStopper {
 		if(uuid == null) {
 			return;
 		}
-		final String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		final String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		Optional<Player> oplayer = server.getPlayer(uuid);
 		if(oplayer.isPresent()) {
 			Player player = oplayer.get();

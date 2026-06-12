@@ -46,16 +46,17 @@ public final class VelocitySoundStarter implements SoundStarter {
 	}
 	
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte partid) {
-		Optional<Player> oplayer = server.getPlayer(uuid);
-		if(oplayer.isEmpty()) {
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+		//this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, id, 1.0f);
+		final Optional<Player> oplayer;
+		if(uuid == null || soundhash == null || (oplayer = server.getPlayer(uuid)).isEmpty()) {
 			return;
 		}
 		Player player = oplayer.get();
 		final int version = player.getProtocolVersion().getProtocol();
-		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		if(version > 760) {
-			Sound sound = Sound.sound(Key.key(musicid), Sound.Source.VOICE, version < 393 ? 1.0E9f : 1.0f, 1.0f);
+			Sound sound = Sound.sound(Key.key(musicid), Sound.Source.VOICE, 1.0f, 1.0f);
 			player.playSound(sound, player);
 			return;
 		}
@@ -81,15 +82,68 @@ public final class VelocitySoundStarter implements SoundStarter {
             buf.writeShort(w);
         }
 		buf.writeBytes(songidb);
-		if (version > 47) buf.writeByte(9);
+		if (version > 47) buf.writeByte(version < 393 ? 0 : 9);
         buf.writeInt(0);
-        buf.writeInt(Integer.MIN_VALUE);
+        buf.writeInt(0);
         buf.writeInt(0);
         buf.writeFloat(version < 393 ? 1.0E9f : 1.0f);
         if (version < 210) {
             buf.writeByte(63);
         } else {
             buf.writeFloat(1.0F);
+        }
+        if (version >= 759) {
+            buf.writeLong(0L);
+        }
+		((ConnectedPlayer) player).getConnection().write(buf);
+	}
+
+	@Override
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part, double x, double y, double z, float volume, float pitch) {
+		final Optional<Player> oplayer;
+		if(uuid == null || soundhash == null || (oplayer = server.getPlayer(uuid)).isEmpty()) {
+			return;
+		}
+		Player player = oplayer.get();
+		final int version = player.getProtocolVersion().getProtocol();
+		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		if(version > 760) {
+			Sound sound = Sound.sound(Key.key(musicid), Sound.Source.VOICE, volume, pitch);
+			player.playSound(sound, player);
+			//player.playSound(sound, x, y, z); //NOT IMPLEMENTED
+			return;
+		}
+		
+		int packetsize = 19;
+		if(version > 209) packetsize += 3;
+		if(version == 759) packetsize += 4;
+		if (version > 47) ++packetsize;
+		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
+		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
+		if(!bytesoundnamelength) ++packetsize;
+		packetsize+=songidb.length;
+		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
+		int pid;
+		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
+			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
+		}
+		buf.writeByte(pid);
+		if (bytesoundnamelength) {
+            buf.writeByte(songidb.length);
+        } else {
+            int w = (songidb.length & 0x7F | 0x80) << 8 | (songidb.length >>> 7);
+            buf.writeShort(w);
+        }
+		buf.writeBytes(songidb);
+		if (version > 47) buf.writeByte(version < 393 ? 0 : 9);
+        buf.writeInt((int) (x * 8.0D));
+        buf.writeInt((int) (y * 8.0D));
+        buf.writeInt((int) (z * 8.0D));
+        buf.writeFloat(volume);
+        if (version < 210) {
+            buf.writeByte((int) (pitch * 63.0F));
+        } else {
+            buf.writeFloat(pitch);
         }
         if (version >= 759) {
             buf.writeLong(0L);

@@ -283,13 +283,13 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
-	public final boolean playSoundUntrackable(UUID playeruuid, String name) {
+	public final boolean playSoundUntrackable(UUID playeruuid, String name, double x, double y, double z, float volume, float pitch) {
 		if(playeruuid == null || name == null) {
 			return false;
 		}
 		Runnable r = new Runnable() {
 			public void run() {
-				positiontracker.playMusicUntrackable(playeruuid, name);
+				positiontracker.playMusicUntrackable(playeruuid, name, x, y, z, volume, pitch);
 			}
 		};
 		executor.execute(r);

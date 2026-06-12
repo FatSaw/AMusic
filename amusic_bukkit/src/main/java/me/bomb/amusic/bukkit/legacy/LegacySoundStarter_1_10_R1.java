@@ -19,13 +19,18 @@ public final class LegacySoundStarter_1_10_R1 implements SoundStarter {
 	}
 	
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte partid) {
-		if(uuid == null) {
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+		this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, 1.0E9f, 1.0f);
+	}
+
+	@Override
+	public void startSound(UUID uuid, UUID soundhash, short id, byte part, double x, double y, double z, float volume, float pitch) {
+		if(uuid == null || soundhash == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		CraftPlayer player = (CraftPlayer) server.getPlayer(uuid);
-		player.getHandle().playerConnection.sendPacket(new PacketPlayOutCustomSoundEffect(musicid, SoundCategory.VOICE, 0.0d, 0.0d, 0.0d, 1.0E9f, 1.0f));
+		player.getHandle().playerConnection.sendPacket(new PacketPlayOutCustomSoundEffect(musicid, SoundCategory.VOICE, x, y, z, volume, pitch));
 	}
 
 }

@@ -256,7 +256,7 @@ public final class PlaymusicCommand implements CommandExecutor {
 			}
 		} else {
 			for(UUID targetuuid : targetuuids) {
-				amusic.playSoundUntrackable(targetuuid,soundname);
+				amusic.playSoundUntrackable(targetuuid,soundname,0d,0d,0d,1.0f,1.0f);
 			}
 		}
 		

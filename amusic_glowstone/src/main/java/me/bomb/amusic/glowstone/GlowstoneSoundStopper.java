@@ -27,14 +27,13 @@ public final class GlowstoneSoundStopper implements SoundStopper {
 		if(uuid == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic.music").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
 		GlowPlayer player = (GlowPlayer) server.getPlayer(uuid);
 		try {
 			ByteBuf buffer = Unpooled.buffer();
 			ByteBufUtils.writeUTF8(buffer, "voice"); //Source
 	        ByteBufUtils.writeUTF8(buffer, musicid); //Sound
 	        player.getSession().sendAndRelease(new PluginMessage("MC|StopSound", buffer.array()), buffer);
-
 		} catch (IOException e) {
 		}
 	}

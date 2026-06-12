@@ -175,7 +175,7 @@ public final class PositionTracker extends Thread {
 		return playing.remaining;
 	}
 	
-	public void playMusicUntrackable(UUID uuid, String name) {
+	public void playMusicUntrackable(UUID uuid, String name, double x, double y, double z, float volume, float pitch) {
 		SoundInfo[] soundsinfo = getSoundInfo(uuid);
 		if (soundsinfo == null) {
 			return;
@@ -199,7 +199,7 @@ public final class PositionTracker extends Thread {
 				if(playing != null) {
 					soundstopper.stopSound(uuid, playing.soundhash, playing.currenttrack, (byte) 0);
 				}
-				soundstarter.startSound(uuid, soundhash, fid, (byte) 0);
+				soundstarter.startSound(uuid, soundhash, fid, (byte) 0, x, y, z, volume, pitch);
 			}
 		};
 		

@@ -60,10 +60,10 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final byte[] getPlayersLoadedBytes(byte[] playlistnameb) {
-		if(playlistnameb.length > 255 || playlistnameb.length < 1) {
+		if(playlistnameb.length > 0xFF || playlistnameb.length < 0x01) {
 			return new byte[0];
 		}
-		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
+		String playlistname = new String(playlistnameb, 0, playlistnameb.length, StandardCharsets.UTF_8);
 		UUID[] playeruuids = positiontracker.getPlayersLoaded(playlistname);
 		if(playeruuids == null) {
 			playeruuids = new UUID[0];
@@ -765,7 +765,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final void playSoundBytes(byte[] playeruuidnameb) {
-		if(playeruuidnameb.length < 16 || playeruuidnameb.length > 271) {
+		if(playeruuidnameb.length < 0x10 || playeruuidnameb.length > 0x10F) {
 			return;
 		}
 		long lsb = 0L, msb = 0L;
@@ -800,17 +800,86 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb<<=8;
 		msb |= playeruuidnameb[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
-		byte[] nameb = new byte[playeruuidnameb.length - 16];
-		System.arraycopy(playeruuidnameb, 16, nameb, 0, nameb.length);
-		String name = new String(nameb, StandardCharsets.UTF_8);
+		/*byte[] nameb = new byte[playeruuidnameb.length - 0x10];
+		System.arraycopy(playeruuidnameb, 0x10, nameb, 0, nameb.length);
+		String name = new String(nameb, StandardCharsets.UTF_8);*/
+		String name = new String(playeruuidnameb, 0x10, playeruuidnameb.length - 0x10, StandardCharsets.UTF_8);
 		positiontracker.playMusic(playeruuid, name);
 	}
 	
 	public final void playSoundUntrackableBytes(byte[] playeruuidnameb) {
-		if(playeruuidnameb.length < 16 || playeruuidnameb.length > 271) {
+		if(playeruuidnameb.length < 0x30 || playeruuidnameb.length > 0x12F) {
 			return;
 		}
-
+		long lb = 0;
+		lb = playeruuidnameb[0x2F] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x2E] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x2D] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x2C] & 0xFF;
+		float pitch = Float.intBitsToFloat((int) lb);
+		lb = 0;
+		lb |= playeruuidnameb[0x2B] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x2A] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x29] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x28] & 0xFF;
+		float volume = Float.intBitsToFloat((int) lb);
+		lb = 0;
+		lb = playeruuidnameb[0x27] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x26] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x25] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x24] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x23] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x22] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x21] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x20] & 0xFF;
+		double z = Double.longBitsToDouble(lb);
+		lb = 0;
+		lb = playeruuidnameb[0x1F] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x1E] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x1D] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x1C] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x1B] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x1A] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x19] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x18] & 0xFF;
+		double y = Double.longBitsToDouble(lb);
+		lb = 0;
+		lb = playeruuidnameb[0x17] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x16] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x15] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x14] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x13] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x12] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x11] & 0xFF;
+		lb<<=8;
+		lb |= playeruuidnameb[0x10] & 0xFF;
+		double x = Double.longBitsToDouble(lb);
 		long lsb = 0L, msb = 0L;
 		lsb = playeruuidnameb[0x0F] & 0xFF;
 		lsb<<=8;
@@ -843,10 +912,11 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb<<=8;
 		msb |= playeruuidnameb[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
-		byte[] nameb = new byte[playeruuidnameb.length - 16];
-		System.arraycopy(playeruuidnameb, 16, nameb, 0, nameb.length);
-		String name = new String(nameb, StandardCharsets.UTF_8);
-		positiontracker.playMusicUntrackable(playeruuid, name);
+		/*byte[] nameb = new byte[playeruuidnameb.length - 0x30];
+		System.arraycopy(playeruuidnameb, 0x30, nameb, 0, nameb.length);
+		String name = new String(nameb, StandardCharsets.UTF_8);*/
+		String name = new String(playeruuidnameb, 0x30, playeruuidnameb.length - 0x30, StandardCharsets.UTF_8);
+		positiontracker.playMusicUntrackable(playeruuid, name, x, y, z, volume, pitch);
 	}
 	
 	public final byte[] openUploadSessionBytes(byte[] playlistnameb) {

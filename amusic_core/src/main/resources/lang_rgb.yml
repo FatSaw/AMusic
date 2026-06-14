@@ -9,7 +9,7 @@ localisation:
    noconsoleselector: {"color":"#ee2222","text":"This selector unavilable from console"}
    targetoffline: {"color":"#ee2222","text":"Target player offline"}
    processing: [{"color":"#22ee22","text":"Processing "},{"color":"#eeee22","text":"%playlistname%"},{"color":"#22ee22","text":" ..."}]
-   noplaylist: [{"color":"#ee2222","text":"Playlist "},{"color":"#eeee22","text":"%playlistname%"},{"color":"#ee2222","text":" not exsit"}]
+   noplaylist: [{"color":"#ee2222","text":"Playlist "},{"color":"#eeee22","text":"%playlistname%"},{"color":"#ee2222","text":" not exist"}]
    loaderunavilable: {"color":"#ee2222","text":"Loader temporarily unavilable"}
    success:
     removed: [{"color":"#22ee22","text":"Removed playlist "},{"color":"#eeee22","text":"%playlistname%"}]
@@ -26,7 +26,7 @@ localisation:
    noconsoleselector: {"color":"#ee2222","text":"This selector unavilable from console"}
    targetoffline: {"color":"#ee2222","text":"Target player offline"}
    noplaylist: {"color":"#ee2222","text":"Playlist not loaded fot that player"}
-   missingtrack: [{"color":"#ee2222","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" not exsit"}]
+   missingtrack: [{"color":"#ee2222","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" not exist"}]
    success: [{"color":"#22ee22","text":"Starting playing... "},{"color":"#eeee22","text":"%soundname%"}]
    stop: {"color":"#22ee22","text":"Stopping playing..."}
    unavilableselector:

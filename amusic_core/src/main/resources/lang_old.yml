@@ -9,7 +9,7 @@ localisation:
    noconsoleselector: {"color":"red","text":"This selector unavilable from console"}
    targetoffline: {"color":"red","text":"Target player offline"}
    processing: [{"color":"green","text":"Processing "},{"color":"yellow","text":"%playlistname%"},{"color":"green","text":" ..."}]
-   noplaylist: [{"color":"red","text":"Playlist "},{"color":"yellow","text":"%playlistname%"},{"color":"red","text":" not exsit"}]
+   noplaylist: [{"color":"red","text":"Playlist "},{"color":"yellow","text":"%playlistname%"},{"color":"red","text":" not exist"}]
    loaderunavilable: {"color":"red","text":"Loader temporarily unavilable"}
    success:
     removed: [{"color":"green","text":"Removed playlist "},{"color":"yellow","text":"%playlistname%"}]
@@ -26,7 +26,7 @@ localisation:
    noconsoleselector: {"color":"red","text":"This selector unavilable from console"}
    targetoffline: {"color":"red","text":"Target player offline"}
    noplaylist: {"color":"red","text":"Playlist not loaded fot that player"}
-   missingtrack: [{"color":"red","text":"Sound "},{"color":"yellow","text":"%soundname%"},{"color":"red","text":" not exsit"}]
+   missingtrack: [{"color":"red","text":"Sound "},{"color":"yellow","text":"%soundname%"},{"color":"red","text":" not exist"}]
    success: [{"color":"green","text":"Starting playing... "},{"color":"yellow","text":"%soundname%"}]
    stop: {"color":"green","text":"Stopping playing..."}
    unavilableselector:

@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -24,7 +23,6 @@ import static java.lang.System.currentTimeMillis;
 
 public final class ResourcePacker implements Runnable {
 	
-	private final static Pattern invalidname;
 	private final static byte[] silencesound;
 	
 	public SoundInfo[] sounds;
@@ -36,7 +34,6 @@ public final class ResourcePacker implements Runnable {
 	private final boolean reproducible;
 	
 	static {
-		invalidname = Pattern.compile("[^a-z0-9/._-]");
 		byte[] buf = new byte[2983];
 		InputStream is = ResourcePacker.class.getClassLoader().getResourceAsStream("silence.ogg");
 		try {
@@ -280,7 +277,13 @@ public final class ResourcePacker implements Runnable {
 					final byte split = splits[i];
 					String soundid = new StringBuilder().append(soundhashs[i].toString()).append(HexUtils.shortToHex((short) i)).toString();
 					String soundname = soundnames[i];
-					if((split & 0x01) == 0x01 && !invalidname.matcher(soundname).find()) {
+					byte[] soundnameb = soundname.getBytes(StandardCharsets.US_ASCII);
+					int j = soundnameb.length;
+					while(--j > -1) {
+						byte ch = soundnameb[j];
+						if(ch < 0x2D || ch > 0x7A || (ch < 0x5F && ch > 0x39) || ch == 0x60) break;
+					}
+					if((split & 0x01) == 0x01 && j == -1) {
 						String soundidp = soundid.concat("00");
 						byte channel = channels[i];
 						if(channel == 1) {

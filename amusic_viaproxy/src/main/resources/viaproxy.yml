@@ -1,0 +1,5 @@
+name: "AMusic"
+version: "${revision}"
+author: "Bomb"
+main: "me.bomb.amusic.viaproxy.AMusicViaproxy"
+min-version: "3.0.0"

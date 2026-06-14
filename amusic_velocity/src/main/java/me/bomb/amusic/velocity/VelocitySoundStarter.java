@@ -47,7 +47,6 @@ public final class VelocitySoundStarter implements SoundStarter {
 	
 	@Override
 	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
-		//this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, id, 1.0f);
 		final Optional<Player> oplayer;
 		if(uuid == null || soundhash == null || (oplayer = server.getPlayer(uuid)).isEmpty()) {
 			return;

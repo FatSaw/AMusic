@@ -9,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.source.OggVorbisPageInfo;
@@ -18,6 +17,7 @@ import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
 import me.bomb.amusic.util.ChunkedOutputStream;
 import me.bomb.amusic.util.HexUtils;
+import me.bomb.amusic.util.ZipOutput;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -83,11 +83,9 @@ public final class ResourcePacker implements Runnable {
 		
 		{
 			ChunkedOutputStream cos;
-			ZipOutputStream zos;
+			ZipOutput zo;
 			cos = new ChunkedOutputStream();
-			zos = new ZipOutputStream(cos, StandardCharsets.UTF_8);
-			zos.setMethod(8);
-			zos.setLevel(5);
+			zo = new ZipOutput(cos);
 			boolean packmcmetafound = false;
 			byte[] srcbuf = null;
 			if(packsource != null && (srcbuf = packsource.get(id)) != null) {
@@ -95,20 +93,14 @@ public final class ResourcePacker implements Runnable {
 				try {
 					zis = new ZipInputStream(new ByteArrayInputStream(srcbuf), StandardCharsets.UTF_8);
 					ZipEntry entry;
-					int len;
-					byte[] buf = new byte[0x2000];
 					while((entry = zis.getNextEntry()) != null) {
 						String entryname = entry.getName();
 						if(!packmcmetafound&&entryname.equals("pack.mcmeta")) {
 							packmcmetafound = true;
 						}
-						entry = new ZipEntry(entryname);
-						entry.setTime(0L);
-						zos.putNextEntry(entry);
-			            while ((len = zis.read(buf)) != -1) {
-			            	zos.write(buf, 0, len);
-			            }
-		                zos.closeEntry();
+						byte[] buf = new byte[(int) entry.getSize()];
+						zis.read(buf, 0, buf.length);
+						zo.putEntry(entryname, buf);
 					}
 					zis.close();
 				} catch (IOException e1) {
@@ -121,21 +113,7 @@ public final class ResourcePacker implements Runnable {
 				}
 			}
 			try {
-				if(!packmcmetafound) {
-					ZipEntry entry = new ZipEntry("pack.mcmeta");
-					entry.setTime(0L);
-					zos.putNextEntry(entry);
-					zos.write("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"AMusic resourcepack\"\n\t}\n}".getBytes());
-					zos.closeEntry();
-				}
-			} catch (IOException e) {
-			}
-			try {
-				ZipEntry entry = new ZipEntry("assets/amusic/sounds/silence.ogg");
-				entry.setTime(0L);
-				zos.putNextEntry(entry);
-				zos.write(silencesound);
-				zos.closeEntry();
+				zo.putEntry("silence.ogg", "assets/amusic/sounds/silence.ogg", "sounds/amusic/silence.ogg", silencesound);
 			} catch (IOException e) {
 			}
 			byte[] channels = new byte[musiccount];
@@ -176,7 +154,10 @@ public final class ResourcePacker implements Runnable {
 						byte[][][] ntopack = sourceentry.data;
 						while(--i > -1) {
 							final byte split = splits[i];
-							String entryid = "assets/amusic/sounds/".concat(soundhashs[i].toString()).concat(HexUtils.shortToHex((short)i));
+							String soundid =  soundhashs[i].toString().concat(HexUtils.shortToHex((short)i));
+							String javaentryid = "assets/amusic/sounds/";
+							String bedrockentryid = "sounds/amusic/";
+							
 							byte[][] sounddata = ntopack[i];
 							byte channel = 0;
 							try {
@@ -195,11 +176,8 @@ public final class ResourcePacker implements Runnable {
 									while(--partscount > -1) {
 										byte[] part = sounddata[--partid];
 										try {
-											ZipEntry entry = new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg"));
-											entry.setTime(0L);
-											zos.putNextEntry(entry);
-								            zos.write(part);
-								            zos.closeEntry();
+											String spartid = soundid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg");
+											zo.putEntry(spartid, javaentryid.concat(spartid), bedrockentryid.concat(spartid), part);
 										} catch (IOException e) {
 										}
 									}
@@ -226,7 +204,9 @@ public final class ResourcePacker implements Runnable {
 							continue;
 						}
 						final byte split = splits[i];
-						String entryid = "assets/amusic/sounds/".concat(soundhashs[i].toString()).concat(HexUtils.shortToHex((short)i));
+						String soundid =  soundhashs[i].toString().concat(HexUtils.shortToHex((short)i));
+						String javaentryid = "assets/amusic/sounds/";
+						String bedrockentryid = "sounds/amusic/";
 						
 						byte[][] sounddata = ntopack[i];
 						byte channel = 0;
@@ -246,11 +226,8 @@ public final class ResourcePacker implements Runnable {
 								while(--partscount > -1) {
 									byte[] part = sounddata[--partid];
 									try {
-										ZipEntry entry = new ZipEntry(entryid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg"));
-										entry.setTime(0L);
-										zos.putNextEntry(entry);
-							            zos.write(part);
-							            zos.closeEntry();
+							            String spartid = soundid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg");
+										zo.putEntry(spartid, javaentryid.concat(spartid), bedrockentryid.concat(spartid), part);
 									} catch (IOException e) {
 									}
 								}
@@ -269,9 +246,11 @@ public final class ResourcePacker implements Runnable {
 				}
 			}
 			
-			String soundslist;
+			String soundslistjava;
+			String soundslistbedrock;
 			{
-				StringBuffer sounds = new StringBuffer("{\n");
+				StringBuffer soundsjava = new StringBuffer("{\n");
+				StringBuffer soundsbedrock = new StringBuffer("{\n\t\"format_version\": \"1.14.0\",\n\t\"sound_defenitions\": {\n");
 				int i = musiccount;
 				while(--i > -1) {
 					final byte split = splits[i];
@@ -290,22 +269,22 @@ public final class ResourcePacker implements Runnable {
 							byte att = 100;
 							while(--att > 0) {
 								String atts = Integer.toString(att);
-								sounds.append("\t\"");
-								sounds.append(atts);
-								sounds.append(".");
-								sounds.append(soundname);
-								sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": ");
-								sounds.append(atts);
-								sounds.append(",\n\t\t\t\t\"name\": \"amusic:");
-								sounds.append(soundidp);
-								sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+								soundsjava.append("\t\"");
+								soundsjava.append(atts);
+								soundsjava.append(".");
+								soundsjava.append(soundname);
+								soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": ");
+								soundsjava.append(atts);
+								soundsjava.append(",\n\t\t\t\t\"name\": \"amusic:");
+								soundsjava.append(soundidp);
+								soundsjava.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
 							}
 						}
-						sounds.append("\t\"_.");
-						sounds.append(soundname);
-						sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic:");
-						sounds.append(soundidp);
-						sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+						soundsjava.append("\t\"_.");
+						soundsjava.append(soundname);
+						soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic:");
+						soundsjava.append(soundidp);
+						soundsjava.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
 					}
 					short partid = (short) (split & 0xFF);
 					byte splitbitid = 8;
@@ -315,31 +294,60 @@ public final class ResourcePacker implements Runnable {
 							byte partscount = (byte) (1 << splitbitid);
 							while(--partscount > -1) {
 								String soundidp = soundid.concat(HexUtils.byteToHex((byte) --partid));
-								sounds.append("\t\"internal.");
-								sounds.append(soundidp);
-								sounds.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic:");
-								sounds.append(soundidp);
-								sounds.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+								soundsjava.append("\t\"internal.");
+								soundsjava.append(soundidp);
+								soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic:");
+								soundsjava.append(soundidp);
+								soundsjava.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+								soundsbedrock.append("\t\t\"amusic.internal.");
+								soundsbedrock.append(soundidp);
+								soundsbedrock.append("\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"sounds/amusic/");
+								soundsbedrock.append(soundidp);
+								soundsbedrock.append("\"\n\t\t\t]\n\t\t},\n");
 							}
 						}
 					}
 				}
-				sounds.append("\t\"internal.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic:silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n}");
-				soundslist = sounds.toString();
+				soundsjava.append("\t\"internal.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic:silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n}");
+				soundsbedrock.append("\t\t\"amusic.internal.silence\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"sounds/amusic/silence\"\n\t\t\t]\n\t\t}\n\t}\n}");
+				soundslistjava = soundsjava.toString();
+				soundslistbedrock = soundsbedrock.toString();
 			}
 			
-			
 			try {
-				ZipEntry entry = new ZipEntry("assets/amusic/sounds.json");
-				entry.setTime(0L);
-				zos.putNextEntry(entry);
-				zos.write(soundslist.getBytes(StandardCharsets.US_ASCII));
-				zos.closeEntry();
+				zo.putEntry("assets/amusic/sounds.json", soundslistjava.getBytes(StandardCharsets.US_ASCII));
 			} catch (IOException e) {
 			}
 			
 			try {
-				zos.close();
+				zo.putEntry("sounds/sound_definitions.json", soundslistbedrock.getBytes(StandardCharsets.US_ASCII));
+			} catch (IOException e) {
+			}
+			
+			try {
+				if(!packmcmetafound) {
+					zo.putEntry("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"AMusic resourcepack\"\n\t}\n}".getBytes(StandardCharsets.US_ASCII));
+				}
+			} catch (IOException e) {
+			}
+			try {
+				StringBuilder sb = new StringBuilder();
+				sb.append("{\n\t\"format_version\": 2,\n\t\"header\": {\n\t\t\"name\": \"AMusic resourcepack\",\n\t\t\"description\": \"DESCRIPTION\",\n\t\t\"uuid\": \"");
+				sb.append(new UUID(12345L, 67890L));
+				sb.append("\",\n\t\t\"version\": [1, 0, 0]\n\t},\n\t\"modules\": [\n\t\t{\n\t\t\t\"type\": \"resources\",\n\t\t\t\"uuid\": \"");
+				sb.append(new UUID(67890L, 12345L));
+				sb.append("\",\n\t\t\t\"version\": [1, 0, 0]\n\t\t}\n\t]\n}");
+				zo.putEntry("manifest.json", sb.toString().getBytes(StandardCharsets.US_ASCII));
+			} catch (IOException e) {
+			}
+			
+			try {
+				zo.writeCentralDirectory();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				cos.close();
 			} catch (IOException e) {
 			}
 			this.resourcepack = cos.toByteArray();

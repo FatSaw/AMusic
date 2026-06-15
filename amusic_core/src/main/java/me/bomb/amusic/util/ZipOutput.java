@@ -19,22 +19,24 @@ public final class ZipOutput {
 	public ZipOutput(OutputStream outstream) {
 		this.outstream = new CountingOutputStream(outstream);
 	}
-
-	public void putEntry(String name, byte[] data) throws IOException {
-		long offset = this.outstream.getByteCount();
-		int crc = calculateCRC32(data);
-		this.writeLocalHeader(name, crc, data.length);
-		this.outstream.write(data);
-		this.entries.add(new ZipEntryHeader(name, crc, data.length, offset));
+	
+	public void putEntry(String localname, byte[] data, String name1) throws IOException {
+		this.putEntry(localname, data, 0, data.length, new String[] {name1});
+	}
+	
+	public void putEntry(String localname, byte[] data, String name1, String name2) throws IOException {
+		this.putEntry(localname, data, 0, data.length, new String[] {name1, name2});
 	}
 
-	public void putEntry(String localname, String name1, String name2, byte[] data) throws IOException {
+	public void putEntry(String localname, byte[] data, int off, int len, String[] names) throws IOException {
 		long offset = this.outstream.getByteCount();
-		int crc = calculateCRC32(data);
+		int crc = calculateCRC32(data, off, len);
 		this.writeLocalHeader(localname, crc, data.length);
-		this.outstream.write(data);
-		this.entries.add(new ZipEntryHeader(name1, crc, data.length, offset));
-		this.entries.add(new ZipEntryHeader(name2, crc, data.length, offset));
+		this.outstream.write(data, off, len);
+		int i = names.length;
+		while(--i > -1) {
+			this.entries.add(new ZipEntryHeader(names[i], crc, data.length, offset));
+		}
 	}
 
 	private void writeLocalHeader(String name, int crc, int size) throws IOException {
@@ -103,9 +105,9 @@ public final class ZipOutput {
 		out.write((v >>> 24) & 0xFF);
 	}
 
-	private static int calculateCRC32(byte[] data) {
+	private static int calculateCRC32(byte[] data, int off, int len) {
 		CRC32 crc = new CRC32();
-		crc.update(data);
+		crc.update(data, off, len);
 		return (int) crc.getValue();
 	}
 

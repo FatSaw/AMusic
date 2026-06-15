@@ -81,8 +81,12 @@ public final class ResourceManager {
 			while(--i > -1) {
 				target = targets[i];
 				token = UUID.randomUUID();
+				UUID previoustoken = this.targets.put(target, token);
+				if(previoustoken != null) {
+					this.tokenres.remove(previoustoken);
+					this.tokens.remove(previoustoken);
+				}
 				this.tokenres.put(token, dataentry);
-				this.targets.put(target, token);
 				this.tokens.put(token, target);
 				System.arraycopy(token.toString().getBytes(StandardCharsets.US_ASCII), 0, host, this.end, 36);
 				positiontracker.stopMusic(target);
@@ -176,8 +180,8 @@ public final class ResourceManager {
 			msb<<=8;
 			msb |= hash[0x00] & 0xFF;
 			token = new UUID(msb, lsb);
-			this.tokenres.put(token, dataentry);
 			this.targets.put(target, token);
+			this.tokenres.put(token, dataentry);
 			this.tokens.put(token, target);
 			System.arraycopy(token.toString().getBytes(StandardCharsets.US_ASCII), 0, host, this.end, 36);
 			positiontracker.stopMusic(target);
@@ -218,13 +222,19 @@ public final class ResourceManager {
 	 */
 	protected DataEntry get(UUID token) {
 		UUID target;
+		if (token == null || (target = tokens.get(token)) == null || !token.equals(targets.get(target))) {
+			return null;
+		}
+		return tokenres.get(token);
+		
+		/*UUID target;
 		if (token == null || (target = tokens.remove(token)) == null || !token.equals(targets.remove(target))) {
 			return null;
 		}
 		if(accepted != null) {
 			accepted.remove(token);
 		}
-		return tokenres.remove(token);
+		return tokenres.remove(token);*/
 	}
 	
 	/**

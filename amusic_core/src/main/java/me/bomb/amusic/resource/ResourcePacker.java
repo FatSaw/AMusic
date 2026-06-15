@@ -100,7 +100,7 @@ public final class ResourcePacker implements Runnable {
 						}
 						byte[] buf = new byte[(int) entry.getSize()];
 						zis.read(buf, 0, buf.length);
-						zo.putEntry(entryname, buf);
+						zo.putEntry(entryname, buf, entryname);
 					}
 					zis.close();
 				} catch (IOException e1) {
@@ -113,7 +113,7 @@ public final class ResourcePacker implements Runnable {
 				}
 			}
 			try {
-				zo.putEntry("silence.ogg", "assets/amusic/sounds/silence.ogg", "sounds/amusic/silence.ogg", silencesound);
+				zo.putEntry("silence.ogg", silencesound, "assets/amusic/sounds/silence.ogg", "sounds/amusic/silence.ogg");
 			} catch (IOException e) {
 			}
 			byte[] channels = new byte[musiccount];
@@ -177,7 +177,7 @@ public final class ResourcePacker implements Runnable {
 										byte[] part = sounddata[--partid];
 										try {
 											String spartid = soundid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg");
-											zo.putEntry(spartid, javaentryid.concat(spartid), bedrockentryid.concat(spartid), part);
+											zo.putEntry(spartid, part, javaentryid.concat(spartid), bedrockentryid.concat(spartid));
 										} catch (IOException e) {
 										}
 									}
@@ -227,7 +227,7 @@ public final class ResourcePacker implements Runnable {
 									byte[] part = sounddata[--partid];
 									try {
 							            String spartid = soundid.concat(HexUtils.byteToHex((byte)partid)).concat(".ogg");
-										zo.putEntry(spartid, javaentryid.concat(spartid), bedrockentryid.concat(spartid), part);
+										zo.putEntry(spartid, part, javaentryid.concat(spartid), bedrockentryid.concat(spartid));
 									} catch (IOException e) {
 									}
 								}
@@ -315,18 +315,18 @@ public final class ResourcePacker implements Runnable {
 			}
 			
 			try {
-				zo.putEntry("assets/amusic/sounds.json", soundslistjava.getBytes(StandardCharsets.US_ASCII));
+				zo.putEntry("sounds.json", soundslistjava.getBytes(StandardCharsets.US_ASCII), "assets/amusic/sounds.json");
 			} catch (IOException e) {
 			}
 			
 			try {
-				zo.putEntry("sounds/sound_definitions.json", soundslistbedrock.getBytes(StandardCharsets.US_ASCII));
+				zo.putEntry("sound_definitions.json", soundslistbedrock.getBytes(StandardCharsets.US_ASCII), "sounds/sound_definitions.json");
 			} catch (IOException e) {
 			}
 			
 			try {
 				if(!packmcmetafound) {
-					zo.putEntry("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"AMusic resourcepack\"\n\t}\n}".getBytes(StandardCharsets.US_ASCII));
+					zo.putEntry("pack.mcmeta", "{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"AMusic resourcepack\"\n\t}\n}".getBytes(StandardCharsets.US_ASCII), "pack.mcmeta");
 				}
 			} catch (IOException e) {
 			}
@@ -337,7 +337,7 @@ public final class ResourcePacker implements Runnable {
 				sb.append("\",\n\t\t\"version\": [1, 0, 0]\n\t},\n\t\"modules\": [\n\t\t{\n\t\t\t\"type\": \"resources\",\n\t\t\t\"uuid\": \"");
 				sb.append(new UUID(67890L, 12345L));
 				sb.append("\",\n\t\t\t\"version\": [1, 0, 0]\n\t\t}\n\t]\n}");
-				zo.putEntry("manifest.json", sb.toString().getBytes(StandardCharsets.US_ASCII));
+				zo.putEntry("manifest.json", sb.toString().getBytes(StandardCharsets.US_ASCII), "manifest.json");
 			} catch (IOException e) {
 			}
 			

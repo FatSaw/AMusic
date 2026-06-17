@@ -26,7 +26,7 @@ public final class ResourcePacker implements Runnable {
 	private final static byte[] silencesound;
 	
 	public SoundInfo[] sounds;
-	public byte[] sha1, resourcepack = null;
+	public byte[] sha1, sha256, resourcepack = null;
 
 	private final SoundSource soundsource;
 	private final String id;
@@ -72,9 +72,14 @@ public final class ResourcePacker implements Runnable {
 		if(musiccount > 65536) {
 			musiccount = 65536;
 		}
-		final MessageDigest sha1hash;
+		final MessageDigest sha1hash, sha256hash;
 		try {
 			sha1hash = MessageDigest.getInstance("SHA-1");
+		} catch (NoSuchAlgorithmException e) {
+			return;
+		}
+		try {
+			sha256hash = MessageDigest.getInstance("SHA-256");
 		} catch (NoSuchAlgorithmException e) {
 			return;
 		}
@@ -353,6 +358,7 @@ public final class ResourcePacker implements Runnable {
 			this.resourcepack = cos.toByteArray();
 		}
 		this.sha1 = sha1hash.digest(this.resourcepack);
+		this.sha256 = sha256hash.digest(this.resourcepack);
 		short[] soundlengths = sourceentry.lengths;
 		int i = musiccount;
 		this.sounds = new SoundInfo[i];

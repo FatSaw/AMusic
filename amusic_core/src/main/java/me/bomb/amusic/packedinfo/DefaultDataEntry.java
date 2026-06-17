@@ -16,8 +16,8 @@ public final class DefaultDataEntry extends DataEntry {
 	protected final int skip;
 	protected final Path datapath;
 
-	protected DefaultDataEntry(int skip, Path datapath, String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1) {
-		super(storeid, size, name, sounds, sha1);
+	protected DefaultDataEntry(int skip, Path datapath, String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] sha256) {
+		super(storeid, size, name, sounds, sha1, sha256);
 		this.fs = datapath.getFileSystem().provider();
 		this.skip = skip;
 		this.datapath = datapath;

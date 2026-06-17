@@ -24,7 +24,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 	
 	private static final String FORMAT = ".ampi";
 	private static final byte FORMATSIZE = 5;
-	private static final byte VERSION = 5;
+	private static final byte VERSION = 6;
 	private static final DirectoryStream.Filter<Path> ampifilter = new DirectoryStream.Filter<Path>() {
 		@Override
 		public boolean accept(Path path) throws IOException {
@@ -94,7 +94,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 		InputStream is = null;
 		try {
-			int skip = 36;
+			int skip = 68;
 			is = fs.newInputStream(ampifile);
 			byte[] buf = new byte[8];
 			if(is.read(buf) != 8 || buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'p' || buf[3] != 'i' || buf[4] != 0 || buf[7] != 0) {
@@ -105,9 +105,11 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			byte version = (byte) is.read();
 			buf = new byte[4];
 			byte[] sha1 = new byte[20];
+			byte[] sha256 = new byte[0x20];
 			int packednamelength;
 			is.read(buf);
 			is.read(sha1);
+			is.read(sha256);
 			if(version != VERSION || (packednamelength = is.read()) == -1) {
 				is.close();
 				AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid version)"));
@@ -156,7 +158,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			if(this.storeinram) {
 				buf = new byte[packedsize];
 				is.read(buf, 0, buf.length);
-				RamDataEntry dataentry = new RamDataEntry(storeid, packedsize, packedname, sounds, sha1, buf);
+				RamDataEntry dataentry = new RamDataEntry(storeid, packedsize, packedname, sounds, sha1, sha256, buf);
 				is.close();
 				final MessageDigest sha1hash;
 				try {
@@ -174,7 +176,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				}
 			}
 			is.close();
-			DefaultDataEntry dataentry = new DefaultDataEntry(skip, ampifile, storeid, packedsize, packedname, sounds, sha1);
+			DefaultDataEntry dataentry = new DefaultDataEntry(skip, ampifile, storeid, packedsize, packedname, sounds, sha1, sha256);
 			return dataentry;
 		} catch (IOException e1) {
 			if (is != null) {
@@ -189,8 +191,8 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 	}
 	
-	private DataEntry saveAmp(String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] resource) {
-		if(storeid == null || size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20) {
+	private DataEntry saveAmp(String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] sha256, byte[] resource) {
+		if(storeid == null || size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20|| sha256 == null || sha256.length != 0x20) {
 			AMusicLogger.warn("Pack save fail (invalid values)");
 			return null;
 		}
@@ -213,7 +215,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid path)"));
 			return null;
 		}
-		int skip = 36;
+		int skip = 68;
 		OutputStream os = null;
 		try {
 			int soundcount = sounds.length;
@@ -237,6 +239,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			entryfilesize>>>=8;
 			os.write((byte)entryfilesize); //FILESIZE
 			os.write(sha1); //SHA1
+			os.write(sha256); //SHA256
 			byte[] packednamebytes = name.getBytes(StandardCharsets.UTF_8);
 			int packednamelength = packednamebytes.length;
 			if(packednamelength > 0xFF) {
@@ -343,10 +346,10 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			return null;
 		}
 		if(this.storeinram) {
-			RamDataEntry dataentry = new RamDataEntry(storeid, size, name, sounds, sha1, resource);
+			RamDataEntry dataentry = new RamDataEntry(storeid, size, name, sounds, sha1, sha256, resource);
 			return dataentry;
 		}
-		DefaultDataEntry entry = new DefaultDataEntry(skip, ampifile, storeid, size, name, sounds, sha1);
+		DefaultDataEntry entry = new DefaultDataEntry(skip, ampifile, storeid, size, name, sounds, sha1, sha256);
 		return entry;
 	}
 	
@@ -398,7 +401,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 		DataEntry oentry = options.remove(name);
 		String storeid = oentry == null ? UUID.randomUUID().toString() : oentry.storeid;
-		DataEntry entry = saveAmp(storeid, resourcepack.length, name, packer.sounds, packer.sha1, resourcepack);
+		DataEntry entry = saveAmp(storeid, resourcepack.length, name, packer.sounds, packer.sha1, packer.sha256, resourcepack);
 		if(entry == null) {
 			return false;
 		}

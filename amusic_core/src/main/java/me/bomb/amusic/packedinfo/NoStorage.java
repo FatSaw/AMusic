@@ -40,7 +40,7 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 			if((resourcepack = packer.resourcepack) == null) {
 				continue;
 			}
-			options.put(playlist, new RamDataEntry(null, resourcepack.length, playlist, packer.sounds, packer.sha1, resourcepack));
+			options.put(playlist, new RamDataEntry(null, resourcepack.length, playlist, packer.sounds, packer.sha1, packer.sha256, resourcepack));
 			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(packer.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
@@ -89,7 +89,7 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 		if((resourcepack = packer.resourcepack) == null) {
 			return false;
 		}
-		options.put(name, new RamDataEntry(null, resourcepack.length, name, packer.sounds, packer.sha1, resourcepack));
+		options.put(name, new RamDataEntry(null, resourcepack.length, name, packer.sounds, packer.sha1, packer.sha256, resourcepack));
 		this.printRamUsage();
 		return true;
 	}

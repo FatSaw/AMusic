@@ -20,6 +20,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.Configuration;
+import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
@@ -159,6 +160,11 @@ public final class AMusicVelocity {
 		
 		if(this.resourcemanager != null) {
 			this.server.getEventManager().register(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusic, joinplaylist));
+		}
+		try {
+			new GeyserHook(((LocalAMusic) this.amusic).datamanager);
+			logger.info("Geyser hook loaded");
+		} catch (NoClassDefFoundError e) {
 		}
 		this.amusic.enable();
 	}

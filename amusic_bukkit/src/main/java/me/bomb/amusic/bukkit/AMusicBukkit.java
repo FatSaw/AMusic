@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 import org.bukkit.Server;
 import org.bukkit.command.PluginCommand;
@@ -16,6 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.Configuration;
+import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.MessageSender;
 import me.bomb.amusic.PackSender;
@@ -219,8 +221,9 @@ public final class AMusicBukkit extends JavaPlugin {
 	//PLUGIN INIT START
 	public void onEnable() {
 		final Server server = this.getServer();
+		Logger logger = this.getLogger();
 		if(!this.configerrors.isEmpty()) {
-			this.getLogger().severe("AMusic config initialization errors: \n".concat(configerrors));
+			logger.severe("AMusic config initialization errors: \n".concat(configerrors));
 			return;
 		}
 		if(this.amusic == null) {
@@ -260,7 +263,13 @@ public final class AMusicBukkit extends JavaPlugin {
 				pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
 			}
 		}
-		
+		if(this.amusic instanceof LocalAMusic) {
+			try {
+				new GeyserHook(((LocalAMusic) this.amusic).datamanager);
+				logger.info("Geyser hook loaded");
+			} catch (NoClassDefFoundError e) {
+			}
+		}
 		this.amusic.enable();
 	}
 

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.Configuration;
+import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
@@ -140,6 +141,11 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		
 		if(this.resourcemanager != null) {
 			ViaProxy.EVENT_MANAGER.register(new EventListener(this.amusic, resourcemanager, positiontracker, players, playerips, joinplaylist, uuidByPlayername));
+		}
+		try {
+			new GeyserHook(((LocalAMusic) this.amusic).datamanager);
+			logger.info("Geyser hook loaded");
+		} catch (NoClassDefFoundError e) {
 		}
 		this.amusic.enable();
 	}

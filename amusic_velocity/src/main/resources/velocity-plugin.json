@@ -1,8 +1,13 @@
 {
-    "id": "amusic",
-    "name": "AMusic",
-    "version": "${revision}",
-    "authors": ["Bomb"],
-    "dependencies": [],
-    "main": "me.bomb.amusic.velocity.AMusicVelocity"
+	"id": "amusic",
+	"name": "AMusic",
+	"version": "${revision}",
+	"authors": ["Bomb"],
+	"dependencies": [
+		{
+			"id": "geyser",
+			"optional": "true"
+		}
+	],
+	"main": "me.bomb.amusic.velocity.AMusicVelocity"
 }

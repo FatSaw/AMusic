@@ -4,6 +4,7 @@ version: ${revision}
 api-version: 1.13
 author: Bomb
 folia-supported: true
+softdepend: ["Geyser-Spigot"]
 commands:
   uploadmusic:
   loadmusic:

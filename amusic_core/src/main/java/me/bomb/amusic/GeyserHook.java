@@ -23,7 +23,7 @@ public final class GeyserHook implements EventRegistrar {
 	private final Data datamanager;
 	private final GeyserApi api;
 
-	public GeyserHook(Data datamanager) throws ClassNotFoundException {
+	public GeyserHook(Data datamanager) throws NoClassDefFoundError {
 		this.datamanager = datamanager;
 		this.api = GeyserApi.api();
 		api.eventBus().register(this, this);

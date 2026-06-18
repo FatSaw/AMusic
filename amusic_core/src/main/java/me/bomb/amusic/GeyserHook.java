@@ -2,6 +2,9 @@ package me.bomb.amusic;
 
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.UUID;
 
 import org.geysermc.event.subscribe.Subscribe;
@@ -10,9 +13,14 @@ import org.geysermc.geyser.api.event.EventRegistrar;
 import org.geysermc.geyser.api.event.bedrock.SessionLoadResourcePacksEvent;
 import org.geysermc.geyser.api.pack.PackCodec;
 import org.geysermc.geyser.api.pack.ResourcePack;
-import org.geysermc.geyser.api.pack.ResourcePackManifest;
 import org.geysermc.geyser.api.pack.ResourcePack.Builder;
+import org.geysermc.geyser.api.pack.option.PriorityOption;
 import org.geysermc.geyser.api.pack.option.UrlFallbackOption;
+import org.geysermc.geyser.pack.GeyserResourcePack;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest.Header;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest.Module;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest.Version;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.DataEntry;
@@ -35,42 +43,22 @@ public final class GeyserHook implements EventRegistrar {
 
 	@Subscribe
 	public void onSessionLoadResourcePacksEvent(SessionLoadResourcePacksEvent event) {
-		String[] playlists = this.datamanager.getPlaylists();
+		DataEntry entry = this.datamanager.getPlaylist("test");
+		if(entry == null) {
+			return;
+		}
+		ResourcePack pack = new BufPackCodec(entry).create();
+		event.register(pack, PriorityOption.NORMAL);
+		/*String[] playlists = this.datamanager.getPlaylists();
 		int i = playlists.length;
 		while(--i > -1) {
 			DataEntry entry = this.datamanager.getPlaylist(playlists[i]);
 			if(entry == null) {
 				continue;
 			}
-			event.register(new BufPackCodec(entry).create(), UrlFallbackOption.TRUE);
-		}
-	}
-	
-	public final static class BufResourcePack implements ResourcePack {
-		private final PackCodec codec;
-		private final ResourcePackManifest manifest;
-		private final String contentKey;
-		
-		protected BufResourcePack(PackCodec codec, ResourcePackManifest manifest, String contentKey) {
-			this.codec = codec;
-			this.manifest = manifest;
-			this.contentKey = contentKey;
-		}
-
-		@Override
-		public PackCodec codec() {
-			return this.codec;
-		}
-
-		@Override
-		public ResourcePackManifest manifest() {
-			return this.manifest;
-		}
-
-		@Override
-		public String contentKey() {
-			return this.contentKey;
-		}
+			ResourcePack pack = new BufPackCodec(entry).create();
+			event.register(pack, UrlFallbackOption.FALSE);
+		}*/
 	}
 	public final static class BufPackCodec extends PackCodec {
 
@@ -97,12 +85,18 @@ public final class GeyserHook implements EventRegistrar {
 		
 		@Override
 	    protected ResourcePack create() {
-	        return createBuilder().build();
+			Header header = new Header(new UUID(123456L, 67890L), new Version(1, 0, 0), "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
+			Module module = new Module(new UUID(67890L, 123456L), new Version(1, 0, 0), "resources", "");
+			HashSet<Module> modules = new HashSet<>(1);
+			modules.add(module);
+			GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+			return new GeyserResourcePack(this, manifest, entry.name);
 	    }
 
 		@Override
 		protected Builder createBuilder() {
 			return null;
 		}
+		
 	}
 }

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -15,6 +16,7 @@ import me.bomb.amusic.source.OggVorbisPageInfo;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
+import me.bomb.amusic.util.Base64Utils;
 import me.bomb.amusic.util.ChunkedOutputStream;
 import me.bomb.amusic.util.HexUtils;
 import me.bomb.amusic.util.ZipOutput;
@@ -336,8 +338,11 @@ public final class ResourcePacker implements Runnable {
 				}
 			} catch (IOException e) {
 			}
-			bhea = UUID.fromString("bhea/0".concat(this.id)); //TODO: SET THIS BASED ON ZIP CONTENT HASH
-			bres = UUID.fromString("bres/0".concat(this.id)); //TODO: SET THIS BASED ON ZIP CONTENT HASH
+			
+			bhea = new UUID(0L, 0L); //TODO: SET THIS BASED ON ZIP CONTENT HASH
+			bres = new UUID(0L, 0L); //TODO: SET THIS BASED ON ZIP CONTENT HASH
+			//bhea = UUID.randomUUID();
+			//bres = UUID.randomUUID();
 			try {
 				StringBuilder sb = new StringBuilder();
 				sb.append("{\n\t\"format_version\": 2,\n\t\"header\": {\n\t\t\"name\": \"AMusic resourcepack\",\n\t\t\"description\": \"DESCRIPTION\",\n\t\t\"uuid\": \"");

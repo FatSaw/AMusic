@@ -43,13 +43,7 @@ public final class GeyserHook implements EventRegistrar {
 
 	@Subscribe
 	public void onSessionLoadResourcePacksEvent(SessionLoadResourcePacksEvent event) {
-		DataEntry entry = this.datamanager.getPlaylist("test");
-		if(entry == null) {
-			return;
-		}
-		ResourcePack pack = new BufPackCodec(entry).create();
-		event.register(pack, PriorityOption.NORMAL);
-		/*String[] playlists = this.datamanager.getPlaylists();
+		String[] playlists = this.datamanager.getPlaylists();
 		int i = playlists.length;
 		while(--i > -1) {
 			DataEntry entry = this.datamanager.getPlaylist(playlists[i]);
@@ -57,8 +51,8 @@ public final class GeyserHook implements EventRegistrar {
 				continue;
 			}
 			ResourcePack pack = new BufPackCodec(entry).create();
-			event.register(pack, UrlFallbackOption.FALSE);
-		}*/
+			event.register(pack, PriorityOption.NORMAL);
+		}
 	}
 	public final static class BufPackCodec extends PackCodec {
 

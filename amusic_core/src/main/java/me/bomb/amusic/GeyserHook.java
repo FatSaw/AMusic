@@ -79,8 +79,8 @@ public final class GeyserHook implements EventRegistrar {
 		
 		@Override
 	    protected ResourcePack create() {
-			Header header = new Header(new UUID(123456L, 67890L), new Version(1, 0, 0), "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
-			Module module = new Module(new UUID(67890L, 123456L), new Version(1, 0, 0), "resources", "");
+			Header header = new Header(entry.bhea, new Version(1, 0, 0), "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
+			Module module = new Module(entry.bres, new Version(1, 0, 0), "resources", "");
 			HashSet<Module> modules = new HashSet<>(1);
 			modules.add(module);
 			GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());

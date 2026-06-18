@@ -255,7 +255,7 @@ public final class ResourcePacker implements Runnable {
 			String soundslistbedrock;
 			{
 				StringBuffer soundsjava = new StringBuffer("{\n");
-				StringBuffer soundsbedrock = new StringBuffer("{\n\t\"format_version\": \"1.14.0\",\n\t\"sound_defenitions\": {\n");
+				StringBuffer soundsbedrock = new StringBuffer("{\n\t\"format_version\": \"1.14.0\",\n\t\"sound_definitions\": {\n");
 				int i = musiccount;
 				while(--i > -1) {
 					final byte split = splits[i];
@@ -306,7 +306,7 @@ public final class ResourcePacker implements Runnable {
 								soundsjava.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
 								soundsbedrock.append("\t\t\"amusic.internal.");
 								soundsbedrock.append(soundidp);
-								soundsbedrock.append("\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"sounds/amusic/");
+								soundsbedrock.append("\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"amusic/");
 								soundsbedrock.append(soundidp);
 								soundsbedrock.append("\"\n\t\t\t]\n\t\t},\n");
 							}
@@ -314,7 +314,7 @@ public final class ResourcePacker implements Runnable {
 					}
 				}
 				soundsjava.append("\t\"internal.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic:silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n}");
-				soundsbedrock.append("\t\t\"amusic.internal.silence\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"sounds/amusic/silence\"\n\t\t\t]\n\t\t}\n\t}\n}");
+				soundsbedrock.append("\t\t\"amusic.internal.silence\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"amusic/silence\"\n\t\t\t]\n\t\t}\n\t}\n}");
 				soundslistjava = soundsjava.toString();
 				soundslistbedrock = soundsbedrock.toString();
 			}
@@ -338,9 +338,9 @@ public final class ResourcePacker implements Runnable {
 			try {
 				StringBuilder sb = new StringBuilder();
 				sb.append("{\n\t\"format_version\": 2,\n\t\"header\": {\n\t\t\"name\": \"AMusic resourcepack\",\n\t\t\"description\": \"DESCRIPTION\",\n\t\t\"uuid\": \"");
-				sb.append(new UUID(12345L, 67890L));
-				sb.append("\",\n\t\t\"version\": [1, 0, 0]\n\t},\n\t\"modules\": [\n\t\t{\n\t\t\t\"type\": \"resources\",\n\t\t\t\"uuid\": \"");
-				sb.append(new UUID(67890L, 12345L));
+				sb.append(new UUID(123456L, 67890L));
+				sb.append("\",\n\t\t\"version\": [1, 0, 0],\n\t\t\"min_engine_version\": [1, 14, 0]\n\t},\n\t\"modules\": [\n\t\t{\n\t\t\t\"type\": \"resources\",\n\t\t\t\"uuid\": \"");
+				sb.append(new UUID(67890L, 123456L));
 				sb.append("\",\n\t\t\t\"version\": [1, 0, 0]\n\t\t}\n\t]\n}");
 				zo.putEntry(sb.toString().getBytes(StandardCharsets.US_ASCII), "manifest.json");
 			} catch (IOException e) {

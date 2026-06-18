@@ -142,11 +142,11 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		if(this.resourcemanager != null) {
 			ViaProxy.EVENT_MANAGER.register(new EventListener(this.amusic, resourcemanager, positiontracker, players, playerips, joinplaylist, uuidByPlayername));
 		}
-		try {
+		/*try {
 			new GeyserHook(((LocalAMusic) this.amusic).datamanager);
 			logger.info("Geyser hook loaded");
 		} catch (NoClassDefFoundError e) {
-		}
+		}*/
 		this.amusic.enable();
 	}
 	

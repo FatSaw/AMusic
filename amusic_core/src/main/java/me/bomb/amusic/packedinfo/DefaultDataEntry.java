@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 import me.bomb.amusic.util.AMusicLogger;
 
@@ -16,8 +17,8 @@ public final class DefaultDataEntry extends DataEntry {
 	protected final int skip;
 	protected final Path datapath;
 
-	protected DefaultDataEntry(int skip, Path datapath, String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] sha256) {
-		super(storeid, size, name, sounds, sha1, sha256);
+	protected DefaultDataEntry(int skip, Path datapath, String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] sha256, UUID bhea, UUID bres) {
+		super(storeid, size, name, sounds, sha1, sha256, bhea, bres);
 		this.fs = datapath.getFileSystem().provider();
 		this.skip = skip;
 		this.datapath = datapath;

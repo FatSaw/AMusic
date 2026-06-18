@@ -94,7 +94,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 		InputStream is = null;
 		try {
-			int skip = 68;
+			int skip = 100;
 			is = fs.newInputStream(ampifile);
 			byte[] buf = new byte[8];
 			if(is.read(buf) != 8 || buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'p' || buf[3] != 'i' || buf[4] != 0 || buf[7] != 0) {
@@ -106,10 +106,12 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			buf = new byte[4];
 			byte[] sha1 = new byte[20];
 			byte[] sha256 = new byte[0x20];
+			byte[] buuids = new byte[0x20];
 			int packednamelength;
 			is.read(buf);
 			is.read(sha1);
 			is.read(sha256);
+			is.read(buuids);
 			if(version != VERSION || (packednamelength = is.read()) == -1) {
 				is.close();
 				AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid version)"));
@@ -117,6 +119,15 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			}
 			skip+=packednamelength;
 			int packedsize = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0];
+			UUID bhea, bres;
+			{
+				int j = buuids.length;
+				long msb = (buuids[--j] & 0xFFL) | (buuids[--j] & 0xFFL) << 8 | (buuids[--j] & 0xFFL) << 16 | (buuids[--j] & 0xFFL) << 24 | (buuids[--j] & 0xFFL) << 32 | (buuids[--j] & 0xFFL) << 40 | (buuids[--j] & 0xFFL) << 48 | (buuids[--j] & 0xFFL) << 56, lsb = (buuids[--j] & 0xFFL) | (buuids[--j] & 0xFFL) << 8 | (buuids[--j] & 0xFFL) << 16 | (buuids[--j] & 0xFFL) << 24 | (buuids[--j] & 0xFFL) << 32 | (buuids[--j] & 0xFFL) << 40 | (buuids[--j] & 0xFFL) << 48 | (buuids[--j] & 0xFFL) << 56;
+				bhea = new UUID(msb, lsb);
+				msb = (buuids[--j] & 0xFFL) | (buuids[--j] & 0xFFL) << 8 | (buuids[--j] & 0xFFL) << 16 | (buuids[--j] & 0xFFL) << 24 | (buuids[--j] & 0xFFL) << 32 | (buuids[--j] & 0xFFL) << 40 | (buuids[--j] & 0xFFL) << 48 | (buuids[--j] & 0xFFL) << 56;
+				lsb = (buuids[--j] & 0xFFL) | (buuids[--j] & 0xFFL) << 8 | (buuids[--j] & 0xFFL) << 16 | (buuids[--j] & 0xFFL) << 24 | (buuids[--j] & 0xFFL) << 32 | (buuids[--j] & 0xFFL) << 40 | (buuids[--j] & 0xFFL) << 48 | (buuids[--j] & 0xFFL) << 56;
+				bres = new UUID(msb, lsb);
+			}
 			buf = new byte[packednamelength];
 			is.read(buf);
 			String packedname = new String(buf, StandardCharsets.UTF_8);
@@ -158,7 +169,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			if(this.storeinram) {
 				buf = new byte[packedsize];
 				is.read(buf, 0, buf.length);
-				RamDataEntry dataentry = new RamDataEntry(storeid, packedsize, packedname, sounds, sha1, sha256, buf);
+				RamDataEntry dataentry = new RamDataEntry(storeid, packedsize, packedname, sounds, sha1, sha256, bhea, bres, buf);
 				is.close();
 				final MessageDigest sha1hash;
 				try {
@@ -176,7 +187,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 				}
 			}
 			is.close();
-			DefaultDataEntry dataentry = new DefaultDataEntry(skip, ampifile, storeid, packedsize, packedname, sounds, sha1, sha256);
+			DefaultDataEntry dataentry = new DefaultDataEntry(skip, ampifile, storeid, packedsize, packedname, sounds, sha1, sha256, bhea, bres);
 			return dataentry;
 		} catch (IOException e1) {
 			if (is != null) {
@@ -191,7 +202,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 	}
 	
-	private DataEntry saveAmp(String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] sha256, byte[] resource) {
+	private DataEntry saveAmp(String storeid, int size, String name, SoundInfo[] sounds, byte[] sha1, byte[] sha256, UUID bhea, UUID bres, byte[] resource) {
 		if(storeid == null || size < 0 || name == null || sounds == null || sha1 == null || sha1.length != 20|| sha256 == null || sha256.length != 0x20) {
 			AMusicLogger.warn("Pack save fail (invalid values)");
 			return null;
@@ -215,7 +226,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid path)"));
 			return null;
 		}
-		int skip = 68;
+		int skip = 100;
 		OutputStream os = null;
 		try {
 			int soundcount = sounds.length;
@@ -240,6 +251,74 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			os.write((byte)entryfilesize); //FILESIZE
 			os.write(sha1); //SHA1
 			os.write(sha256); //SHA256
+			byte[] buuids = new byte[0x20];
+			{
+				int k = buuids.length;
+				long msb = bhea.getMostSignificantBits(), lsb = bhea.getLeastSignificantBits();
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				msb = bres.getMostSignificantBits();
+				lsb = bres.getLeastSignificantBits();
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				msb>>>=8;
+				buuids[--k] = (byte) msb;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+				lsb>>>=8;
+				buuids[--k] = (byte) lsb;
+			}
+			os.write(buuids);
 			byte[] packednamebytes = name.getBytes(StandardCharsets.UTF_8);
 			int packednamelength = packednamebytes.length;
 			if(packednamelength > 0xFF) {
@@ -346,10 +425,10 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			return null;
 		}
 		if(this.storeinram) {
-			RamDataEntry dataentry = new RamDataEntry(storeid, size, name, sounds, sha1, sha256, resource);
+			RamDataEntry dataentry = new RamDataEntry(storeid, size, name, sounds, sha1, sha256, bhea, bres, resource);
 			return dataentry;
 		}
-		DefaultDataEntry entry = new DefaultDataEntry(skip, ampifile, storeid, size, name, sounds, sha1, sha256);
+		DefaultDataEntry entry = new DefaultDataEntry(skip, ampifile, storeid, size, name, sounds, sha1, sha256, bhea, bres);
 		return entry;
 	}
 	
@@ -401,7 +480,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 		}
 		DataEntry oentry = options.remove(name);
 		String storeid = oentry == null ? UUID.randomUUID().toString() : oentry.storeid;
-		DataEntry entry = saveAmp(storeid, resourcepack.length, name, packer.sounds, packer.sha1, packer.sha256, resourcepack);
+		DataEntry entry = saveAmp(storeid, resourcepack.length, name, packer.sounds, packer.sha1, packer.sha256, packer.bhea, packer.bres, resourcepack);
 		if(entry == null) {
 			return false;
 		}

@@ -27,6 +27,7 @@ public final class ResourcePacker implements Runnable {
 	
 	public SoundInfo[] sounds;
 	public byte[] sha1, sha256, resourcepack = null;
+	public UUID bhea, bres;
 
 	private final SoundSource soundsource;
 	private final String id;
@@ -335,12 +336,14 @@ public final class ResourcePacker implements Runnable {
 				}
 			} catch (IOException e) {
 			}
+			bhea = UUID.fromString("bhea/0".concat(this.id)); //TODO: SET THIS BASED ON ZIP CONTENT HASH
+			bres = UUID.fromString("bres/0".concat(this.id)); //TODO: SET THIS BASED ON ZIP CONTENT HASH
 			try {
 				StringBuilder sb = new StringBuilder();
 				sb.append("{\n\t\"format_version\": 2,\n\t\"header\": {\n\t\t\"name\": \"AMusic resourcepack\",\n\t\t\"description\": \"DESCRIPTION\",\n\t\t\"uuid\": \"");
-				sb.append(new UUID(123456L, 67890L));
+				sb.append(bhea);
 				sb.append("\",\n\t\t\"version\": [1, 0, 0],\n\t\t\"min_engine_version\": [1, 14, 0]\n\t},\n\t\"modules\": [\n\t\t{\n\t\t\t\"type\": \"resources\",\n\t\t\t\"uuid\": \"");
-				sb.append(new UUID(67890L, 123456L));
+				sb.append(bres);
 				sb.append("\",\n\t\t\t\"version\": [1, 0, 0]\n\t\t}\n\t]\n}");
 				zo.putEntry(sb.toString().getBytes(StandardCharsets.US_ASCII), "manifest.json");
 			} catch (IOException e) {

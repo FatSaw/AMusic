@@ -2,7 +2,6 @@ package me.bomb.amusic;
 
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
@@ -15,7 +14,6 @@ import org.geysermc.geyser.api.pack.PackCodec;
 import org.geysermc.geyser.api.pack.ResourcePack;
 import org.geysermc.geyser.api.pack.ResourcePack.Builder;
 import org.geysermc.geyser.api.pack.option.PriorityOption;
-import org.geysermc.geyser.api.pack.option.UrlFallbackOption;
 import org.geysermc.geyser.pack.GeyserResourcePack;
 import org.geysermc.geyser.pack.GeyserResourcePackManifest;
 import org.geysermc.geyser.pack.GeyserResourcePackManifest.Header;
@@ -79,8 +77,9 @@ public final class GeyserHook implements EventRegistrar {
 		
 		@Override
 	    protected ResourcePack create() {
-			Header header = new Header(entry.bhea, new Version(1, 0, 0), "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
-			Module module = new Module(entry.bres, new Version(1, 0, 0), "resources", "");
+			Version version = new Version(1, 0, 0);
+			Header header = new Header(entry.bhea, version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
+			Module module = new Module(entry.bres, version, "resources", "");
 			HashSet<Module> modules = new HashSet<>(1);
 			modules.add(module);
 			GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());

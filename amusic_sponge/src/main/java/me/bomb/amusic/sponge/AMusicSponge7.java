@@ -11,6 +11,7 @@ import javax.inject.Inject;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.Configuration;
+import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.MessageSender;
 import me.bomb.amusic.PackSender;
@@ -181,7 +182,13 @@ public final class AMusicSponge7 {
 		if(this.waitacception) {
 			eventmanager.registerListeners(this, new PackStatusEventListener(resourcemanager));
 		}
-		
+		/*if(this.amusic instanceof LocalAMusic) {
+			try {
+				new GeyserHook(((LocalAMusic) this.amusic).datamanager);
+				logger.info("Geyser hook loaded");
+			} catch (NoClassDefFoundError e) {
+			}
+		}*/
 		this.amusic.enable();
     }
 	

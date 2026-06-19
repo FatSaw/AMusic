@@ -59,7 +59,10 @@ public final class VelocitySoundStarter implements SoundStarter {
 			player.playSound(sound, player);
 			return;
 		}
-		
+		int pid;
+		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
+			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
+		}
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
 		if(version == 759) packetsize += 4;
@@ -69,10 +72,6 @@ public final class VelocitySoundStarter implements SoundStarter {
 		if(!bytesoundnamelength) ++packetsize;
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
-		int pid;
-		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
-			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
-		}
 		buf.writeByte(pid);
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);
@@ -112,7 +111,10 @@ public final class VelocitySoundStarter implements SoundStarter {
 			//player.playSound(sound, x, y, z); //NOT IMPLEMENTED
 			return;
 		}
-		
+		int pid;
+		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
+			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
+		}
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
 		if(version == 759) packetsize += 4;
@@ -122,10 +124,6 @@ public final class VelocitySoundStarter implements SoundStarter {
 		if(!bytesoundnamelength) ++packetsize;
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
-		int pid;
-		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
-			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
-		}
 		buf.writeByte(pid);
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);

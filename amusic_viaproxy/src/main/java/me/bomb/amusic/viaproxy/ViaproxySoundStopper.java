@@ -96,16 +96,11 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			}
 			return;
 		}
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
-
-		if (version > 760) {
-			return;
-		}
 		int pid;
 		if (version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
-		
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 		if (version > 388) {

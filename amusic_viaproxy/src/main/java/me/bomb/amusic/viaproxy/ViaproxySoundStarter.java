@@ -49,10 +49,11 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		}
 		final int version = player.getClientVersion().getVersion();
 		UserConnection connection = player.getUserConnection();
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
-		if(version > 760) {
-			return;
+		int pid;
+		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
+			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
 		if(version == 759) packetsize += 4;
@@ -62,10 +63,6 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		if(!bytesoundnamelength) ++packetsize;
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
-		int pid;
-		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
-			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
-		}
 		buf.writeByte(pid);
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);
@@ -98,10 +95,11 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		}
 		final int version = player.getClientVersion().getVersion();
 		UserConnection connection = player.getUserConnection();
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
-		if(version > 760) {
-			return;
+		int pid;
+		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
+			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
 		if(version == 759) packetsize += 4;
@@ -111,10 +109,6 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		if(!bytesoundnamelength) ++packetsize;
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
-		int pid;
-		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
-			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
-		}
 		buf.writeByte(pid);
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);

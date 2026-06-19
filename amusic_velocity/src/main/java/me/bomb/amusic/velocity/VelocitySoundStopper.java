@@ -53,7 +53,7 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
     	legacysoundstop2.writeByte(0x19);
     	legacysoundstop2.writeByte(33);
     	legacysoundstop2.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
-    	legacysoundstop2.writeByte(9);
+    	legacysoundstop2.writeByte(0);
     	legacysoundstop2.writeInt(0);
         legacysoundstop2.writeInt(Integer.MIN_VALUE);
         legacysoundstop2.writeInt(0);

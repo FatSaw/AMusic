@@ -24,7 +24,6 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		byte id;
 		while (--i > -1) {
 			id = -1;
-			if (i > 0x04 && i < 0x2f) id = 0x17;
 			if (i > 0x6a && i < 0x155) id = 0x18;
 			if (i > 0x188 && i < 0x195) id = 0x4C;
 			if (i > 0x1dc && i < 0x1f3) id = 0x52;
@@ -51,7 +50,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		legacysoundstop2.writeByte(0x19);
 		legacysoundstop2.writeByte(33);
 		legacysoundstop2.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
-		legacysoundstop2.writeByte(9);
+		legacysoundstop2.writeByte(0);
 		legacysoundstop2.writeInt(0);
 		legacysoundstop2.writeInt(Integer.MIN_VALUE);
 		legacysoundstop2.writeInt(0);
@@ -108,9 +107,9 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		}
 		
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
+		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 		if (version > 388) {
 			int packetsize = 4;
-			boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 			if (!bytesoundnamelength)
 				++packetsize;
 			packetsize += songidb.length;
@@ -130,22 +129,20 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			connection.sendRawPacket(buf);
 			return;
 		}
-
-		if(songidb.length != 0x3A) {
-			return;
-		}
-		ByteBuf buf = Unpooled.buffer(74, 74);
+		int packetsize = 16;
+		if (!bytesoundnamelength)
+			++packetsize;
+		ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
 		buf.writeByte(pid);
 		buf.writeBytes(stopsound);
-		if(version < 6) {
-			buf.writeByte(0x3B);
-			buf.writeByte(0x00);
-			buf.writeBytes(songidb);
+		buf.writeByte(0x00);
+		if (bytesoundnamelength) {
+			buf.writeByte(songidb.length);
 		} else {
-			buf.writeByte(0x00);
-			buf.writeByte(0x3A);
-			buf.writeBytes(songidb);
+			int w = (songidb.length & 0x7F | 0x80) << 8 | (songidb.length >>> 7);
+			buf.writeShort(w);
 		}
+		buf.writeBytes(songidb);
 		connection.sendRawPacket(buf);
 	}
 

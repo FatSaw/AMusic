@@ -16,7 +16,7 @@ public final class BukkitSoundSilenceLockStopper implements SoundStopper {
 		this.server = server;
 	}
 	
-	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte part) {
 		if(uuid == null) {
 			return;
 		}
@@ -24,7 +24,7 @@ public final class BukkitSoundSilenceLockStopper implements SoundStopper {
 		Location location = player.getLocation();
 		byte i = 5;
 		while(--i > -1) {
-			player.playSound(location, "amusic:internal.silence", 1.0E9f, 1.0f);
+			player.playSound(location, "minecraft:amusic.internal.silence", 1.0E9f, 1.0f);
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException e) {

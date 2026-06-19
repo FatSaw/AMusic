@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -16,7 +15,6 @@ import me.bomb.amusic.source.OggVorbisPageInfo;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.source.SourceEntry;
-import me.bomb.amusic.util.Base64Utils;
 import me.bomb.amusic.util.ChunkedOutputStream;
 import me.bomb.amusic.util.HexUtils;
 import me.bomb.amusic.util.ZipOutput;
@@ -121,7 +119,7 @@ public final class ResourcePacker implements Runnable {
 				}
 			}
 			try {
-				zo.putSound(silencesound, "assets/amusic/sounds/silence.ogg", "sounds/amusic/silence.ogg");
+				zo.putSound(silencesound, "assets/minecraft/sounds/amusic/silence.ogg", "sounds/amusic/silence.ogg");
 			} catch (IOException e) {
 			}
 			byte[] channels = new byte[musiccount];
@@ -163,7 +161,7 @@ public final class ResourcePacker implements Runnable {
 						while(--i > -1) {
 							final byte split = splits[i];
 							String soundid =  soundhashs[i].toString().concat(HexUtils.shortToHex((short)i));
-							String javaentryid = "assets/amusic/sounds/";
+							String javaentryid = "assets/minecraft/sounds/amusic/";
 							String bedrockentryid = "sounds/amusic/";
 							
 							byte[][] sounddata = ntopack[i];
@@ -213,7 +211,7 @@ public final class ResourcePacker implements Runnable {
 						}
 						final byte split = splits[i];
 						String soundid =  soundhashs[i].toString().concat(HexUtils.shortToHex((short)i));
-						String javaentryid = "assets/amusic/sounds/";
+						String javaentryid = "assets/minecraft/sounds/amusic/";
 						String bedrockentryid = "sounds/amusic/";
 						
 						byte[][] sounddata = ntopack[i];
@@ -277,22 +275,27 @@ public final class ResourcePacker implements Runnable {
 							byte att = 100;
 							while(--att > 0) {
 								String atts = Integer.toString(att);
-								soundsjava.append("\t\"");
+								soundsjava.append("\t\"amusic.");
 								soundsjava.append(atts);
 								soundsjava.append(".");
 								soundsjava.append(soundname);
 								soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": ");
 								soundsjava.append(atts);
-								soundsjava.append(",\n\t\t\t\t\"name\": \"amusic:");
+								soundsjava.append(",\n\t\t\t\t\"name\": \"minecraft:amusic/");
 								soundsjava.append(soundidp);
 								soundsjava.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
 							}
 						}
-						soundsjava.append("\t\"_.");
+						soundsjava.append("\t\"amusic._.");
 						soundsjava.append(soundname);
-						soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic:");
+						soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"minecraft:amusic/");
 						soundsjava.append(soundidp);
 						soundsjava.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
+						soundsbedrock.append("\t\t\"amusic._.");
+						soundsbedrock.append(soundname);
+						soundsbedrock.append("\": {\n\t\t\t\"category\": \"voice\",\n\t\t\t\"min_distance\": 3.4028235e+38,\n\t\t\t\"max_distance\": 3.4028235e+38,\n\t\t\t\"sounds\": [\n\t\t\t\t{\n\t\t\t\t\t\"name\": \"sounds/amusic/");
+						soundsbedrock.append(soundidp);
+						soundsbedrock.append("\",\n\t\t\t\t\t\"stream\": true,\n\t\t\t\t\t\"is3D\": false\n\t\t\t\t}\n\t\t\t]\n\t\t},\n");
 					}
 					short partid = (short) (split & 0xFF);
 					byte splitbitid = 8;
@@ -302,28 +305,28 @@ public final class ResourcePacker implements Runnable {
 							byte partscount = (byte) (1 << splitbitid);
 							while(--partscount > -1) {
 								String soundidp = soundid.concat(HexUtils.byteToHex((byte) --partid));
-								soundsjava.append("\t\"internal.");
+								soundsjava.append("\t\"amusic.internal.");
 								soundsjava.append(soundidp);
-								soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"amusic:");
+								soundsjava.append("\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"minecraft:amusic/");
 								soundsjava.append(soundidp);
 								soundsjava.append("\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n");
 								soundsbedrock.append("\t\t\"amusic.internal.");
 								soundsbedrock.append(soundidp);
-								soundsbedrock.append("\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"amusic/");
+								soundsbedrock.append("\": {\n\t\t\t\"category\": \"voice\",\n\t\t\t\"min_distance\": 3.4028235e+38,\n\t\t\t\"max_distance\": 3.4028235e+38,\n\t\t\t\"sounds\": [\n\t\t\t\t{\n\t\t\t\t\t\"name\": \"sounds/amusic/");
 								soundsbedrock.append(soundidp);
-								soundsbedrock.append("\"\n\t\t\t]\n\t\t},\n");
+								soundsbedrock.append("\",\n\t\t\t\t\t\"stream\": true,\n\t\t\t\t\t\"is3D\": false\n\t\t\t\t}\n\t\t\t]\n\t\t},\n");
 							}
 						}
 					}
 				}
-				soundsjava.append("\t\"internal.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"amusic:silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n}");
-				soundsbedrock.append("\t\t\"amusic.internal.silence\": {\n\t\t\t\"category\": \"neutral\",\n\t\t\t\"sounds\": [\n\t\t\t\t\"amusic/silence\"\n\t\t\t]\n\t\t}\n\t}\n}");
+				soundsjava.append("\t\"amusic.internal.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"minecraft:amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n}");
+				soundsbedrock.append("\t\t\"amusic.internal.silence\": {\n\t\t\t\"category\": \"voice\",\n\t\t\t\"sounds\": [\n\t\t\t\t{\n\t\t\t\t\t\"name\": \"sounds/amusic/silence\",\n\t\t\t\t\t\"stream\": true\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}");
 				soundslistjava = soundsjava.toString();
 				soundslistbedrock = soundsbedrock.toString();
 			}
 			
 			try {
-				zo.putEntry(soundslistjava.getBytes(StandardCharsets.US_ASCII), "assets/amusic/sounds.json");
+				zo.putEntry(soundslistjava.getBytes(StandardCharsets.US_ASCII), "assets/minecraft/sounds.json");
 			} catch (IOException e) {
 			}
 			

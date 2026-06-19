@@ -17,11 +17,11 @@ public class BukkitLegacySoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte part) {
 		if(uuid == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		Player player = server.getPlayer(uuid);
 		player.stopSound(musicid);
 	}

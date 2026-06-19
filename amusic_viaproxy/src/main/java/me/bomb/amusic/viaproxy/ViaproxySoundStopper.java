@@ -37,20 +37,20 @@ public final class ViaproxySoundStopper implements SoundStopper {
 
 		stopsound = new byte[] {0x0C, 0x4D, 0x43, 0x7C, 0x53, 0x74, 0x6F, 0x70, 0x53, 0x6F, 0x75, 0x6E, 0x64};
 		
-		legacysoundstop1 = Unpooled.buffer(42, 42);
+		legacysoundstop1 = Unpooled.buffer(52, 52);
 		legacysoundstop1.writeByte(0x29);
-		legacysoundstop1.writeByte(23);
-		legacysoundstop1.writeBytes("amusic:internal.silence".getBytes(StandardCharsets.US_ASCII));
+		legacysoundstop1.writeByte(33);
+		legacysoundstop1.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
 		legacysoundstop1.writeInt(0);
 		legacysoundstop1.writeInt(Integer.MIN_VALUE);
 		legacysoundstop1.writeInt(0);
 		legacysoundstop1.writeFloat(1.0E9f);
 		legacysoundstop1.writeByte((byte) 63);
 
-		legacysoundstop2 = Unpooled.buffer(43, 43);
+		legacysoundstop2 = Unpooled.buffer(53, 53);
 		legacysoundstop2.writeByte(0x19);
-		legacysoundstop2.writeByte(23);
-		legacysoundstop2.writeBytes("amusic:internal.silence".getBytes(StandardCharsets.US_ASCII));
+		legacysoundstop2.writeByte(33);
+		legacysoundstop2.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
 		legacysoundstop2.writeByte(9);
 		legacysoundstop2.writeInt(0);
 		legacysoundstop2.writeInt(Integer.MIN_VALUE);
@@ -97,7 +97,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			}
 			return;
 		}
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 
 		if (version > 760) {
 			return;

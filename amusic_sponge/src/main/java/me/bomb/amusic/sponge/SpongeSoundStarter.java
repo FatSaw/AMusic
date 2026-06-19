@@ -33,7 +33,7 @@ public final class SpongeSoundStarter implements SoundStarter {
 			return;
 		}
 		SoundType sound = new SoundType() {
-			String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+			String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 			@Override
 			public String getName() {
 				return musicid;

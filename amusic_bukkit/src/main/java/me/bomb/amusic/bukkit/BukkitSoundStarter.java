@@ -28,7 +28,7 @@ public final class BukkitSoundStarter implements SoundStarter {
 		if(uuid == null || soundhash == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		Player player = server.getPlayer(uuid);
 		player.playSound(new Location(player.getWorld(), x, y, z), musicid, SoundCategory.VOICE, volume, pitch);
 	}

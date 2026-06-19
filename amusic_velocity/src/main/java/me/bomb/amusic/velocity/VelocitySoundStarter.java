@@ -53,7 +53,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 		}
 		Player player = oplayer.get();
 		final int version = player.getProtocolVersion().getProtocol();
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		if(version > 760) {
 			Sound sound = Sound.sound(Key.key(musicid), Sound.Source.VOICE, 1.0f, 1.0f);
 			player.playSound(sound, player);
@@ -105,7 +105,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 		}
 		Player player = oplayer.get();
 		final int version = player.getProtocolVersion().getProtocol();
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		if(version > 760) {
 			Sound sound = Sound.sound(Key.key(musicid), Sound.Source.VOICE, volume, pitch);
 			player.playSound(sound, player);

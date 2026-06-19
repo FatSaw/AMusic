@@ -49,7 +49,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		}
 		final int version = player.getClientVersion().getVersion();
 		UserConnection connection = player.getUserConnection();
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		if(version > 760) {
 			return;
 		}
@@ -98,7 +98,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		}
 		final int version = player.getClientVersion().getVersion();
 		UserConnection connection = player.getUserConnection();
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		if(version > 760) {
 			return;
 		}

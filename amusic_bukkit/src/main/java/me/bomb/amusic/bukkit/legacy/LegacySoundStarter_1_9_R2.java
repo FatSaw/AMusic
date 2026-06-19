@@ -28,7 +28,7 @@ public final class LegacySoundStarter_1_9_R2 implements SoundStarter {
 		if(uuid == null || soundhash == null) {
 			return;
 		}
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		CraftPlayer player = (CraftPlayer) server.getPlayer(uuid);
 		player.getHandle().playerConnection.sendPacket(new PacketPlayOutCustomSoundEffect(musicid, SoundCategory.VOICE, x, y, z, volume, pitch));
 	}

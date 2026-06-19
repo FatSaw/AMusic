@@ -39,20 +39,20 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
     		packetid[i] = id;
     	}
 		identifier = new LegacyChannelIdentifier("MC|StopSound");
-    	legacysoundstop1 = Unpooled.buffer(42, 42);
+    	legacysoundstop1 = Unpooled.buffer(52, 52);
     	legacysoundstop1.writeByte(0x29);
-    	legacysoundstop1.writeByte(23);
-    	legacysoundstop1.writeBytes("amusic:internal.silence".getBytes(StandardCharsets.US_ASCII));
+    	legacysoundstop1.writeByte(33);
+    	legacysoundstop1.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
     	legacysoundstop1.writeInt(0);
         legacysoundstop1.writeInt(Integer.MIN_VALUE);
         legacysoundstop1.writeInt(0);
         legacysoundstop1.writeFloat(1.0E9f);
     	legacysoundstop1.writeByte((byte) 63);
 
-    	legacysoundstop2 = Unpooled.buffer(43, 43);
+    	legacysoundstop2 = Unpooled.buffer(53, 53);
     	legacysoundstop2.writeByte(0x19);
-    	legacysoundstop2.writeByte(23);
-    	legacysoundstop2.writeBytes("amusic:internal.silence".getBytes(StandardCharsets.US_ASCII));
+    	legacysoundstop2.writeByte(33);
+    	legacysoundstop2.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
     	legacysoundstop2.writeByte(9);
     	legacysoundstop2.writeInt(0);
         legacysoundstop2.writeInt(Integer.MIN_VALUE);
@@ -68,7 +68,7 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
 	}
 	
 	@Override
-	public void stopSound(UUID uuid, UUID soundhash, short id, byte partid) {
+	public void stopSound(UUID uuid, UUID soundhash, short id, byte part) {
 		Optional<Player> oplayer = server.getPlayer(uuid);
 		if(oplayer.isEmpty()) {
 			return;
@@ -98,8 +98,7 @@ private final static ByteBuf legacysoundstop1, legacysoundstop2;
 			}
 			return;
 		}
-		String musicid = new StringBuilder("amusic:internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(partid)).toString();
-		
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		if(version > 760) {
 			SoundStop sound = SoundStop.namedOnSource(Key.key(musicid), Sound.Source.VOICE);
 			player.stopSound(sound);

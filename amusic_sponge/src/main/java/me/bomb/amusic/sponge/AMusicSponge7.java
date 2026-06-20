@@ -182,13 +182,13 @@ public final class AMusicSponge7 {
 		if(this.waitacception) {
 			eventmanager.registerListeners(this, new PackStatusEventListener(resourcemanager));
 		}
-		/*if(this.amusic instanceof LocalAMusic) {
+		if(this.amusic instanceof LocalAMusic) {
 			try {
 				new GeyserHook(((LocalAMusic) this.amusic).datamanager);
 				logger.info("Geyser hook loaded");
 			} catch (NoClassDefFoundError e) {
 			}
-		}*/
+		}
 		this.amusic.enable();
     }
 	

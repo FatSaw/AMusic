@@ -161,11 +161,11 @@ public final class AMusicVelocity {
 		if(this.resourcemanager != null) {
 			this.server.getEventManager().register(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusic, joinplaylist));
 		}
-		/*try {
+		try {
 			new GeyserHook(((LocalAMusic) this.amusic).datamanager);
 			logger.info("Geyser hook loaded");
 		} catch (NoClassDefFoundError e) {
-		}*/
+		}
 		this.amusic.enable();
 	}
 	

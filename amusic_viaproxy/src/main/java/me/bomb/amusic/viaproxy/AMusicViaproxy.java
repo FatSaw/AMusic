@@ -17,6 +17,7 @@ import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ServerAMusic;
+import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
 import me.bomb.amusic.source.LocalUnconvertedSource;
@@ -142,11 +143,28 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		if(this.resourcemanager != null) {
 			ViaProxy.EVENT_MANAGER.register(new EventListener(this.amusic, resourcemanager, positiontracker, players, playerips, joinplaylist, uuidByPlayername));
 		}
-		/*try {
-			new GeyserHook(((LocalAMusic) this.amusic).datamanager);
-			logger.info("Geyser hook loaded");
-		} catch (NoClassDefFoundError e) {
-		}*/
+		
+		final Data data = ((LocalAMusic) this.amusic).datamanager;
+		new Thread("GeyserHookLoader") {
+			@Override
+			public void run() {
+				byte i = 10;
+				while(--i > -1) {
+					try {
+						sleep(1000);
+					} catch (InterruptedException e) {
+					}
+					try {
+						new GeyserHook(data);
+						logger.info("Geyser hook loaded");
+						return;
+					} catch(NoClassDefFoundError e) {
+						return;
+					} catch(RuntimeException e) {
+					}
+				}
+			}
+		}.start();
 		this.amusic.enable();
 	}
 	

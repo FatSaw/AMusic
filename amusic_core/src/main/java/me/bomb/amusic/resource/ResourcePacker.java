@@ -73,14 +73,9 @@ public final class ResourcePacker implements Runnable {
 		if(musiccount > 65536) {
 			musiccount = 65536;
 		}
-		final MessageDigest sha1hash, sha256hash;
+		final MessageDigest sha1hash;
 		try {
 			sha1hash = MessageDigest.getInstance("SHA-1");
-		} catch (NoSuchAlgorithmException e) {
-			return;
-		}
-		try {
-			sha256hash = MessageDigest.getInstance("SHA-256");
 		} catch (NoSuchAlgorithmException e) {
 			return;
 		}
@@ -334,7 +329,10 @@ public final class ResourcePacker implements Runnable {
 				zo.putEntry(soundslistbedrock.getBytes(StandardCharsets.US_ASCII), "sounds/sound_definitions.json");
 			} catch (IOException e) {
 			}
-			
+			byte[] sha256hash = zo.sha256();
+			byte i = 0x20;
+			this.bhea = new UUID((sha256hash[--i] & 0xFFL) | (sha256hash[--i] & 0xFFL) << 8 | (sha256hash[--i] & 0xFFL) << 16 | (sha256hash[--i] & 0xFFL) << 24 | (sha256hash[--i] & 0xFFL) << 32 | (sha256hash[--i] & 0xFFL) << 40 | (sha256hash[--i] & 0xFFL) << 48 | (sha256hash[--i] & 0xFFL) << 56, (sha256hash[--i] & 0xFFL) | (sha256hash[--i] & 0xFFL) << 8 | (sha256hash[--i] & 0xFFL) << 16 | (sha256hash[--i] & 0xFFL) << 24 | (sha256hash[--i] & 0xFFL) << 32 | (sha256hash[--i] & 0xFFL) << 40 | (sha256hash[--i] & 0xFFL) << 48 | (sha256hash[--i] & 0xFFL) << 56);
+			this.bres = new UUID((sha256hash[--i] & 0xFFL) | (sha256hash[--i] & 0xFFL) << 8 | (sha256hash[--i] & 0xFFL) << 16 | (sha256hash[--i] & 0xFFL) << 24 | (sha256hash[--i] & 0xFFL) << 32 | (sha256hash[--i] & 0xFFL) << 40 | (sha256hash[--i] & 0xFFL) << 48 | (sha256hash[--i] & 0xFFL) << 56, (sha256hash[--i] & 0xFFL) | (sha256hash[--i] & 0xFFL) << 8 | (sha256hash[--i] & 0xFFL) << 16 | (sha256hash[--i] & 0xFFL) << 24 | (sha256hash[--i] & 0xFFL) << 32 | (sha256hash[--i] & 0xFFL) << 40 | (sha256hash[--i] & 0xFFL) << 48 | (sha256hash[--i] & 0xFFL) << 56);
 			try {
 				if(!packmcmetafound) {
 					zo.putEntry("{\n\t\"pack\": {\n\t\t\"pack_format\": 1,\n\t\t\"description\": \"AMusic resourcepack\"\n\t}\n}".getBytes(StandardCharsets.US_ASCII), "pack.mcmeta");
@@ -342,10 +340,6 @@ public final class ResourcePacker implements Runnable {
 			} catch (IOException e) {
 			}
 			
-			bhea = new UUID(0L, 0L); //TODO: SET THIS BASED ON ZIP CONTENT HASH
-			bres = new UUID(0L, 0L); //TODO: SET THIS BASED ON ZIP CONTENT HASH
-			//bhea = UUID.randomUUID();
-			//bres = UUID.randomUUID();
 			try {
 				StringBuilder sb = new StringBuilder();
 				sb.append("{\n\t\"format_version\": 2,\n\t\"header\": {\n\t\t\"name\": \"AMusic resourcepack\",\n\t\t\"description\": \"DESCRIPTION\",\n\t\t\"uuid\": \"");
@@ -367,9 +361,9 @@ public final class ResourcePacker implements Runnable {
 			} catch (IOException e) {
 			}
 			this.resourcepack = cos.toByteArray();
+			this.sha256 = zo.sha256();
 		}
 		this.sha1 = sha1hash.digest(this.resourcepack);
-		this.sha256 = sha256hash.digest(this.resourcepack);
 		short[] soundlengths = sourceentry.lengths;
 		int i = musiccount;
 		this.sounds = new SoundInfo[i];

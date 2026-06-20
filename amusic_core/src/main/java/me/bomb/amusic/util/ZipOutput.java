@@ -3,6 +3,8 @@ package me.bomb.amusic.util;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.CRC32;
@@ -16,12 +18,18 @@ public final class ZipOutput {
 	private final List<byte[]> bentries;
 	private final Deflater deflater;
 	private final CRC32 acrc;
+	private final MessageDigest sha256hash;
 
 	public ZipOutput(OutputStream outstream) {
 		this.outstream = outstream;
 		this.bentries = new ArrayList<>();
 		this.deflater = new Deflater(9, true);
 		this.acrc = new CRC32();
+		try {
+			this.sha256hash = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 	
 	public void putEntry(byte[] data, String name) throws IOException {
@@ -58,10 +66,12 @@ public final class ZipOutput {
 		localHeader[24] = (byte) ((ulen >>> 16) & 0xFF);
 		localHeader[25] = (byte) ((ulen >>> 24) & 0xFF);
 		this.outstream.write(localHeader);
+		this.sha256hash.update(localHeader);
 		count+=localHeader.length;
 		int j = bbuf.length;
 		while(--j > i) {
 			this.outstream.write(bbuf[j], 0, bsizes[j]);
+			this.sha256hash.update(bbuf[j], 0, bsizes[j]);
 		}
 		count+=clen;
 		byte[] nameb = name.getBytes(StandardCharsets.US_ASCII);
@@ -109,8 +119,10 @@ public final class ZipOutput {
 		localHeader[24] = (byte) ((len >>> 16) & 0xFF);
 		localHeader[25] = (byte) ((len >>> 24) & 0xFF);
 		this.outstream.write(localHeader);
+		this.sha256hash.update(localHeader);
 		count+=localHeader.length;
 		this.outstream.write(data);
+		this.sha256hash.update(data);
 		count+=data.length;
 		byte[] jnameb = javapath.getBytes(StandardCharsets.US_ASCII), bnameb = bedrockpath.getBytes(StandardCharsets.US_ASCII), jglobalHeaderEntry = new byte[] {0x50, 0x4b, 0x01, 0x02, 0x14, 0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, bglobalHeaderEntry;
 		int jnamel = jnameb.length, bnamel = bnameb.length;
@@ -149,6 +161,7 @@ public final class ZipOutput {
 		int cdSize = 0;
 		for(byte[] buf : bentries) {
 			this.outstream.write(buf);
+			this.sha256hash.update(buf);
 			cdSize += buf.length;
 		}
 		count+=cdSize;
@@ -166,7 +179,18 @@ public final class ZipOutput {
 		end[18] = (byte) ((cdOffset >>> 16) & 0xFF);
 		end[19] = (byte) ((cdOffset >>> 24) & 0xFF);
 		this.outstream.write(end);
+		this.sha256hash.update(end);
 		count+=end.length;
 		deflater.end();
+	}
+	
+	public byte[] sha256() {
+		final MessageDigest sha256hash;
+		try {
+			sha256hash = (MessageDigest) this.sha256hash.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
+		return sha256hash.digest();
 	}
 }

@@ -2,6 +2,7 @@ package me.bomb.amusic.glowstone;
 
 import java.util.UUID;
 
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.SoundCategory;
 
@@ -20,7 +21,13 @@ public final class GlowstoneLegacySoundStarter implements SoundStarter {
 
 	@Override
 	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
-		this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, 1.0E9f, 1.0f);
+		if(uuid == null || soundhash == null) {
+			return;
+		}
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		GlowPlayer player = (GlowPlayer) server.getPlayer(uuid);
+		Location loc = player.getLocation();
+		player.getSession().send(new NamedSoundEffectMessage(musicid, SoundCategory.VOICE, loc.getX(), loc.getY(), loc.getZ(), 1.0E9f, 1.0f));
 	}
 
 	@Override

@@ -11,7 +11,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import com.flowpowered.math.vector.Vector3d;
 
 import me.bomb.amusic.SoundStarter;
-import me.bomb.amusic.util.HexUtils;
 
 public final class SpongeSoundStarter implements SoundStarter {
 	
@@ -23,7 +22,13 @@ public final class SpongeSoundStarter implements SoundStarter {
 
 	@Override
 	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
-		this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, 1.0f, 1.0f);
+		final Optional<Player> oplayer;
+		if(uuid == null || soundhash == null || !(oplayer = server.getPlayer(uuid)).isPresent()) {
+			return;
+		}
+		Player player = oplayer.get();
+		SoundType sound = new AMusicSoundType(uuid, soundhash, id, part);
+		player.playSound(sound, SoundCategories.VOICE, player.getPosition(), 1.0f, 1.0f);
 	}
 
 	@Override
@@ -32,17 +37,7 @@ public final class SpongeSoundStarter implements SoundStarter {
 		if(uuid == null || soundhash == null || !(oplayer = server.getPlayer(uuid)).isPresent()) {
 			return;
 		}
-		SoundType sound = new SoundType() {
-			String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
-			@Override
-			public String getName() {
-				return musicid;
-			}
-			@Override
-			public String getId() {
-				return musicid;
-			}
-		};
+		SoundType sound = new AMusicSoundType(uuid, soundhash, id, part);
 		oplayer.get().playSound(sound, SoundCategories.VOICE, new Vector3d(x, y, z), volume, pitch);
 	}
 

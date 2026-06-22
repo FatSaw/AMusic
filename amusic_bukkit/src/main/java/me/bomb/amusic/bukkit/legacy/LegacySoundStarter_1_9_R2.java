@@ -2,6 +2,7 @@ package me.bomb.amusic.bukkit.legacy;
 
 import java.util.UUID;
 
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 
@@ -20,7 +21,13 @@ public final class LegacySoundStarter_1_9_R2 implements SoundStarter {
 	
 	@Override
 	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
-		this.startSound(uuid, soundhash, id, part, 0d, 0d, 0d, 1.0E9f, 1.0f);
+		if(uuid == null || soundhash == null) {
+			return;
+		}
+		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		CraftPlayer player = (CraftPlayer) server.getPlayer(uuid);
+		Location loc = player.getLocation();
+		player.getHandle().playerConnection.sendPacket(new PacketPlayOutCustomSoundEffect(musicid, SoundCategory.VOICE, loc.getX(), loc.getY(), loc.getZ(), 1.0E9f, 1.0f));
 	}
 
 	@Override

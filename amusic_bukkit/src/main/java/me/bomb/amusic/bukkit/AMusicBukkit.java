@@ -71,6 +71,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final String configerrors, uploaderhost, joinplaylist;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
+	private GeyserHook geyserhook = null;
 
 	public AMusicBukkit() {
 		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
@@ -93,7 +94,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		final Server server = this.getServer();
 		byte ver = 127;
 		try {
-			String nmsversion = this.getServer().getClass().getPackage().getName().substring(23);
+			String nmsversion = server.getClass().getPackage().getName().substring(23);
 			ver = Byte.valueOf(nmsversion.split("_", 3)[1]);
 		} catch (StringIndexOutOfBoundsException | NumberFormatException e) {
 		}
@@ -263,17 +264,20 @@ public final class AMusicBukkit extends JavaPlugin {
 				pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
 			}
 		}
+		this.amusic.enable();
 		if(this.amusic instanceof LocalAMusic) {
 			try {
-				new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
+				this.geyserhook = new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
 				logger.info("Geyser hook loaded");
 			} catch (NoClassDefFoundError e) {
 			}
 		}
-		this.amusic.enable();
 	}
 
 	public void onDisable() {
+		if(this.geyserhook != null) {
+			this.geyserhook.unregister();
+		}
 		if(this.amusic == null) {
 			return;
 		}

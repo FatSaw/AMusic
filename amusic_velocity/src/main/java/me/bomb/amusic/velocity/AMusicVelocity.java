@@ -51,6 +51,7 @@ public final class AMusicVelocity {
 	private final boolean usecmd;
 	private final PositionTracker positiontracker;
 	private final String configerrors, uploaderhost, joinplaylist;
+	private GeyserHook geyserhook = null;
 	
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -161,16 +162,19 @@ public final class AMusicVelocity {
 		if(this.resourcemanager != null) {
 			this.server.getEventManager().register(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusic, joinplaylist));
 		}
+		this.amusic.enable();
 		try {
-			new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
+			this.geyserhook = new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
 			logger.info("Geyser hook loaded");
 		} catch (NoClassDefFoundError e) {
 		}
-		this.amusic.enable();
 	}
 	
 	@Subscribe
 	public void onProxyShutdown(ProxyShutdownEvent event) {
+		if(this.geyserhook != null) {
+			this.geyserhook.unregister();
+		}
 		if(this.amusic == null) {
 			return;
 		}

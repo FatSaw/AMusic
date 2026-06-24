@@ -55,6 +55,7 @@ public final class AMusicSponge7 {
 	private String configerrors, uploaderhost, joinplaylist;
 	private ResourceManager resourcemanager;
 	private PositionTracker positiontracker;
+	private GeyserHook geyserhook = null;
 	
 	@Inject
 	private Logger logger;
@@ -182,18 +183,21 @@ public final class AMusicSponge7 {
 		if(this.waitacception) {
 			eventmanager.registerListeners(this, new PackStatusEventListener(resourcemanager));
 		}
+		this.amusic.enable();
 		if(this.amusic instanceof LocalAMusic) {
 			try {
-				new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
+				this.geyserhook = new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
 				logger.info("Geyser hook loaded");
 			} catch (NoClassDefFoundError e) {
 			}
 		}
-		this.amusic.enable();
     }
 	
 	@Listener
     public void onServerStop(GameStoppedServerEvent event) {
+		if(this.geyserhook != null) {
+			this.geyserhook.unregister();
+		}
 		if(this.amusic == null) {
 			return;
 		}

@@ -2,20 +2,20 @@ package me.bomb.amusic;
 
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.function.Consumer;
 
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.EventBus;
 import org.geysermc.geyser.api.event.EventRegistrar;
+import org.geysermc.geyser.api.event.EventSubscriber;
 import org.geysermc.geyser.api.event.bedrock.SessionLoadResourcePacksEvent;
 import org.geysermc.geyser.api.pack.PackCodec;
 import org.geysermc.geyser.api.pack.ResourcePack;
-import org.geysermc.geyser.api.pack.ResourcePack.Builder;
 import org.geysermc.geyser.api.pack.option.PriorityOption;
 import org.geysermc.geyser.pack.GeyserResourcePack;
+import org.geysermc.geyser.pack.GeyserResourcePack.Builder;
 import org.geysermc.geyser.pack.GeyserResourcePackManifest;
 import org.geysermc.geyser.pack.GeyserResourcePackManifest.Header;
 import org.geysermc.geyser.pack.GeyserResourcePackManifest.Module;
@@ -23,18 +23,20 @@ import org.geysermc.geyser.pack.GeyserResourcePackManifest.Version;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.DataEntry;
-import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.ReadOnlyByteArrayChannel;
 
 public final class GeyserHook {
+	
+	private final EventBus<EventRegistrar> eventbus;
+	private final EventSubscriber<EventRegistrar, SessionLoadResourcePacksEvent> subscriber;
 
 	public GeyserHook(Object plugin, Data datamanager) throws NoClassDefFoundError {
-		GeyserApi api = GeyserApi.api();
-		try {
-			api.eventBus().subscribe(EventRegistrar.of(plugin), SessionLoadResourcePacksEvent.class, new SessionLoadResourcePacksHandler(datamanager));
-		} catch (Throwable t) {
-			AMusicLogger.warn("GeyserApi register FAIL!");
-		}
+		this.eventbus = GeyserApi.api().eventBus();
+		this.subscriber = this.eventbus.subscribe(EventRegistrar.of(plugin), SessionLoadResourcePacksEvent.class, new SessionLoadResourcePacksHandler(datamanager));
+	}
+	
+	public void unregister() {
+		this.eventbus.unsubscribe(this.subscriber);
 	}
 	
 	public final static class SessionLoadResourcePacksHandler implements Consumer<SessionLoadResourcePacksEvent> {
@@ -84,18 +86,18 @@ public final class GeyserHook {
 
 			@Override
 		    protected ResourcePack create() {
+				return createBuilder().build();
+		    }
+
+			@Override
+			protected Builder createBuilder() {
 				Version version = new Version(1, 0, 0);
 				Header header = new Header(entry.bhea, version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
 				Module module = new Module(entry.bres, version, "resources", "");
 				HashSet<Module> modules = new HashSet<>(1);
 				modules.add(module);
 				GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
-				return new GeyserResourcePack(this, manifest, entry.name);
-		    }
-
-			@Override
-			protected Builder createBuilder() {
-				return null;
+				return new GeyserResourcePack.Builder(this, manifest, entry.name);
 			}
 
 		}

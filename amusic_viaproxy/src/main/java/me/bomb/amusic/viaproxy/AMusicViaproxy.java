@@ -49,6 +49,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 	private boolean usecmd;
 	private PositionTracker positiontracker;
 	private String configerrors, uploaderhost, joinplaylist;
+	private GeyserHook geyserhook = null;
 	
 	public AMusicViaproxy() {
 		this.logger = LogManager.getLogger("AMusic");
@@ -143,7 +144,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		if(this.resourcemanager != null) {
 			ViaProxy.EVENT_MANAGER.register(new EventListener(this.amusic, resourcemanager, positiontracker, players, playerips, joinplaylist, uuidByPlayername));
 		}
-		
+		this.amusic.enable();
 		final Data data = ((LocalAMusic) this.amusic).datamanager;
 		new Thread("GeyserHookLoader") {
 			@Override
@@ -155,7 +156,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 					} catch (InterruptedException e) {
 					}
 					try {
-						new GeyserHook(this, data);
+						AMusicViaproxy.this.geyserhook = new GeyserHook(this, data);
 						logger.info("Geyser hook loaded");
 						return;
 					} catch(NoClassDefFoundError e) {
@@ -165,11 +166,13 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 				}
 			}
 		}.start();
-		this.amusic.enable();
 	}
 	
 	@Override
     public void onDisable() {
+		if(this.geyserhook != null) {
+			this.geyserhook.unregister();
+		}
 		if(this.amusic == null) {
 			return;
 		}

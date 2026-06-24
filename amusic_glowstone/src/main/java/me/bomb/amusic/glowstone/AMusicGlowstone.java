@@ -57,6 +57,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 	private final String configerrors, uploaderhost, joinplaylist;
 	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
+	private GeyserHook geyserhook = null;
 
 	public AMusicGlowstone() {
 		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
@@ -200,17 +201,20 @@ public final class AMusicGlowstone extends JavaPlugin {
 				pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
 			}
 		}
+		this.amusic.enable();
 		if(this.amusic instanceof LocalAMusic) {
 			try {
-				new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
+				this.geyserhook = new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
 				logger.info("Geyser hook loaded");
 			} catch (NoClassDefFoundError e) {
 			}
 		}
-		this.amusic.enable();
 	}
 
 	public void onDisable() {
+		if(this.geyserhook != null) {
+			this.geyserhook.unregister();
+		}
 		if(this.amusic == null) {
 			return;
 		}

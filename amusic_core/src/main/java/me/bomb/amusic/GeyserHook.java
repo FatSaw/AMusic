@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.event.EventBus;
 import org.geysermc.geyser.api.event.EventRegistrar;
-import org.geysermc.geyser.api.event.EventSubscriber;
 import org.geysermc.geyser.api.event.bedrock.SessionLoadResourcePacksEvent;
 import org.geysermc.geyser.api.pack.PackCodec;
 import org.geysermc.geyser.api.pack.ResourcePack;
@@ -28,15 +27,16 @@ import me.bomb.amusic.util.ReadOnlyByteArrayChannel;
 public final class GeyserHook {
 	
 	private final EventBus<EventRegistrar> eventbus;
-	private final EventSubscriber<EventRegistrar, SessionLoadResourcePacksEvent> subscriber;
+	private final EventRegistrar registrar;
 
 	public GeyserHook(Object plugin, Data datamanager) throws NoClassDefFoundError {
 		this.eventbus = GeyserApi.api().eventBus();
-		this.subscriber = this.eventbus.subscribe(EventRegistrar.of(plugin), SessionLoadResourcePacksEvent.class, new SessionLoadResourcePacksHandler(datamanager));
+		this.registrar = EventRegistrar.of(plugin);
+		this.eventbus.subscribe(this.registrar, SessionLoadResourcePacksEvent.class, new SessionLoadResourcePacksHandler(datamanager));
 	}
 	
 	public void unregister() {
-		this.eventbus.unsubscribe(this.subscriber);
+		this.eventbus.unregisterAll(registrar);
 	}
 	
 	public final static class SessionLoadResourcePacksHandler implements Consumer<SessionLoadResourcePacksEvent> {

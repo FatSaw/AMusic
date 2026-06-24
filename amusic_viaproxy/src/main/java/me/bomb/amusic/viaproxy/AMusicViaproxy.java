@@ -155,7 +155,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 					} catch (InterruptedException e) {
 					}
 					try {
-						new GeyserHook(data);
+						new GeyserHook(this, data);
 						logger.info("Geyser hook loaded");
 						return;
 					} catch(NoClassDefFoundError e) {

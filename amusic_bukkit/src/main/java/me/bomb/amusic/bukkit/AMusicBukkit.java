@@ -265,7 +265,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		if(this.amusic instanceof LocalAMusic) {
 			try {
-				new GeyserHook(((LocalAMusic) this.amusic).datamanager);
+				new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
 				logger.info("Geyser hook loaded");
 			} catch (NoClassDefFoundError e) {
 			}

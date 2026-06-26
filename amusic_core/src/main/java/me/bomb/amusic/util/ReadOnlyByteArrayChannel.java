@@ -2,65 +2,62 @@ package me.bomb.amusic.util;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NonWritableChannelException;
 import java.nio.channels.SeekableByteChannel;
 
 public final class ReadOnlyByteArrayChannel implements SeekableByteChannel {
-	private final ByteBuffer buffer;
-	private boolean open = true;
+	
+	private int offset;
+	private final byte[] data;
 
 	public ReadOnlyByteArrayChannel(byte[] data) {
 		if (data == null) {
 			throw new IllegalArgumentException("Data array cannot be null");
 		}
-		this.buffer = ByteBuffer.wrap(data).asReadOnlyBuffer();
+		this.data = data;
 	}
 
 	@Override
 	public int read(ByteBuffer dst) throws IOException {
-		ensureOpen();
-		if (!buffer.hasRemaining()) {
+		int remaining = data.length - offset;
+		if(remaining < 1) {
 			return -1;
 		}
-		int bytesToRead = Math.min(dst.remaining(), buffer.remaining());
-		ByteBuffer slice = buffer.slice();
-		slice.limit(bytesToRead);
-		dst.put(slice);
-		buffer.position(buffer.position() + bytesToRead);
-		return bytesToRead;
+		int dremaining = dst.remaining();
+		if(dremaining < remaining) {
+			remaining = dremaining;
+		}
+		dst.put(data, offset, remaining);
+		offset += remaining;
+		return remaining;
 	}
 
 	@Override
 	public long position() throws IOException {
-		ensureOpen();
-		return buffer.position();
+		return offset;
 	}
 
 	@Override
 	public SeekableByteChannel position(long newPosition) throws IOException {
-		ensureOpen();
-		if (newPosition < 0 || newPosition > buffer.limit()) {
+		if (newPosition < 0 || newPosition > data.length) {
 			throw new IllegalArgumentException("Invalid position: " + newPosition);
 		}
-		buffer.position((int) newPosition);
+		offset = (int) newPosition;
 		return this;
 	}
 
 	@Override
 	public long size() throws IOException {
-		ensureOpen();
-		return buffer.limit();
+		return data.length;
 	}
 
 	@Override
 	public boolean isOpen() {
-		return open;
+		return true;
 	}
 
 	@Override
 	public void close() {
-		open = false;
 	}
 
 	@Override
@@ -71,11 +68,5 @@ public final class ReadOnlyByteArrayChannel implements SeekableByteChannel {
 	@Override
 	public SeekableByteChannel truncate(long size) {
 		throw new NonWritableChannelException();
-	}
-
-	private void ensureOpen() throws ClosedChannelException {
-		if (!open) {
-			throw new ClosedChannelException();
-		}
 	}
 }

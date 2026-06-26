@@ -64,6 +64,7 @@ public final class GeyserHook {
 		public final static class BufPackCodec extends PackCodec {
 
 			private final DataEntry entry;
+			private SeekableByteChannel cachedchannel = null;
 
 			protected BufPackCodec(DataEntry entry) {
 				this.entry = entry;
@@ -81,7 +82,7 @@ public final class GeyserHook {
 
 			@Override
 			public SeekableByteChannel serialize() throws IOException {
-				return new ReadOnlyByteArrayChannel(this.entry.getPack());
+				return this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel;
 			}
 
 			@Override

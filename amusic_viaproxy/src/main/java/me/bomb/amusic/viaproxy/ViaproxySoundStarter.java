@@ -17,7 +17,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 	final static byte[] packetid;
 	
 	static {
-    	int i = 760;
+    	int i = 777;
     	packetid = new byte[i];
     	byte id;
     	while(--i > -1) {
@@ -31,6 +31,15 @@ public final class ViaproxySoundStarter implements SoundStarter {
     		if(i > 0x2ee && i < 0x2f3) id = 0x18;
     		if(i > 0x2f2 && i < 0x2f7) id = 0x19;
     		if(i == 0x2f7) id = 0x16;
+    		if(i == 0x2f8) id = 0x17;
+    		if(i == 0x2f9) id = 0x5E;
+    		if(i > 0x2f9 && i < 0x2fc) id = 0x62;
+    		if(i == 0x2fc) id = 0x64;
+    		if(i == 0x2fd) id = 0x66;
+    		if(i > 0x2fd && i < 0x300) id = 0x68;
+    		if(i > 0x2ff && i < 0x302) id = 0x6F;
+    		if(i > 0x301 && i < 0x305) id = 0x6E;
+    		if(i > 0x304 && i < 0x309) id = 0x73;
     		packetid[i] = id;
     	}
     }
@@ -55,8 +64,9 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		}
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
+		if(version > 760) packetsize += 2;
+		if(version > 758) packetsize += 4;
 		if(version > 209) packetsize += 3;
-		if(version == 759) packetsize += 4;
 		if (version > 47) ++packetsize;
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
@@ -64,6 +74,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
 		buf.writeByte(pid);
+		if(version > 760) buf.writeByte(0);
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);
         } else {
@@ -71,6 +82,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
             buf.writeShort(w);
         }
 		buf.writeBytes(songidb);
+		if(version > 760) buf.writeByte(0);
 		if (version > 47) buf.writeByte(version < 393 ? 0 : 9);
         buf.writeInt(0);
         buf.writeInt(0);
@@ -81,7 +93,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
         } else {
             buf.writeFloat(1.0f);
         }
-        if (version >= 759) {
+        if (version > 758) {
             buf.writeLong(0L);
         }
         connection.sendRawPacket(buf);
@@ -101,8 +113,9 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		}
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
+		if(version > 760) packetsize += 2;
+		if(version > 758) packetsize += 4;
 		if(version > 209) packetsize += 3;
-		if(version == 759) packetsize += 4;
 		if (version > 47) ++packetsize;
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
@@ -110,6 +123,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		packetsize+=songidb.length;
 		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
 		buf.writeByte(pid);
+		if(version > 760) buf.writeByte(0);
 		if (bytesoundnamelength) {
             buf.writeByte(songidb.length);
         } else {
@@ -117,6 +131,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
             buf.writeShort(w);
         }
 		buf.writeBytes(songidb);
+		if(version > 760) buf.writeByte(0);
 		if (version > 47) buf.writeByte(version < 393 ? 0 : 9);
         buf.writeInt((int) (x * 8.0D));
         buf.writeInt((int) (y * 8.0D));
@@ -127,7 +142,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
         } else {
             buf.writeFloat(pitch);
         }
-        if (version >= 759) {
+        if (version > 758) {
             buf.writeLong(0L);
         }
         connection.sendRawPacket(buf);

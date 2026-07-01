@@ -18,7 +18,7 @@ public final class ViaproxyPackSender implements PackSender {
 	private final static byte[] rpack;
 	
 	static {
-    	int i = 760;
+    	int i = 777;
     	packetid = new byte[i];
     	byte id;
     	while(--i > -1) {
@@ -35,6 +35,15 @@ public final class ViaproxyPackSender implements PackSender {
     		if(i > 0x2ee && i < 0x2f3) id = 0x38;
     		if(i > 0x2f2 && i < 0x2f7) id = 0x3C;
     		if(i == 0x2f7) id = 0x3A;
+    		if(i == 0x2f8) id = 0x3D;
+    		if(i == 0x2f9) id = 0x3C;
+    		if(i > 0x2f9 && i < 0x2fc) id = 0x40;
+    		if(i == 0x2fc) id = 0x42;
+    		if(i == 0x2fd) id = 0x44;
+    		if(i > 0x2fd && i < 0x301) id = 0x46;
+    		if(i == 0x301) id = 0x4B;
+    		if(i > 0x301 && i < 0x305) id = 0x4A;
+    		if(i > 0x304 && i < 0x309) id = 0x4F;
     		packetid[i] = id;
     	}
 		rpack = new byte[] {0x08, 0x4D, 0x43, 0x7C, 0x52, 0x50, 0x61, 0x63, 0x6B};
@@ -83,8 +92,16 @@ public final class ViaproxyPackSender implements PackSender {
 		if(hasmessageforced) {
 			packetsize+=2;
 		}
+		if(version > 764) {
+			packetsize+=16;
+		}
 		ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
 		buf.writeByte(pid);
+		if(version > 764) {
+			UUID urluuid = UUID.nameUUIDFromBytes(urlb);
+			buf.writeLong(urluuid.getMostSignificantBits());
+			buf.writeLong(urluuid.getLeastSignificantBits());
+		}
 		if(shortlength) {
 			buf.writeByte(i & 127 | 128);
 			i >>>= 7;

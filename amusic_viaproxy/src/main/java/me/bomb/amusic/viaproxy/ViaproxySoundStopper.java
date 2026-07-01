@@ -19,7 +19,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 	private final static ByteBuf legacysoundstop1, legacysoundstop2;
 
 	static {
-		int i = 760;
+		int i = 777;
 		packetid = new byte[i];
 		byte id;
 		while (--i > -1) {
@@ -30,7 +30,16 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			if (i > 0x23c && i < 0x243) id = 0x53;
 			if (i > 0x2de && i < 0x2f3) id = 0x52;
 			if (i > 0x2f2 && i < 0x2f5) id = 0x5D;
-			if (i > 0x2f4 && i < 0x2f9) id = 0x5E;
+			if (i > 0x2f4 && i < 0x2f8) id = 0x5E;
+			if (i == 0x2f8) id = 0x61;
+			if (i == 0x2f9) id = 0x5F;
+			if (i > 0x2f9 && i < 0x2fc) id = 0x63;
+			if (i == 0x2fc) id = 0x66;
+			if (i == 0x2fd) id = 0x68;
+			if (i > 0x2fd && i < 0x300) id = 0x6A;
+			if (i > 0x2ff && i < 0x302) id = 0x71;
+			if (i > 0x301 && i < 0x305) id = 0x70;
+			if (i > 0x304 && i < 0x309) id = 0x75;
 			packetid[i] = id;
 		}
 
@@ -44,7 +53,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		legacysoundstop1.writeInt(Integer.MIN_VALUE);
 		legacysoundstop1.writeInt(0);
 		legacysoundstop1.writeFloat(1.0E9f);
-		legacysoundstop1.writeByte((byte) 63);
+		legacysoundstop1.writeByte(63);
 
 		legacysoundstop2 = Unpooled.buffer(53, 53);
 		legacysoundstop2.writeByte(0x19);

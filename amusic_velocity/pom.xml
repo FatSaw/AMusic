@@ -33,6 +33,12 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport</artifactId>
+			<version>4.2.4.Final</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>me.bomb</groupId>
 			<artifactId>amusic_core</artifactId>
 			<version>${revision}</version>
@@ -95,7 +101,6 @@
 									<excludes>
 										<exclude>META-INF/**</exclude>
 										<exclude>com/velocitypowered/**</exclude>
-										<exclude>io/netty/**</exclude>
 									</excludes>
 								</filter>
 							</filters>

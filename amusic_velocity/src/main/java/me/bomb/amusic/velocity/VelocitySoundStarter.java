@@ -10,7 +10,8 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.Channel;
 import me.bomb.amusic.SoundStarter;
 import me.bomb.amusic.util.HexUtils;
 import net.kyori.adventure.key.Key;
@@ -63,6 +64,8 @@ public final class VelocitySoundStarter implements SoundStarter {
 		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
+		final Channel channel = ((ConnectedPlayer) player).getConnection().getChannel();
+		final ByteBufAllocator allocator = channel.alloc();
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
 		if(version == 759) packetsize += 4;
@@ -71,29 +74,33 @@ public final class VelocitySoundStarter implements SoundStarter {
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 		if(!bytesoundnamelength) ++packetsize;
 		packetsize+=songidb.length;
-		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
+		ByteBuf buf = allocator.directBuffer(packetsize, packetsize);
 		buf.writeByte(pid);
 		if (bytesoundnamelength) {
-            buf.writeByte(songidb.length);
-        } else {
-            int w = (songidb.length & 0x7F | 0x80) << 8 | (songidb.length >>> 7);
-            buf.writeShort(w);
-        }
+			buf.writeByte(songidb.length);
+		} else {
+			int w = (songidb.length & 0x7F | 0x80) << 8 | (songidb.length >>> 7);
+			buf.writeShort(w);
+		}
 		buf.writeBytes(songidb);
 		if (version > 47) buf.writeByte(version < 393 ? 0 : 9);
-        buf.writeInt(0);
-        buf.writeInt(0);
-        buf.writeInt(0);
-        buf.writeFloat(version < 393 ? 1.0E9f : 1.0f);
-        if (version < 210) {
-            buf.writeByte(63);
-        } else {
-            buf.writeFloat(1.0F);
-        }
-        if (version >= 759) {
-            buf.writeLong(0L);
-        }
-		((ConnectedPlayer) player).getConnection().write(buf);
+		buf.writeInt(0);
+		buf.writeInt(0);
+		buf.writeInt(0);
+		buf.writeFloat(version < 393 ? 1.0E9f : 1.0f);
+		if (version < 210) {
+			buf.writeByte(63);
+		} else {
+			buf.writeFloat(1.0F);
+		}
+		if (version >= 759) {
+			buf.writeLong(0L);
+		}
+		if (channel.isActive()) {
+			channel.writeAndFlush(buf);
+		} else {
+			buf.release();
+		}
 	}
 
 	@Override
@@ -115,6 +122,8 @@ public final class VelocitySoundStarter implements SoundStarter {
 		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
+		final Channel channel = ((ConnectedPlayer) player).getConnection().getChannel();
+		final ByteBufAllocator allocator = channel.alloc();
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
 		if(version == 759) packetsize += 4;
@@ -123,28 +132,32 @@ public final class VelocitySoundStarter implements SoundStarter {
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 		if(!bytesoundnamelength) ++packetsize;
 		packetsize+=songidb.length;
-		ByteBuf buf =  Unpooled.buffer(packetsize, packetsize);
+		ByteBuf buf = allocator.directBuffer(packetsize, packetsize);
 		buf.writeByte(pid);
 		if (bytesoundnamelength) {
-            buf.writeByte(songidb.length);
+			buf.writeByte(songidb.length);
         } else {
-            int w = (songidb.length & 0x7F | 0x80) << 8 | (songidb.length >>> 7);
-            buf.writeShort(w);
-        }
+			int w = (songidb.length & 0x7F | 0x80) << 8 | (songidb.length >>> 7);
+			buf.writeShort(w);
+		}
 		buf.writeBytes(songidb);
 		if (version > 47) buf.writeByte(version < 393 ? 0 : 9);
-        buf.writeInt((int) (x * 8.0D));
-        buf.writeInt((int) (y * 8.0D));
-        buf.writeInt((int) (z * 8.0D));
-        buf.writeFloat(volume);
-        if (version < 210) {
-            buf.writeByte((int) (pitch * 63.0F));
-        } else {
-            buf.writeFloat(pitch);
-        }
-        if (version >= 759) {
-            buf.writeLong(0L);
-        }
-		((ConnectedPlayer) player).getConnection().write(buf);
+		buf.writeInt((int) (x * 8.0D));
+		buf.writeInt((int) (y * 8.0D));
+		buf.writeInt((int) (z * 8.0D));
+		buf.writeFloat(volume);
+		if (version < 210) {
+			buf.writeByte((int) (pitch * 63.0F));
+		} else {
+			buf.writeFloat(pitch);
+		}
+		if (version >= 759) {
+			buf.writeLong(0L);
+		}
+		if (channel.isActive()) {
+			channel.writeAndFlush(buf);
+		} else {
+			buf.release();
+		}
 	}
 }

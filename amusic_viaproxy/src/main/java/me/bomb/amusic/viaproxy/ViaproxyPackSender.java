@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.viaversion.viaversion.api.connection.UserConnection;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.util.HexUtils;
@@ -67,11 +68,12 @@ public final class ViaproxyPackSender implements PackSender {
 		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
+		ByteBufAllocator allocator = connection.getChannel().alloc();
 		byte[] urlb = url.getBytes(StandardCharsets.UTF_8);
 		int packetsize = urlb.length;
 		if(version < 6) {
 			packetsize += 12;
-			ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
+			ByteBuf buf = allocator.directBuffer(packetsize, packetsize);
 			buf.writeByte(pid);
 			buf.writeBytes(rpack);
 			short ulength = (short) urlb.length;

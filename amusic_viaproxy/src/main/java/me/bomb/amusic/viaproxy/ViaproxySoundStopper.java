@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.viaversion.viaversion.api.connection.UserConnection;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.HexUtils;
@@ -44,27 +45,29 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		}
 
 		stopsound = new byte[] {0x0C, 0x4D, 0x43, 0x7C, 0x53, 0x74, 0x6F, 0x70, 0x53, 0x6F, 0x75, 0x6E, 0x64};
+		ByteBuf legacysoundstop;
+		legacysoundstop = Unpooled.directBuffer(52, 52);
+		legacysoundstop.writeByte(0x29);
+		legacysoundstop.writeByte(33);
+		legacysoundstop.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
+		legacysoundstop.writeInt(0);
+		legacysoundstop.writeInt(Integer.MIN_VALUE);
+		legacysoundstop.writeInt(0);
+		legacysoundstop.writeFloat(1.0E9f);
+		legacysoundstop.writeByte(63);
+		legacysoundstop1 = Unpooled.unreleasableBuffer(legacysoundstop);
 		
-		legacysoundstop1 = Unpooled.buffer(52, 52);
-		legacysoundstop1.writeByte(0x29);
-		legacysoundstop1.writeByte(33);
-		legacysoundstop1.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
-		legacysoundstop1.writeInt(0);
-		legacysoundstop1.writeInt(Integer.MIN_VALUE);
-		legacysoundstop1.writeInt(0);
-		legacysoundstop1.writeFloat(1.0E9f);
-		legacysoundstop1.writeByte(63);
-
-		legacysoundstop2 = Unpooled.buffer(53, 53);
-		legacysoundstop2.writeByte(0x19);
-		legacysoundstop2.writeByte(33);
-		legacysoundstop2.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
-		legacysoundstop2.writeByte(0);
-		legacysoundstop2.writeInt(0);
-		legacysoundstop2.writeInt(Integer.MIN_VALUE);
-		legacysoundstop2.writeInt(0);
-		legacysoundstop2.writeFloat(1.0E9f);
-		legacysoundstop2.writeByte(63);
+		legacysoundstop = Unpooled.directBuffer(53, 53);
+		legacysoundstop.writeByte(0x19);
+		legacysoundstop.writeByte(33);
+		legacysoundstop.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
+		legacysoundstop.writeByte(0);
+		legacysoundstop.writeInt(0);
+		legacysoundstop.writeInt(Integer.MIN_VALUE);
+		legacysoundstop.writeInt(0);
+		legacysoundstop.writeFloat(1.0E9f);
+		legacysoundstop.writeByte(63);
+		legacysoundstop2 = Unpooled.unreleasableBuffer(legacysoundstop);
 	}
 
 	private final ConcurrentHashMap<UUID, ProxyConnection> players;
@@ -109,6 +112,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		if (version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
+		ByteBufAllocator allocator = connection.getChannel().alloc();
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
@@ -117,7 +121,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			if (!bytesoundnamelength)
 				++packetsize;
 			packetsize += songidb.length;
-			ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
+			ByteBuf buf = allocator.directBuffer(packetsize, packetsize);
 			
 			buf.writeByte(pid);
 			buf.writeByte(0x03);
@@ -136,7 +140,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		int packetsize = 16;
 		if (!bytesoundnamelength)
 			++packetsize;
-		ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
+		ByteBuf buf = allocator.directBuffer(packetsize, packetsize);
 		buf.writeByte(pid);
 		buf.writeBytes(stopsound);
 		buf.writeByte(0x00);

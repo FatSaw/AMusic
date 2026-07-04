@@ -9,21 +9,27 @@ import java.util.UUID;
 
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
-import com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier;
+import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.Channel;
 import me.bomb.amusic.PackSender;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
 
 public final class VelocityPackSender implements PackSender {
+	
+	private final static byte[] rpack;
+	
+	static {
+		rpack = new byte[] {0x08, 0x4D, 0x43, 0x7C, 0x52, 0x50, 0x61, 0x63, 0x6B};
+	}
 
 	private final ProxyServer server;
-	private final ChannelIdentifier identifier;
 	
 	protected VelocityPackSender(ProxyServer server) {
 		this.server = server;
-		this.identifier = new LegacyChannelIdentifier("MC|RPack");
 	}
 	
 	@Override
@@ -34,13 +40,24 @@ public final class VelocityPackSender implements PackSender {
 		}
 		Player player = oplayer.get();
 		if (player.getProtocolVersion().getProtocol() < 6) {
-			byte[] urlb = url.getBytes(StandardCharsets.UTF_8), buf = new byte[2 + urlb.length];
-			short length = (short) urlb.length;
-			System.arraycopy(urlb, 0, buf, 2, length);
-			urlb[0] = (byte) length;
-			length >>>= 8;
-			urlb[1] = (byte) length;
-			player.sendPluginMessage(identifier, buf);
+			final Channel channel = ((ConnectedPlayer) player).getConnection().getChannel();
+			final ByteBufAllocator allocator = channel.alloc();
+			byte[] urlb = url.getBytes(StandardCharsets.UTF_8);
+			int packetsize = urlb.length;
+			packetsize += 12;
+			ByteBuf buf = allocator.directBuffer(packetsize, packetsize);
+			buf.writeByte(0x17);
+			buf.writeBytes(rpack);
+			short ulength = (short) urlb.length;
+			buf.writeByte(ulength);
+			ulength >>>= 8;
+			buf.writeByte(ulength);
+			buf.writeBytes(urlb);
+			if (channel.isActive()) {
+				channel.writeAndFlush(buf);
+			} else {
+				buf.release();
+			}
 			return;
 		}
 		ResourcePackInfo info = ResourcePackInfo.resourcePackInfo(UUID.nameUUIDFromBytes(url.getBytes(StandardCharsets.UTF_8)), URI.create(url), fromBytesToHex(sha1));

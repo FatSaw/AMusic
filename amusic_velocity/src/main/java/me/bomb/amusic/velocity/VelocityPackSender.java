@@ -46,11 +46,10 @@ public final class VelocityPackSender implements PackSender {
 			int packetsize = urlb.length;
 			packetsize += 12;
 			ByteBuf buf = allocator.directBuffer(packetsize, packetsize);
-			buf.writeByte(0x17);
+			buf.writeByte(0x3F);
 			buf.writeBytes(rpack);
 			short ulength = (short) urlb.length;
-			buf.writeByte(ulength);
-			ulength >>>= 8;
+			buf.writeByte(ulength >>> 8);
 			buf.writeByte(ulength);
 			buf.writeBytes(urlb);
 			if (channel.isActive()) {

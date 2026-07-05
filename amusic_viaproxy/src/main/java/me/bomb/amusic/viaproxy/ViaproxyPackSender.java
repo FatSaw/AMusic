@@ -24,7 +24,7 @@ public final class ViaproxyPackSender implements PackSender {
     	byte id;
     	while(--i > -1) {
     		id = -1;
-    		if(i == 0x05) id = 0x17;
+    		if(i == 0x05) id = 0x3F;
     		if(i > 0x2e && i < 0x30) id = 0x48;
     		if(i > 0x6a && i < 0x13d) id = 0x32;
     		if(i > 0x14e && i < 0x150) id = 0x33;
@@ -77,8 +77,7 @@ public final class ViaproxyPackSender implements PackSender {
 			buf.writeByte(pid);
 			buf.writeBytes(rpack);
 			short ulength = (short) urlb.length;
-			buf.writeByte(ulength);
-			ulength >>>= 8;
+			buf.writeByte(ulength >>> 8);
 			buf.writeByte(ulength);
 			buf.writeBytes(urlb);
 			connection.sendRawPacket(buf);

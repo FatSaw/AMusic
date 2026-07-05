@@ -8,6 +8,7 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.Channel;
 import me.bomb.amusic.SoundStarter;
 import me.bomb.amusic.util.HexUtils;
 import net.raphimc.viaproxy.proxy.session.ProxyConnection;
@@ -57,12 +58,13 @@ public final class ViaproxySoundStarter implements SoundStarter {
 			return;
 		}
 		final int version = player.getClientVersion().getVersion();
-		UserConnection connection = player.getUserConnection();
 		int pid;
 		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
-		ByteBufAllocator allocator = connection.getChannel().alloc();
+		final Channel channel = player.getC2P();
+		final UserConnection connection = player.getUserConnection();
+		final ByteBufAllocator allocator = channel.alloc();
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
 		if(version > 760) packetsize += 2;
@@ -107,12 +109,13 @@ public final class ViaproxySoundStarter implements SoundStarter {
 			return;
 		}
 		final int version = player.getClientVersion().getVersion();
-		UserConnection connection = player.getUserConnection();
 		int pid;
 		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
-		ByteBufAllocator allocator = connection.getChannel().alloc();
+		final Channel channel = player.getC2P();
+		final UserConnection connection = player.getUserConnection();
+		final ByteBufAllocator allocator = channel.alloc();
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
 		if(version > 760) packetsize += 2;

@@ -8,6 +8,7 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.Channel;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.HexUtils;
 import me.bomb.amusic.util.SendSilence;
@@ -59,9 +60,9 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			return;
 		}
 		final int version = player.getClientVersion().getVersion();
-		UserConnection connection = player.getUserConnection();
+		final Channel channel = player.getC2P();
 		if (version < 110) {
-			new SendSilence(connection.getChannel(), version, (byte)5).run();
+			new SendSilence(channel, version, (byte)5).run();
 			try {
 				Thread.sleep(250L);
 			} catch (InterruptedException e) {
@@ -72,7 +73,8 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		if (version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
-		ByteBufAllocator allocator = connection.getChannel().alloc();
+		final UserConnection connection = player.getUserConnection();
+		final ByteBufAllocator allocator = channel.alloc();
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
@@ -93,7 +95,6 @@ public final class ViaproxySoundStopper implements SoundStopper {
 				buf.writeShort(w);
 			}
 			buf.writeBytes(songidb);
-
 			connection.sendRawPacket(buf);
 			return;
 		}

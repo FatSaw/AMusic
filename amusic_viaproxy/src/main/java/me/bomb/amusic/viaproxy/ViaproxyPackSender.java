@@ -9,6 +9,7 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.util.HexUtils;
 import net.raphimc.viaproxy.proxy.session.ProxyConnection;
@@ -63,12 +64,13 @@ public final class ViaproxyPackSender implements PackSender {
 			return;
 		}
 		final int version = player.getClientVersion().getVersion();
-		UserConnection connection = player.getUserConnection();
 		int pid;
 		if(version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
-		ByteBufAllocator allocator = connection.getChannel().alloc();
+		final Channel channel = player.getC2P();
+		final UserConnection connection = player.getUserConnection();
+		final ByteBufAllocator allocator = channel.alloc();
 		byte[] urlb = url.getBytes(StandardCharsets.UTF_8);
 		int packetsize = urlb.length;
 		if(version < 6) {

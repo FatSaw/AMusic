@@ -63,11 +63,14 @@ public final class SendSilence implements Runnable {
 
 	@Override
 	public void run() {
-		if (--this.remaining < 0 || !this.channel.isActive()) {
+		if (!this.channel.isActive()) {
 			return;
 		}
 		this.buf.readerIndex(0);
 		this.channel.writeAndFlush(this.buf, this.voidpromise);
+		if(--this.remaining < 0) {
+			return;
+		}
 		this.eventloop.schedule(this, 50L, TimeUnit.MILLISECONDS);
 	}
 

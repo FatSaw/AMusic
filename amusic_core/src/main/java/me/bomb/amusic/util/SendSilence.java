@@ -49,14 +49,13 @@ public final class SendSilence implements Runnable {
 	final EventLoop eventloop;
 	byte remaining;
 
-	public SendSilence(final Channel channel, final int version, byte remaining) {
+	public SendSilence(final Channel channel, final int version) {
 		ByteBuf buf;
 		if (version < 0 || version > 110 || (buf = version < 48 ? legacysoundstop1 : version > 106 ? legacysoundstop2 : null) == null) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
 		this.channel = channel;
 		this.buf = buf.retainedDuplicate();
-		this.remaining = remaining;
 		this.voidpromise = channel.voidPromise();
 		this.eventloop = channel.eventLoop();
 	}
@@ -68,10 +67,16 @@ public final class SendSilence implements Runnable {
 		}
 		this.buf.readerIndex(0);
 		this.channel.writeAndFlush(this.buf, this.voidpromise);
-		if(--this.remaining < 0) {
+		if(--this.remaining < 1) {
 			return;
 		}
 		this.eventloop.schedule(this, 50L, TimeUnit.MILLISECONDS);
+	}
+	
+	public long send() {
+		this.remaining = 5;
+		this.run();
+		return 250L;
 	}
 
 }

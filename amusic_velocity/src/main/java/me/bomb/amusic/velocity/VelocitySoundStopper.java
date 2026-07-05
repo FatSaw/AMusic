@@ -56,11 +56,10 @@ public final class VelocitySoundStopper implements SoundStopper {
 		}
 		Player player = oplayer.get();
 		final int version = player.getProtocolVersion().getProtocol();
-		if(version < 110) {
+		if (version < 110) {
 			final Channel channel = ((ConnectedPlayer) player).getConnection().getChannel();
-			new SendSilence(channel, version, (byte)5).run();
 			try {
-				Thread.sleep(250L);
+				Thread.sleep(new SendSilence(channel, version).send());
 			} catch (InterruptedException e) {
 			}
 			return;

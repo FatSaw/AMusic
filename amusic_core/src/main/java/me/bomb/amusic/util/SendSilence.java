@@ -50,8 +50,8 @@ public final class SendSilence implements Runnable {
 	byte remaining;
 
 	public SendSilence(final Channel channel, final int version, byte remaining) {
-		ByteBuf buf = version < 48 ? legacysoundstop1 : version > 106 ? legacysoundstop2 : null;
-		if (buf == null) {
+		ByteBuf buf;
+		if (version < 0 || version > 110 || (buf = version < 48 ? legacysoundstop1 : version > 106 ? legacysoundstop2 : null) == null) {
 			throw new IllegalStateException("Can not encode protocol ".concat(Integer.toString(version)));
 		}
 		this.channel = channel;

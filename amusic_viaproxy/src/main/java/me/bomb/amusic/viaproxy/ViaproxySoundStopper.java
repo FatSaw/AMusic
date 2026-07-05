@@ -62,9 +62,8 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		final int version = player.getClientVersion().getVersion();
 		final Channel channel = player.getC2P();
 		if (version < 110) {
-			new SendSilence(channel, version, (byte)5).run();
 			try {
-				Thread.sleep(250L);
+				Thread.sleep(new SendSilence(channel, version).send());
 			} catch (InterruptedException e) {
 			}
 			return;

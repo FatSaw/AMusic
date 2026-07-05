@@ -66,6 +66,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 				Thread.sleep(250L);
 			} catch (InterruptedException e) {
 			}
+			return;
 		}
 		int pid;
 		if (version < 0 || version >= packetid.length || (pid = packetid[version]) == -1) {

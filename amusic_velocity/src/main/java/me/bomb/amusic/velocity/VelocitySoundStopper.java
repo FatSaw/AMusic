@@ -10,10 +10,10 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.HexUtils;
+import me.bomb.amusic.util.SendSilence;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.sound.SoundStop;
@@ -22,7 +22,6 @@ public final class VelocitySoundStopper implements SoundStopper {
 	
 	private final static byte[] packetid;
 	private final static byte[] stopsound;
-	private final static ByteBuf legacysoundstop1, legacysoundstop2;
 	
 	static {
     	int i = 760;
@@ -41,29 +40,6 @@ public final class VelocitySoundStopper implements SoundStopper {
     	}
     	
     	stopsound = new byte[] {0x0C, 0x4D, 0x43, 0x7C, 0x53, 0x74, 0x6F, 0x70, 0x53, 0x6F, 0x75, 0x6E, 0x64};
-		ByteBuf legacysoundstop;
-		legacysoundstop = Unpooled.directBuffer(52, 52);
-		legacysoundstop.writeByte(0x29);
-		legacysoundstop.writeByte(33);
-		legacysoundstop.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
-		legacysoundstop.writeInt(0);
-    	legacysoundstop.writeInt(Integer.MIN_VALUE);
-    	legacysoundstop.writeInt(0);
-    	legacysoundstop.writeFloat(1.0E9f);
-    	legacysoundstop.writeByte((byte) 63);
-    	legacysoundstop1 = Unpooled.unreleasableBuffer(legacysoundstop);
-
-    	legacysoundstop = Unpooled.directBuffer(53, 53);
-    	legacysoundstop.writeByte(0x19);
-    	legacysoundstop.writeByte(33);
-    	legacysoundstop.writeBytes("minecraft:amusic.internal.silence".getBytes(StandardCharsets.US_ASCII));
-    	legacysoundstop.writeByte(0);
-    	legacysoundstop.writeInt(0);
-    	legacysoundstop.writeInt(Integer.MIN_VALUE);
-    	legacysoundstop.writeInt(0);
-    	legacysoundstop.writeFloat(1.0E9f);
-    	legacysoundstop.writeByte(63);
-    	legacysoundstop2 = Unpooled.unreleasableBuffer(legacysoundstop);
     }
 
 	private final ProxyServer server;
@@ -81,25 +57,11 @@ public final class VelocitySoundStopper implements SoundStopper {
 		Player player = oplayer.get();
 		final int version = player.getProtocolVersion().getProtocol();
 		if(version < 110) {
-			//There is no sound stop packet below protocol version 110, it still can be stopped by world rejoin or more than 4 sounds playing on the same time.
-			//4 silence sounds should be processed by client in different ticks
-			byte i = 5;
-			if(version < 48) {
-				while(--i > -1) {
-					((ConnectedPlayer) player).getConnection().write(legacysoundstop1);
-					try {
-						Thread.sleep(50);
-					} catch (InterruptedException e) {
-					}
-				}
-			} else if (version > 106) {
-				while(--i > -1) {
-					((ConnectedPlayer) player).getConnection().write(legacysoundstop2);
-					try {
-						Thread.sleep(50);
-					} catch (InterruptedException e) {
-					}
-				}
+			final Channel channel = ((ConnectedPlayer) player).getConnection().getChannel();
+			new SendSilence(channel, version, (byte)5).run();
+			try {
+				Thread.sleep(250L);
+			} catch (InterruptedException e) {
 			}
 			return;
 		}

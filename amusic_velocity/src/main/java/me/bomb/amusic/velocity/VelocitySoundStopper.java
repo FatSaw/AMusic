@@ -100,7 +100,7 @@ public final class VelocitySoundStopper implements SoundStopper {
 			}
 			return;
 		}
-		int packetsize = 16;
+		int packetsize = 16 + songidb.length;
 		if (!bytesoundnamelength)
 			++packetsize;
 		ByteBuf buf = allocator.directBuffer(packetsize, packetsize);

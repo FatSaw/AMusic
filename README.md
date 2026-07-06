@@ -2,21 +2,21 @@
 Music through resource pack
 ## Features:
 - Clientside, serverside caching
-- Addition to existing resourcepack
-- 5 repeat types (repeatone, repeatall, playone, playall, random)
-- Web sound uploader with clientside transcoding
+- Resourcepack merge (for versions before `1.20.3`)
+- Optional sound repeat, repeat types: (`repeatone`, `repeatall`, `playone`, `playall`, `random`)
 - Large number of supported versions `1.7.10` - `1.21.11`
-- Position and count selectors (bukkit only)
-- Volume control option `Voice` only `1.13+`
+- GeyserMC supported (single resourcepack compatible with java and bedrock, without sound data duplication)
+- Volume control in `Voice` sound setting (only for `1.13+`)
+- Web sound uploader with clientside transcoding
 
 ## Files and directories
 - `./config.yml` - configuration file
 - `./lang.yml` - localization file
-- `./resourcepack.zip` - default parent resourcepack file
+- `./resourcepack.zip` - default parent resourcepack file (used for resourcepack merge if exsist)
 - `./Music/` - music directory
 - `./Music/<playlist_name>/` - playlist directory
 - `./Music/<playlist_name>/<sound_name>` - sound
-- `./Music/<playlist_name>.zip` - playlist specific parent resourcepack file
+- `./Music/<playlist_name>.zip` - playlist specific parent resourcepack file (used for resourcepack merge if exsist)
 - `./Packed/` - packed resourcepacks directory
 - `./Packed/<uuid>.ampi` - packed resourcepack with info
 
@@ -41,7 +41,9 @@ Music through resource pack
 ### Selectors <playername>:
 - `@n` - update playlist
 - `@s` - self
-
+<details>
+<summary>Selector options</summary>
+  
 Argument format (`@p`, `@r`, `@a`): `[arg1,arg2,arg3,...]`
 - `loadmusic` `@s`, `@p`, `@r`, `@a`, `@n`
 - `playmusic` `@s`, `@p`, `@r`, `@a`
@@ -69,49 +71,25 @@ Args:
 Format: `<arg><operation><int_value>`
 Available operations: `=`
 Description: `Limits player count`
-
+</details>
 ### Commands for console without tab complete:
-`loadmusic @l` - get packed playlist(resourcepack) list
 
-`playmusic @l <playername>` - get loaded to player soundnames, currently playing sound name and time
+- `loadmusic @l` - get packed playlist(resourcepack) list
+- `playmusic @l <playername>` - get loaded to player soundnames, currently playing sound name and time
 
 ## Dependencies
 
-### Ffmpeg (optional)
-[Size reduced ffmpeg 7.0.1 building arguments Linux](/FFMPEG_BUILD.md)
+### GeyserMC (optional)
+- Viaproxy 3.x.x does not support optional dependency, to use viaproxy amusic implementation without GeyserMC need to remove depends from `viaproxy.yml` inside jar
+
+### FFmpeg (optional)
+- [Size reduced ffmpeg 7.0.1 building arguments Linux](/FFMPEG_BUILD.md)
+
+### FFmpeg.wasm
+- [source](https://github.com/FatSaw/ffmpeg.wasm)
+
 
 ## BUILD:
 
 1) Clone repository https://github.com/FatSaw/AMusic.git
 2) Build project with: `mvn package`
-
-## API:
-
-### AMusic core
-May be used to add amusic core into other plugin, or create multiple independent AMusic instances
-```
-AMusic api = new AMusic(ConfigOptions configoptions, SoundSource<?> source, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, ConcurrentHashMap<Object,InetAddress> playerips);
-api.enable(); //starts threads
-api.disable(); //stops threads
-```
-### For all operating modes
-```
-api.logout(UUID playeruuid); //Handle logout.
-api.getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer); //get playlists(resourcepacks)
-api.getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer); //get list of sounds in playlist "playlistname"
-api.getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer); //get list of sounds loaded to player with uuid "playeruuid"
-api.getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer); //get a list of sound lengths in playlist "playlistname"
-api.getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer); //get a list of sound lengths loaded to player with uuid "playeruuid"
-api.loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport); //pack, convert(if enabled), send playlist(resourcepack) to player with uuid "playeruuid" (if playeruuid is null, do not send)
-api.getPackName(UUID playeruuid, Consumer<String> resultConsumer); //get loaded playlist(resourcepack) name, of player with uuid "playeruuid" 
-api.setRepeatMode(UUID playeruuid, RepeatType repeattype); //set repeat mode "repeattype" to player with uuid "playeruuid"
-api.stopSound(UUID playeruuid); //stop sound for player with uuid "playeruuid"
-api.playSound(UUID playeruuid, String name); //start sound "name" to player with uuid "playeruuid"
-api.getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer); //get currently playing sound of player with uuid "playeruuid"
-api.getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer); //get currently playing sound size of player with uuid "playeruuid"
-api.getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer); //get currently playing sound remaining time of player with uuid "playeruuid"
-api.openUploadSession(String playlistname, Consumer<UUID> resultConsumer); //open upload session.
-api.getUploadSessions(Consumer<UUID[]> resultConsumer); //get upload sessions.
-api.closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer); //close upload session
-api.closeUploadSession(UUID token, boolean save); //close upload session
-```

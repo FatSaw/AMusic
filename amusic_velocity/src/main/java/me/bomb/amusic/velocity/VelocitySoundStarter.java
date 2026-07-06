@@ -68,7 +68,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 		final ByteBufAllocator allocator = channel.alloc();
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
-		if(version == 759) packetsize += 4;
+		if(version == 759) packetsize += 8;
 		if (version > 47) ++packetsize;
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
@@ -93,7 +93,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 		} else {
 			buf.writeFloat(1.0F);
 		}
-		if (version >= 759) {
+		if (version == 759) {
 			buf.writeLong(0L);
 		}
 		if (channel.isActive()) {
@@ -126,7 +126,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 		final ByteBufAllocator allocator = channel.alloc();
 		int packetsize = 19;
 		if(version > 209) packetsize += 3;
-		if(version == 759) packetsize += 4;
+		if(version == 759) packetsize += 8;
 		if (version > 47) ++packetsize;
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
@@ -151,7 +151,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 		} else {
 			buf.writeFloat(pitch);
 		}
-		if (version >= 759) {
+		if (version == 759) {
 			buf.writeLong(0L);
 		}
 		if (channel.isActive()) {

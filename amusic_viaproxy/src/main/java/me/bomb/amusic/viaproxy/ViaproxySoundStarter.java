@@ -68,7 +68,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
 		if(version > 760) packetsize += 2;
-		if(version > 758) packetsize += 4;
+		if(version > 758) packetsize += 8;
 		if(version > 209) packetsize += 3;
 		if (version > 47) ++packetsize;
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
@@ -119,7 +119,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
 		int packetsize = 19;
 		if(version > 760) packetsize += 2;
-		if(version > 758) packetsize += 4;
+		if(version > 758) packetsize += 8;
 		if(version > 209) packetsize += 3;
 		if (version > 47) ++packetsize;
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);

@@ -97,7 +97,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			connection.sendRawPacket(buf);
 			return;
 		}
-		int packetsize = 16;
+		int packetsize = 16 + songidb.length;
 		if (!bytesoundnamelength)
 			++packetsize;
 		ByteBuf buf = allocator.directBuffer(packetsize, packetsize);

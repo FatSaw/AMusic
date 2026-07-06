@@ -12,11 +12,11 @@ Music through resource pack
 ## Files and directories
 - `./config.yml` - configuration file
 - `./lang.yml` - localization file
-- `./resourcepack.zip` - default parent resourcepack file (used for resourcepack merge if exsist)
+- `./resourcepack.zip` - default parent resourcepack file (used for all resourcepacks merge if exsist)
 - `./Music/` - music directory
 - `./Music/<playlist_name>/` - playlist directory
 - `./Music/<playlist_name>/<sound_name>` - sound
-- `./Music/<playlist_name>.zip` - playlist specific parent resourcepack file (used for resourcepack merge if exsist)
+- `./Music/<playlist_name>.zip` - playlist specific parent resourcepack file (used for specific resourcepack merge if exsist)
 - `./Packed/` - packed resourcepacks directory
 - `./Packed/<uuid>.ampi` - packed resourcepack with info
 

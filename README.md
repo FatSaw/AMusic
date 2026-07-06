@@ -4,7 +4,8 @@ Music through resource pack
 - Clientside, serverside caching
 - Resourcepack merge (for versions before `1.20.3`)
 - Optional sound repeat, repeat types: (`repeatone`, `repeatall`, `playone`, `playall`, `random`)
-- Large number of supported versions `1.7.10` - `1.21.11`
+- Supported cores: `Bukkit`, `Glowstone` (1.12.2), `Sponge` (API version: `7.4`), `Velocity`, `ViaProxy`
+- Supported versions: `1.7.10` - `1.21.11`
 - GeyserMC supported (single resourcepack compatible with java and bedrock, without sound data duplication)
 - Volume control in `Voice` sound setting (only for `1.13+`)
 - Web sound uploader with clientside transcoding
@@ -80,13 +81,15 @@ Description: `Limits player count`
 ## Dependencies
 
 ### GeyserMC (optional)
+- [GeyserMC source](https://github.com/GeyserMC/Geyser)
 - Viaproxy 3.x.x does not support optional dependency, to use viaproxy amusic implementation without GeyserMC need to remove depends from `viaproxy.yml` inside jar
+
 
 ### FFmpeg (optional)
 - [Size reduced ffmpeg 7.0.1 building arguments Linux](/FFMPEG_BUILD.md)
 
 ### FFmpeg.wasm
-- [source](https://github.com/FatSaw/ffmpeg.wasm)
+- [FFmpeg.wasm source](https://github.com/FatSaw/ffmpeg.wasm)
 
 
 ## BUILD:

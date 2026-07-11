@@ -6,10 +6,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.function.Consumer;
 
+import org.geysermc.event.Event;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.event.EventBus;
 import org.geysermc.geyser.api.event.EventRegistrar;
 import org.geysermc.geyser.api.event.bedrock.SessionLoadResourcePacksEvent;
+import org.geysermc.geyser.api.event.lifecycle.GeyserDefineResourcePacksEvent;
 import org.geysermc.geyser.api.pack.PackCodec;
 import org.geysermc.geyser.api.pack.ResourcePack;
 import org.geysermc.geyser.api.pack.option.PriorityOption;
@@ -32,11 +34,38 @@ public final class GeyserHook {
 	public GeyserHook(Object plugin, Data datamanager) throws NoClassDefFoundError {
 		this.eventbus = GeyserApi.api().eventBus();
 		this.registrar = EventRegistrar.of(plugin);
-		this.eventbus.subscribe(this.registrar, SessionLoadResourcePacksEvent.class, new SessionLoadResourcePacksHandler(datamanager));
+		if(datamanager.lockwrite) {
+			this.eventbus.subscribe(this.registrar, GeyserDefineResourcePacksEvent.class, new GeyserDefineResourcePacksHandler(datamanager));
+		} else {
+			this.eventbus.subscribe(this.registrar, SessionLoadResourcePacksEvent.class, new SessionLoadResourcePacksHandler(datamanager));
+		}
 	}
 	
 	public void unregister() {
 		this.eventbus.unregisterAll(registrar);
+	}
+	
+	public final static class GeyserDefineResourcePacksHandler implements Consumer<GeyserDefineResourcePacksEvent> {
+
+		private final Data datamanager;
+		
+		protected GeyserDefineResourcePacksHandler(Data datamanager) {
+			this.datamanager = datamanager;
+		}
+		
+		@Override
+		public void accept(GeyserDefineResourcePacksEvent event) {
+			String[] playlists = this.datamanager.getPlaylists();
+			int i = playlists.length;
+			while(--i > -1) {
+				DataEntry entry = this.datamanager.getPlaylist(playlists[i]);
+				if(entry == null) {
+					continue;
+				}
+				ResourcePack pack = new BufPackCodec(entry, true).create();
+				event.register(pack, PriorityOption.NORMAL);
+			}
+		}
 	}
 	
 	public final static class SessionLoadResourcePacksHandler implements Consumer<SessionLoadResourcePacksEvent> {
@@ -56,52 +85,53 @@ public final class GeyserHook {
 				if(entry == null) {
 					continue;
 				}
-				ResourcePack pack = new BufPackCodec(entry).create();
+				ResourcePack pack = new BufPackCodec(entry, false).create();
 				event.register(pack, PriorityOption.NORMAL);
 			}
 		}
-		
-		public final static class BufPackCodec extends PackCodec {
+	}
+	
+	public final static class BufPackCodec extends PackCodec {
 
-			private final DataEntry entry;
-			private SeekableByteChannel cachedchannel = null;
+		private final DataEntry entry;
+		private final boolean threadsafe;
+		private SeekableByteChannel cachedchannel = null;
 
-			protected BufPackCodec(DataEntry entry) {
-				this.entry = entry;
-			}
-
-			@Override
-			public byte[] sha256() {
-				return this.entry.sha256;
-			}
-
-			@Override
-			public long size() {
-				return this.entry.size;
-			}
-
-			@Override
-			public SeekableByteChannel serialize() throws IOException {
-				return this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel;
-			}
-
-			@Override
-		    protected ResourcePack create() {
-				return createBuilder().build();
-		    }
-
-			@Override
-			protected Builder createBuilder() {
-				Version version = new Version(1, 0, 0);
-				Header header = new Header(entry.bhea, version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
-				Module module = new Module(entry.bres, version, "resources", "");
-				HashSet<Module> modules = new HashSet<>(1);
-				modules.add(module);
-				GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
-				return new GeyserResourcePack.Builder(this, manifest, entry.name);
-			}
-
+		protected BufPackCodec(DataEntry entry, boolean threadsafe) {
+			this.entry = entry;
+			this.threadsafe = threadsafe;
 		}
-		
+
+		@Override
+		public byte[] sha256() {
+			return this.entry.sha256;
+		}
+
+		@Override
+		public long size() {
+			return this.entry.size;
+		}
+
+		@Override
+		public SeekableByteChannel serialize() throws IOException {
+			return this.threadsafe || this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel;
+		}
+
+		@Override
+	    protected ResourcePack create() {
+			return createBuilder().build();
+	    }
+
+		@Override
+		protected Builder createBuilder() {
+			Version version = new Version(1, 0, 0);
+			Header header = new Header(entry.bhea, version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
+			Module module = new Module(entry.bres, version, "resources", "");
+			HashSet<Module> modules = new HashSet<>(1);
+			modules.add(module);
+			GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+			return new GeyserResourcePack.Builder(this, manifest, entry.name);
+		}
+
 	}
 }

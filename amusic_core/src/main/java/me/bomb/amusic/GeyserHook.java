@@ -114,7 +114,7 @@ public final class GeyserHook {
 
 		@Override
 		public SeekableByteChannel serialize() throws IOException {
-			return this.threadsafe || this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel;
+			return this.threadsafe ? new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel;
 		}
 
 		@Override

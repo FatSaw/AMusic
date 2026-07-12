@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.UUID;
 
 import me.bomb.amusic.util.AMusicLogger;
@@ -49,7 +50,7 @@ public final class DefaultDataEntry extends DataEntry {
 			return null;
 		}
 		byte[] filesha1 = sha1hash.digest(buf);
-		if (!MessageDigest.isEqual(filesha1, sha1)) {
+		if (!Arrays.equals(filesha1, sha1)) {
 			AMusicLogger.warn("Packed resourcepack \"".concat(storeid).concat("\" load fail (invalid checksum)"));
 			return null;
 		}

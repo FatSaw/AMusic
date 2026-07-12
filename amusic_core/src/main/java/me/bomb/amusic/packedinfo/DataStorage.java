@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.UUID;
 
@@ -179,7 +180,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 					return null;
 				}
 				byte[] filesha1 = sha1hash.digest(buf);
-				if(MessageDigest.isEqual(filesha1, sha1)) {
+				if(Arrays.equals(filesha1, sha1)) {
 					return dataentry;
 				} else {
 					AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid checksum)"));
@@ -215,7 +216,7 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 			return null;
 		}
 		byte[] filesha1 = sha1hash.digest(resource);
-		if(!MessageDigest.isEqual(filesha1, sha1)) {
+		if(!Arrays.equals(filesha1, sha1)) {
 			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid checksum)"));
 			return null;
 		}

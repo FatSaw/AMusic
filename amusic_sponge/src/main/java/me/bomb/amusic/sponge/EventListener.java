@@ -12,19 +12,16 @@ import org.spongepowered.api.event.entity.MoveEntityEvent;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.PositionTracker;
-import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.sponge.command.UploadmusicCommand;
 
 public final class EventListener {
 	private final AMusic amusic;
-	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final UploadmusicCommand uploadmusiccmd;
 	private final String joinplaylist;
-	protected EventListener(AMusic amusic, ResourceManager resourcemanager, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd, String joinplaylist) {
+	protected EventListener(AMusic amusic, PositionTracker positiontracker, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd, String joinplaylist) {
 		this.amusic = amusic;
-		this.resourcemanager = resourcemanager;
 		this.positiontracker = positiontracker;
 		this.playerips = playerips;
 		this.uploadmusiccmd = uploadmusiccmd;
@@ -41,8 +38,6 @@ public final class EventListener {
 		Player player = event.getTargetEntity();
 		UUID playeruuid = player.getUniqueId();
 		amusic.logout(playeruuid);
-		positiontracker.remove(playeruuid);
-		resourcemanager.remove(playeruuid);
 		if(uploadmusiccmd != null) uploadmusiccmd.logoutUploader(player);
 		if(playerips == null) return;
 		playerips.remove(player);

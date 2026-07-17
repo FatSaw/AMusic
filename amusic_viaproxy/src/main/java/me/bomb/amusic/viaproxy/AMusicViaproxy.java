@@ -15,7 +15,6 @@ import me.bomb.amusic.Configuration;
 import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
-import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ServerAMusic;
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.resourceserver.ResourceManager;
@@ -32,29 +31,32 @@ import me.bomb.amusic.viaproxy.command.LoadmusicCommand;
 import me.bomb.amusic.viaproxy.command.PlaymusicCommand;
 import me.bomb.amusic.viaproxy.command.RepeatCommand;
 import me.bomb.amusic.viaproxy.command.UploadmusicCommand;
+import net.lenni0451.lambdaevents.LambdaManager;
 import net.raphimc.viaproxy.ViaProxy;
 import net.raphimc.viaproxy.plugins.ViaProxyPlugin;
+import net.raphimc.viaproxy.plugins.events.ClientLoggedInEvent;
+import net.raphimc.viaproxy.plugins.events.ConsoleCommandEvent;
 import net.raphimc.viaproxy.proxy.session.ProxyConnection;
 
 public final class AMusicViaproxy extends ViaProxyPlugin {
 	
 	private static AMusic instance = null;
 	
-	private final org.apache.logging.log4j.Logger logger;
+	private final me.bomb.amusic.util.Logger logger;
 	
 	private AMusic amusic;
 	private ResourceManager resourcemanager;
 	private ConcurrentHashMap<UUID,ProxyConnection> players;
 	private ConcurrentHashMap<Object,InetAddress> playerips;
 	private boolean usecmd;
-	private PositionTracker positiontracker;
 	private String configerrors, uploaderhost, joinplaylist;
 	private GeyserHook geyserhook = null;
 	
 	public AMusicViaproxy() {
-		this.logger = LogManager.getLogger("AMusic");
-		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
-			private final org.apache.logging.log4j.Logger logger = AMusicViaproxy.this.logger;
+		this.logger = new me.bomb.amusic.util.Logger() {
+			
+			private final org.apache.logging.log4j.Logger logger = LogManager.getLogger("AMusic");
+			
 			@Override
 			public void warn(String msg) {
 				logger.warn(msg);
@@ -69,7 +71,8 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			public void error(String msg) {
 				logger.error(msg);
 			}
-		});
+		};
+		AMusicLogger.setLogger(this.logger);
 	}
 
 	@Override
@@ -82,6 +85,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		} catch (IOException e) {
 		}
 		Configuration config = new Configuration(fs, configfile, musicdir, packeddir, false, false);
+		
 		this.configerrors = config.errors;
 		if(config.use) {
 			try {
@@ -104,14 +108,12 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 			PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
 			if(config.connectuse) {
-				ServerAMusic amusic = new ServerAMusic(config, soundsource, packsource, packsender, new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players), playerips == null ? null : playerips.values());
+				ServerAMusic amusic = new ServerAMusic(this.logger, config, soundsource, packsource, packsender, new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
-				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
 			} else {
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players), playerips == null ? null : playerips.values());
+				LocalAMusic amusic = new LocalAMusic(this.logger, config, soundsource, packsource, packsender, new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players), playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
-				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
 			}
 			if(AMusicViaproxy.instance == null) {
@@ -124,7 +126,6 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			this.uploaderhost = null;
 			this.joinplaylist = null;
 			this.resourcemanager = null;
-			this.positiontracker = null;
 			this.amusic = null;
 		}
 		if(!this.configerrors.isEmpty()) {
@@ -135,14 +136,14 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			return;
 		}
 		ConcurrentHashMap<String, UUID> uuidByPlayername = new ConcurrentHashMap<String, UUID>(16,0.75f,1);
+		LambdaManager eventManager = ViaProxy.EVENT_MANAGER;
 		if(this.usecmd) {
 			Command loadmusic = new LoadmusicCommand(this.amusic, uuidByPlayername), playmusic = new PlaymusicCommand(this.amusic, uuidByPlayername, true), playmusicuntrackable = new PlaymusicCommand(this.amusic, uuidByPlayername, false), repeat = new RepeatCommand(this.amusic, uuidByPlayername), uploadmusic = new UploadmusicCommand(this.amusic, this.uploaderhost);
-			
-			ViaProxy.EVENT_MANAGER.register(new ConsoleCommandListener(this.logger, loadmusic, playmusic, playmusicuntrackable, repeat, uploadmusic));
+			eventManager.registerConsumer(new ConsoleCommandListener(this.logger, loadmusic, playmusic, playmusicuntrackable, repeat, uploadmusic), ConsoleCommandEvent.class);
 		}
 		
 		if(this.resourcemanager != null) {
-			ViaProxy.EVENT_MANAGER.register(new EventListener(this.amusic, resourcemanager, positiontracker, players, playerips, joinplaylist, uuidByPlayername));
+			eventManager.registerConsumer(new LoginLogoutHandler(this.amusic, players, playerips, joinplaylist, uuidByPlayername), ClientLoggedInEvent.class);
 		}
 		this.amusic.enable();
 		final Data data = ((LocalAMusic) this.amusic).datamanager;

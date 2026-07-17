@@ -1,15 +1,17 @@
 package me.bomb.amusic.viaproxy;
 
+import java.util.function.Consumer;
+
+import me.bomb.amusic.util.Logger;
 import me.bomb.amusic.viaproxy.command.Command;
-import net.lenni0451.lambdaevents.EventHandler;
 import net.raphimc.viaproxy.plugins.events.ConsoleCommandEvent;
 
-public final class ConsoleCommandListener {
+public final class ConsoleCommandListener implements Consumer<ConsoleCommandEvent> {
 	
-	private final org.apache.logging.log4j.Logger logger;
+	private final Logger logger;
 	private final Command loadmusic, playmusic, playmusicuntrackable, repeat, uploadmusic;
 	
-	public ConsoleCommandListener(org.apache.logging.log4j.Logger logger, Command loadmusic, Command playmusic, Command playmusicuntrackable, Command repeat, Command uploadmusic) {
+	public ConsoleCommandListener(Logger logger, Command loadmusic, Command playmusic, Command playmusicuntrackable, Command repeat, Command uploadmusic) {
 		this.logger = logger;
 		this.loadmusic = loadmusic;
 		this.playmusic = playmusic;
@@ -17,9 +19,9 @@ public final class ConsoleCommandListener {
 		this.repeat = repeat;
 		this.uploadmusic = uploadmusic;
 	}
-	
-	@EventHandler
-	public void onConsoleCommand(ConsoleCommandEvent event) {
+
+	@Override
+	public void accept(ConsoleCommandEvent event) {
 		String cmd = event.getCommand().toLowerCase();
 		if(cmd.equals("loadmusic")) {
 			loadmusic.handleConsole(this.logger, event.getArgs());

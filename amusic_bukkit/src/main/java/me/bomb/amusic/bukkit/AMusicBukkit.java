@@ -74,7 +74,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private GeyserHook geyserhook = null;
 
 	public AMusicBukkit() {
-		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
+		me.bomb.amusic.util.Logger logger = new me.bomb.amusic.util.Logger() {
 			java.util.logging.Logger logger = AMusicBukkit.this.getLogger();
 			@Override
 			public void warn(String msg) {
@@ -90,7 +90,8 @@ public final class AMusicBukkit extends JavaPlugin {
 			public void error(String msg) {
 				logger.severe(msg);
 			}
-		});
+		};
+		AMusicLogger.setLogger(logger);
 		final Server server = this.getServer();
 		byte ver = 127;
 		try {
@@ -173,7 +174,7 @@ public final class AMusicBukkit extends JavaPlugin {
 				Runtime runtime = Runtime.getRuntime();
 				SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
+				LocalAMusic amusic = new LocalAMusic(logger, config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

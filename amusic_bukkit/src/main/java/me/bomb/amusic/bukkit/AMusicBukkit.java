@@ -10,9 +10,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import org.bukkit.Server;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import me.bomb.amusic.AMusic;
@@ -36,6 +37,11 @@ import me.bomb.amusic.bukkit.command.RepeatTabComplete;
 import me.bomb.amusic.bukkit.command.SelectorProcessor;
 import me.bomb.amusic.bukkit.command.UploadmusicCommand;
 import me.bomb.amusic.bukkit.command.UploadmusicTabComplete;
+import me.bomb.amusic.bukkit.event.PlayerChangedWorldHandler;
+import me.bomb.amusic.bukkit.event.PlayerJoinHandler;
+import me.bomb.amusic.bukkit.event.PlayerQuitHandler;
+import me.bomb.amusic.bukkit.event.PlayerResourcePackStatusHandler;
+import me.bomb.amusic.bukkit.event.PlayerRespawnHandler;
 import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacyMessageSender_1_9_R2;
@@ -45,13 +51,12 @@ import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_7_R4;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_8_R3;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_9_R2;
 import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_10_R1;
-//import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_9_R2;
-//import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_10_R1;
 //import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_7_R4;
 //import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_8_R3;
+//import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_9_R2;
+//import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_10_R1;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_10_R1;
-import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.LocalConvertedSource;
 import me.bomb.amusic.source.LocalUnconvertedSource;
 import me.bomb.amusic.source.MusicdirFStaticPackSource;
@@ -67,11 +72,19 @@ public final class AMusicBukkit extends JavaPlugin {
 	
 	private final AMusic amusic;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	private final boolean waitacception, usecmd;
+	private final boolean usecmd;
 	private final String configerrors, uploaderhost, joinplaylist;
-	private final ResourceManager resourcemanager;
 	private final PositionTracker positiontracker;
 	private GeyserHook geyserhook = null;
+	
+	private final CommandExecutor loadmusiccmd, playmusiccmd, playmusicuntrackablecmd, repeatcmd, uploadmusiccmd;
+	private final TabCompleter loadmusictc, playmusictc, repeattc, uploadmusictc;
+	
+	private final PlayerJoinHandler playerjoin;
+	private final PlayerQuitHandler playerquit;
+	private final PlayerChangedWorldHandler playerchangedworld;
+	private final PlayerRespawnHandler playerrespawn;
+	private final PlayerResourcePackStatusHandler playerresourcepackstatus;
 
 	public AMusicBukkit() {
 		me.bomb.amusic.util.Logger logger = new me.bomb.amusic.util.Logger() {
@@ -110,6 +123,15 @@ public final class AMusicBukkit extends JavaPlugin {
 		boolean waitacception = ver == 7 ? false : true;
 		Configuration config = new Configuration(plugindir.getFileSystem(), configfile, musicdir, packeddir, waitacception, true);
 		this.configerrors = config.errors;
+		LoadmusicCommand loadmusiccmd = null;
+		PlaymusicCommand playmusiccmd = null;
+		PlaymusicCommand playmusicuntrackablecmd = null;
+		RepeatCommand repeatcmd = null;
+		UploadmusicCommand uploadmusiccmd = null;
+		LoadmusicTabComplete loadmusictc = null;
+		PlaymusicTabComplete playmusictc = null;
+		RepeatTabComplete repeattc = null;
+		UploadmusicTabComplete uploadmusictc = null;
 		if(config.use) {
 			try {
 				fsp.createDirectory(musicdir);
@@ -123,12 +145,27 @@ public final class AMusicBukkit extends JavaPlugin {
 			this.uploaderhost = config.uploadhost;
 			this.joinplaylist = config.joinplaylist;
 			if(config.connectuse) {
-				this.waitacception = false;
 				this.playerips = null;
 				ClientAMusic amusic = new ClientAMusic(config);
-				this.resourcemanager = null;
 				this.positiontracker = null;
 				this.amusic = amusic;
+				this.playerjoin = null;
+				this.playerquit = null;
+				this.playerchangedworld = null;
+				this.playerrespawn = null;
+				this.playerresourcepackstatus = null;
+				if(this.usecmd) {
+					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
+					loadmusiccmd = new LoadmusicCommand(server, amusic, selectorprocessor);
+					playmusiccmd = new PlaymusicCommand(server, amusic, selectorprocessor, true);
+					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, selectorprocessor, false);
+					repeatcmd = new RepeatCommand(server, amusic, selectorprocessor);
+					uploadmusiccmd = new UploadmusicCommand(amusic, uploaderhost);
+					loadmusictc = new LoadmusicTabComplete(server, amusic);
+					playmusictc = new PlaymusicTabComplete(server, amusic);
+					repeattc = new RepeatTabComplete(server);
+					uploadmusictc = new UploadmusicTabComplete(amusic);
+				}
 			} else {
 				PackSender packsender;
 				SoundStarter soundstarter;
@@ -169,15 +206,58 @@ public final class AMusicBukkit extends JavaPlugin {
 					soundstopper = new BukkitSoundStopper(server);
 				break;
 				}
-				this.waitacception = config.waitacception;
+				waitacception = config.waitacception;
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				Runtime runtime = Runtime.getRuntime();
 				SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
 				LocalAMusic amusic = new LocalAMusic(logger, config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
-				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;
+				if(this.usecmd) {
+					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
+					loadmusiccmd = new LoadmusicCommand(server, amusic, selectorprocessor);
+					playmusiccmd = new PlaymusicCommand(server, amusic, selectorprocessor, true);
+					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, selectorprocessor, false);
+					repeatcmd = new RepeatCommand(server, amusic, selectorprocessor);
+					uploadmusiccmd = new UploadmusicCommand(amusic, uploaderhost);
+					loadmusictc = new LoadmusicTabComplete(server, amusic);
+					playmusictc = new PlaymusicTabComplete(server, amusic);
+					repeattc = new RepeatTabComplete(server);
+					uploadmusictc = new UploadmusicTabComplete(amusic);
+				}
+				PlayerJoinHandler playerjoin = null;
+				PlayerQuitHandler playerquit = null;
+				PlayerChangedWorldHandler playerchangedworld = null;
+				PlayerRespawnHandler playerrespawn = null;
+				PlayerResourcePackStatusHandler playerresourcepackstatus = null;
+				try {
+					playerjoin = new PlayerJoinHandler(this, amusic, playerips, joinplaylist);
+				} catch (NoClassDefFoundError e) {
+				}
+				try {
+					playerquit = new PlayerQuitHandler(this, amusic, playerips, uploadmusiccmd);
+				} catch (NoClassDefFoundError e) {
+				}
+				try {
+					playerchangedworld = new PlayerChangedWorldHandler(this, positiontracker);
+				} catch (NoClassDefFoundError e) {
+				}
+				try {
+					playerrespawn = new PlayerRespawnHandler(this, positiontracker);
+				} catch (NoClassDefFoundError e) {
+				}
+				if(waitacception) {
+					try {
+						playerresourcepackstatus = new PlayerResourcePackStatusHandler(this, amusic.resourcemanager);
+					} catch (NoClassDefFoundError e) {
+					}
+				}
+				this.playerjoin = playerjoin;
+				this.playerquit = playerquit;
+				this.playerchangedworld = playerchangedworld;
+				this.playerrespawn = playerrespawn;
+				this.playerresourcepackstatus = playerresourcepackstatus;
 			}
 			MessageSender messagesender;
 			switch (ver) {
@@ -205,15 +285,27 @@ public final class AMusicBukkit extends JavaPlugin {
 				AMusicBukkit.instance = this.amusic;
 			}
 		} else {
-			this.waitacception = false;
 			this.usecmd = false;
 			this.playerips = null;
 			this.uploaderhost = null;
 			this.joinplaylist = null;
-			this.resourcemanager = null;
 			this.positiontracker = null;
 			this.amusic = null;
+			this.playerjoin = null;
+			this.playerquit = null;
+			this.playerchangedworld = null;
+			this.playerrespawn = null;
+			this.playerresourcepackstatus = null;
 		}
+		this.loadmusiccmd = loadmusiccmd;
+		this.playmusiccmd = playmusiccmd;
+		this.playmusicuntrackablecmd = playmusicuntrackablecmd;
+		this.repeatcmd = repeatcmd;
+		this.uploadmusiccmd = uploadmusiccmd;
+		this.loadmusictc = loadmusictc;
+		this.playmusictc = playmusictc;
+		this.repeattc = repeattc;
+		this.uploadmusictc = uploadmusictc;
 	}
 	
 	public final static AMusic API() {
@@ -231,26 +323,22 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(this.amusic == null) {
 			return;
 		}
-		UploadmusicCommand uploadmusiccmd = null;
 		if(this.usecmd) {
-			SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
-			PluginCommand loadmusiccommand = getCommand("loadmusic");
-			loadmusiccommand.setExecutor(new LoadmusicCommand(server, amusic, selectorprocessor));
-			loadmusiccommand.setTabCompleter(new LoadmusicTabComplete(server, amusic));
-			PlaymusicTabComplete pmtc = new PlaymusicTabComplete(server, amusic);
-			PluginCommand playmusiccommand = getCommand("playmusic");
-			playmusiccommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, true));
-			playmusiccommand.setTabCompleter(pmtc);
-			PluginCommand playmusicntrackablecommand = getCommand("playmusicuntrackable");
-			playmusicntrackablecommand.setExecutor(new PlaymusicCommand(server, amusic, selectorprocessor, false));
-			playmusicntrackablecommand.setTabCompleter(pmtc);
-			PluginCommand repeatcommand = getCommand("repeat");
-			repeatcommand.setExecutor(new RepeatCommand(server, amusic, selectorprocessor));
-			repeatcommand.setTabCompleter(new RepeatTabComplete(server));
-			PluginCommand uploadmusiccommand = getCommand("uploadmusic");
-			uploadmusiccmd = new UploadmusicCommand(amusic, uploaderhost);
-			uploadmusiccommand.setExecutor(uploadmusiccmd);
-			uploadmusiccommand.setTabCompleter(new UploadmusicTabComplete(amusic));
+			PluginCommand loadmusiccommand = this.getCommand("loadmusic");
+			loadmusiccommand.setExecutor(this.loadmusiccmd);
+			loadmusiccommand.setTabCompleter(this.loadmusictc);
+			PluginCommand playmusiccommand = this.getCommand("playmusic");
+			playmusiccommand.setExecutor(this.playmusiccmd);
+			playmusiccommand.setTabCompleter(this.playmusictc);
+			PluginCommand playmusicntrackablecommand = this.getCommand("playmusicuntrackable");
+			playmusicntrackablecommand.setExecutor(this.playmusicuntrackablecmd);
+			playmusicntrackablecommand.setTabCompleter(this.playmusictc);
+			PluginCommand repeatcommand = this.getCommand("repeat");
+			repeatcommand.setExecutor(this.repeatcmd);
+			repeatcommand.setTabCompleter(this.repeattc);
+			PluginCommand uploadmusiccommand = this.getCommand("uploadmusic");
+			uploadmusiccommand.setExecutor(this.uploadmusiccmd);
+			uploadmusiccommand.setTabCompleter(this.uploadmusictc);
 		}
 		if(playerips != null) {
 			playerips.clear();
@@ -258,12 +346,12 @@ public final class AMusicBukkit extends JavaPlugin {
 				playerips.put(player, player.getAddress().getAddress());
 			}
 		}
-		PluginManager pluginmanager = server.getPluginManager();
-		if(this.resourcemanager != null) {
-			pluginmanager.registerEvents(new EventListener(this.amusic, positiontracker, playerips, uploadmusiccmd, joinplaylist), this);
-			if(waitacception) {
-				pluginmanager.registerEvents(new PackStatusEventListener(resourcemanager), this);
-			}
+		if(this.amusic instanceof LocalAMusic) {
+			if(this.playerjoin != null) this.playerjoin.register();
+			if(this.playerquit != null) this.playerquit.register();
+			if(this.playerchangedworld != null) this.playerchangedworld.register();
+			if(this.playerrespawn != null) this.playerrespawn.register();
+			if(this.playerresourcepackstatus != null) this.playerresourcepackstatus.register();
 		}
 		this.amusic.enable();
 		if(this.amusic instanceof LocalAMusic) {
@@ -281,6 +369,13 @@ public final class AMusicBukkit extends JavaPlugin {
 		}
 		if(this.amusic == null) {
 			return;
+		}
+		if(this.amusic instanceof LocalAMusic) {
+			if(this.playerjoin != null) this.playerjoin.unregister();
+			if(this.playerquit != null) this.playerquit.unregister();
+			if(this.playerchangedworld != null) this.playerchangedworld.unregister();
+			if(this.playerrespawn != null) this.playerrespawn.unregister();
+			if(this.playerresourcepackstatus != null) this.playerresourcepackstatus.unregister();
 		}
 		this.amusic.disable();
 	}

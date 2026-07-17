@@ -57,6 +57,8 @@ public final class AMusicSponge7 {
 	private PositionTracker positiontracker;
 	private GeyserHook geyserhook = null;
 	
+	private final me.bomb.amusic.util.Logger amusiclogger;
+	
 	@Inject
 	private Logger logger;
 	
@@ -66,7 +68,7 @@ public final class AMusicSponge7 {
 	
 
 	public AMusicSponge7() {
-		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
+		this.amusiclogger = new me.bomb.amusic.util.Logger() {
 			org.slf4j.Logger logger = AMusicSponge7.this.logger;
 			@Override
 			public void warn(String msg) {
@@ -82,8 +84,8 @@ public final class AMusicSponge7 {
 			public void error(String msg) {
 				logger.error(msg);
 			}
-		});
-		
+		};
+		AMusicLogger.setLogger(amusiclogger);
 	}
 	
 	public final static AMusic API() {
@@ -132,7 +134,7 @@ public final class AMusicSponge7 {
 				Runtime runtime = Runtime.getRuntime();
 				SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
+				LocalAMusic amusic = new LocalAMusic(amusiclogger, config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

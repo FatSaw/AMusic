@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>net.raphimc</groupId>
 			<artifactId>ViaProxy</artifactId>
-			<version>3.4.11</version>
+			<version>3.4.12</version>
 			<scope>provided</scope>
 			<exclusions>
 				<exclusion>
@@ -35,7 +35,7 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-buffer</artifactId>
-			<version>4.2.4.Final</version>
+			<version>4.2.16.Final</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

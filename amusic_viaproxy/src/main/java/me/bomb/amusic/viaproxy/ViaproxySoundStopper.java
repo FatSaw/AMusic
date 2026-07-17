@@ -40,7 +40,8 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			if (i > 0x2fd && i < 0x300) id = 0x6A;
 			if (i > 0x2ff && i < 0x302) id = 0x71;
 			if (i > 0x301 && i < 0x305) id = 0x70;
-			if (i > 0x304 && i < 0x309) id = 0x75;
+			if (i > 0x304 && i < 0x307) id = 0x75;
+			if (i > 0x306 && i < 0x309) id = 0x77;
 			packetid[i] = id;
 		}
 

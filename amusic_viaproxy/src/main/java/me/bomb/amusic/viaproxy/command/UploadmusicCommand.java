@@ -3,11 +3,10 @@ package me.bomb.amusic.viaproxy.command;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import org.apache.logging.log4j.Logger;
-
 import com.viaversion.viaversion.api.connection.UserConnection;
 
 import me.bomb.amusic.AMusic;
+import me.bomb.amusic.util.Logger;
 
 public final class UploadmusicCommand implements Command {
 

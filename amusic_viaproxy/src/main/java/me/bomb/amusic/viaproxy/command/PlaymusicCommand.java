@@ -4,11 +4,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-import org.apache.logging.log4j.Logger;
-
 import com.viaversion.viaversion.api.connection.UserConnection;
 
 import me.bomb.amusic.AMusic;
+import me.bomb.amusic.util.Logger;
 
 public final class PlaymusicCommand implements Command {
 	

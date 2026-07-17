@@ -3,12 +3,11 @@ package me.bomb.amusic.viaproxy.command;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.logging.log4j.Logger;
-
 import com.viaversion.viaversion.api.connection.UserConnection;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.RepeatType;
+import me.bomb.amusic.util.Logger;
 
 public final class RepeatCommand implements Command {
 	

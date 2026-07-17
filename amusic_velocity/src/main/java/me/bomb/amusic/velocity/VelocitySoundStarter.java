@@ -27,7 +27,7 @@ public final class VelocitySoundStarter implements SoundStarter {
     	byte id;
     	while(--i > -1) {
     		id = -1;
-    		if(i > 0x4 && i < 0x30) id = 0x29;
+    		if(i > 0x03 && i < 0x30) id = 0x29;
     		if(i > 0x6a && i < 0x155) id = 0x19;
     		if(i > 0x188 && i < 0x195) id = 0x1A;
     		if(i > 0x1dc && i < 0x1f3) id = 0x19;

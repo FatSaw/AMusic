@@ -22,6 +22,7 @@ import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.util.ByteArraysOutputStream;
+import me.bomb.amusic.util.Logger;
 
 public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
@@ -31,8 +32,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private volatile boolean run;
 	private ServerSocket server;
 
-	public ServerAMusic(Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
-		super(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips);
+	public ServerAMusic(Logger logger, Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
+		super(logger, config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips);
 		this.hostip = config.connectifip;
 		this.remoteip = config.connectremoteip;
 		this.port = config.connectport;

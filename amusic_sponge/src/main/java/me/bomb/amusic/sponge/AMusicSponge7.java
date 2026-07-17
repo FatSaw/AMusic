@@ -181,7 +181,7 @@ public final class AMusicSponge7 {
 		}
 		
 		EventManager eventmanager =  Sponge.getEventManager();
-		eventmanager.registerListeners(this, new EventListener(this.amusic, resourcemanager, positiontracker, playerips, uploadmusiccommand, joinplaylist));
+		eventmanager.registerListeners(this, new EventListener(this.amusic, positiontracker, playerips, uploadmusiccommand, joinplaylist));
 		if(this.waitacception) {
 			eventmanager.registerListeners(this, new PackStatusEventListener(resourcemanager));
 		}

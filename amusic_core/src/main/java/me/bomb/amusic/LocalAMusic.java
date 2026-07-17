@@ -14,8 +14,11 @@ import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.source.PackSource;
 import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.uploader.UploadManager;
+import me.bomb.amusic.util.Logger;
 
 public class LocalAMusic implements AMusic {
+	
+	public final Logger logger;
 	public final SoundSource soundsource;
 	public final PackSource packsource;
 	public final PositionTracker positiontracker;
@@ -24,7 +27,8 @@ public class LocalAMusic implements AMusic {
 	public final UploadManager uploadermanager;
 	private final Executor executor;
 	
-	public LocalAMusic(Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
+	public LocalAMusic(Logger logger, Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
+		this.logger = logger;
 		this.soundsource = soundsource;
 		this.packsource = packsource;
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
@@ -50,6 +54,8 @@ public class LocalAMusic implements AMusic {
 	}
 	
 	public void logout(UUID playeruuid) {
+		positiontracker.remove(playeruuid);
+		resourcemanager.remove(playeruuid);
 	}
 	
 	@Override

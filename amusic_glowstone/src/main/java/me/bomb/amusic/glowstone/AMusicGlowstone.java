@@ -60,23 +60,24 @@ public final class AMusicGlowstone extends JavaPlugin {
 	private GeyserHook geyserhook = null;
 
 	public AMusicGlowstone() {
-		AMusicLogger.setLogger(new me.bomb.amusic.util.Logger() {
+		me.bomb.amusic.util.Logger logger = new me.bomb.amusic.util.Logger() {
 			java.util.logging.Logger logger = AMusicGlowstone.this.getLogger();
 			@Override
 			public void warn(String msg) {
-				logger.warning(msg);
+				this.logger.warning(msg);
 			}
 			
 			@Override
 			public void info(String msg) {
-				logger.info(msg);
+				this.logger.info(msg);
 			}
 			
 			@Override
 			public void error(String msg) {
-				logger.severe(msg);
+				this.logger.severe(msg);
 			}
-		});
+		};
+		AMusicLogger.setLogger(logger);
 		final Server server = this.getServer();
 		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
@@ -129,7 +130,7 @@ public final class AMusicGlowstone extends JavaPlugin {
 				Runtime runtime = Runtime.getRuntime();
 				SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
-				LocalAMusic amusic = new LocalAMusic(config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
+				LocalAMusic amusic = new LocalAMusic(logger, config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
 				this.resourcemanager = amusic.resourcemanager;
 				this.positiontracker = amusic.positiontracker;
 				this.amusic = amusic;

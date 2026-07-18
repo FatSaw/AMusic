@@ -159,9 +159,7 @@ public final class AMusicBukkit extends JavaPlugin {
 							field.setAccessible(true);
 							mapcommand = (HashMap<String, Command>) field.get(commandmap);
 						} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e3) {
-							e3.printStackTrace();
 						}
-						e2.printStackTrace();
 					}
 				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
 					e1.printStackTrace();

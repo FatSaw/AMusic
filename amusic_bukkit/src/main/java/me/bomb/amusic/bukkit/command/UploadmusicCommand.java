@@ -1,11 +1,12 @@
 package me.bomb.amusic.bukkit.command;
 
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -13,19 +14,20 @@ import me.bomb.amusic.AMusic;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.util.LangOptions.Placeholder;
 
-public final class UploadmusicCommand implements CommandExecutor {
+public final class UploadmusicCommand extends Command {
 	
 	private final AMusic amusic;
 	private final String uploaderhost;
 	private final ConcurrentHashMap<Player, UUID> uploaders = new ConcurrentHashMap<Player, UUID>();
 	
 	public UploadmusicCommand(AMusic amusic, String uploaderhost) {
+		super("uploadmusic");
 		this.amusic = amusic;
 		this.uploaderhost = uploaderhost;
 	}
-	
+
 	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+	public boolean execute(CommandSender sender, String commandLabel, String[] args) {
 		if(uploaderhost == null) {
 			LangOptions.uploadmusic_disabled.sendMsg(sender);
 			return true;
@@ -121,6 +123,61 @@ public final class UploadmusicCommand implements CommandExecutor {
 		}
 		LangOptions.uploadmusic_usage.sendMsg(sender);
 		return true;
+	}
+	
+	@Override
+	public java.util.List<String> tabComplete(CommandSender sender, String alias, String[] args) throws CommandException, IllegalArgumentException {
+		if (!sender.hasPermission("amusic.uploadmusic")) {
+			return null;
+		}
+		ArrayList<String> tabcomplete = new ArrayList<String>();
+		if (args.length == 0) {
+			tabcomplete.add("start");
+			tabcomplete.add("finish");
+			tabcomplete.add("drop");
+		}
+		if (args.length == 1) {
+			String arg0 = args[0].toLowerCase();
+			if ("start".startsWith(arg0)) {
+				tabcomplete.add("start");
+			}
+			if ("finish".startsWith(arg0)) {
+				tabcomplete.add("finish");
+			}
+			if ("drop".startsWith(arg0)) {
+				tabcomplete.add("drop");
+			}
+		}
+		if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
+			String arg0 = args[0].toLowerCase();
+			if ("finish".equals(arg0) || "drop".equals(arg0)) {
+				Consumer<UUID[]> consumer = new Consumer<UUID[]>() {
+					@Override
+					public void accept(UUID[] sessions) {
+						String arg1 = args[1].toUpperCase();
+						for(UUID token : sessions) {
+							String tokenstr = token.toString();
+							if(tokenstr.startsWith(arg1)) {
+								tabcomplete.add(tokenstr);
+							}
+						}
+						synchronized (tabcomplete) {
+							tabcomplete.notify();
+						}
+					}
+				};
+				boolean async = amusic.getUploadSessions(consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
+					}
+				}
+			}
+		}
+		return tabcomplete;
 	}
 	
 	public void logoutUploader(Player uploader) {

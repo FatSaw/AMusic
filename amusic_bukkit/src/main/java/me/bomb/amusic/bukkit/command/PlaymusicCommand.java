@@ -1,11 +1,12 @@
 package me.bomb.amusic.bukkit.command;
 
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.bukkit.Server;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
@@ -15,19 +16,21 @@ import me.bomb.amusic.AMusic;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.util.LangOptions.Placeholder;
 
-public final class PlaymusicCommand implements CommandExecutor {
+public final class PlaymusicCommand extends Command {
 	private final Server server;
 	private final AMusic amusic;
 	private final SelectorProcessor selectorprocessor;
 	private final boolean trackable;
 	public PlaymusicCommand(Server server, AMusic amusic, SelectorProcessor selectorprocessor, boolean trackable) {
+		super(trackable ? "playmusic" : "playmusicuntrackable");
 		this.server = server;
 		this.amusic = amusic;
 		this.selectorprocessor = selectorprocessor;
 		this.trackable = trackable;
 	}
+	
 	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+	public boolean execute(CommandSender sender, String commandLabel, String[] args) {
 		if(!sender.hasPermission("amusic.playmusic")) {
 			LangOptions.playmusic_nopermission.sendMsg(sender);
 			return true;
@@ -247,6 +250,86 @@ public final class PlaymusicCommand implements CommandExecutor {
 			LangOptions.playmusic_usage.sendMsg(sender);
 		}
 		return true;
+	}
+	
+	@Override
+	public java.util.List<String> tabComplete(CommandSender sender, String alias, String[] args) throws CommandException, IllegalArgumentException {
+		ArrayList<String> tabcomplete = new ArrayList<String>();
+		if (!sender.hasPermission("amusic.playmusic")) {
+			return null;
+		}
+		if (args.length == 1) {
+			if (sender instanceof Player) {
+				tabcomplete.add("@s");
+			}
+			if (sender.hasPermission("amusic.playmusic.other")) {
+				for (Player player : server.getOnlinePlayers()) {
+					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+						tabcomplete.add(player.getName());
+					}
+				}
+			}
+			return tabcomplete;
+		}
+		//TODO: Suggest with space limit for pre 1.13 clients to avoid wrong values
+		if (args.length > 1 && !args[0].equals("@l") && !args[0].equals("@p") && !args[0].equals("@r") && !args[0].equals("@a")) {
+			boolean selfsender = false;
+			if (args[0].equals("@s") && sender instanceof Player) {
+				args[0] = sender.getName();
+				selfsender = true;
+			}
+			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
+				Player target = server.getPlayerExact(args[0]);
+				if (target != null) {
+					Consumer<String[]> consumer = new Consumer<String[]>() {
+						@Override
+						public void accept(String[] soundnames) {
+							if (soundnames != null) {
+								int lastspace = -1;
+								if(args.length > 2) {
+									StringBuilder sb = new StringBuilder(args[1]);
+									for(int i = 2;i < args.length;++i) {
+										sb.append(' ');
+										sb.append(args[i]);
+									}
+									args[1] = sb.toString();
+									lastspace = args[1].lastIndexOf(' ');
+								}
+								++lastspace;
+								
+								if(lastspace == 0) {
+									for (String soundname : soundnames) {
+										if (soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+											tabcomplete.add(soundname);
+										}
+									}
+								} else {
+									for (String soundname : soundnames) {
+										if (lastspace < soundname.length() && soundname.startsWith(args[1]) && soundname.indexOf(0xA7) == -1) {
+											soundname = soundname.substring(lastspace);
+											tabcomplete.add(soundname);
+										}
+									}
+								}
+							}
+							synchronized (tabcomplete) {
+								tabcomplete.notify();
+							}
+						}
+					};
+					boolean async = amusic.getPlaylistSoundnames(target.getUniqueId(), true, consumer);
+					if(async) {
+						try {
+							synchronized (tabcomplete) {
+								tabcomplete.wait(200);
+							}
+						} catch (InterruptedException e) {
+						}
+					}
+				}
+			}
+		}
+		return tabcomplete;
 	}
 	
 	private void executeCommand(String soundname, UUID... targetuuids) {

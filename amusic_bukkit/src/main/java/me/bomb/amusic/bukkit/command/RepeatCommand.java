@@ -1,10 +1,11 @@
 package me.bomb.amusic.bukkit.command;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.bukkit.Server;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -12,16 +13,19 @@ import me.bomb.amusic.AMusic;
 import me.bomb.amusic.RepeatType;
 import me.bomb.amusic.util.LangOptions;
 
-public final class RepeatCommand implements CommandExecutor {
+public final class RepeatCommand extends Command {
 	private final Server server;
 	private final AMusic amusic;
 	private final SelectorProcessor selectorprocessor;
 	public RepeatCommand(Server server, AMusic amusic, SelectorProcessor selectorprocessor) {
+		super("repeat");
 		this.server = server;
 		this.amusic = amusic;
 		this.selectorprocessor = selectorprocessor;
 	}
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+	
+	@Override
+	public boolean execute(CommandSender sender, String commandLabel, String[] args) {
 		if (!sender.hasPermission("amusic.repeat")) {
 			LangOptions.repeat_nopermission.sendMsg(sender);
 			return true;
@@ -78,6 +82,45 @@ public final class RepeatCommand implements CommandExecutor {
 			LangOptions.repeat_usage.sendMsg(sender);
 		}
 		return true;
+	}
+	
+	@Override
+	public java.util.List<String> tabComplete(CommandSender sender, String alias, String[] args) throws CommandException, IllegalArgumentException {
+		if (!sender.hasPermission("amusic.repeat")) {
+			return null;
+		}
+		ArrayList<String> tabcomplete = new ArrayList<String>();
+		if (args.length == 1) {
+			if (sender instanceof Player) {
+				tabcomplete.add("@s");
+			}
+			if (sender.hasPermission("amusic.repeat.other")) {
+				for (Player player : server.getOnlinePlayers()) {
+					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
+						tabcomplete.add(player.getName());
+					}
+				}
+			}
+		}
+		if (args.length == 2) {
+			String arg1 = args[1].toLowerCase();
+			if ("repeatall".startsWith(arg1)) {
+				tabcomplete.add("repeatall");
+			}
+			if ("repeatone".startsWith(arg1)) {
+				tabcomplete.add("repeatone");
+			}
+			if ("playone".startsWith(arg1)) {
+				tabcomplete.add("playone");
+			}
+			if ("playall".startsWith(arg1)) {
+				tabcomplete.add("playall");
+			}
+			if ("random".startsWith(arg1)) {
+				tabcomplete.add("random");
+			}
+		}
+		return tabcomplete;
 	}
 	
 	private void executeCommand(CommandSender sender, String repeattype, UUID... targets) {

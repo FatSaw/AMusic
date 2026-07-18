@@ -26,7 +26,8 @@ public final class LegacyMessageSender_1_9_R2 implements MessageSender {
 	public final String getLocale(Object target) {
 		if(target instanceof CraftPlayer) {
 			CraftPlayer player = (CraftPlayer)target;
-			return player.getHandle().locale.toLowerCase();
+			String lang = player.getHandle().locale;
+			return lang == null ? null : lang.toLowerCase();
 		}
 		return null;
 	}

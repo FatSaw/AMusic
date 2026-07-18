@@ -131,7 +131,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 		messagesender.send(target, msg);
 	}
 	
-public static class Placeholder {
+	public static class Placeholder {
 		
 		private static final byte[] HEX = "0123456789abcdef".getBytes(StandardCharsets.US_ASCII);
 		

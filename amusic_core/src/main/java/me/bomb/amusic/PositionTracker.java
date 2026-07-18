@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import me.bomb.amusic.packedinfo.SoundInfo;
 
-public final class PositionTracker extends Thread {
+public final class PositionTracker implements Runnable {
 
 	private final ConcurrentHashMap<UUID, Playing> trackers = new ConcurrentHashMap<UUID, Playing>();
 	private final ConcurrentHashMap<UUID, RepeatType> repeaters = new ConcurrentHashMap<UUID, RepeatType>();
@@ -18,6 +18,8 @@ public final class PositionTracker extends Thread {
 	
 	private final SoundStarter soundstarter;
 	private final SoundStopper soundstopper;
+	
+	private Thread ticker;
 	
 	public void setPlaylistInfo(UUID playeruuid, String playlistname, SoundInfo[] soundinfo) {
 		playlistinfo.put(playeruuid, soundinfo);
@@ -58,14 +60,23 @@ public final class PositionTracker extends Thread {
 		this.soundstopper = soundstopper;
 	}
 
-	@Override
 	public void start() {
-		run = true;
-		super.start();
+		this.run = true;
+		this.ticker = new Thread(this);
+		this.ticker.start();
 	}
 
 	protected void end() {
-		run = false;
+		this.run = false;
+		Thread ticker = this.ticker;
+		if(ticker != null) {
+			ticker.interrupt();
+			this.ticker = null;
+		}
+		this.trackers.clear();
+		this.repeaters.clear();
+		this.playlistinfo.clear();
+		this.loadedplaylistnames.clear();
 	}
 
 	@Override

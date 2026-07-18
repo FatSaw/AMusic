@@ -18,13 +18,12 @@ import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.util.ByteArraysOutputStream;
 
-public final class ClientAMusic extends Thread implements AMusic {
+public final class ClientAMusic implements AMusic {
 	
 	private final InetAddress hostip, remoteip;
 	private final int port;
 	private final SocketFactory socketfactory;
 	private final Executor executor;
-	private volatile boolean run;
 	
 	public ClientAMusic(Configuration config) {
 		this.hostip = config.connectifip;
@@ -95,25 +94,10 @@ public final class ClientAMusic extends Thread implements AMusic {
 
 	@Override
 	public void enable() {
-		this.run = true;
-		start();
-	}
-	
-	@Override
-	public void run() {
-		while(run) {
-			try {
-				sleep(1000L);
-			} catch (InterruptedException e) {
-				interrupted();
-			}
-		}
 	}
 
 	@Override
 	public void disable() {
-		this.run = false;
-		this.interrupt();
 	}
 	
 	public void logout(UUID playeruuid) {

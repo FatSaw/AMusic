@@ -21,7 +21,7 @@ import me.bomb.amusic.http.ServerManager;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
-public final class UploadManager extends Thread {
+public final class UploadManager implements Runnable {
 	
 	private static final DirectoryStream.Filter<Path> filefilter = new DirectoryStream.Filter<Path>() {
     	@Override
@@ -36,6 +36,7 @@ public final class UploadManager extends Thread {
 	private final ConcurrentHashMap<UUID, UploadSession> sessions;
 	private final ServerManager server;
 	private volatile boolean run;
+	private Thread sessionexpire;
 	
 	public UploadManager(int expiretime, int limitsize, int limitcount, Path musicdir, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount) {
 		this.expiretime = expiretime;
@@ -47,15 +48,20 @@ public final class UploadManager extends Thread {
 		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new PageSender(this), connectcount);
 	}
 	
-	@Override
 	public void start() {
 		run = true;
-		super.start();
+		this.sessionexpire = new Thread(this);
+		this.sessionexpire.start();
 		server.start();
 	}
 
 	public void end() {
 		run = false;
+		Thread sessionexpire = this.sessionexpire;
+		if(sessionexpire != null) {
+			sessionexpire.interrupt();
+			this.sessionexpire = null;
+		}
 		server.end();
 	}
 	

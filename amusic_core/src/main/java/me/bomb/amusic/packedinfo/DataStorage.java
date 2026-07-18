@@ -520,11 +520,9 @@ final class DataStorage extends me.bomb.amusic.packedinfo.Data {
 	public void start() {
 	}
 	
-	/**
-	 * Ignored.
-	 */
 	@Override
 	public void end() {
+		options.clear();
 	}
 
 }

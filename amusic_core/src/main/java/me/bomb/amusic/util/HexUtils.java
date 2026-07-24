@@ -116,6 +116,68 @@ public final class HexUtils {
 		hexChars[0] = HEX[(int) along & 0x0F];
 		return new String(hexChars, US_ASCII);
 	}
+	public static byte[] fromUUIDBytesToUUIDHexBytes(byte[] bytes) {
+		if(bytes == null || bytes.length != 16) {
+			throw new IllegalArgumentException();
+		}
+		int i = 16, j = 36;
+		int v;
+		byte[] hexChars = new byte[36];
+
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		hexChars[--j] = '-';
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		hexChars[--j] = '-';
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		hexChars[--j] = '-';
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		hexChars[--j] = '-';
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		v = bytes[--i] & 0xFF;
+		hexChars[--j] = HEX[v & 0x0F];
+		hexChars[--j] = HEX[v >>> 4];
+		return hexChars;
+	}
 	public static String getHex(byte abyte) {
 		return new String(new byte[] {HEX[abyte & 0x0F]}, US_ASCII);
 	}

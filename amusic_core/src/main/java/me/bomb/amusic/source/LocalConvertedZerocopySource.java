@@ -365,17 +365,6 @@ public final class LocalConvertedZerocopySource {
 		if(resultthreadcount > threadcountlimit) resultthreadcount = threadcountlimit;
 		if(resultthreadcount < 1) resultthreadcount = 1;
 		ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(count, false);
-		ThreadPoolExecutor executor = null;
-		try {
-			executor = new ThreadPoolExecutor(resultthreadcount, resultthreadcount, 0, TimeUnit.MILLISECONDS, queue);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			if(executor != null) {
-				executor.shutdownNow();
-			}
-			e.printStackTrace();
-			return null;
-		}
-		
 		totalsize += 30 * count; //ZIP LOCAL SOUND HEADERS
 		int soundsjsonentryoffset = totalsize;
 		totalsize += 255 * count; //18 + 42 + 118 + 42 + 35 = 255 JAVA SOUNDLIST ENTRY
@@ -443,7 +432,9 @@ public final class LocalConvertedZerocopySource {
 			soundsjsonentryoffset += 255;
 			sounddefenitionsentryoffset += 308;
 		}
-		executor.prestartAllCoreThreads(); 
+		ThreadPoolExecutor executor = new ThreadPoolExecutor(resultthreadcount, resultthreadcount, 0, TimeUnit.MILLISECONDS, queue);
+		executor.shutdown();
+		executor.prestartAllCoreThreads();
 		buf = "\t\"amusic.internal.silence\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"name\": \"minecraft:amusic/silence\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t}\n}".getBytes(StandardCharsets.US_ASCII); //145
 		System.arraycopy(buf, 0, resourcepack, soundsjsonentryoffset, buf.length);
 		buf = "\t\t\"amusic.internal.silence\": {\n\t\t\t\"category\": \"voice\",\n\t\t\t\"sounds\": [\n\t\t\t\t{\n\t\t\t\t\t\"name\": \"sounds/amusic/silence\",\n\t\t\t\t\t\"stream\": true\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t}\n}".getBytes(StandardCharsets.US_ASCII); //153
@@ -461,7 +452,6 @@ public final class LocalConvertedZerocopySource {
 		offset += 153;
 		soundsjsonentryoffset = soundsjsonentryoffset - soundsjsonziplocalentryoffset;
 		soundsjsonentryoffset -= 30;
-		executor.shutdown();
 		try {
 			if(!executor.awaitTermination(1, TimeUnit.MINUTES)) {
 				executor.shutdownNow();

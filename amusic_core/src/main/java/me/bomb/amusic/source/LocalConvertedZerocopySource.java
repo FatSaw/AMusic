@@ -23,7 +23,7 @@ import me.bomb.amusic.util.HexUtils;
 
 public final class LocalConvertedZerocopySource {
 	
-private final static byte[] silencesound, silencesoundglobalheader, packmcmeta, packmcmetaglobalheader, manifestjson, manifestjsonglobalheader;
+	private final static byte[] silencesound, silencesoundglobalheader, packmcmeta, packmcmetaglobalheader, manifestjson, manifestjsonglobalheader;
 	
 	static {
 		int size = 2983;
@@ -235,7 +235,6 @@ private final static byte[] silencesound, silencesoundglobalheader, packmcmeta, 
 		manifestjsonglobalheader[++j] = 0x00;
 		manifestjsonglobalheader[++j] = 0x14;
 		j += 13;
-		
 		manifestjson[++i] = 0x50;
 		manifestjson[++i] = 0x4b;
 		manifestjson[++i] = 0x03;
@@ -656,7 +655,7 @@ private final static byte[] silencesound, silencesoundglobalheader, packmcmeta, 
 		b = (byte) (v & 0xFF);
 		resourcepack[++globalheaderoffset] = b;
 		buf = "sounds/sound_definitions.json".getBytes(StandardCharsets.US_ASCII); //29
-		System.arraycopy(buf, 0, resourcepack, 1+globalheaderoffset, buf.length);
+		System.arraycopy(buf, 0, resourcepack, ++globalheaderoffset, buf.length);
 		globalheaderoffset += buf.length;
 		buf = null;
 		this.sha256hash.update(resourcepack, 0, bedrockpackidlength);
@@ -673,12 +672,25 @@ private final static byte[] silencesound, silencesoundglobalheader, packmcmeta, 
 		UUID bres = new UUID((buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56, (buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56);
 
 		System.arraycopy(packmcmeta, 0, resourcepack, offset, packmcmeta.length);
+		v = offset;
 		offset += packmcmeta.length;
-		System.arraycopy(packmcmetaglobalheader, 0, resourcepack, 1+globalheaderoffset, packmcmetaglobalheader.length);
-		globalheaderoffset += packmcmetaglobalheader.length;
+		System.arraycopy(packmcmetaglobalheader, 0, resourcepack, globalheaderoffset, packmcmetaglobalheader.length);
+		globalheaderoffset += 41;
+		b = (byte) (v & 0xFF);
+		resourcepack[++globalheaderoffset] = b;
+		v >>>= 8;
+		b = (byte) (v & 0xFF);
+		resourcepack[++globalheaderoffset] = b;
+		v >>>= 8;
+		b = (byte) (v & 0xFF);
+		resourcepack[++globalheaderoffset] = b;
+		v >>>= 8;
+		b = (byte) (v & 0xFF);
+		resourcepack[++globalheaderoffset] = b;
+		globalheaderoffset += 12;
 		
 		System.arraycopy(manifestjson, 0, resourcepack, offset, manifestjson.length);
-		System.arraycopy(manifestjsonglobalheader, 0, resourcepack, 1+globalheaderoffset, manifestjsonglobalheader.length);
+		System.arraycopy(manifestjsonglobalheader, 0, resourcepack, globalheaderoffset, manifestjsonglobalheader.length);
 		
 		System.arraycopy(bhea.toString().getBytes(StandardCharsets.US_ASCII), 0, resourcepack, offset + 143, 36);
 		System.arraycopy(bres.toString().getBytes(StandardCharsets.US_ASCII), 0, resourcepack, offset + 299, 36);
@@ -718,7 +730,7 @@ private final static byte[] silencesound, silencesoundglobalheader, packmcmeta, 
 		v >>>= 8;
 		b = (byte) (v & 0xFF);
 		resourcepack[++globalheaderoffset] = b;
-		globalheaderoffset += 14;
+		globalheaderoffset += 13;
 		
 		offset += manifestjson.length;
 		

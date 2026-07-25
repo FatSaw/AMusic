@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.function.Consumer;
 
-import org.geysermc.event.Event;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.event.EventBus;
 import org.geysermc.geyser.api.event.EventRegistrar;

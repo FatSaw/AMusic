@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
-import com.velocitypowered.api.event.EventHandler;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.player.PlayerResourcePackStatusEvent;
@@ -45,7 +45,7 @@ import me.bomb.amusic.velocity.event.LoginHandler;
 import me.bomb.amusic.velocity.event.PlayerResourcePackStatusHandler;
 import me.bomb.amusic.velocity.event.ProxyShutdownHandler;
 
-public final class AMusicVelocity implements EventHandler<ProxyInitializeEvent> {
+public final class AMusicVelocity {
 	
 	private final ProxyServer server;
 	private final Configuration config;
@@ -118,8 +118,8 @@ public final class AMusicVelocity implements EventHandler<ProxyInitializeEvent> 
     }
 
 
-	@Override
-	public void execute(ProxyInitializeEvent event) {
+	@Subscribe
+	public void onProxyInitialize(ProxyInitializeEvent event) {
 		this.amusic.enable();
 		GeyserHook geyser = null;
 		try {

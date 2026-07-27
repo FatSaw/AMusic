@@ -18,7 +18,5 @@
 		<module>amusic_velocity</module>
 		<module>amusic_viaproxy</module>
 		<module>amusic_bukkit</module>
-		<module>amusic_glowstone</module>
-		<module>amusic_sponge</module>
 	</modules>
 </project>

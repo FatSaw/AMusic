@@ -8,19 +8,21 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLException;
 
+import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.packedinfo.SoundSource;
+import me.bomb.amusic.packedinfo.SourceEntry;
 import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
-import me.bomb.amusic.source.PackSource;
-import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.ByteArraysOutputStream;
 import me.bomb.amusic.util.Logger;
 
@@ -28,20 +30,20 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
 	private final int port, backlog;
 	private final ServerSocketFactory connectserverfactory;
-	private final Executor serverexecutor;
 	private volatile boolean run;
 	private ServerSocket server;
-
-	public ServerAMusic(Logger logger, Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
-		super(logger, config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips);
-		this.hostip = config.connectifip;
-		this.remoteip = config.connectremoteip;
-		this.port = config.connectport;
-		this.backlog = config.connectbacklog;
-		this.connectserverfactory = config.connectserverfactory;
-		this.serverexecutor = config.serverexecutor;
-	}
+	private final Executor serverexecutor;
 	
+	public ServerAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, UploadManager uploadermanager, InetAddress hostip, InetAddress remoteip, int port, int backlog, ServerSocketFactory connectserverfactory, Executor serverexecutor) {
+		super(logger, executor, soundsource, positiontracker, resourcemanager, datamanager, uploadermanager);
+		this.hostip = hostip;
+		this.remoteip = remoteip;
+		this.port = port;
+		this.backlog = backlog;
+		this.connectserverfactory = connectserverfactory;
+		this.serverexecutor = serverexecutor;
+	}
+
 	@Override
 	public void enable() {
 		super.enable();

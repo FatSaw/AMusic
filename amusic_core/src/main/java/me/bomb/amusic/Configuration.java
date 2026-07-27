@@ -40,7 +40,7 @@ public final class Configuration {
 	
 	public final Executor executor, serverexecutor, sendpackexecutorchecker, sendpackexecutorsender;
 	
-	public final boolean use, usecmd, uploaduse, connectuse, encoderuse, uploadhttps, connecttls;
+	public final boolean use, usecmd, uploaduse, connectuse, uploadhttps, connecttls;
 	
 	public final String uploadhost, sendpackhost, joinplaylist;
 	public final InetAddress sendpackifip, uploadifip, connectifip, connectremoteip;
@@ -50,21 +50,16 @@ public final class Configuration {
 	
 	public final boolean uploadstrictaccess, sendpackstrictaccess;
 	
-	public final Path encoderbinary;
-	
-	public final boolean processpack, storepacked, servercache, clientcache, waitacception;
+	public final boolean processpack, storepacked, waitacception;
 	public final int uploadlifetime, uploadlimitsize, uploadlimitcount, packsizelimit;
 	public final short packthreadlimitcount;
 	public final float packthreadcoefficient;
 	
-	public final byte encoderchannels;
-	public final int encoderbitrate, encodersamplingrate;
+	public final byte[] tokensalt;
+	public final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
+	public final SocketFactory connectsocketfactory;
 	
-	protected final byte[] tokensalt;
-	protected final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
-	protected final SocketFactory connectsocketfactory;
-	
-	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean encoderuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, Path encoderbinary, boolean processpack, boolean storepacked, boolean servercache, boolean clientcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte encoderchannels, int encoderbitrate, int encodersamplingrate, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, boolean processpack, boolean storepacked, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -76,7 +71,6 @@ public final class Configuration {
 		this.usecmd = usecmd;
 		this.uploaduse = uploaduse;
 		this.connectuse = connectuse;
-		this.encoderuse = encoderuse;
 		this.uploadhttps = uploadhttps;
 		this.connecttls = connecthttps;
 		this.uploadhost = uploadhost;
@@ -96,11 +90,8 @@ public final class Configuration {
 		this.uploadtimeout = uploadtimeout;
 		this.uploadstrictaccess = uploadstrictaccess;
 		this.sendpackstrictaccess = sendpackstrictaccess;
-		this.encoderbinary = encoderbinary;
 		this.processpack = processpack;
 		this.storepacked = storepacked;
-		this.servercache = servercache;
-		this.clientcache = clientcache;
 		this.waitacception = waitacception;
 		this.uploadlifetime = uploadlifetime;
 		this.uploadlimitsize = uploadlimitsize;
@@ -108,9 +99,6 @@ public final class Configuration {
 		this.packsizelimit = packsizelimit;
 		this.packthreadlimitcount = packthreadlimitcount;
 		this.packthreadcoefficient = packthreadcoefficient;
-		this.encoderchannels = encoderchannels;
-		this.encoderbitrate = encoderbitrate;
-		this.encodersamplingrate = encodersamplingrate;
 		this.tokensalt = tokensalt;
 		this.sendpackserverfactory = sendpackserverfactory;
 		this.uploadserverfactory = uploadserverfactory;
@@ -179,7 +167,6 @@ public final class Configuration {
 			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
 			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
-			this.encoderuse = sc.getBooleanOrError("amusic\0encoder\0use", errors);
 			String executorcfg = sc.getStringOrDefault("amusic\0executor", EMPTY);
 			ExecutorConfiguration executorconfig = executorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0executor") : new ExecutorConfiguration("executor_".concat(executorcfg).concat(".yml"));
 			if(executorconfig.errors.length() != 0) {
@@ -499,25 +486,6 @@ public final class Configuration {
 				this.connectserverfactory = null;
 				this.connectsocketfactory = null;
 			}
-			if(this.encoderuse) {
-				final String ffmpegpath = sc.getStringOrError("amusic\0encoder\0path", errors);
-				Path ffmpegfile = null;
-				try {
-					ffmpegfile = fs.getPath(ffmpegpath);
-				} catch (InvalidPathException e) {
-					appendError("FFmpeg binary path invalid", errors);
-				}
-				this.encoderbinary = ffmpegfile;
-				this.encoderbitrate = sc.getIntOrError("amusic\0encoder\0bitrate", errors);
-				int channels = sc.getIntOrError("amusic\0encoder\0channels", errors);
-				this.encoderchannels = (byte) channels; 
-				this.encodersamplingrate = sc.getIntOrError("amusic\0encoder\0samplingrate", errors);
-			} else {
-				this.encoderbinary = null;
-				this.encoderbitrate = 0;
-				this.encoderchannels = 0;
-				this.encodersamplingrate = 0;
-			}
 			this.processpack = sc.getBooleanOrError("amusic\0resourcepack\0processpack", errors);
 			this.packsizelimit = sc.getIntOrError("amusic\0resourcepack\0sizelimit", errors);
 			this.joinplaylist = sc.getStringOrDefault("amusic\0resourcepack\0joinplaylist", null);
@@ -528,9 +496,6 @@ public final class Configuration {
 			this.packthreadlimitcount = (short) packthreadlimitcount;
 			this.packthreadcoefficient = sc.getFloatOrError("amusic\0resourcepack\0packthread\0coefficient", errors);
 			this.storepacked = sc.getBooleanOrError("amusic\0resourcepack\0cache\0storepacked", errors);
-			this.servercache = sc.getBooleanOrError("amusic\0resourcepack\0cache\0server", errors);
-			this.clientcache = sc.getBooleanOrError("amusic\0resourcepack\0cache\0client", errors);
-			
 		} else {
 			this.use = false;
 			this.usecmd = false;
@@ -540,7 +505,6 @@ public final class Configuration {
 			this.serverexecutor = null;
 			this.uploaduse = false;
 			this.connectuse = false;
-			this.encoderuse = false;
 			this.uploadhost = null;
 			this.uploadhttps = false;
 			this.sendpackserverfactory = null;
@@ -570,18 +534,12 @@ public final class Configuration {
 			this.connectbacklog = 0;
 			this.connectserverfactory = null;
 			this.connectsocketfactory = null;
-			this.encoderbinary = null;
-			this.encoderbitrate = 0;
-			this.encoderchannels = 0;
-			this.encodersamplingrate = 0;
 			this.processpack = false;
 			this.packsizelimit = 0;
 			this.joinplaylist = null;
 			this.packthreadlimitcount = 0;
 			this.packthreadcoefficient = 0;
 			this.storepacked = false;
-			this.servercache = false;
-			this.clientcache = false;
 		}
 		this.errors = errors.toString();
 	}

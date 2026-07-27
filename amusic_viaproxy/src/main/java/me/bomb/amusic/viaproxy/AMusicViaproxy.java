@@ -15,16 +15,12 @@ import me.bomb.amusic.Configuration;
 import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
+import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ServerAMusic;
 import me.bomb.amusic.packedinfo.Data;
+import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.source.LocalConvertedSource;
-import me.bomb.amusic.source.LocalUnconvertedSource;
-import me.bomb.amusic.source.MusicdirFStaticPackSource;
-import me.bomb.amusic.source.MusicdirPackSource;
-import me.bomb.amusic.source.PackSource;
-import me.bomb.amusic.source.SoundSource;
-import me.bomb.amusic.source.StaticPackSource;
+import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.viaproxy.command.Command;
 import me.bomb.amusic.viaproxy.command.LoadmusicCommand;
@@ -77,7 +73,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 
 	@Override
 	public void onEnable() {
-		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
+		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
 		try {
@@ -104,17 +100,15 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 
 			PackSender packsender = new ViaproxyPackSender(this.players);
 	        
-			Runtime runtime = Runtime.getRuntime();
-			SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
-			PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
+			LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+			PositionTracker positiontracker = new PositionTracker(new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players));
+			ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+			Data datamanager = Data.getNoStorage(!config.processpack, lczs);
+			UploadManager uploadmanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips.values() : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 			if(config.connectuse) {
-				ServerAMusic amusic = new ServerAMusic(this.logger, config, soundsource, packsource, packsender, new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players), playerips == null ? null : playerips.values());
-				this.resourcemanager = amusic.resourcemanager;
-				this.amusic = amusic;
+				this.amusic = new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
 			} else {
-				LocalAMusic amusic = new LocalAMusic(this.logger, config, soundsource, packsource, packsender, new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players), playerips == null ? null : playerips.values());
-				this.resourcemanager = amusic.resourcemanager;
-				this.amusic = amusic;
+				this.amusic = new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
 			}
 			if(AMusicViaproxy.instance == null) {
 				AMusicViaproxy.instance = this.amusic;

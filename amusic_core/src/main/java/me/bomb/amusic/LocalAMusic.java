@@ -1,42 +1,48 @@
 package me.bomb.amusic;
 
-import java.net.InetAddress;
-import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.SoundInfo;
+import me.bomb.amusic.packedinfo.SoundSource;
+import me.bomb.amusic.packedinfo.SourceEntry;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.source.PackSource;
-import me.bomb.amusic.source.SoundSource;
 import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.Logger;
 
 public class LocalAMusic implements AMusic {
 	
 	public final Logger logger;
-	public final SoundSource soundsource;
-	public final PackSource packsource;
+	public final SoundSource<? extends SourceEntry> soundsource;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final Data datamanager;
 	public final UploadManager uploadermanager;
 	private final Executor executor;
 	
-	public LocalAMusic(Logger logger, Configuration config, SoundSource soundsource, PackSource packsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
+	public LocalAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, UploadManager uploadermanager) {
 		this.logger = logger;
 		this.soundsource = soundsource;
-		this.packsource = packsource;
+		this.positiontracker = positiontracker;
+		this.resourcemanager = resourcemanager;
+		this.datamanager = datamanager;
+		this.uploadermanager = uploadermanager;
+		this.executor = executor;
+	}
+	
+	/*public LocalAMusic(Logger logger, Configuration config, SoundSource<?> soundsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
+		this.logger = logger;
+		this.soundsource = soundsource;
 		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
 		this.resourcemanager = new ResourceManager(packsender, this.positiontracker, config.sendpackhost, config.packsizelimit, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
-		this.datamanager = config.storepacked ? Data.getDefault(soundsource, packsource, !config.processpack, config.servercache, config.packeddir) : Data.getNoStorage(this.soundsource, this.packsource, !config.processpack, config.servercache);
+		this.datamanager = Data.getNoStorage(!config.processpack, soundsource);
 		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 		this.executor = config.executor;
-	}
+	}*/
 	
 	public void enable() {
 		positiontracker.start();

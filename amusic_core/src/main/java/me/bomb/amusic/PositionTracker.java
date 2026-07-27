@@ -55,7 +55,7 @@ public final class PositionTracker implements Runnable {
 
 	private volatile boolean run = false;
 
-	protected PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper) {
+	public PositionTracker(SoundStarter soundstarter, SoundStopper soundstopper) {
 		this.soundstarter = soundstarter;
 		this.soundstopper = soundstopper;
 	}

@@ -5,7 +5,39 @@ amusic:
  executor: apicall
  #Usecmd - register commands
  usecmd: true
+ resourcepack:
+  #Processpack - if false resourcepack modification not allowed
+  processpack: true
+  #Joinplaylist - apply resourcepack on join
+  #joinplaylist: playlistname
+  #Size limit - max packed resourcepack size recomended values for specific versions (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 '52428800', 1.16-1.17.1 '104857600', 1.18+ '262144000'
+  sizelimit: 262144000
+  packthread:
+   #Limit count - limit maximal thread count per packer
+   limitcount: 4
+   #Coefficient - allowed value range 0.0 - 1.0, calculates thread count, works if limitcount greater than 1
+   coefficient: 0.125
  server:
+  sendpack:
+   executor:
+    #Executor - resourcepack checker executor configuration preset
+    checker: sendpackchecker
+    #Executor - resourcepack sender executor configuration preset
+    sender: sendpacksender
+   #Host - '<protocol>://<ip or hostname>:<port>/'
+   host: http://127.0.0.1:25530/
+   #Interface ip
+   ip: 0.0.0.0
+   port: 25530
+   backlog: 0
+   #Connect timeout (in ms)
+   timeout: 0
+   #Allow connection only from ips that connected to MC server (may not work if proxy server used)
+   strictaccess: true
+   #Wait acception - true resourcepack download start only after resourcepack status accepted recieved, false - resourcepack status ignored, blocked - auto
+   #waitacception: true
+   #Token salt - recomended to replace this by random generated if clientside caching used
+   tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
   #Sound upload server - load and convert sound clientside (ffmpeg wasm)
   upload:
    use: false
@@ -31,26 +63,6 @@ amusic:
     size: 262144000
     #Limit upload count
     count: 65535
-  sendpack:
-   executor:
-    #Executor - resourcepack checker executor configuration preset
-    checker: sendpackchecker
-    #Executor - resourcepack sender executor configuration preset
-    sender: sendpacksender
-   #Host - '<protocol>://<ip or hostname>:<port>/'
-   host: http://127.0.0.1:25530/
-   #Interface ip
-   ip: 0.0.0.0
-   port: 25530
-   backlog: 0
-   #Connect timeout (in ms)
-   timeout: 0
-   #Allow connection only from ips that connected to MC server (may not work if proxy server used)
-   strictaccess: true
-   #Wait acception - true resourcepack download start only after resourcepack status accepted recieved, false - resourcepack status ignored, blocked - auto
-   #waitacception: true
-   #Token salt - recomended to replace this by random generated if clientside caching used
-   tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
   #Connect api to other amusic instance
   connect:
    use: false
@@ -60,12 +72,12 @@ amusic:
     use: false
     path: connectcert.p12
     password: passwordkey
-   #Client used on bukkit by default
+   #Client used on bukkit
    client:
     #Remote server ip
     serverip: 0.0.0.0
     port: 25534
-   #Server used on velocity by default
+   #Server used on velocity, viaproxy
    server:
     #Executor - api call (for remote requests) executor configuration preset
     executor: apicallremote
@@ -73,30 +85,3 @@ amusic:
     clientip: 0.0.0.0
     port: 25534
     backlog: 0
- resourcepack:
-  #Processpack - if false resourcepack modification not allowed
-  processpack: true
-  #Joinplaylist - apply resourcepack on join
-  #joinplaylist: playlistname
-  #Size limit - max packed resourcepack size recomended values for specific versions (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 '52428800', 1.16-1.17.1 '104857600', 1.18+ '262144000'
-  sizelimit: 262144000
-  packthread:
-   #Limit count - limit maximal thread count per packer, 0 - do not use
-   limitcount: 0
-   #Coefficient - allowed value range 0.0 - 1.0, calculates thread count, works if limitcount greater than 1
-   coefficient: 0.5
-  cache:
-   #Storepacked caching - store packed resourcepacks on disk
-   storepacked: true
-   #Serverside caching - store all packed resourcepacks in ram
-   server: false
-   #Clientside caching - store resourcepacks clientside (up to 10)
-   client: true
- #Serverside encoder, not recommended to use since web uploader with clientside convertation exists
- encoder:
-  use: false
-  #Path - ffmpeg binary path
-  path: ffmpeg
-  bitrate: 64000
-  channels: 2
-  samplingrate: 44100

@@ -2,18 +2,18 @@ package me.bomb.amusic.packedinfo;
 
 import static me.bomb.amusic.util.NameFilter.filterName;
 
-import me.bomb.amusic.resource.ResourcePacker;
-import me.bomb.amusic.source.PackSource;
-import me.bomb.amusic.source.SoundSource;
+import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource.PackedResourcepack;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.HexUtils;
 
 public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	
+	private final LocalConvertedZerocopySource lczs;
 	
-
-	protected NoStorage(SoundSource soundsource, PackSource packsource, boolean lockwrite, boolean storeinram) {
-		super(soundsource, packsource, lockwrite, storeinram);
+	
+	protected NoStorage(boolean lockwrite, LocalConvertedZerocopySource lczs) {
+		super(lockwrite);
+		this.lczs = lczs;
 	}
 	
 	/**
@@ -26,22 +26,26 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	@Override
 	public void load() {
 		options.clear();
-		String[] playlists = this.soundsource.getPlaylists();
+		String[] playlists = this.lczs.getPlaylists();
 		int i = playlists.length;
 		while(--i > -1) {
 			String playlist = playlists[i];
 			if(playlist == null) {
 				continue;
 			}
-			final String filteredid = filterName(playlist);
-			ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource, true);
-			packer.run();
-			final byte[] resourcepack;
-			if((resourcepack = packer.resourcepack) == null) {
+			//final String filteredid = filterName(playlist);
+			final PackedResourcepack packedresourcepack = this.lczs.get(playlist);
+			
+			if(packedresourcepack == null) {
 				continue;
 			}
-			options.put(playlist, new RamDataEntry(null, resourcepack.length, playlist, packer.sounds, packer.sha1, packer.sha256, packer.bhea, packer.bres, resourcepack));
-			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(packer.sha1)));
+			SoundInfo[] soundinfos = new SoundInfo[packedresourcepack.names.length];
+			int j = soundinfos.length;
+			while(--j > -1) {
+				soundinfos[j] = new SoundInfo(packedresourcepack.names[j], packedresourcepack.soundhashs[j], packedresourcepack.lengths[j], packedresourcepack.splits[j]);
+			}
+			options.put(playlist, new RamDataEntry(null, packedresourcepack.resourcepack.length, playlist, soundinfos, packedresourcepack.sha1, packedresourcepack.sha256, packedresourcepack.bhea, packedresourcepack.bres, packedresourcepack.resourcepack));
+			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(packedresourcepack.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
 		this.printRamUsage();
@@ -60,36 +64,33 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	}
 
 	@Override
-	public ResourcePacker createPacker(String id) {
-		if(this.lockwrite || id == null || this.soundsource == null || !this.soundsource.exists(id)) {
-			return null;
+	public UpdateResult update(String id) {
+		if(this.lockwrite || id == null) {
+			return UpdateResult.UNAVILABLE;
 		}
-		final String filteredid = filterName(id);
-		ResourcePacker packer = new ResourcePacker(this.soundsource, filteredid, this.packsource, true);
-		return packer;
-	}
-
-	@Override
-	public boolean update(String name, ResourcePacker packer) {
-		if(this.lockwrite || name == null) {
-			return false;
-		}
+		PackedResourcepack packer = lczs.get(id);
 		if(packer == null) {
-			DataEntry data = options.remove(name);
+			DataEntry data = options.remove(id);
 			if(data == null) {
-				return false;
+				return UpdateResult.DELETED_FAILED;
 			}
 			this.printRamUsage();
-			return true;
+			return UpdateResult.DELETED_SUCCESS;
 		}
-		packer.run();
 		final byte[] resourcepack;
 		if((resourcepack = packer.resourcepack) == null) {
-			return false;
+			return UpdateResult.PACKED_FAILED;
 		}
-		options.put(name, new RamDataEntry(null, resourcepack.length, name, packer.sounds, packer.sha1, packer.sha256, packer.bhea, packer.bres, resourcepack));
+		
+		SoundInfo[] soundinfos = new SoundInfo[packer.names.length];
+		int j = soundinfos.length;
+		while(--j > -1) {
+			soundinfos[j] = new SoundInfo(packer.names[j], packer.soundhashs[j], packer.lengths[j], packer.splits[j]);
+		}
+		
+		options.put(id, new RamDataEntry(null, resourcepack.length, id, soundinfos, packer.sha1, packer.sha256, packer.bhea, packer.bres, resourcepack));
 		this.printRamUsage();
-		return true;
+		return UpdateResult.PACKED_SUCCESS;
 	}
 	
 	private void printRamUsage() {

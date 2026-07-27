@@ -25,12 +25,12 @@ public final class ClientAMusic implements AMusic {
 	private final SocketFactory socketfactory;
 	private final Executor executor;
 	
-	public ClientAMusic(Configuration config) {
-		this.hostip = config.connectifip;
-		this.remoteip = config.connectremoteip;
-		this.port = config.connectport;
-		this.socketfactory = config.connectsocketfactory;
-		this.executor = config.executor;
+	public ClientAMusic(InetAddress hostip, InetAddress remoteip, int port, SocketFactory socketfactory, Executor executor) {
+		this.hostip = hostip;
+		this.remoteip = remoteip;
+		this.port = port;
+		this.socketfactory = socketfactory;
+		this.executor = executor;
 	}
 	
 	private byte[] sendPacket(byte packetid, byte[] buf, boolean sendsize, int responsesize, boolean remotesize) {

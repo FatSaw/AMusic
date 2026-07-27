@@ -26,14 +26,12 @@ import me.bomb.amusic.Configuration;
 import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.PackSender;
+import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ServerAMusic;
-import me.bomb.amusic.source.LocalConvertedSource;
-import me.bomb.amusic.source.LocalUnconvertedSource;
-import me.bomb.amusic.source.MusicdirFStaticPackSource;
-import me.bomb.amusic.source.MusicdirPackSource;
-import me.bomb.amusic.source.PackSource;
-import me.bomb.amusic.source.SoundSource;
-import me.bomb.amusic.source.StaticPackSource;
+import me.bomb.amusic.packedinfo.Data;
+import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
+import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.LangOptions;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
@@ -71,7 +69,7 @@ public final class AMusicVelocity {
 			}
 		};
 		AMusicLogger.setLogger(amusiclogger);
-		Path plugindir = dataDirectory, configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
+		Path plugindir = dataDirectory, configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
 		try {
@@ -104,15 +102,15 @@ public final class AMusicVelocity {
 		this.playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 
 		PackSender packsender = new VelocityPackSender(server);
-		SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(Runtime.getRuntime(), config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
-		PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
-		
+		LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+		PositionTracker positiontracker = new PositionTracker(new VelocitySoundStarter(server), new VelocitySoundStopper(server));
+		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+		Data datamanager = Data.getNoStorage(!config.processpack, lczs);
+		UploadManager uploadmanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips.values() : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 		if(config.connectuse) {
-			ServerAMusic lamusic = new ServerAMusic(amusiclogger, config, soundsource, packsource, packsender, new VelocitySoundStarter(server), new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
-			this.amusic = lamusic;
+			this.amusic = new ServerAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
 		} else {
-			LocalAMusic lamusic = new LocalAMusic(amusiclogger, config, soundsource, packsource, packsender, new VelocitySoundStarter(server), new VelocitySoundStopper(server), playerips == null ? null : playerips.values());
-			this.amusic = lamusic;
+			this.amusic = new LocalAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
 		}
 		LangOptions.loadLang(new VelocityMessageSender(), langfile, false);
     }

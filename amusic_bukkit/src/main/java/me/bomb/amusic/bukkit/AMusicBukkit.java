@@ -26,6 +26,7 @@ import me.bomb.amusic.GeyserHook;
 import me.bomb.amusic.LocalAMusic;
 import me.bomb.amusic.MessageSender;
 import me.bomb.amusic.PackSender;
+import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.SoundStarter;
 import me.bomb.amusic.ClientAMusic;
 import me.bomb.amusic.SoundStopper;
@@ -55,14 +56,11 @@ import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_10_R1;
 //import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_9_R2;
 //import me.bomb.amusic.bukkit.legacy.LegacySoundStarter_1_10_R1;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
+import me.bomb.amusic.packedinfo.Data;
+import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
+import me.bomb.amusic.resourceserver.ResourceManager;
+import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_10_R1;
-import me.bomb.amusic.source.LocalConvertedSource;
-import me.bomb.amusic.source.LocalUnconvertedSource;
-import me.bomb.amusic.source.MusicdirFStaticPackSource;
-import me.bomb.amusic.source.MusicdirPackSource;
-import me.bomb.amusic.source.SoundSource;
-import me.bomb.amusic.source.PackSource;
-import me.bomb.amusic.source.StaticPackSource;
 
 
 public final class AMusicBukkit extends JavaPlugin {
@@ -112,7 +110,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		} catch (StringIndexOutOfBoundsException | NumberFormatException e) {
 		}
 		
-		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), defaultresourcepackfile = plugindir.resolve("resourcepack.zip"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
+		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
 		try {
@@ -169,7 +167,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			
 			if(config.connectuse) {
 				this.playerips = null;
-				ClientAMusic amusic = new ClientAMusic(config);
+				ClientAMusic amusic = new ClientAMusic(config.connectifip, config.connectremoteip, config.connectport, config.connectsocketfactory, config.executor);
 				this.amusic = amusic;
 				this.playerjoin = null;
 				this.playerquit = null;
@@ -226,10 +224,12 @@ public final class AMusicBukkit extends JavaPlugin {
 				}
 				waitacception = config.waitacception;
 				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-				Runtime runtime = Runtime.getRuntime();
-				SoundSource soundsource = config.encoderuse ? new LocalUnconvertedSource(runtime, config.musicdir, config.packsizelimit, config.encoderbinary, config.encoderbitrate, config.encoderchannels, config.encodersamplingrate, config.packthreadcoefficient, config.packthreadlimitcount) : new LocalConvertedSource(config.musicdir, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
-				PackSource packsource = new MusicdirFStaticPackSource(new MusicdirPackSource(musicdir, config.packsizelimit), new StaticPackSource(defaultresourcepackfile, config.packsizelimit));
-				LocalAMusic amusic = new LocalAMusic(logger, config, soundsource, packsource, packsender, soundstarter, soundstopper, playerips == null ? null : playerips.values());
+				LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+				PositionTracker positiontracker = new PositionTracker(soundstarter, soundstopper);
+				ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+				Data datamanager = Data.getNoStorage(!config.processpack, lczs);
+				UploadManager uploadmanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips.values() : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
+				LocalAMusic amusic = new LocalAMusic(logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
 				this.amusic = amusic;
 				if(this.usecmd) {
 					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());

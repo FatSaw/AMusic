@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.DataEntry;
+import me.bomb.amusic.packedinfo.UpdateResult;
 import me.bomb.amusic.resourceserver.ResourceManager;
 
 public final class ResourceFactory implements Runnable {
@@ -27,33 +28,33 @@ public final class ResourceFactory implements Runnable {
 	@Override
 	public void run() {
 		if(update) {
-			if(datamanager.lockwrite) {
+			UpdateResult result = datamanager.update(id);
+			switch(result) {
+			case UNAVILABLE:
 				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
 				return;
-			}
-			ResourcePacker resourcepacker = datamanager.createPacker(this.id);
-			
-			final boolean updated = datamanager.update(this.id, resourcepacker);
-			if(resourcepacker == null) {
-				if(statusreport == null) {
-					return;
+			case DELETED_FAILED:
+				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.NOTEXSIST);
+				return;
+			case DELETED_SUCCESS:
+				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.REMOVED);
+				return;
+			case PACKED_FAILED:
+				if(statusreport != null) statusreport.onStatusResponse(EnumStatus.NOTEXSIST);
+				return;
+			case PACKED_SUCCESS:
+				if(targets == null) {
+					if(statusreport != null) statusreport.onStatusResponse(EnumStatus.PACKED);
+				} else {
+					DataEntry dataentry = datamanager.getPlaylist(this.id);
+					if(resourcemanager.dispatch(dataentry, this.targets)) {
+						if(statusreport != null) statusreport.onStatusResponse(EnumStatus.DISPATCHED);
+					} else {
+						if(statusreport != null) statusreport.onStatusResponse(EnumStatus.UNAVILABLE);
+					}
 				}
-				statusreport.onStatusResponse(updated ? EnumStatus.REMOVED : EnumStatus.NOTEXSIST);
 				return;
 			}
-			if(targets == null) {
-				if(statusreport == null) {
-					return;
-				}
-				statusreport.onStatusResponse(EnumStatus.PACKED);
-				return;
-			}
-			DataEntry dataentry = datamanager.getPlaylist(this.id);
-			resourcemanager.dispatch(dataentry, this.targets);
-			if(statusreport == null) {
-				return;
-			}
-			statusreport.onStatusResponse(EnumStatus.DISPATCHED);
 			return;
 		}
 		DataEntry dataentry = datamanager.getPlaylist(this.id);

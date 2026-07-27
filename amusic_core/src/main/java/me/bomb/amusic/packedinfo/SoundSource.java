@@ -1,12 +1,11 @@
-package me.bomb.amusic.source;
+package me.bomb.amusic.packedinfo;
 
-public abstract class SoundSource {
+public interface SoundSource<T extends SourceEntry> {
 
 	/**
-	 * {@link SourceEntry#names} must be ready on return.
-	 * Other SourceEntry fields may be not ready.
+	 * {@link SourceEntry} ready on return.
 	 */
-	public abstract SourceEntry get(String entrykey);
+	public abstract T get(String entrykey);
 	
 	/**
 	 * @return true if entry has at least one element

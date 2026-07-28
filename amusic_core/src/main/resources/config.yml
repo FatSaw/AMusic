@@ -17,6 +17,8 @@ amusic:
    limitcount: 4
    #Coefficient - allowed value range 0.0 - 1.0, calculates thread count, works if limitcount greater than 1
    coefficient: 0.125
+  #Cache - cache resourcepack in ram
+  cache: true
  server:
   sendpack:
    executor:

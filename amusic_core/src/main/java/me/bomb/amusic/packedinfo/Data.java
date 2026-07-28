@@ -24,6 +24,15 @@ public abstract class Data {
 	}
 	
 	/**
+	 * Get ram storage
+	 * @param id
+	 * @return ram storage
+	 */
+	public static RamStorage getRamStorage(boolean lockwrite, LocalConvertedZerocopySource source) {
+		return new RamStorage(lockwrite, source);
+	}
+	
+	/**
 	 * Save {@link Data#options} to storage.
 	 */
 	protected abstract void save();

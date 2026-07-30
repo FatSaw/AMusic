@@ -325,9 +325,11 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 					} catch (IOException e) {
 						throw new IllegalStateException(e);
 					} finally {
-						try {
-							is.close();
-						} catch (IOException e2) {
+						if(is != null) {
+							try {
+								is.close();
+							} catch (IOException e2) {
+							}
 						}
 					}
 					int i = buf.length;
@@ -1139,12 +1141,11 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			} finally {
-				if(is == null) {
-					return;
-				}
-				try {
-					is.close();
-				} catch (IOException e2) {
+				if(is != null) {
+					try {
+						is.close();
+					} catch (IOException e2) {
+					}
 				}
 			}
 			this.lengths[this.num] = (short) calculateDuration(this.resourcepack, this.offset, this.length);

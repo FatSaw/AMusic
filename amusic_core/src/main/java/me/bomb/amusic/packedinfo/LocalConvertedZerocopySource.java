@@ -301,15 +301,13 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 	
 	public LocalConvertedZerocopySource(Path mergepack, Path musicdir, int maxresourcepacksize, int maxsoundsize, float threadcoefficient, short threadcountlimit) {
 		byte[] mergepackb = null;
-		int mregeentriescount = -1, mergecdsize = -1, mergecdoffset = -1, mergecommentlength = -1;
+		int mregeentriescount = 0, mergecdsize = 0, mergecdoffset = 0, mergecommentlength = 0;
 		if(mergepack != null) {
 			try {
 				FileSystemProvider fsp = mergepack.getFileSystem().provider();
 				BasicFileAttributes attributes = fsp.readAttributes(mergepack, BasicFileAttributes.class);
 				final long size = attributes.size();
 				if(attributes.isRegularFile() && size <= maxresourcepacksize) {
-					maxresourcepacksize -= size;
-					maxresourcepacksize += 22;
 					byte[] buf = new byte[(int) size];
 					InputStream is = null;
 					try {
@@ -424,6 +422,10 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		final byte[] splits;
 		final short[] lengths;
 		int offset = 0, totalsize = 0;
+		if(this.mergepack != null) {
+			offset += this.mergecdoffset;
+			totalsize += this.mergecdoffset;
+		}
 		final Iterator<Path> it;
 		HashMap<Path, Integer> filesm;
 		try {
@@ -477,8 +479,13 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		final int bedrockpackidlength = totalsize;
 		totalsize += packmcmeta.length; //PACK MCMETA + LOCAL HEADER 
 		totalsize += manifestjson.length; //MANIFEST JSON + LOCAL HEADER 
-		final int centraldirectoryoffset = totalsize, centraldirectorylength = silencesoundglobalheader.length + packmcmetaglobalheader.length + manifestjsonglobalheader.length + 149 + 229 * count;
+		final int centraldirectoryoffset = totalsize, centraldirectorylength = this.mergecdsize + silencesoundglobalheader.length + packmcmetaglobalheader.length + manifestjsonglobalheader.length + 149 + 229 * count;
 		int globalheaderoffset = totalsize; //all sizes except global header and zip end should be calculated before this
+		if(this.mergepack != null) {
+			totalsize += this.mergecdsize;
+			totalsize += this.mergecommentlength;
+			globalheaderoffset += this.mergecdsize;
+		}
 		totalsize += silencesoundglobalheader.length; //ZIP GLOBAL SILENCE SOUND HEADERS WITH PATHS
 		totalsize += 74; //SOUNDS JSON GLOBAL HEADER
 		totalsize += 75; //SOUND DEFENITIONS GLOBAL HEADER
@@ -569,6 +576,11 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		offset += 153;
 		soundsjsonentryoffset = soundsjsonentryoffset - soundsjsonziplocalentryoffset;
 		soundsjsonentryoffset -= 30;
+		if(this.mergepack != null) {
+			System.arraycopy(this.mergepack, 0, resourcepack, 0, this.mergecdoffset);
+			System.arraycopy(this.mergepack, this.mergecdoffset, resourcepack, centraldirectoryoffset, this.mergecdsize);
+			System.arraycopy(this.mergepack, this.mergepack.length - this.mergecommentlength, resourcepack, resourcepack.length - this.mergecommentlength, this.mergecommentlength);
+		}
 		try {
 			if(!executor.awaitTermination(1, TimeUnit.MINUTES)) {
 				executor.shutdownNow();
@@ -840,7 +852,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		offset += manifestjson.length;
 		
 		
-		v = 6 + (count << 1);
+		v = 6 + (count << 1) + this.mregeentriescount;
 		byte[] end = new byte[] {0x50, 0x4b, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		end[8] = (byte) (v & 0xFF);
 		end[9] = (byte) ((v >>> 8) & 0xFF);
@@ -856,6 +868,9 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		end[17] = (byte) ((v >>> 8) & 0xFF);
 		end[18] = (byte) ((v >>> 16) & 0xFF);
 		end[19] = (byte) ((v >>> 24) & 0xFF);
+		v = this.mergecommentlength;
+		end[20] = (byte) (v & 0xFF);
+		end[21] = (byte) ((v >>> 8) & 0xFF);
 		System.arraycopy(end, 0, resourcepack, ++globalheaderoffset, end.length);
 		sha1hash.update(resourcepack, 0, resourcepack.length);
 		sha256hash.update(resourcepack, bedrockpackidlength, resourcepack.length - bedrockpackidlength);

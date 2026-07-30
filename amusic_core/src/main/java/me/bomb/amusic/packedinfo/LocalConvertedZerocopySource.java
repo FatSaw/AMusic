@@ -288,6 +288,9 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		sounddefenitionspath = "sounds/sound_definitions.json".getBytes(StandardCharsets.US_ASCII);
 	}
 
+	private final byte[] mergepack;
+	private final int mregeentriescount, mergecdsize, mergecdoffset, mergecommentlength;
+	
 	private final FileSystemProvider fsp;
 	private final RegularFileFilter regularfilefilter;
 	private final DirectoryFilter directoryfilter;
@@ -296,7 +299,66 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 	private final float threadcoefficient;
 	private final short threadcountlimit;
 	
-	public LocalConvertedZerocopySource(Path musicdir, int maxresourcepacksize, int maxsoundsize, float threadcoefficient, short threadcountlimit) {
+	public LocalConvertedZerocopySource(Path mergepack, Path musicdir, int maxresourcepacksize, int maxsoundsize, float threadcoefficient, short threadcountlimit) {
+		byte[] mergepackb = null;
+		int mregeentriescount = -1, mergecdsize = -1, mergecdoffset = -1, mergecommentlength = -1;
+		if(mergepack != null) {
+			try {
+				FileSystemProvider fsp = mergepack.getFileSystem().provider();
+				BasicFileAttributes attributes = fsp.readAttributes(mergepack, BasicFileAttributes.class);
+				final long size = attributes.size();
+				if(attributes.isRegularFile() && size <= maxresourcepacksize) {
+					maxresourcepacksize -= size;
+					maxresourcepacksize += 22;
+					byte[] buf = new byte[(int) size];
+					InputStream is = null;
+					try {
+						is = fsp.newInputStream(mergepack);
+						{
+							int off = 0;
+							int remaining = buf.length;
+							while (remaining > 0) {
+								int read = is.read(buf, off, remaining);
+								if (read < 0) throw new EOFException();
+								off += read;
+								remaining -= read;
+							}
+						}
+					} catch (IOException e) {
+						throw new IllegalStateException(e);
+					} finally {
+						try {
+							is.close();
+						} catch (IOException e2) {
+						}
+					}
+					int i = buf.length;
+					if(i > 21) {
+						int end = buf.length - 65558;
+						if(end < -1) end = -1;
+						i -= 21;
+						while (--i > end) {
+							int commentlength; //THIS WILL BE USED LATER
+							if(buf[i] == 0x50 && buf[1+i] == 0x4B && buf[2+i] == 0x05 && buf[3+i] == 0x06 && buf.length == (commentlength = ((buf[21+i] & 0xFF) << 8) | (buf[20+i] & 0xFF)) + i + 22) {
+								mregeentriescount = ((buf[i + 11] & 0xFF) << 8) | (buf[i + 10] & 0xFF);
+								mergecdsize = ((buf[i + 15] & 0xFF) << 24) | ((buf[i + 14] & 0xFF) << 16) | ((buf[i + 13] & 0xFF) << 8) | (buf[i + 12] & 0xFF);
+								mergecdoffset = ((buf[i + 19] & 0xFF) << 24) | ((buf[i + 18] & 0xFF) << 16) | ((buf[i + 17] & 0xFF) << 8) | (buf[i + 16] & 0xFF);
+								mergecommentlength = commentlength;
+								mergepackb = buf;
+								break;
+							}
+						}
+					}
+				}
+			} catch (IOException e) {
+			}
+		}
+		this.mergepack = mergepackb;
+		this.mregeentriescount = mregeentriescount;
+		this.mergecdsize = mergecdsize;
+		this.mergecdoffset = mergecdoffset;
+		this.mergecommentlength = mergecommentlength;
+		
 		this.fsp = musicdir.getFileSystem().provider();
 		this.regularfilefilter = new RegularFileFilter(this.fsp);
 		this.directoryfilter = new DirectoryFilter(this.fsp);
@@ -356,13 +418,12 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			return null;
 		}
 		
-		int i;
 		final byte[] resourcepack;
 		final UUID[] soundhashs;
 		final String[] names;
 		final byte[] splits;
 		final short[] lengths;
-		int offset = silencesound.length, totalsize = silencesound.length;
+		int offset = 0, totalsize = 0;
 		final Iterator<Path> it;
 		HashMap<Path, Integer> filesm;
 		try {
@@ -404,6 +465,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		if(resultthreadcount > threadcountlimit) resultthreadcount = threadcountlimit;
 		if(resultthreadcount < 1) resultthreadcount = 1;
 		ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(count, false);
+		totalsize += silencesound.length;
 		totalsize += 30 * count; //ZIP LOCAL SOUND HEADERS
 		int soundsjsonentryoffset = totalsize;
 		totalsize += 255 * count; //18 + 42 + 118 + 42 + 35 = 255 JAVA SOUNDLIST ENTRY
@@ -428,8 +490,31 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			return null;
 		}
 		resourcepack = new byte[totalsize];
-		System.arraycopy(silencesound, 0, resourcepack, 0, silencesound.length);
+		int i, j, v;
+		byte b;
+		System.arraycopy(silencesound, 0, resourcepack, offset, silencesound.length);
 		System.arraycopy(silencesoundglobalheader, 0, resourcepack, globalheaderoffset, silencesoundglobalheader.length);
+		{
+			i = globalheaderoffset + 41;
+			j = globalheaderoffset + 129;
+			v = offset;
+			b = (byte) (v & 0xFF);
+			resourcepack[++i] = b;
+			resourcepack[++j] = b;
+			v >>>= 8;
+			b = (byte) (v & 0xFF);
+			resourcepack[++i] = b;
+			resourcepack[++j] = b;
+			v >>>= 8;
+			b = (byte) (v & 0xFF);
+			resourcepack[++i] = b;
+			resourcepack[++j] = b;
+			v >>>= 8;
+			b = (byte) (v & 0xFF);
+			resourcepack[++i] = b;
+			resourcepack[++j] = b;
+		}
+		offset += silencesound.length;
 		globalheaderoffset += silencesoundglobalheader.length;
 		
 		i = count;
@@ -453,7 +538,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			final Entry<Path, Integer> filee = fiterator.next();
 			final Path file = filee.getKey();
 			String songname = file.getFileName().toString();
-			final int j = songname.lastIndexOf(".");
+			j = songname.lastIndexOf(".");
 			if (j != -1) {
 				songname = songname.substring(0, j);
 			}
@@ -497,9 +582,8 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		//AFTER THIS ALL FILES READ SHOULD BE FINISHED
 		CRC32 crc32 = new CRC32();
 		crc32.update(resourcepack, soundsjsonziplocalentryoffset + 30, soundsjsonentryoffset);
-		int v = (int) crc32.getValue();
+		v = (int) crc32.getValue();
 		crc32.reset();
-		byte b;
 		--soundsjsonziplocalentryoffset;
 		--globalheaderoffset;
 		

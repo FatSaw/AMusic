@@ -73,7 +73,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 
 	@Override
 	public void onEnable() {
-		Path plugindir = this.getDataFolder().toPath(), configfile = plugindir.resolve("config.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
+		Path plugindir = this.getDataFolder().toPath(), mergezip = plugindir.resolve("resourcepack.zip"), configfile = plugindir.resolve("config.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
 		try {
@@ -100,7 +100,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 
 			PackSender packsender = new ViaproxyPackSender(this.players);
 	        
-			LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+			LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(mergezip, config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 			PositionTracker positiontracker = new PositionTracker(new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players));
 			ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
 			Data datamanager = config.ramcache ? Data.getRamStorage(!config.processpack, lczs) : Data.getNoStorage(!config.processpack, lczs);

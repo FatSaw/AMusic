@@ -164,7 +164,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		System.arraycopy(playlistnamepackedb, 1, playlistnameb, 0, playlistnameb.length);
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
 		if(packed) {
-			SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+			SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
 			if(soundinfos==null) {
 				return new byte[0];
 			}
@@ -327,7 +327,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			return new byte[0];
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
-		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
 		if(soundinfos==null) {
 			return new byte[0];
 		}

@@ -91,8 +91,8 @@ public final class ResourceManager {
 				System.arraycopy(token.toString().getBytes(StandardCharsets.US_ASCII), 0, host, this.end, 36);
 				positiontracker.stopMusic(target);
 				positiontracker.removePlaylistInfo(target);
-				packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.sha1);
-				positiontracker.setPlaylistInfo(target, dataentry.name, dataentry.sounds);
+				packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.info.sha1);
+				positiontracker.setPlaylistInfo(target, dataentry.info.packname, dataentry.info.sounds);
 			}
 			return true;
 		}
@@ -140,7 +140,7 @@ public final class ResourceManager {
 			hash[0x0F] = (byte) lsb;
 			
 			md5hash.reset();
-			md5hash.update(dataentry.sha1);
+			md5hash.update(dataentry.info.sha1);
 			md5hash.update(hash);
 			md5hash.update(this.salt);
 			try {
@@ -186,8 +186,8 @@ public final class ResourceManager {
 			System.arraycopy(token.toString().getBytes(StandardCharsets.US_ASCII), 0, host, this.end, 36);
 			positiontracker.stopMusic(target);
 			positiontracker.removePlaylistInfo(target);
-			packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.sha1);
-			positiontracker.setPlaylistInfo(target, dataentry.name, dataentry.sounds);
+			packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.info.sha1);
+			positiontracker.setPlaylistInfo(target, dataentry.info.packname, dataentry.info.sounds);
 		}
 		return true;
 	}

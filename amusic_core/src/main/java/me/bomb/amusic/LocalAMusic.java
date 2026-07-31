@@ -95,7 +95,7 @@ public class LocalAMusic implements AMusic {
 		Runnable r = new Runnable() {
 			public void run() {
 				if(packed) {
-					SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+					SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
 					if(soundinfos==null) {
 						resultConsumer.accept(null);
 						return;
@@ -145,7 +145,7 @@ public class LocalAMusic implements AMusic {
 		}
 		Runnable r = new Runnable() {
 			public void run() {
-				SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).sounds;
+				SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
 				if(soundinfos==null) {
 					resultConsumer.accept(null);
 					return;

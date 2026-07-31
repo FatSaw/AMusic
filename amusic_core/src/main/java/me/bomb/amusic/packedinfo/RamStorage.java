@@ -36,13 +36,9 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 			if(packedresourcepack == null) {
 				continue;
 			}
-			SoundInfo[] soundinfos = new SoundInfo[packedresourcepack.names.length];
-			int j = soundinfos.length;
-			while(--j > -1) {
-				soundinfos[j] = new SoundInfo(packedresourcepack.names[j], packedresourcepack.soundhashs[j], packedresourcepack.lengths[j], packedresourcepack.splits[j]);
-			}
-			options.put(playlist, new RamDataEntry(null, packedresourcepack.resourcepack.length, playlist, soundinfos, packedresourcepack.sha1, packedresourcepack.sha256, packedresourcepack.bhea, packedresourcepack.bres, packedresourcepack.resourcepack));
-			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(packedresourcepack.sha1)));
+			ResourcepackInfo info = packedresourcepack.info;
+			options.put(playlist, new RamDataEntry(null, info, packedresourcepack.resourcepack));
+			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(info.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
 		this.printRamUsage();
@@ -78,14 +74,8 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 		if((resourcepack = packer.resourcepack) == null) {
 			return UpdateResult.PACKED_FAILED;
 		}
-		
-		SoundInfo[] soundinfos = new SoundInfo[packer.names.length];
-		int j = soundinfos.length;
-		while(--j > -1) {
-			soundinfos[j] = new SoundInfo(packer.names[j], packer.soundhashs[j], packer.lengths[j], packer.splits[j]);
-		}
-		
-		options.put(id, new RamDataEntry(null, resourcepack.length, id, soundinfos, packer.sha1, packer.sha256, packer.bhea, packer.bres, resourcepack));
+		ResourcepackInfo info = packer.info;
+		options.put(id, new RamDataEntry(null, info, resourcepack));
 		this.printRamUsage();
 		return UpdateResult.PACKED_SUCCESS;
 	}
@@ -93,7 +83,7 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 	private void printRamUsage() {
 		long rambytesused = 0;
 		for(DataEntry optionentry : options.values()) {
-			rambytesused += optionentry.size;
+			rambytesused += optionentry.info.packsize;
 		}
 		String unit;
 		if(rambytesused<0x800L) {

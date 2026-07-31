@@ -876,7 +876,14 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		System.arraycopy(end, 0, resourcepack, ++globalheaderoffset, end.length);
 		sha1hash.update(resourcepack, 0, resourcepack.length);
 		sha256hash.update(resourcepack, bedrockpackidlength, resourcepack.length - bedrockpackidlength);
-		return new PackedResourcepack(resourcepack, sha1hash.digest(), sha256hash.digest(), soundhashs, names, splits, lengths, bhea, bres);
+		
+		SoundInfo[] sounds = new SoundInfo[names.length];
+		i = sounds.length;
+		while(--i > -1) {
+			sounds[i] = new SoundInfo(names[j], soundhashs[j], lengths[j], splits[j]);
+		}
+		ResourcepackInfo info = new ResourcepackInfo(0, resourcepack.length, entrykey, sounds, sha1hash.digest(), sha256hash.digest(), bhea, bres);
+		return new PackedResourcepack(resourcepack, info);
 	}
 	
 	public boolean exists(String entrykey) {
@@ -1059,23 +1066,12 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 	
 	public static final class PackedResourcepack implements SourceEntry {
 		
-		public final byte[] resourcepack, sha1, sha256;
-		public final UUID[] soundhashs;
-		public final String[] names;
-		public final byte[] splits;
-		public final short[] lengths;
-		public final UUID bhea, bres;
+		public final byte[] resourcepack;
+		public final ResourcepackInfo info;
 		
-		private PackedResourcepack(byte[] resourcepack, byte[] sha1, byte[] sha256, UUID[] soundhashs, String[] names, byte[] splits , short[] lengths, UUID bhea, UUID bres) {
+		private PackedResourcepack(byte[] resourcepack, ResourcepackInfo info) {
 			this.resourcepack = resourcepack;
-			this.sha1 = sha1;
-			this.sha256 = sha256;
-			this.soundhashs = soundhashs;
-			this.names = names;
-			this.splits = splits;
-			this.lengths = lengths;
-			this.bhea = bhea;
-			this.bres = bres;
+			this.info = info;
 		}
 	}
 	

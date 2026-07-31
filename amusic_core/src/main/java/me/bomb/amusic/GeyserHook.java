@@ -103,12 +103,12 @@ public final class GeyserHook {
 
 		@Override
 		public byte[] sha256() {
-			return this.entry.sha256;
+			return this.entry.info.sha256;
 		}
 
 		@Override
 		public long size() {
-			return this.entry.size;
+			return this.entry.info.packsize;
 		}
 
 		@Override
@@ -124,12 +124,12 @@ public final class GeyserHook {
 		@Override
 		protected Builder createBuilder() {
 			Version version = new Version(1, 0, 0);
-			Header header = new Header(entry.bhea, version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
-			Module module = new Module(entry.bres, version, "resources", "");
+			Header header = new Header(entry.info.bhea, version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
+			Module module = new Module(entry.info.bres, version, "resources", "");
 			HashSet<Module> modules = new HashSet<>(1);
 			modules.add(module);
 			GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
-			return new GeyserResourcePack.Builder(this, manifest, entry.name);
+			return new GeyserResourcePack.Builder(this, manifest, entry.info.packname);
 		}
 
 	}

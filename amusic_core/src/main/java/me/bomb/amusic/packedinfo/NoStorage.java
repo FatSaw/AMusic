@@ -36,13 +36,9 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 			if(packedresourcepack == null) {
 				continue;
 			}
-			SoundInfo[] soundinfos = new SoundInfo[packedresourcepack.names.length];
-			int j = soundinfos.length;
-			while(--j > -1) {
-				soundinfos[j] = new SoundInfo(packedresourcepack.names[j], packedresourcepack.soundhashs[j], packedresourcepack.lengths[j], packedresourcepack.splits[j]);
-			}
-			options.put(playlist, new NoDataEntry(null, packedresourcepack.resourcepack.length, playlist, soundinfos, packedresourcepack.sha1, packedresourcepack.sha256, packedresourcepack.bhea, packedresourcepack.bres, this.lczs));
-			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(packedresourcepack.sha1)));
+			ResourcepackInfo info = packedresourcepack.info;
+			options.put(playlist, new NoDataEntry(null, info, this.lczs));
+			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(info.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
 	}
@@ -72,18 +68,10 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 			}
 			return UpdateResult.DELETED_SUCCESS;
 		}
-		final byte[] resourcepack;
-		if((resourcepack = packer.resourcepack) == null) {
+		if(packer.resourcepack == null) {
 			return UpdateResult.PACKED_FAILED;
 		}
-		
-		SoundInfo[] soundinfos = new SoundInfo[packer.names.length];
-		int j = soundinfos.length;
-		while(--j > -1) {
-			soundinfos[j] = new SoundInfo(packer.names[j], packer.soundhashs[j], packer.lengths[j], packer.splits[j]);
-		}
-		
-		options.put(id, new NoDataEntry(null, resourcepack.length, id, soundinfos, packer.sha1, packer.sha256, packer.bhea, packer.bres, this.lczs));
+		options.put(id, new NoDataEntry(null, packer.info, this.lczs));
 		return UpdateResult.PACKED_SUCCESS;
 	}
 

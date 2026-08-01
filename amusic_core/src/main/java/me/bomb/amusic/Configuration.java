@@ -50,7 +50,7 @@ public final class Configuration {
 	
 	public final boolean uploadstrictaccess, sendpackstrictaccess;
 	
-	public final boolean processpack, ramcache, waitacception;
+	public final boolean processpack, ramcache, diskstore, waitacception;
 	public final int uploadlifetime, uploadlimitsize, uploadlimitcount, packsizelimit;
 	public final short packthreadlimitcount;
 	public final float packthreadcoefficient;
@@ -59,7 +59,7 @@ public final class Configuration {
 	public final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -92,6 +92,7 @@ public final class Configuration {
 		this.sendpackstrictaccess = sendpackstrictaccess;
 		this.processpack = processpack;
 		this.ramcache = ramcache;
+		this.diskstore = diskstore;
 		this.waitacception = waitacception;
 		this.uploadlifetime = uploadlifetime;
 		this.uploadlimitsize = uploadlimitsize;
@@ -309,7 +310,7 @@ public final class Configuration {
 			this.sendpacktimeout = sc.getIntOrError("amusic\0server\0sendpack\0timeout", errors);
 			this.sendpackstrictaccess = sc.getBooleanOrError("amusic\0server\0sendpack\0strictaccess", errors);
 			this.waitacception = sc.getBooleanOrDefault("amusic\0server\0sendpack\0waitacception", defaultwaitacception);
-			this.tokensalt = sc.getBytesBase64OrError("amusic\0server\0sendpack\0tokensalt", errors);
+			this.tokensalt = sc.getBytesBase64OrDefault("amusic\0server\0sendpack\0tokensalt", null);
 			this.sendpackserverfactory = new SimpleServerSocketFactory();
 			if(this.connectuse) {
 				InetAddress connectifip = null;
@@ -496,6 +497,7 @@ public final class Configuration {
 			this.packthreadlimitcount = (short) packthreadlimitcount;
 			this.packthreadcoefficient = sc.getFloatOrError("amusic\0resourcepack\0packthread\0coefficient", errors);
 			this.ramcache = sc.getBooleanOrError("amusic\0resourcepack\0cache", errors);
+			this.diskstore = sc.getBooleanOrError("amusic\0resourcepack\0diskstore", errors);
 		} else {
 			this.use = false;
 			this.usecmd = false;
@@ -540,6 +542,7 @@ public final class Configuration {
 			this.packthreadlimitcount = 0;
 			this.packthreadcoefficient = 0;
 			this.ramcache = false;
+			this.diskstore = false;
 		}
 		this.errors = errors.toString();
 	}

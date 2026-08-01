@@ -19,6 +19,8 @@ amusic:
    coefficient: 0.125
   #Cache - cache resourcepack in ram
   cache: true
+  #Diskstore - store packed resourcepack
+  diskstore: true
  server:
   sendpack:
    executor:

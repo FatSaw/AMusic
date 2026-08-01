@@ -880,7 +880,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		SoundInfo[] sounds = new SoundInfo[names.length];
 		i = sounds.length;
 		while(--i > -1) {
-			sounds[i] = new SoundInfo(names[j], soundhashs[j], lengths[j], splits[j]);
+			sounds[i] = new SoundInfo(names[i], soundhashs[i], lengths[i], splits[i]);
 		}
 		ResourcepackInfo info = new ResourcepackInfo(0, resourcepack.length, entrykey, sounds, sha1hash.digest(), sha256hash.digest(), bhea, bres);
 		return new PackedResourcepack(resourcepack, info);

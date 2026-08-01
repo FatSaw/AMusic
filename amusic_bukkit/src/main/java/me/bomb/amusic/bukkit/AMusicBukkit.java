@@ -109,7 +109,6 @@ public final class AMusicBukkit extends JavaPlugin {
 			ver = Byte.valueOf(nmsversion.split("_", 3)[1]);
 		} catch (StringIndexOutOfBoundsException | NumberFormatException e) {
 		}
-		
 		Path plugindir = this.getDataFolder().toPath(), mergezip = plugindir.resolve("resourcepack.zip"), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
@@ -227,7 +226,7 @@ public final class AMusicBukkit extends JavaPlugin {
 				LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(mergezip, config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PositionTracker positiontracker = new PositionTracker(soundstarter, soundstopper);
 				ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
-				Data datamanager = config.ramcache ? Data.getRamStorage(!config.processpack, lczs) : Data.getNoStorage(!config.processpack, lczs);
+				Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packeddir) : Data.getRamStorage(!config.processpack, lczs) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packeddir) : Data.getNoStorage(!config.processpack, lczs);
 				UploadManager uploadmanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips.values() : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 				LocalAMusic amusic = new LocalAMusic(logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
 				this.amusic = amusic;

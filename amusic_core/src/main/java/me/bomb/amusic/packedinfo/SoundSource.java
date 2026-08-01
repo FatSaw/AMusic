@@ -12,7 +12,7 @@ public interface SoundSource<T extends SourceEntry> {
 	 */
 	public abstract boolean exists(String entrykey);
 	
-	public abstract String[] getPlaylists();
+	public abstract String[] listResourcepacks();
 	
 	public abstract String[] getSounds(String playlistname);
 	

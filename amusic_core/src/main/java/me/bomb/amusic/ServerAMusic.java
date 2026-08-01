@@ -118,7 +118,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		if(packedb.length != 1) {
 			return new byte[0];
 		}
-		String[] playlists = packedb[0] == 1 ? datamanager.getPlaylists() : soundsource.getPlaylists();
+		String[] playlists = packedb[0] == 1 ? datamanager.listResourcepacks() : soundsource.listResourcepacks();
 		int playlistcount = playlists.length;
 		if(playlistcount > 65535) {
 			playlistcount = 65535;
@@ -164,7 +164,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		System.arraycopy(playlistnamepackedb, 1, playlistnameb, 0, playlistnameb.length);
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
 		if(packed) {
-			SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
+			SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
 			if(soundinfos==null) {
 				return new byte[0];
 			}
@@ -327,7 +327,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			return new byte[0];
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
-		SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
+		SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
 		if(soundinfos==null) {
 			return new byte[0];
 		}

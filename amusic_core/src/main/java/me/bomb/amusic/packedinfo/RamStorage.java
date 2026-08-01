@@ -24,20 +24,20 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 	@Override
 	public void load() {
 		options.clear();
-		String[] playlists = this.lczs.getPlaylists();
-		int i = playlists.length;
+		String[] resourcepacks = this.lczs.listResourcepacks();
+		int i = resourcepacks.length;
 		while(--i > -1) {
-			String playlist = playlists[i];
-			if(playlist == null) {
+			String resourcepack = resourcepacks[i];
+			if(resourcepack == null) {
 				continue;
 			}
-			final PackedResourcepack packedresourcepack = this.lczs.get(playlist);
+			final PackedResourcepack packedresourcepack = this.lczs.get(resourcepack);
 			
 			if(packedresourcepack == null) {
 				continue;
 			}
 			ResourcepackInfo info = packedresourcepack.info;
-			options.put(playlist, new RamDataEntry(null, info, packedresourcepack.resourcepack));
+			options.put(resourcepack, new RamDataEntry(null, info, packedresourcepack.resourcepack));
 			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(info.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
@@ -61,7 +61,7 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 		if(this.lockwrite || id == null) {
 			return UpdateResult.UNAVILABLE;
 		}
-		PackedResourcepack packer = lczs.get(id);
+		PackedResourcepack packer = this.lczs.get(id);
 		if(packer == null) {
 			DataEntry data = options.remove(id);
 			if(data == null) {
@@ -78,26 +78,6 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 		options.put(id, new RamDataEntry(null, info, resourcepack));
 		this.printRamUsage();
 		return UpdateResult.PACKED_SUCCESS;
-	}
-	
-	private void printRamUsage() {
-		long rambytesused = 0;
-		for(DataEntry optionentry : options.values()) {
-			rambytesused += optionentry.info.packsize;
-		}
-		String unit;
-		if(rambytesused<0x800L) {
-			unit = Long.toString(rambytesused).concat(" B");
-		} else if(rambytesused<0x200000L) {
-			unit = Long.toString((rambytesused>>>10)).concat(" KiB");
-		} else if(rambytesused<0x80000000L) {
-			unit = Long.toString((rambytesused>>>20)).concat(" MiB");
-		} else if(rambytesused<0x20000000000L) {
-			unit = Long.toString((rambytesused>>>30)).concat(" GiB");
-		} else {
-			unit = Long.toString((rambytesused>>>40)).concat(" TiB");
-		}
-		AMusicLogger.info("RAM used: ".concat(unit));
 	}
 
 }

@@ -417,7 +417,13 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		if(musicdir == null) {
 			return null;
 		}
-		
+		int infosize = 102;
+		byte[] entrykeyb = entrykey.getBytes(StandardCharsets.UTF_8);
+		int entrykeylength = entrykeyb.length;
+		if(entrykeylength > 0xFF) {
+			entrykeylength = 0xFF;
+		}
+		infosize += entrykeylength;
 		final byte[] resourcepack;
 		final UUID[] soundhashs;
 		final String[] names;
@@ -464,6 +470,8 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		if (count == 0) {
 			return null;
 		}
+		infosize += count<<4;
+		infosize += count<<2;
 		int resultthreadcount = count;
 		resultthreadcount *= this.threadcoefficient;
 		if(resultthreadcount > threadcountlimit) resultthreadcount = threadcountlimit;
@@ -551,7 +559,13 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			if (j != -1) {
 				songname = songname.substring(0, j);
 			}
-			names[i] = songname;
+			byte[] songnameb = songname.getBytes(StandardCharsets.UTF_8);
+			int songnamelength = songnameb.length;
+			if(songnamelength > 0xFF) {
+				songnamelength = 0xFF;
+			}
+			infosize += songnamelength;
+			names[i] = new String(songnameb, 0, songnamelength, StandardCharsets.UTF_8);
 			splits[i] = 0x01; //HARDCODE SPLITS FEATURE NOT SUPPORTED FOR THIS IMPLEMENTATION
 			int size = filee.getValue();
 			LocalConvertedZerocopySource.ReadSoundZerocopy run = new LocalConvertedZerocopySource.ReadSoundZerocopy(this.fsp, file, (short)i, resourcepack, offset, size, globalheaderoffset, soundsjsonentryoffset, sounddefenitionsentryoffset, soundhashs, lengths);
@@ -882,7 +896,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		while(--i > -1) {
 			sounds[i] = new SoundInfo(names[i], soundhashs[i], lengths[i], splits[i]);
 		}
-		ResourcepackInfo info = new ResourcepackInfo(0, resourcepack.length, entrykey, sounds, sha1hash.digest(), sha256hash.digest(), bhea, bres);
+		ResourcepackInfo info = new ResourcepackInfo(infosize, resourcepack.length, entrykey, sounds, sha1hash.digest(), sha256hash.digest(), bhea, bres, null);
 		return new PackedResourcepack(resourcepack, info);
 	}
 	
@@ -943,7 +957,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		return false;
 	}
 
-	public String[] getPlaylists() {
+	public String[] listResourcepacks() {
 		DirectoryStream<Path> ds = null;
 		ArrayList<Path> playlistsc = new ArrayList<Path>();
 		try {

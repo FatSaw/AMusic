@@ -81,7 +81,7 @@ public class LocalAMusic implements AMusic {
 	public final boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
 		Runnable r = new Runnable() {
 			public void run() {
-				resultConsumer.accept(packed ? datamanager.getPlaylists() : soundsource.getPlaylists());
+				resultConsumer.accept(packed ? datamanager.listResourcepacks() : soundsource.listResourcepacks());
 			}
 		};
 		executor.execute(r);
@@ -95,7 +95,7 @@ public class LocalAMusic implements AMusic {
 		Runnable r = new Runnable() {
 			public void run() {
 				if(packed) {
-					SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
+					SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
 					if(soundinfos==null) {
 						resultConsumer.accept(null);
 						return;
@@ -145,7 +145,7 @@ public class LocalAMusic implements AMusic {
 		}
 		Runnable r = new Runnable() {
 			public void run() {
-				SoundInfo[] soundinfos = datamanager.getPlaylist(playlistname).info.sounds;
+				SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
 				if(soundinfos==null) {
 					resultConsumer.accept(null);
 					return;

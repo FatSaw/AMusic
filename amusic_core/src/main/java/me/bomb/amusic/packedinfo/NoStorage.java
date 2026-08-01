@@ -24,23 +24,24 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	@Override
 	public void load() {
 		options.clear();
-		String[] playlists = this.lczs.getPlaylists();
-		int i = playlists.length;
+		String[] resourcepacks = this.lczs.listResourcepacks();
+		int i = resourcepacks.length;
 		while(--i > -1) {
-			String playlist = playlists[i];
-			if(playlist == null) {
+			String resourcepack = resourcepacks[i];
+			if(resourcepack == null) {
 				continue;
 			}
-			final PackedResourcepack packedresourcepack = this.lczs.get(playlist);
+			final PackedResourcepack packedresourcepack = this.lczs.get(resourcepack);
 			
 			if(packedresourcepack == null) {
 				continue;
 			}
 			ResourcepackInfo info = packedresourcepack.info;
-			options.put(playlist, new NoDataEntry(null, info, this.lczs));
+			options.put(resourcepack, new NoDataEntry(null, info, this.lczs));
 			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(info.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
+		this.printRamUsageInfo();
 	}
 
 	/**
@@ -60,18 +61,20 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 		if(this.lockwrite || id == null) {
 			return UpdateResult.UNAVILABLE;
 		}
-		PackedResourcepack packer = lczs.get(id);
+		PackedResourcepack packer = this.lczs.get(id);
 		if(packer == null) {
 			DataEntry data = options.remove(id);
 			if(data == null) {
 				return UpdateResult.DELETED_FAILED;
 			}
+			this.printRamUsageInfo();
 			return UpdateResult.DELETED_SUCCESS;
 		}
 		if(packer.resourcepack == null) {
 			return UpdateResult.PACKED_FAILED;
 		}
 		options.put(id, new NoDataEntry(null, packer.info, this.lczs));
+		this.printRamUsageInfo();
 		return UpdateResult.PACKED_SUCCESS;
 	}
 

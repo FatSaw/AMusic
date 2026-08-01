@@ -8,17 +8,18 @@ import java.util.UUID;
 
 public final class ResourcepackInfo {
 	
-	private static final byte VERSION = 5;
+	private static final byte VERSION = 7;
 	
 	protected int infosize;
 	
-	public int packsize;
-	public String packname;
-	public SoundInfo[] sounds;
-	public byte[] sha1, sha256;
-	public UUID bhea, bres;
+	protected int packsize;
+	protected String packname;
+	protected SoundInfo[] sounds;
+	protected byte[] sha1, sha256;
+	protected UUID bhea, bres;
+	protected byte[] customdata;
 	
-	protected ResourcepackInfo(int infosize, int packsize, String packname, SoundInfo[] sounds, byte[] sha1, byte[] sha256, UUID bhea, UUID bres) {
+	protected ResourcepackInfo(int infosize, int packsize, String packname, SoundInfo[] sounds, byte[] sha1, byte[] sha256, UUID bhea, UUID bres, byte[] customdata) {
 		this.infosize = infosize;
 		this.packsize = packsize;
 		this.packname = packname;
@@ -27,13 +28,46 @@ public final class ResourcepackInfo {
 		this.sha256 = sha256;
 		this.bhea = bhea;
 		this.bres = bres;
+		this.customdata = customdata;
+	}
+
+	public int getPacksize() {
+		return this.packsize;
+	}
+
+	public String getPackname() {
+		return this.packname;
+	}
+	
+	public SoundInfo[] getSounds() {
+		return this.sounds.clone();
+	}
+	
+	public byte[] getSha1() {
+		return this.sha1.clone();
+	}
+	
+	public byte[] getSha256() {
+		return this.sha256.clone();
+	}
+	
+	public UUID getBhea() {
+		return this.bhea;
+	}
+	
+	public UUID getBres() {
+		return this.bres;
+	}
+	
+	public byte[] getCustomdata() {
+		return this.customdata.clone();
 	}
 	
 	public static int serialize(OutputStream os, ResourcepackInfo info) throws IOException {
 		if(os == null || info.packsize < 0 || info.packname == null || info.sounds == null || info.sha1 == null || info.sha1.length != 20|| info.sha256 == null || info.sha256.length != 0x20) {
 			throw new IllegalArgumentException();
 		}
-		int infosize = 100;
+		int infosize = 102;
 		int soundcount = info.sounds.length;
 		os.write('a'); //FORMATID
 		os.write('m'); //FORMATID
@@ -215,6 +249,20 @@ public final class ResourcepackInfo {
 		os.write(splits); //SOUND SPLITS ENTRY 0-255
 		os.write(lengths); //SOUND LENGTHS ENTRY 0-65535
 		os.write(names); //SOUND LENGTHS ALL 0-8355585 32767*255
+		if(info.customdata == null) {
+			os.write(0x00);
+			os.write(0x00);
+		} else {
+			int customdatalength = info.customdata.length;
+			if(customdatalength > 0xFFFF) {
+				customdatalength = 0xFFFF;
+			}
+			infosize += customdatalength;
+			os.write(customdatalength);
+			customdatalength >>>= 8;
+			os.write(customdatalength);
+			os.write(info.customdata, 0, customdatalength);
+		}
 		info.infosize = infosize;
 		return infosize;
 	}
@@ -223,7 +271,7 @@ public final class ResourcepackInfo {
 		if(is == null) {
 			throw new IllegalArgumentException();
 		}
-		int infosize = 100;
+		int infosize = 102;
 		byte[] buf = new byte[8];
 		if(is.read(buf) != 8 || buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'p' || buf[3] != 'i' || buf[4] != 0 || buf[7] != 0) {
 			is.close();
@@ -294,7 +342,16 @@ public final class ResourcepackInfo {
 			infosize+=buf.length;
 			sounds[i] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), soundhashs[i], lengths[i], splits[i]);
 		}
-		return new ResourcepackInfo(infosize, packedsize, packedname, sounds, sha1, sha256, bhea, bres);
+		byte[] customdata = null;
+		buf = new byte[2];
+		is.read(buf);
+		int customdatalength = (buf[1] & 0xFF | buf[0]<<8);
+		infosize += customdatalength;
+		if(customdatalength > 0) {
+			customdata = new byte[customdatalength];
+			is.read(customdata);
+		}
+		return new ResourcepackInfo(infosize, packedsize, packedname, sounds, sha1, sha256, bhea, bres, customdata);
 	}
 
 }

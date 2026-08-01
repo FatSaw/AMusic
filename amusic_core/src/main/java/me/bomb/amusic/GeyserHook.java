@@ -54,10 +54,10 @@ public final class GeyserHook {
 		
 		@Override
 		public void accept(GeyserDefineResourcePacksEvent event) {
-			String[] playlists = this.datamanager.getPlaylists();
-			int i = playlists.length;
+			String[] resourcepacks = this.datamanager.listResourcepacks();
+			int i = resourcepacks.length;
 			while(--i > -1) {
-				DataEntry entry = this.datamanager.getPlaylist(playlists[i]);
+				DataEntry entry = this.datamanager.getResourcepack(resourcepacks[i]);
 				if(entry == null) {
 					continue;
 				}
@@ -77,10 +77,10 @@ public final class GeyserHook {
 		
 		@Override
 		public void accept(SessionLoadResourcePacksEvent event) {
-			String[] playlists = this.datamanager.getPlaylists();
+			String[] playlists = this.datamanager.listResourcepacks();
 			int i = playlists.length;
 			while(--i > -1) {
-				DataEntry entry = this.datamanager.getPlaylist(playlists[i]);
+				DataEntry entry = this.datamanager.getResourcepack(playlists[i]);
 				if(entry == null) {
 					continue;
 				}
@@ -103,12 +103,12 @@ public final class GeyserHook {
 
 		@Override
 		public byte[] sha256() {
-			return this.entry.info.sha256;
+			return this.entry.info.getSha256();
 		}
 
 		@Override
 		public long size() {
-			return this.entry.info.packsize;
+			return this.entry.info.getPacksize();
 		}
 
 		@Override
@@ -124,12 +124,12 @@ public final class GeyserHook {
 		@Override
 		protected Builder createBuilder() {
 			Version version = new Version(1, 0, 0);
-			Header header = new Header(entry.info.bhea, version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
-			Module module = new Module(entry.info.bres, version, "resources", "");
+			Header header = new Header(entry.info.getBhea(), version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
+			Module module = new Module(entry.info.getBres(), version, "resources", "");
 			HashSet<Module> modules = new HashSet<>(1);
 			modules.add(module);
 			GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
-			return new GeyserResourcePack.Builder(this, manifest, entry.info.packname);
+			return new GeyserResourcePack.Builder(this, manifest, entry.info.getPackname());
 		}
 
 	}

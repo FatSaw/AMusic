@@ -46,7 +46,7 @@ public final class ResourceFactory implements Runnable {
 				if(targets == null) {
 					if(statusreport != null) statusreport.onStatusResponse(EnumStatus.PACKED);
 				} else {
-					DataEntry dataentry = datamanager.getPlaylist(this.id);
+					DataEntry dataentry = datamanager.getResourcepack(this.id);
 					if(resourcemanager.dispatch(dataentry, this.targets)) {
 						if(statusreport != null) statusreport.onStatusResponse(EnumStatus.DISPATCHED);
 					} else {
@@ -57,7 +57,7 @@ public final class ResourceFactory implements Runnable {
 			}
 			return;
 		}
-		DataEntry dataentry = datamanager.getPlaylist(this.id);
+		DataEntry dataentry = datamanager.getResourcepack(this.id);
 		if(dataentry == null) {
 			if(statusreport == null) {
 				return;

@@ -63,14 +63,15 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 		ResourcepackInfo info = this.info;
 		String storeid = this.storeid;
 		InputStream is = null;
-		byte[] resourcepack;
+		byte[] resourcepack = null;
+		boolean fail = false;
 		try {
 			is = this.fsp.newInputStream(this.datapath);
 			is.skip(info.infosize);
 			resourcepack = new byte[info.packsize];
 		} catch (IOException e) {
 			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" update customdata fail (invalid path)"));
-			throw new IllegalStateException(e);
+			fail = true;
 		} finally {
 			if(is != null) {
 				try {
@@ -80,6 +81,9 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 				}
 			}
 		}
+		if(fail) {
+			return false;
+		}
 		info.customdata = customdata;
 		OutputStream os = null;
 		try {
@@ -87,7 +91,7 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 			ResourcepackInfo.serialize(os, info);
 			os.write(resourcepack); //RESOURCEPACK ARCHIVE
 		} catch (IOException e1) {
-			throw new IllegalStateException(e1);
+			fail = true;
 		} finally {
 			if(os != null) {
 				try {
@@ -97,7 +101,7 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 				}
 			}
 		}
-		return true;
+		return !fail;
 	}
 
 }

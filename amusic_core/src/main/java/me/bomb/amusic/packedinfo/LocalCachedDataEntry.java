@@ -34,12 +34,13 @@ public final class LocalCachedDataEntry extends DataEntry implements CustomDatas
 		ResourcepackInfo info = this.info;
 		info.customdata = customdata;
 		OutputStream os = null;
+		boolean fail = false;
 		try {
 			os = this.fsp.newOutputStream(this.datapath);
 			ResourcepackInfo.serialize(os, info);
 			os.write(this.pack); //RESOURCEPACK ARCHIVE
 		} catch (IOException e1) {
-			throw new IllegalStateException(e1);
+			fail = true;
 		} finally {
 			if(os != null) {
 				try {
@@ -49,7 +50,7 @@ public final class LocalCachedDataEntry extends DataEntry implements CustomDatas
 				}
 			}
 		}
-		return true;
+		return !fail;
 	}
 
 }

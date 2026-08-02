@@ -2,6 +2,7 @@ package me.bomb.amusic;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -14,6 +15,9 @@ import java.util.function.Consumer;
 
 import javax.net.SocketFactory;
 
+import me.bomb.amusic.packedinfo.CustomDatastore;
+import me.bomb.amusic.packedinfo.DataEntry;
+import me.bomb.amusic.packedinfo.ResourcepackInfo;
 import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.util.ByteArraysOutputStream;
@@ -21,7 +25,7 @@ import me.bomb.amusic.util.ByteArraysOutputStream;
 public final class ClientAMusic implements AMusic {
 	
 	private final InetAddress hostip, remoteip;
-	private final int port;
+	private final int port, timeout;
 	private final SocketFactory socketfactory;
 	private final Executor executor;
 	
@@ -29,6 +33,7 @@ public final class ClientAMusic implements AMusic {
 		this.hostip = hostip;
 		this.remoteip = remoteip;
 		this.port = port;
+		this.timeout = 5000;
 		this.socketfactory = socketfactory;
 		this.executor = executor;
 	}
@@ -104,10 +109,6 @@ public final class ClientAMusic implements AMusic {
 		cachePlayerPlaylistSoundnames.remove(playeruuid);
 		cachePlayerPlaylistSoundlengths.remove(playeruuid);
 	}
-	
-	private void addToQueue(Runnable run) {
-		executor.execute(run);
-	}
 
 	@Override
 	public boolean getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer) {
@@ -162,7 +163,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(players);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 	
@@ -215,10 +216,10 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(names);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
-	
+
 	private ConcurrentHashMap<String, String[]> cachePlaylistSoundnamesPacked = new ConcurrentHashMap<>();
 	private ConcurrentHashMap<String, String[]> cachePlaylistSoundnames = new ConcurrentHashMap<>();
 
@@ -280,7 +281,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(names);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 	
@@ -353,7 +354,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(names);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 	
@@ -390,7 +391,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(lengths);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 	
@@ -458,10 +459,10 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(lengths);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
-
+	
 	@Override
 	public boolean setRepeatMode(UUID playeruuid, RepeatType repeattype) {
 		if(playeruuid == null) {
@@ -505,7 +506,7 @@ public final class ClientAMusic implements AMusic {
 				ClientAMusic.this.sendPacket((byte)0x07, buf, false, 0, false);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -556,7 +557,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(new String(buf, StandardCharsets.UTF_8));
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -607,7 +608,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept((short) (buf[0] & 0xFF | buf[1]<<8));
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -658,7 +659,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept((short) (buf[0] & 0xFF | buf[1]<<8));
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -792,7 +793,7 @@ public final class ClientAMusic implements AMusic {
 				}
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -843,7 +844,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(new String(buf, StandardCharsets.UTF_8));
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -889,7 +890,7 @@ public final class ClientAMusic implements AMusic {
 				ClientAMusic.this.sendPacket((byte)0x0D, buf, false, 0, false);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -935,7 +936,7 @@ public final class ClientAMusic implements AMusic {
 				ClientAMusic.this.sendPacket((byte)0x0E, buf, false, 0, false);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -990,7 +991,7 @@ public final class ClientAMusic implements AMusic {
 				ClientAMusic.this.sendPacket((byte)0x0F, buf, true, 0, false);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -1111,7 +1112,7 @@ public final class ClientAMusic implements AMusic {
 				ClientAMusic.this.sendPacket((byte)0x10, buf, true, 0, false);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -1164,7 +1165,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(playeruuid);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -1217,7 +1218,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(tokens);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 
@@ -1271,7 +1272,7 @@ public final class ClientAMusic implements AMusic {
 				resultConsumer.accept(success);
 			}
 		};
-		addToQueue(r);
+		executor.execute(r);
 		return true;
 	}
 	
@@ -1322,6 +1323,191 @@ public final class ClientAMusic implements AMusic {
 			cachePlaylistsUpdated.set(false);
 			cachePlaylistSoundnames.clear();
 		}
+	}
+
+	@Override
+	public boolean getResourcepackInfo(String resourcepackname, Consumer<ResourcepackInfo> resultConsumer) {
+		if(resourcepackname == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				byte[] resourcepacknameb = resourcepackname.getBytes(StandardCharsets.UTF_8);
+				int resourcepacknamelength = resourcepacknameb.length;
+				if(resourcepacknamelength > 0xFF) {
+					resourcepacknamelength = 0xFF;
+				}
+				
+				ResourcepackInfo info = null;
+				Socket socket = null;
+				try {
+					socket = socketfactory.createSocket(remoteip, port, hostip, 0);
+					socket.setSoTimeout(timeout);
+					OutputStream os = socket.getOutputStream();
+					byte[] buf = new byte[0x0a];
+					buf[0x00] = 'a';
+					buf[0x01] = 'm';
+					buf[0x02] = 'r';
+					buf[0x03] = 'a';
+					buf[0x04] = 0x00;
+					buf[0x05] = 0x00;
+					buf[0x06] = 0x00;
+					buf[0x07] = 0x00;
+					buf[0x08] = 0x14;
+					buf[0x09] = (byte) resourcepacknamelength;
+					os.write(buf, 0, buf.length);
+					buf = null;
+					os.write(resourcepacknameb, 0, resourcepacknamelength);
+					InputStream is = socket.getInputStream();
+					info = ResourcepackInfo.deserialize(is);
+				} catch (IOException e) {
+				} finally {
+					if(socket != null) {
+						try {
+							socket.close();
+						} catch (IOException e) {
+						}
+					}
+				}
+				resultConsumer.accept(info);
+			}
+		};
+		executor.execute(r);
+		return true;
+	}
+
+	@Override
+	public boolean getResourcepackInfo(UUID playeruuid, Consumer<ResourcepackInfo> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				long msb = playeruuid.getMostSignificantBits(), lsb = playeruuid.getLeastSignificantBits();
+				byte[] buf = new byte[0x19];
+				buf[0x00] = 'a';
+				buf[0x01] = 'm';
+				buf[0x02] = 'r';
+				buf[0x03] = 'a';
+				buf[0x04] = 0x00;
+				buf[0x05] = 0x00;
+				buf[0x06] = 0x00;
+				buf[0x07] = 0x00;
+				buf[0x08] = 0x15;
+				buf[0x09] = (byte) msb;
+				msb>>>=8;
+				buf[0x0a] = (byte) msb;
+				msb>>>=8;
+				buf[0x0b] = (byte) msb;
+				msb>>>=8;
+				buf[0x0c] = (byte) msb;
+				msb>>>=8;
+				buf[0x0d] = (byte) msb;
+				msb>>>=8;
+				buf[0x0e] = (byte) msb;
+				msb>>>=8;
+				buf[0x0f] = (byte) msb;
+				msb>>>=8;
+				buf[0x10] = (byte) msb;
+				buf[0x11] = (byte) lsb;
+				lsb>>>=8;
+				buf[0x12] = (byte) lsb;
+				lsb>>>=8;
+				buf[0x13] = (byte) lsb;
+				lsb>>>=8;
+				buf[0x14] = (byte) lsb;
+				lsb>>>=8;
+				buf[0x15] = (byte) lsb;
+				lsb>>>=8;
+				buf[0x16] = (byte) lsb;
+				lsb>>>=8;
+				buf[0x17] = (byte) lsb;
+				lsb>>>=8;
+				buf[0x18] = (byte) lsb;
+				ResourcepackInfo info = null;
+				Socket socket = null;
+				try {
+					socket = socketfactory.createSocket(remoteip, port, hostip, 0);
+					socket.setSoTimeout(timeout);
+					OutputStream os = socket.getOutputStream();
+					os.write(buf, 0, buf.length);
+					buf = null;
+					InputStream is = socket.getInputStream();
+					info = ResourcepackInfo.deserialize(is);
+				} catch (IOException e) {
+				} finally {
+					if(socket != null) {
+						try {
+							socket.close();
+						} catch (IOException e) {
+						}
+					}
+				}
+				resultConsumer.accept(info);
+			}
+		};
+		executor.execute(r);
+		return true;
+	}
+	
+	@Override
+	public final boolean setResourcepackCustomData(String resourcepackname, byte[] customdata, Consumer<Boolean> resultConsumer) {
+		if(resourcepackname == null || customdata == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				byte[] resourcepacknameb = resourcepackname.getBytes(StandardCharsets.UTF_8);
+				int resourcepacknamelength = resourcepacknameb.length;
+				if(resourcepacknamelength > 0xFF) {
+					resourcepacknamelength = 0xFF;
+				}
+				int customdatalength = customdata.length;
+				if(customdatalength > 0xFFFF) {
+					customdatalength = 0xFFFF;
+				}
+				
+				Socket socket = null;
+				boolean success = false;
+				try {
+					socket = socketfactory.createSocket(remoteip, port, hostip, 0);
+					socket.setSoTimeout(timeout);
+					OutputStream os = socket.getOutputStream();
+					byte[] buf = new byte[0x0c];
+					buf[0x00] = 'a';
+					buf[0x01] = 'm';
+					buf[0x02] = 'r';
+					buf[0x03] = 'a';
+					buf[0x04] = 0x00;
+					buf[0x05] = 0x00;
+					buf[0x06] = 0x00;
+					buf[0x07] = 0x00;
+					buf[0x08] = 0x16;
+					buf[0x09] = (byte) resourcepacknamelength;
+					buf[0x0a] = (byte) customdatalength;
+					buf[0x0b] = (byte) (customdatalength >>> 8);
+					os.write(buf, 0, buf.length);
+					buf = null;
+					os.write(resourcepacknameb, 0, resourcepacknamelength);
+					os.write(customdata, 0, customdatalength);
+					InputStream is = socket.getInputStream();
+					buf = new byte[1];
+					is.read(buf);
+					success = buf[0] == 1;
+				} catch (IOException e) {
+				} finally {
+					if(socket != null) {
+						try {
+							socket.close();
+						} catch (IOException e) {
+						}
+					}
+				}
+				resultConsumer.accept(success);
+			}
+		};
+		executor.execute(r);
+		return true;
 	}
 	
 	/*private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);

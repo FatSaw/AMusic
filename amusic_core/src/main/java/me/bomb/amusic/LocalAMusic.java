@@ -4,7 +4,10 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
+import me.bomb.amusic.packedinfo.CustomDatastore;
 import me.bomb.amusic.packedinfo.Data;
+import me.bomb.amusic.packedinfo.DataEntry;
+import me.bomb.amusic.packedinfo.ResourcepackInfo;
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.packedinfo.SoundSource;
 import me.bomb.amusic.packedinfo.SourceEntry;
@@ -33,16 +36,6 @@ public class LocalAMusic implements AMusic {
 		this.uploadermanager = uploadermanager;
 		this.executor = executor;
 	}
-	
-	/*public LocalAMusic(Logger logger, Configuration config, SoundSource<?> soundsource, PackSender packsender, SoundStarter soundstarter, SoundStopper soundstopper, Collection<InetAddress> playerips) {
-		this.logger = logger;
-		this.soundsource = soundsource;
-		this.positiontracker = new PositionTracker(soundstarter, soundstopper);
-		this.resourcemanager = new ResourceManager(packsender, this.positiontracker, config.sendpackhost, config.packsizelimit, config.clientcache ? config.tokensalt : null, config.waitacception, config.sendpackstrictaccess ? playerips : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
-		this.datamanager = Data.getNoStorage(!config.processpack, soundsource);
-		this.uploadermanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
-		this.executor = config.executor;
-	}*/
 	
 	public void enable() {
 		positiontracker.start();
@@ -95,8 +88,10 @@ public class LocalAMusic implements AMusic {
 		Runnable r = new Runnable() {
 			public void run() {
 				if(packed) {
-					SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
-					if(soundinfos==null) {
+					SoundInfo[] soundinfos;
+					ResourcepackInfo info;
+					DataEntry dataentry;
+					if((dataentry = datamanager.getResourcepack(playlistname)) == null || (info = dataentry.info) == null || (soundinfos = info.getSounds()) == null) {
 						resultConsumer.accept(null);
 						return;
 					}
@@ -122,15 +117,16 @@ public class LocalAMusic implements AMusic {
 		}
 		Runnable r = new Runnable() {
 			public void run() {
-				SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-				if(soundinfos==null) {
+				ResourcepackInfo info;
+				SoundInfo[] soundsinfo;
+				if ((info = positiontracker.getResourcepackInfo(playeruuid)) == null || (soundsinfo = info.getSounds()) == null) {
 					resultConsumer.accept(null);
 					return;
 				}
-				int i = soundinfos.length;
+				int i = soundsinfo.length;
 				String[] soundnames = new String[i];
 				while(--i > -1) {
-					soundnames[i] = soundinfos[i].name;
+					soundnames[i] = soundsinfo[i].name;
 				}
 				resultConsumer.accept(soundnames);
 			}
@@ -145,8 +141,10 @@ public class LocalAMusic implements AMusic {
 		}
 		Runnable r = new Runnable() {
 			public void run() {
-				SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
-				if(soundinfos==null) {
+				SoundInfo[] soundinfos;
+				ResourcepackInfo info;
+				DataEntry dataentry;
+				if((dataentry = datamanager.getResourcepack(playlistname)) == null || (info = dataentry.info) == null || (soundinfos = info.getSounds()) == null) {
 					resultConsumer.accept(null);
 					return;
 				}
@@ -168,15 +166,16 @@ public class LocalAMusic implements AMusic {
 		}
 		Runnable r = new Runnable() {
 			public void run() {
-				SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-				if(soundinfos==null) {
+				ResourcepackInfo info;
+				SoundInfo[] soundsinfo;
+				if ((info = positiontracker.getResourcepackInfo(playeruuid)) == null || (soundsinfo = info.getSounds()) == null) {
 					resultConsumer.accept(null);
 					return;
 				}
-				int i = soundinfos.length;
+				int i = soundsinfo.length;
 				short[] soundlengths = new short[i];
 				while(--i > -1) {
-					soundlengths[i] = soundinfos[i].length;
+					soundlengths[i] = soundsinfo[i].length;
 				}
 				resultConsumer.accept(soundlengths);
 			}
@@ -249,7 +248,8 @@ public class LocalAMusic implements AMusic {
 		}
 		Runnable r = new Runnable() {
 			public void run() {
-				resultConsumer.accept(positiontracker.getPlaylistName(playeruuid));
+				ResourcepackInfo info = positiontracker.getResourcepackInfo(playeruuid);
+				resultConsumer.accept(info == null ? null : info.getPackname());
 			}
 		};
 		executor.execute(r);
@@ -357,6 +357,51 @@ public class LocalAMusic implements AMusic {
 			}
 		};
 		r.run();
+	}
+	
+	public final boolean getResourcepackInfo(String resourcepackname, Consumer<ResourcepackInfo> resultConsumer) {
+		if(resourcepackname == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				final DataEntry dataentry = datamanager.getResourcepack(resourcepackname);
+				resultConsumer.accept(dataentry.info);
+			}
+		};
+		executor.execute(r);
+		return true;
+	}
+	
+	public final boolean getResourcepackInfo(UUID playeruuid, Consumer<ResourcepackInfo> resultConsumer) {
+		if(playeruuid == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(positiontracker.getResourcepackInfo(playeruuid));
+			}
+		};
+		executor.execute(r);
+		return true;
+	}
+	
+	public final boolean setResourcepackCustomData(String resourcepackname, byte[] customdata, Consumer<Boolean> resultConsumer) {
+		if(resourcepackname == null || customdata == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				final DataEntry dataentry = datamanager.getResourcepack(resourcepackname);
+				if(dataentry == null || !(dataentry instanceof CustomDatastore)) {
+					resultConsumer.accept(Boolean.FALSE);
+					return;
+				}
+				resultConsumer.accept(((CustomDatastore)dataentry).updateCustomdata(customdata));
+			}
+		};
+		executor.execute(r);
+		return true;
 	}
 	
 }

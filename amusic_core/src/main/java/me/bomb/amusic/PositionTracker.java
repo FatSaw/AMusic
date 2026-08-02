@@ -1,56 +1,54 @@
 package me.bomb.amusic;
 
-import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import me.bomb.amusic.packedinfo.ResourcepackInfo;
 import me.bomb.amusic.packedinfo.SoundInfo;
 
 public final class PositionTracker implements Runnable {
 
 	private final ConcurrentHashMap<UUID, Playing> trackers = new ConcurrentHashMap<UUID, Playing>();
 	private final ConcurrentHashMap<UUID, RepeatType> repeaters = new ConcurrentHashMap<UUID, RepeatType>();
-	private final ConcurrentHashMap<UUID, SoundInfo[]> playlistinfo = new ConcurrentHashMap<UUID, SoundInfo[]>();
-	private final ConcurrentHashMap<UUID, String> loadedplaylistnames = new ConcurrentHashMap<UUID, String>();
+	private final ConcurrentHashMap<UUID, ResourcepackInfo> resourcepackinfo = new ConcurrentHashMap<UUID, ResourcepackInfo>();
 	
 	private final SoundStarter soundstarter;
 	private final SoundStopper soundstopper;
 	
 	private Thread ticker;
 	
-	public void setPlaylistInfo(UUID playeruuid, String playlistname, SoundInfo[] soundinfo) {
-		playlistinfo.put(playeruuid, soundinfo);
-		loadedplaylistnames.put(playeruuid, playlistname);
+	public void setPlaylistInfo(UUID playeruuid, ResourcepackInfo resourcepackinfo) {
+		this.resourcepackinfo.put(playeruuid, resourcepackinfo);
 	}
 	
 	public void removePlaylistInfo(UUID playeruuid) {
-		playlistinfo.remove(playeruuid);
-		loadedplaylistnames.remove(playeruuid);
+		this.resourcepackinfo.remove(playeruuid);
 	}
 	
 	public UUID[] getPlayersLoaded(String playlistname) {
 		if(playlistname == null) {
 			return null;
 		}
-		ArrayList<UUID> playerslist = new ArrayList<UUID>(loadedplaylistnames.size());
-		for(Entry<UUID, String> entry : loadedplaylistnames.entrySet()) {
-			if(entry.getValue().equals(playlistname)) {
-				UUID playeruuid = entry.getKey();
+		HashSet<UUID> playerslist = new HashSet<UUID>(this.resourcepackinfo.size());
+		for(Entry<UUID, ResourcepackInfo> entry : this.resourcepackinfo.entrySet()) {
+			UUID playeruuid = entry.getKey();
+			ResourcepackInfo info = entry.getValue();
+			if(info.getPackname().equals(playlistname)) {
 				playerslist.add(playeruuid);
 			}
 		}
 		return playerslist.toArray(new UUID[playerslist.size()]);
 	}
-
-	public String getPlaylistName(UUID playeruuid) {
-		return playeruuid == null ? null : loadedplaylistnames.get(playeruuid);
-	}
-
-	public SoundInfo[] getSoundInfo(UUID playeruuid) {
-		return playeruuid == null ? null : playlistinfo.get(playeruuid);
+	
+	public ResourcepackInfo getResourcepackInfo(UUID playeruuid) {
+		if(playeruuid == null) {
+			return null;
+		}
+		return this.resourcepackinfo.get(playeruuid);
 	}
 
 	private volatile boolean run = false;
@@ -75,8 +73,7 @@ public final class PositionTracker implements Runnable {
 		}
 		this.trackers.clear();
 		this.repeaters.clear();
-		this.playlistinfo.clear();
-		this.loadedplaylistnames.clear();
+		this.resourcepackinfo.clear();
 	}
 
 	@Override
@@ -157,8 +154,9 @@ public final class PositionTracker implements Runnable {
 		if (!trackers.containsKey(uuid)) {
 			return null;
 		}
-		SoundInfo[] soundsinfo = getSoundInfo(uuid);
-		if (soundsinfo == null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if ((info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return null;
 		}
 		Playing playing = trackers.get(uuid);
@@ -170,8 +168,9 @@ public final class PositionTracker implements Runnable {
 	}
 
 	public short getPlayingSize(UUID uuid) {
-		SoundInfo[] soundsinfo = getSoundInfo(uuid);
-		if (!trackers.containsKey(uuid) || soundsinfo == null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if (!trackers.containsKey(uuid) || (info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return -1;
 		}
 		Playing playing = trackers.get(uuid);
@@ -187,8 +186,9 @@ public final class PositionTracker implements Runnable {
 	}
 	
 	public void playMusicUntrackable(UUID uuid, String name, double x, double y, double z, float volume, float pitch) {
-		SoundInfo[] soundsinfo = getSoundInfo(uuid);
-		if (soundsinfo == null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if ((info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return;
 		}
 		short soundssize = (short) soundsinfo.length, id = soundssize;
@@ -222,8 +222,9 @@ public final class PositionTracker implements Runnable {
 	}
 	
 	public void stopMusicUntrackable(UUID uuid) {
-		SoundInfo[] soundsinfo = getSoundInfo(uuid);
-		if (soundsinfo == null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if ((info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return;
 		}
 		trackers.remove(uuid);
@@ -248,8 +249,9 @@ public final class PositionTracker implements Runnable {
 	}
 
 	public void playMusic(UUID uuid, String name) {
-		SoundInfo[] soundsinfo = getSoundInfo(uuid);
-		if (soundsinfo == null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if ((info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return;
 		}
 		short soundssize = (short) soundsinfo.length, id = soundssize;
@@ -285,8 +287,9 @@ public final class PositionTracker implements Runnable {
 		if (uuid == null || id < 0) {
 			return;
 		}
-		SoundInfo[] soundsinfo = getSoundInfo(uuid);
-		if (soundsinfo == null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if ((info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return;
 		}
 		short soundssize = (short) soundsinfo.length;
@@ -342,13 +345,12 @@ public final class PositionTracker implements Runnable {
 	}
 	
 	/**
-	 * Removes player from {@link PositionTracker#trackers}, {@link PositionTracker#playlistinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
+	 * Removes player from {@link PositionTracker#trackers}, {@link PositionTracker#resourcepackinfo}, {@link PositionTracker#repeaters}, {@link PositionTracker#loadedplaylistnames},.
 	 */
 	public void remove(UUID uuid) {
 		trackers.remove(uuid);
-		playlistinfo.remove(uuid);
+		resourcepackinfo.remove(uuid);
 		repeaters.remove(uuid);
-		loadedplaylistnames.remove(uuid);
 	}
 
 	public void setRepeater(UUID uuid, RepeatType repeattype) {

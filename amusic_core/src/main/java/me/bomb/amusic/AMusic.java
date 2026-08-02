@@ -3,6 +3,7 @@ package me.bomb.amusic;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import me.bomb.amusic.packedinfo.ResourcepackInfo;
 import me.bomb.amusic.resource.StatusReport;
 
 public interface AMusic {
@@ -63,7 +64,7 @@ public interface AMusic {
 	 * @return true if async used.
 	 */
 	public boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer);
-
+	
 	/**
 	 * Set sound repeat mode, null to not repeat.
 	 * 
@@ -159,4 +160,20 @@ public interface AMusic {
 	 * Close upload session.
 	 */
 	public void closeUploadSession(UUID token, boolean save);
+	
+	/**
+	 * Get resourcepack info.
+	 */
+	public boolean getResourcepackInfo(String resourcepackname, Consumer<ResourcepackInfo> resultConsumer);
+
+	/**
+	 * Get resourcepack info.
+	 */
+	public boolean getResourcepackInfo(UUID playeruuid, Consumer<ResourcepackInfo> resultConsumer);
+
+	/**
+	 * Set resourcepack customdata.
+	 */
+	public boolean setResourcepackCustomData(String resourcepackname, byte[] customdata, Consumer<Boolean> resultConsumer);
+
 }

@@ -92,7 +92,7 @@ public final class ResourceManager {
 				positiontracker.stopMusic(target);
 				positiontracker.removePlaylistInfo(target);
 				packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.info.getSha1());
-				positiontracker.setPlaylistInfo(target, dataentry.info.getPackname(), dataentry.info.getSounds());
+				positiontracker.setPlaylistInfo(target, dataentry.info);
 			}
 			return true;
 		}
@@ -187,7 +187,7 @@ public final class ResourceManager {
 			positiontracker.stopMusic(target);
 			positiontracker.removePlaylistInfo(target);
 			packsender.send(target, new String(host, 0, host.length, StandardCharsets.UTF_8), dataentry.info.getSha1());
-			positiontracker.setPlaylistInfo(target, dataentry.info.getPackname(), dataentry.info.getSounds());
+			positiontracker.setPlaylistInfo(target, dataentry.info);
 		}
 		return true;
 	}

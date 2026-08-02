@@ -2,6 +2,7 @@ package me.bomb.amusic;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,7 +15,10 @@ import java.util.concurrent.Executor;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLException;
 
+import me.bomb.amusic.packedinfo.CustomDatastore;
 import me.bomb.amusic.packedinfo.Data;
+import me.bomb.amusic.packedinfo.DataEntry;
+import me.bomb.amusic.packedinfo.ResourcepackInfo;
 import me.bomb.amusic.packedinfo.SoundInfo;
 import me.bomb.amusic.packedinfo.SoundSource;
 import me.bomb.amusic.packedinfo.SourceEntry;
@@ -28,7 +32,7 @@ import me.bomb.amusic.util.Logger;
 
 public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
-	private final int port, backlog;
+	private final int port, timeout, backlog;
 	private final ServerSocketFactory connectserverfactory;
 	private volatile boolean run;
 	private ServerSocket server;
@@ -39,6 +43,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		this.hostip = hostip;
 		this.remoteip = remoteip;
 		this.port = port;
+		this.timeout = 5000;
 		this.backlog = backlog;
 		this.connectserverfactory = connectserverfactory;
 		this.serverexecutor = serverexecutor;
@@ -160,12 +165,12 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			return new byte[0];
 		}
 		boolean packed = playlistnamepackedb[0] == 1;
-		byte[] playlistnameb = new byte[playlistnamepackedb.length-1];
-		System.arraycopy(playlistnamepackedb, 1, playlistnameb, 0, playlistnameb.length);
-		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
+		String playlistname = new String(playlistnamepackedb, 1, playlistnamepackedb.length - 1, StandardCharsets.UTF_8);
 		if(packed) {
-			SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
-			if(soundinfos==null) {
+			SoundInfo[] soundinfos;
+			ResourcepackInfo info;
+			DataEntry dataentry;
+			if((dataentry = datamanager.getResourcepack(playlistname)) == null || (info = dataentry.info) == null || (soundinfos = info.getSounds()) == null) {
 				return new byte[0];
 			}
 			int soundcount = soundinfos.length;
@@ -243,7 +248,6 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			}
 			return response;
 		}
-		
 	}
 	
 	public final byte[] getPlaylistSoundnamesPlayeruuidBytes(byte[] playeruuidb) {
@@ -282,11 +286,12 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb<<=8;
 		msb |= playeruuidb[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
-		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-		if(soundinfos==null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if ((info = positiontracker.getResourcepackInfo(playeruuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return new byte[0];
 		}
-		int soundcount = soundinfos.length;
+		int soundcount = soundsinfo.length;
 		if(soundcount > 65535) {
 			soundcount = 65535;
 		}
@@ -295,7 +300,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		byte[] lengths = new byte[i];
 		byte[][] anames = new byte[i][];
 		while(--i > -1) {
-			byte[] namebytes = soundinfos[i].name.getBytes(StandardCharsets.UTF_8);
+			byte[] namebytes = soundsinfo[i].name.getBytes(StandardCharsets.UTF_8);
 			int length = namebytes.length;
 			if(length > 0xFF) {
 				length = 0xFF;
@@ -327,8 +332,10 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			return new byte[0];
 		}
 		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
-		SoundInfo[] soundinfos = datamanager.getResourcepack(playlistname).info.getSounds();
-		if(soundinfos==null) {
+		SoundInfo[] soundinfos;
+		ResourcepackInfo info;
+		DataEntry dataentry;
+		if((dataentry = datamanager.getResourcepack(playlistname)) == null || (info = dataentry.info) == null || (soundinfos = info.getSounds()) == null) {
 			return new byte[0];
 		}
 		int soundcount = soundinfos.length;
@@ -384,11 +391,12 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb<<=8;
 		msb |= playeruuidb[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
-		SoundInfo[] soundinfos = positiontracker.getSoundInfo(playeruuid);
-		if(soundinfos==null) {
+		ResourcepackInfo info;
+		SoundInfo[] soundsinfo;
+		if ((info = positiontracker.getResourcepackInfo(playeruuid)) == null || (soundsinfo = info.getSounds()) == null) {
 			return new byte[0];
 		}
-		int soundcount = soundinfos.length;
+		int soundcount = soundsinfo.length;
 		if(soundcount > 65535) {
 			soundcount = 65535;
 		}
@@ -397,7 +405,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		response[0] = (byte)i;
 		response[1] = (byte) (i>>>8);
 		while(--i > -1) {
-			short length = soundinfos[i].length;
+			short length = soundsinfo[i].length;
 			response[--j] = (byte) length;
 			length>>>=8;
 			response[--j] = (byte) length;
@@ -685,8 +693,9 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb<<=8;
 		msb |= playeruuidb[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
-		String playlistname = positiontracker.getPlaylistName(playeruuid);
-		return playlistname == null ? new byte[0] : playlistname.getBytes(StandardCharsets.UTF_8);
+		ResourcepackInfo info = positiontracker.getResourcepackInfo(playeruuid);
+		String playlistname;
+		return info == null || (playlistname = info.getPackname()) == null ? new byte[0] : playlistname.getBytes(StandardCharsets.UTF_8);
 	}
 	
 	public final void stopSoundBytes(byte[] playeruuidb) {
@@ -1056,7 +1065,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		while (run) {
 			try {
 				server = connectserverfactory.createServerSocket(port, backlog, hostip);
-				server.setSoTimeout(5000);
+				server.setSoTimeout(timeout);
 			} catch (IOException | SecurityException | IllegalArgumentException e) {
 				e.printStackTrace();
 				return;
@@ -1065,7 +1074,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 				Socket connected = null;
 				try {
 					connected = server.accept();
-					connected.setSoTimeout(5000);
+					connected.setSoTimeout(timeout);
 					InetAddress connectedaddress = connected.getInetAddress();
 					if (this.remoteip == null || this.remoteip.equals(connectedaddress)) {
 						final Socket fconnected = connected;
@@ -1099,14 +1108,103 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		}
 	}
 	
+	public final void processGetResourcepackInfoName(InputStream is, OutputStream os) throws IOException {
+		byte[] buf = new byte[0x100];
+		int read = is.read(buf, 0, buf.length);
+		final int resourcepacknamelength = buf[0x00] & 0xFF;
+		if(read < resourcepacknamelength) {
+			return;
+		}
+		String resourcepackname = new String(buf, 0, resourcepacknamelength, StandardCharsets.UTF_8);
+		final DataEntry dataentry = datamanager.getResourcepack(resourcepackname);
+		ResourcepackInfo info;
+		if(dataentry == null || (info = dataentry.info) == null) {
+			return;
+		}
+		ResourcepackInfo.serialize(os, info);
+	}
+	
+	public final void processGetResourcepackInfoUUID(InputStream is, OutputStream os) throws IOException {
+		byte[] buf = new byte[0x10];
+		is.read(buf, 0, buf.length);
+		long lsb = 0L, msb = 0L;
+		lsb = buf[0x0F] & 0xFF;
+		lsb<<=8;
+		lsb |= buf[0x0E] & 0xFF;
+		lsb<<=8;
+		lsb |= buf[0x0D] & 0xFF;
+		lsb<<=8;
+		lsb |= buf[0x0C] & 0xFF;
+		lsb<<=8;
+		lsb |= buf[0x0B] & 0xFF;
+		lsb<<=8;
+		lsb |= buf[0x0A] & 0xFF;
+		lsb<<=8;
+		lsb |= buf[0x09] & 0xFF;
+		lsb<<=8;
+		lsb |= buf[0x08] & 0xFF;
+		msb = buf[0x07] & 0xFF;
+		msb<<=8;
+		msb |= buf[0x06] & 0xFF;
+		msb<<=8;
+		msb |= buf[0x05] & 0xFF;
+		msb<<=8;
+		msb |= buf[0x04] & 0xFF;
+		msb<<=8;
+		msb |= buf[0x03] & 0xFF;
+		msb<<=8;
+		msb |= buf[0x02] & 0xFF;
+		msb<<=8;
+		msb |= buf[0x01] & 0xFF;
+		msb<<=8;
+		msb |= buf[0x00] & 0xFF;
+		final UUID playeruuid = new UUID(msb, lsb);
+		ResourcepackInfo info = positiontracker.getResourcepackInfo(playeruuid);
+		ResourcepackInfo.serialize(os, info);
+	}
+	
+	public final void processSetResourcepackCustomData(InputStream is, OutputStream os) throws IOException {
+		byte[] buf = new byte[0x03];
+		is.read(buf, 0, buf.length);
+		int resourcepacknamelength = buf[0] & 0xFF;
+		int customdatalength = (buf[1] & 0xFF | buf[2]<<8);
+		buf = new byte[resourcepacknamelength];
+		is.read(buf, 0, buf.length);
+		String resourcepackname = new String(buf, 0, resourcepacknamelength, StandardCharsets.UTF_8);
+		buf = new byte[customdatalength];
+		is.read(buf, 0, buf.length);
+		final DataEntry dataentry = datamanager.getResourcepack(resourcepackname);
+		if(dataentry == null || !(dataentry instanceof CustomDatastore)) {
+			os.write(0x00);
+			return;
+		}
+		os.write(((CustomDatastore)dataentry).updateCustomdata(buf) ? 0x01 : 0x00);
+	}
+	
 	private final void processConnection(Socket connected) throws IOException {
 		InputStream is = connected.getInputStream();
 		byte[] ibuf = new byte[9];
-		final byte packetid;
-		if(is.read(ibuf) != 9 || ibuf[0] != 'a' || ibuf[1] != 'm' || ibuf[2] != 'r' || ibuf[3] != 'a' || ibuf[4] != 0 || ibuf[7] != 0 || (packetid = ibuf[8]) < 0 || packetid > 0x13 ) {
+		if(is.read(ibuf) != 9 || ibuf[0] != 'a' || ibuf[1] != 'm' || ibuf[2] != 'r' || ibuf[3] != 'a' || ibuf[4] != 0 || ibuf[7] != 0) {
 			return;
 		}
+		final byte packetid = ibuf[8];
 		ibuf = null;
+		
+		if(packetid == 0x14) {
+			processGetResourcepackInfoName(is, connected.getOutputStream());
+			connected.close();
+			return;
+		}
+		if(packetid == 0x15) {
+			processGetResourcepackInfoUUID(is, connected.getOutputStream());
+			connected.close();
+			return;
+		}
+		if(packetid == 0x16) {
+			processSetResourcepackCustomData(is, connected.getOutputStream());
+			connected.close();
+			return;
+		}
 		
 		if(packetid == 0x07 || packetid == 0x13) {
 			ibuf = new byte[0x11];
@@ -1162,13 +1260,13 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			obuf = this.getPlaylistSoundnamesPlaylistnameBytes(ibuf);
 			size = obuf.length;
 			sizeb = new byte[4];
-			sizeb[0] = (byte)size;
-			size>>>=8;
-			sizeb[1] = (byte)size;
-			size>>>=8;
-			sizeb[2] = (byte)size;
-			size>>>=8;
-			sizeb[3] = (byte)size;
+			sizeb[0] = (byte) size;
+			size >>>= 8;
+			sizeb[1] = (byte) size;
+			size >>>= 8;
+			sizeb[2] = (byte) size;
+			size >>>= 8;
+			sizeb[3] = (byte) size;
 			baos.write(sizeb);
 			baos.write(obuf);
 		break;
@@ -1176,13 +1274,13 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			obuf = this.getPlaylistSoundnamesPlayeruuidBytes(ibuf);
 			size = obuf.length;
 			sizeb = new byte[4];
-			sizeb[0] = (byte)size;
-			size>>>=8;
-			sizeb[1] = (byte)size;
-			size>>>=8;
-			sizeb[2] = (byte)size;
-			size>>>=8;
-			sizeb[3] = (byte)size;
+			sizeb[0] = (byte) size;
+			size >>>= 8;
+			sizeb[1] = (byte) size;
+			size >>>= 8;
+			sizeb[2] = (byte) size;
+			size >>>= 8;
+			sizeb[3] = (byte) size;
 			baos.write(sizeb);
 			baos.write(obuf);
 		break;
@@ -1190,13 +1288,13 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			obuf = this.getPlaylistSoundlengthsPlaylistnameBytes(ibuf);
 			size = obuf.length;
 			sizeb = new byte[4];
-			sizeb[0] = (byte)size;
-			size>>>=8;
-			sizeb[1] = (byte)size;
-			size>>>=8;
-			sizeb[2] = (byte)size;
-			size>>>=8;
-			sizeb[3] = (byte)size;
+			sizeb[0] = (byte) size;
+			size >>>= 8;
+			sizeb[1] = (byte) size;
+			size >>>= 8;
+			sizeb[2] = (byte) size;
+			size >>>= 8;
+			sizeb[3] = (byte) size;
 			baos.write(sizeb);
 			baos.write(obuf);
 		break;
@@ -1204,13 +1302,13 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			obuf = this.getPlaylistSoundlengthsPlayeruuidBytes(ibuf);
 			size = obuf.length;
 			sizeb = new byte[4];
-			sizeb[0] = (byte)size;
-			size>>>=8;
-			sizeb[1] = (byte)size;
-			size>>>=8;
-			sizeb[2] = (byte)size;
-			size>>>=8;
-			sizeb[3] = (byte)size;
+			sizeb[0] = (byte) size;
+			size >>>= 8;
+			sizeb[1] = (byte) size;
+			size >>>= 8;
+			sizeb[2] = (byte) size;
+			size >>>= 8;
+			sizeb[3] = (byte) size;
 			baos.write(sizeb);
 			baos.write(obuf);
 		break;

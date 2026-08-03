@@ -10,7 +10,7 @@ import net.md_5.bungee.chat.ComponentSerializer;
 
 public final class SpigotMessageSender implements MessageSender {
 	
-	protected SpigotMessageSender() {
+	public SpigotMessageSender() {
 	}
 
 	@Override

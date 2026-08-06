@@ -1,6 +1,7 @@
 package me.bomb.amusic.velocity.command;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,18 +12,24 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 
 import me.bomb.amusic.AMusic;
-import me.bomb.amusic.util.LangOptions;
-import me.bomb.amusic.util.LangOptions.Placeholder;
+import me.bomb.amusic.permission.AMusicPermission;
+import me.bomb.amusic.util.LangLoader;
+import me.bomb.amusic.util.LangLoader.LangOptions;
+import me.bomb.amusic.util.LangLoader.Placeholder;
 
 public final class UploadmusicCommand implements SimpleCommand {
 
 	private final AMusic amusic;
+	private final LangLoader lang;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final String uploaderhost;
 	private final ConcurrentHashMap<Player, UUID> uploaders = new ConcurrentHashMap<Player, UUID>();
 	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
-	public UploadmusicCommand(AMusic amusic, String uploaderhost) {
+	public UploadmusicCommand(AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, String uploaderhost) {
 		this.amusic = amusic;
+		this.lang = lang;
+		this.playerspermission = playerspermission;
 		this.uploaderhost = uploaderhost;
 	}
 	
@@ -30,47 +37,52 @@ public final class UploadmusicCommand implements SimpleCommand {
 	public void execute(Invocation invocation) {
 		CommandSource sender = invocation.source();
 		if(uploaderhost == null) {
-			LangOptions.uploadmusic_disabled.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.uploadmusic_disabled);
 			return;
 		}
-		if(!sender.hasPermission("amusic.uploadmusic")) {
-			LangOptions.uploadmusic_nopermission.sendMsg(sender);
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			this.lang.sendMsg(sender, LangOptions.uploadmusic_nopermission);
+			return;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.UPLOADMUSIC)) {
+			this.lang.sendMsg(sender, LangOptions.uploadmusic_nopermission);
 			return;
 		}
 		String[] args = invocation.arguments();
 		boolean save = false;
 		if(args.length < 1) {
-			LangOptions.uploadmusic_usage.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.uploadmusic_usage);
 			return;
 		}
 		args[0] = args[0].toLowerCase();
 		if(args.length == 1 && ((save = "finish".equals(args[0])) || "drop".equals(args[0]))) {
 			if(!(sender instanceof Player)) {
-				(save ? LangOptions.uploadmusic_finish_player_notplayer : LangOptions.uploadmusic_drop_player_notplayer).sendMsg(sender);
+				this.lang.sendMsg(sender, save ? LangOptions.uploadmusic_finish_player_notplayer : LangOptions.uploadmusic_drop_player_notplayer);
 				return;
 			}
 			Player player = (Player)sender;
 			final UUID token = uploaders.remove(player);
 			if(token == null) {
-				(save ? LangOptions.uploadmusic_finish_player_nosession : LangOptions.uploadmusic_drop_player_nosession).sendMsg(sender);
+				this.lang.sendMsg(sender, save ? LangOptions.uploadmusic_finish_player_nosession : LangOptions.uploadmusic_drop_player_nosession);
 				return;
 			}
 			Consumer<Boolean> consumer = save ? new Consumer<Boolean>() {
 				@Override
 				public void accept(Boolean t) {
-					(t.booleanValue() ? LangOptions.uploadmusic_finish_player_success : LangOptions.uploadmusic_finish_player_nosession).sendMsg(sender);
+					UploadmusicCommand.this.lang.sendMsg(sender, t.booleanValue() ? LangOptions.uploadmusic_finish_player_success : LangOptions.uploadmusic_finish_player_nosession);
 				}
 			} : new Consumer<Boolean>() {
 				@Override
 				public void accept(Boolean t) {
-					(t.booleanValue() ? LangOptions.uploadmusic_drop_player_success : LangOptions.uploadmusic_drop_player_nosession).sendMsg(sender);
+					UploadmusicCommand.this.lang.sendMsg(sender, t.booleanValue() ? LangOptions.uploadmusic_drop_player_success : LangOptions.uploadmusic_drop_player_nosession);
 				}
 			};
 			amusic.closeUploadSession(token, save, consumer);
 			return;
 		}
 		if(args.length < 2) {
-			LangOptions.uploadmusic_usage.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.uploadmusic_usage);
 			return;
 		}
 		if("start".equals(args[0])) {
@@ -88,7 +100,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 				@Override
 				public void accept(UUID token) {
 					String url = uploaderhost.concat(token.toString());
-					(sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show).sendMsg(sender, new Placeholder("%url%", url, false));
+					UploadmusicCommand.this.lang.sendMsg(sender, sender instanceof Player ? LangOptions.uploadmusic_start_url_click : LangOptions.uploadmusic_start_url_show, new Placeholder("%url%", url, false));
 					if(!(sender instanceof Player)) {
 						return;
 					}
@@ -100,8 +112,8 @@ public final class UploadmusicCommand implements SimpleCommand {
 			return;
 		}
 		if((save = "finish".equals(args[0])) || "drop".equals(args[0])) {
-			if(!sender.hasPermission("amusic.uploadmusic.token")) {
-				LangOptions.uploadmusic_nopermissiontoken.sendMsg(sender);
+			if(permissions != null && !permissions.contains(AMusicPermission.UPLOADMUSIC_TOKEN)) {
+				this.lang.sendMsg(sender, LangOptions.uploadmusic_nopermissiontoken);
 				return;
 			}
 			try {
@@ -109,28 +121,35 @@ public final class UploadmusicCommand implements SimpleCommand {
 				Consumer<Boolean> consumer = save ? new Consumer<Boolean>() {
 					@Override
 					public void accept(Boolean t) {
-						(t.booleanValue() ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession).sendMsg(sender);
+						UploadmusicCommand.this.lang.sendMsg(sender, t.booleanValue() ? LangOptions.uploadmusic_finish_token_success : LangOptions.uploadmusic_finish_token_nosession);
 					}
 				} : new Consumer<Boolean>() {
 					@Override
 					public void accept(Boolean t) {
-						(t.booleanValue() ? LangOptions.uploadmusic_drop_token_success : LangOptions.uploadmusic_drop_token_nosession).sendMsg(sender);
+						UploadmusicCommand.this.lang.sendMsg(sender, t.booleanValue() ? LangOptions.uploadmusic_drop_token_success : LangOptions.uploadmusic_drop_token_nosession);
 					}
 				};
 				amusic.closeUploadSession(token, save, consumer);
 			} catch(IllegalArgumentException ex) {
-				(save ? LangOptions.uploadmusic_finish_token_invalid : LangOptions.uploadmusic_drop_token_invalid).sendMsg(sender);
+				this.lang.sendMsg(sender, save ? LangOptions.uploadmusic_finish_token_invalid : LangOptions.uploadmusic_drop_token_invalid);
 			}
 			return;
 		}
-		LangOptions.uploadmusic_usage.sendMsg(sender);
+		this.lang.sendMsg(sender, LangOptions.uploadmusic_usage);
 		return;
 	}
 	
 	@Override
 	public List<String> suggest(Invocation invocation) {
+		if(uploaderhost == null) {
+			return emptytab;
+		}
 		CommandSource sender = invocation.source();
-		if (!sender.hasPermission("amusic.uploadmusic")) {
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			return emptytab;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.UPLOADMUSIC)) {
 			return emptytab;
 		}
 		String[] args = invocation.arguments();
@@ -150,7 +169,7 @@ public final class UploadmusicCommand implements SimpleCommand {
 			if ("drop".startsWith(arg0)) {
 				tabcomplete.add("drop");
 			}
-		} else if (args.length == 2 && sender.hasPermission("amusic.uploadmusic.token")) {
+		} else if (args.length == 2 && (permissions == null || permissions.contains(AMusicPermission.UPLOADMUSIC_TOKEN))) {
 			String arg0 = args[0].toLowerCase();
 			if ("finish".equals(arg0) || "drop".equals(arg0)) {
 				Consumer<UUID[]> consumer = new Consumer<UUID[]>() {

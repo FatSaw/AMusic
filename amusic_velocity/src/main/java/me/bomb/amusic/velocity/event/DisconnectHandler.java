@@ -1,6 +1,7 @@
 package me.bomb.amusic.velocity.event;
 
 import java.net.InetAddress;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,16 +10,19 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 
 import me.bomb.amusic.AMusic;
+import me.bomb.amusic.permission.AMusicPermission;
 import me.bomb.amusic.velocity.command.UploadmusicCommand;
 
 public final class DisconnectHandler implements EventHandler<DisconnectEvent> {
 	
 	private final AMusic amusic;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final UploadmusicCommand uploadmusic;
 	
-	public DisconnectHandler(AMusic amusic, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic) {
+	public DisconnectHandler(AMusic amusic, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic) {
 		this.amusic = amusic;
+		this.playerspermission = playerspermission;
 		this.playerips = playerips;
 		this.uploadmusic = uploadmusic;
 	}
@@ -27,6 +31,7 @@ public final class DisconnectHandler implements EventHandler<DisconnectEvent> {
 	public void execute(DisconnectEvent event) {
 		Player player = event.getPlayer();
 		UUID playeruuid = player.getUniqueId();
+		this.playerspermission.remove(playeruuid);
 		amusic.logout(playeruuid);
 		if(uploadmusic != null) uploadmusic.logoutUploader(player);
 		if(playerips == null) return;

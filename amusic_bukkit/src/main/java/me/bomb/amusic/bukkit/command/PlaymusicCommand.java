@@ -1,7 +1,9 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import org.bukkit.Server;
@@ -13,26 +15,39 @@ import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.AMusic;
-import me.bomb.amusic.util.LangOptions;
-import me.bomb.amusic.util.LangOptions.Placeholder;
+import me.bomb.amusic.permission.AMusicPermission;
+import me.bomb.amusic.util.LangLoader;
+import me.bomb.amusic.util.LangLoader.LangOptions;
+import me.bomb.amusic.util.LangLoader.Placeholder;
 
 public final class PlaymusicCommand extends Command {
 	private final Server server;
 	private final AMusic amusic;
+	private final LangLoader lang;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final SelectorProcessor selectorprocessor;
 	private final boolean trackable;
-	public PlaymusicCommand(Server server, AMusic amusic, SelectorProcessor selectorprocessor, boolean trackable) {
+	private final ArrayList<String> emptytab = new ArrayList<String>(0);
+	
+	public PlaymusicCommand(Server server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, SelectorProcessor selectorprocessor, boolean trackable) {
 		super(trackable ? "playmusic" : "playmusicuntrackable");
 		this.server = server;
 		this.amusic = amusic;
+		this.lang = lang;
+		this.playerspermission = playerspermission;
 		this.selectorprocessor = selectorprocessor;
 		this.trackable = trackable;
 	}
 	
 	@Override
 	public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-		if(!sender.hasPermission("amusic.playmusic")) {
-			LangOptions.playmusic_nopermission.sendMsg(sender);
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			this.lang.sendMsg(sender, LangOptions.playmusic_nopermission);
+			return true;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.PLAYMUSIC)) {
+			this.lang.sendMsg(sender, LangOptions.playmusic_nopermission);
 			return true;
 		}
 		if(args.length==1) {
@@ -40,18 +55,18 @@ public final class PlaymusicCommand extends Command {
 				if(sender instanceof Player) {
 					args[0] = sender.getName();
 				} else {
-					LangOptions.playmusic_noconsoleselector.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_noconsoleselector);
 					return true;
 				}
-			} else if(!sender.hasPermission("amusic.playmusic.other")) {
-				LangOptions.playmusic_nopermissionother.sendMsg(sender);
+			} else if(permissions != null && !permissions.contains(AMusicPermission.PLAYMUSIC_OTHER)) {
+				this.lang.sendMsg(sender, LangOptions.playmusic_nopermissionother);
 				return true;
 			} else {
 				if (args[0].startsWith("@p")) {
 					String closestplayername = selectorprocessor.getNearest(sender, args[0].substring(2));
 					
 					if(closestplayername == null) {
-						LangOptions.playmusic_unavilableselector_near.sendMsg(sender);
+						this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_near);
 						return true;
 					}
 					args[0] = closestplayername;
@@ -60,7 +75,7 @@ public final class PlaymusicCommand extends Command {
 				if (args[0].startsWith("@r")) {
 					String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
 					if(randomplayername == null) {
-						LangOptions.playmusic_unavilableselector_random.sendMsg(sender);
+						this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_random);
 						return true;
 					}
 					args[0] = randomplayername;
@@ -68,7 +83,7 @@ public final class PlaymusicCommand extends Command {
 				if(args[0].startsWith("@a")) {
 					UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
 					if(targetarray == null) {
-						LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
+						this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_all);
 						return true;
 					}
 					if(trackable) {
@@ -80,7 +95,7 @@ public final class PlaymusicCommand extends Command {
 							amusic.stopSoundUntrackable(targetarray[i]);
 						}
 					}
-					LangOptions.playmusic_stop.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_stop);
 					return true;
 				}
 				
@@ -88,7 +103,7 @@ public final class PlaymusicCommand extends Command {
 			
 			Player target = server.getPlayerExact(args[0]);
 			if(target==null) {
-				LangOptions.playmusic_targetoffline.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.playmusic_targetoffline);
 				return true;
 			}
 			if(trackable) {
@@ -97,19 +112,19 @@ public final class PlaymusicCommand extends Command {
 				amusic.stopSoundUntrackable(target.getUniqueId());
 			}
 			
-			LangOptions.playmusic_stop.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.playmusic_stop);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
 				if(sender instanceof Player) {
 					args[0] = sender.getName();
 				} else {
-					LangOptions.playmusic_noconsoleselector.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_noconsoleselector);
 					return true;
 				}
 			} else if(args[0].equals("@l") && (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender)) {
 				Player target = server.getPlayerExact(args[1]);
 				if(target==null) {
-					LangOptions.playmusic_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_targetoffline);
 					return true;
 				}
 				UUID targetuuid = target.getUniqueId();
@@ -117,7 +132,7 @@ public final class PlaymusicCommand extends Command {
 					@Override
 					public void accept(String[] soundnames) {
 						if(soundnames==null) {
-							LangOptions.playmusic_noplaylist.sendMsg(sender);
+							PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_noplaylist);
 							return;
 						}
 						Consumer<String> consumerSoundName = new Consumer<String>() {
@@ -164,15 +179,15 @@ public final class PlaymusicCommand extends Command {
 				amusic.getPlaylistSoundnames(targetuuid, false, consumer);
 				
 				return true;
-			} else if(!sender.hasPermission("amusic.playmusic.other")) {
-				LangOptions.playmusic_nopermissionother.sendMsg(sender);
+			} else if(permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_OTHER)) {
+				this.lang.sendMsg(sender, LangOptions.playmusic_nopermissionother);
 				return true;
 			} else {
 				if (args[0].startsWith("@p")) {
 					String closestplayername = selectorprocessor.getNearest(sender, args[0].substring(2));
 					
 					if(closestplayername == null) {
-						LangOptions.playmusic_unavilableselector_near.sendMsg(sender);
+						this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_near);
 						return true;
 					}
 					args[0] = closestplayername;
@@ -181,7 +196,7 @@ public final class PlaymusicCommand extends Command {
 				if (args[0].startsWith("@r")) {
 					String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
 					if(randomplayername == null) {
-						LangOptions.playmusic_unavilableselector_random.sendMsg(sender);
+						this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_random);
 						return true;
 					}
 					args[0] = randomplayername;
@@ -189,7 +204,7 @@ public final class PlaymusicCommand extends Command {
 				if(args[0].startsWith("@a")) {
 					UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
 					if(targetarray == null) {
-						LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
+						this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_all);
 						return true;
 					}
 					if(args.length>2) {
@@ -205,7 +220,8 @@ public final class PlaymusicCommand extends Command {
 					Placeholder[] placeholders = new Placeholder[1];
 					placeholders[0] = new Placeholder("%soundname%",args[1],true);
 					this.executeCommand(name, targetarray);
-					LangOptions.playmusic_success.sendMsg(sender,placeholders);
+
+					this.lang.sendMsg(sender, LangOptions.playmusic_success, placeholders);
 					return true;
 				}
 				
@@ -213,14 +229,14 @@ public final class PlaymusicCommand extends Command {
 			
 			Player target = server.getPlayerExact(args[0]);
 			if(target==null) {
-				LangOptions.playmusic_targetoffline.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.playmusic_targetoffline);
 				return true;
 			}
 			Consumer<String[]> consumer = new Consumer<String[]>() {
 				@Override
 				public void accept(String[] soundnames) {
 					if(soundnames==null) {
-						LangOptions.playmusic_noplaylist.sendMsg(sender);
+						PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_noplaylist);
 						return;
 					}
 					if(args.length>2) {
@@ -236,33 +252,37 @@ public final class PlaymusicCommand extends Command {
 					for(String soundname : soundnames) {
 						if(soundname.equals(args[1])) {
 							executeCommand(args[1], target.getUniqueId());
-							LangOptions.playmusic_success.sendMsg(sender,placeholders);
+							PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_success, placeholders);
 							return;
 						}
 					}
-					LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
+					PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_missingtrack, placeholders);
 				}
 				
 			};
 			amusic.getPlaylistSoundnames(target.getUniqueId(), false, consumer);
 			return true;
 		} else {
-			LangOptions.playmusic_usage.sendMsg(sender);
+			PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_usage);
 		}
 		return true;
 	}
 	
 	@Override
 	public java.util.List<String> tabComplete(CommandSender sender, String alias, String[] args) throws CommandException, IllegalArgumentException {
-		ArrayList<String> tabcomplete = new ArrayList<String>();
-		if (!sender.hasPermission("amusic.playmusic")) {
-			return null;
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			return emptytab;
 		}
+		if (permissions != null && !permissions.contains(AMusicPermission.PLAYMUSIC)) {
+			return emptytab;
+		}
+		ArrayList<String> tabcomplete = new ArrayList<String>();
 		if (args.length == 1) {
 			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if (sender.hasPermission("amusic.playmusic.other")) {
+			if (permissions == null || permissions.contains(AMusicPermission.LOADMUSIC_OTHER)) {
 				for (Player player : server.getOnlinePlayers()) {
 					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
@@ -278,7 +298,7 @@ public final class PlaymusicCommand extends Command {
 				args[0] = sender.getName();
 				selfsender = true;
 			}
-			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
+			if (selfsender || permissions == null || permissions.contains(AMusicPermission.LOADMUSIC_OTHER)) {
 				Player target = server.getPlayerExact(args[0]);
 				if (target != null) {
 					Consumer<String[]> consumer = new Consumer<String[]>() {

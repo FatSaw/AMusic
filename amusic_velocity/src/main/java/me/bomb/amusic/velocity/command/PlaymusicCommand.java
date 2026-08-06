@@ -1,9 +1,11 @@
 package me.bomb.amusic.velocity.command;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import com.velocitypowered.api.command.CommandSource;
@@ -13,27 +15,38 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.AMusic;
-import me.bomb.amusic.util.LangOptions;
-import me.bomb.amusic.util.LangOptions.Placeholder;
+import me.bomb.amusic.permission.AMusicPermission;
+import me.bomb.amusic.util.LangLoader;
+import me.bomb.amusic.util.LangLoader.LangOptions;
+import me.bomb.amusic.util.LangLoader.Placeholder;
 
 public final class PlaymusicCommand implements SimpleCommand  {
 
 	private final ProxyServer server;
 	private final AMusic amusic;
+	private final LangLoader lang;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final boolean trackable;
 	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
-	public PlaymusicCommand(ProxyServer server, AMusic amusic, boolean trackable) {
+	public PlaymusicCommand(ProxyServer server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, boolean trackable) {
 		this.server = server;
 		this.amusic = amusic;
+		this.lang = lang;
+		this.playerspermission = playerspermission;
 		this.trackable = trackable;
 	}
 	
 	@Override
 	public void execute(Invocation invocation) {
 		CommandSource sender = invocation.source();
-		if (!sender.hasPermission("amusic.playmusic")) {
-			LangOptions.playmusic_nopermission.sendMsg(sender);
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			this.lang.sendMsg(sender, LangOptions.playmusic_nopermission);
+			return;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.PLAYMUSIC)) {
+			this.lang.sendMsg(sender, LangOptions.playmusic_nopermission);
 			return;
 		}
 		String[] args = invocation.arguments();
@@ -42,16 +55,16 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				if(sender instanceof Player) {
 					args[0] = ((Player) sender).getUsername();
 				} else {
-					LangOptions.playmusic_noconsoleselector.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_noconsoleselector);
 					return;
 				}
-			} else if(!sender.hasPermission("amusic.playmusic.other")) {
-				LangOptions.playmusic_nopermissionother.sendMsg(sender);
+			} else if(permissions != null && !permissions.contains(AMusicPermission.PLAYMUSIC_OTHER)) {
+				this.lang.sendMsg(sender, LangOptions.playmusic_nopermissionother);
 				return;
 			}
 			Optional<Player> otarget = server.getPlayer(args[0]);
 			if(otarget.isEmpty()) {
-				LangOptions.playmusic_targetoffline.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.playmusic_targetoffline);
 				return;
 			}
 			Player target = otarget.get();
@@ -60,19 +73,19 @@ public final class PlaymusicCommand implements SimpleCommand  {
 			} else {
 				amusic.stopSoundUntrackable(target.getUniqueId());
 			}
-			LangOptions.playmusic_stop.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.playmusic_stop);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
 				if(sender instanceof Player) {
 					args[0] = ((Player) sender).getUsername();
 				} else {
-					LangOptions.playmusic_noconsoleselector.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_noconsoleselector);
 					return;
 				}
 			} else if(args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 				Optional<Player> otarget = server.getPlayer(args[1]);
 				if(otarget.isEmpty()) {
-					LangOptions.playmusic_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_targetoffline);
 					return;
 				}
 				Player target = otarget.get();
@@ -81,7 +94,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 					@Override
 					public void accept(String[] soundnames) {
 						if(soundnames==null) {
-							LangOptions.playmusic_noplaylist.sendMsg(sender);
+							PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_noplaylist);
 							return;
 						}
 						Consumer<String> consumerSoundName = new Consumer<String>() {
@@ -131,7 +144,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 			}
 			Optional<Player> otarget = server.getPlayer(args[0]);
 			if(otarget.isEmpty()) {
-				LangOptions.playmusic_targetoffline.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.playmusic_targetoffline);
 				return;
 			}
 			Player target = otarget.get();
@@ -140,7 +153,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				@Override
 				public void accept(String[] soundnames) {
 					if(soundnames==null) {
-						LangOptions.playmusic_noplaylist.sendMsg(sender);
+						PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_noplaylist);
 						return;
 					}
 					if(args.length>2) {
@@ -160,18 +173,18 @@ public final class PlaymusicCommand implements SimpleCommand  {
 							} else {
 								amusic.playSoundUntrackable(target.getUniqueId(),args[1],0d,0d,0d,1.0f,1.0f);
 							}
-							LangOptions.playmusic_success.sendMsg(sender,placeholders);
+							PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_success, placeholders);
 							return;
 						}
 					}
-					LangOptions.playmusic_missingtrack.sendMsg(sender,placeholders);
+					PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_missingtrack, placeholders);
 				}
 				
 			};
 			amusic.getPlaylistSoundnames(target.getUniqueId(), false, consumer);
 			return;
 		} else {
-			LangOptions.playmusic_usage.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.playmusic_usage);
 		}
 		return;
 	}
@@ -179,7 +192,11 @@ public final class PlaymusicCommand implements SimpleCommand  {
 	@Override
 	public List<String> suggest(Invocation invocation) {
 		CommandSource sender = invocation.source();
-		if (!sender.hasPermission("amusic.playmusic")) {
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			return emptytab;
+		}
+		if (permissions != null && !permissions.contains(AMusicPermission.PLAYMUSIC)) {
 			return emptytab;
 		}
 		String[] args = invocation.arguments();
@@ -188,7 +205,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if (sender.hasPermission("amusic.playmusic.other")) {
+			if (permissions == null || permissions.contains(AMusicPermission.LOADMUSIC_OTHER)) {
 				if(args.length == 0) {
 					for (Player player : server.getAllPlayers()) {
 						tabcomplete.add(player.getUsername());
@@ -210,7 +227,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				args[0] = ((Player)sender).getUsername();
 				selfsender = true;
 			}
-			if (selfsender || !(sender instanceof Player) || sender.hasPermission("amusic.playmusic.other")) {
+			if (selfsender || permissions == null || permissions.contains(AMusicPermission.LOADMUSIC_OTHER)) {
 				Optional<Player> otarget = server.getPlayer(args[0]);
 				if(otarget.isEmpty()) {
 					return null;

@@ -1,8 +1,11 @@
 package me.bomb.amusic.velocity.command;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
@@ -11,24 +14,35 @@ import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.RepeatType;
-import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.permission.AMusicPermission;
+import me.bomb.amusic.util.LangLoader;
+import me.bomb.amusic.util.LangLoader.LangOptions;
 
 public final class RepeatCommand implements SimpleCommand {
 	
 	private final ProxyServer server;
 	private final AMusic amusic;
+	private final LangLoader lang;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
-	public RepeatCommand(ProxyServer server, AMusic amusic) {
+	public RepeatCommand(ProxyServer server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission) {
 		this.server = server;
 		this.amusic = amusic;
+		this.lang = lang;
+		this.playerspermission = playerspermission;
 	}
 
 	@Override
 	public void execute(Invocation invocation) {
 		CommandSource sender = invocation.source();
-		if (!sender.hasPermission("amusic.repeat")) {
-			LangOptions.repeat_nopermission.sendMsg(sender);
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			this.lang.sendMsg(sender, LangOptions.repeat_nopermission);
+			return;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.REPEAT)) {
+			this.lang.sendMsg(sender, LangOptions.repeat_nopermission);
 			return;
 		}
 		String[] args = invocation.arguments();
@@ -37,52 +51,56 @@ public final class RepeatCommand implements SimpleCommand {
 				if (sender instanceof Player) {
 					args[0] = ((Player) sender).getUsername();
 				} else {
-					LangOptions.repeat_noconsoleselector.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_noconsoleselector);
 					return;
 				}
-			} else if (!sender.hasPermission("amusic.repeat.other")) {
-				LangOptions.repeat_nopermissionother.sendMsg(sender);
+			} else if (permissions != null && !permissions.contains(AMusicPermission.REPEAT_OTHER)) {
+				this.lang.sendMsg(sender, LangOptions.repeat_nopermissionother);
 				return;
 			}
 			Optional<Player> otarget = server.getPlayer(args[0]);
 			if (otarget.isEmpty()) {
-				LangOptions.repeat_targetoffline.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 				return;
 			}
 			Player target = otarget.get();
 			switch (args[1].toLowerCase()) {
 			case "playone":
 				amusic.setRepeatMode(target.getUniqueId(), null);
-				LangOptions.repeat_playone.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_playone);
 				return;
 			case "repeatone":
 				amusic.setRepeatMode(target.getUniqueId(), RepeatType.REPEATONE);
-				LangOptions.repeat_repeatone.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_repeatone);
 				return;
 			case "repeatall":
 				amusic.setRepeatMode(target.getUniqueId(), RepeatType.REPEATALL);
-				LangOptions.repeat_repeatall.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_repeatall);
 				return;
 			case "playall":
 				amusic.setRepeatMode(target.getUniqueId(), RepeatType.PLAYALL);
-				LangOptions.repeat_playall.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_playall);
 				return;
 			case "random":
 				amusic.setRepeatMode(target.getUniqueId(), RepeatType.RANDOM);
-				LangOptions.repeat_random.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_random);
 				return;
 			default:
-				LangOptions.repeat_unknownrepeattype.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_unknownrepeattype);
 			}
 		} else {
-			LangOptions.repeat_usage.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_usage);
 		}
 	}
 	
 	@Override
 	public List<String> suggest(Invocation invocation) {
 		CommandSource sender = invocation.source();
-		if (!sender.hasPermission("amusic.repeat")) {
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			return emptytab;
+		}
+		if (permissions != null && !permissions.contains(AMusicPermission.REPEAT)) {
 			return emptytab;
 		}
 		String[] args = invocation.arguments();
@@ -91,7 +109,7 @@ public final class RepeatCommand implements SimpleCommand {
 			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if (sender.hasPermission("amusic.repeat.other")) {
+			if (permissions == null || permissions.contains(AMusicPermission.REPEAT_OTHER)) {
 				if(args.length == 0) {
 					for (Player player : server.getAllPlayers()) {
 						tabcomplete.add(player.getUsername());

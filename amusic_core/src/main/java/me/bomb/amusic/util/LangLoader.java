@@ -7,20 +7,20 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.Map;
 
 import me.bomb.amusic.MessageSender;
 
-public enum LangOptions {
-loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_noconsoleselector, loadmusic_targetoffline, loadmusic_processing, loadmusic_noplaylist, loadmusic_loaderunavilable, loadmusic_success_removed, loadmusic_success_packed, loadmusic_success_dispatched, loadmusic_unavilableselector_near, loadmusic_unavilableselector_random, loadmusic_unavilableselector_all, playmusic_usage, playmusic_nopermission, playmusic_nopermissionother, playmusic_noconsoleselector, playmusic_targetoffline, playmusic_noplaylist, playmusic_missingtrack, playmusic_success, playmusic_stop, playmusic_unavilableselector_near, playmusic_unavilableselector_random, playmusic_unavilableselector_all, repeat_usage, repeat_nopermission, repeat_nopermissionother, repeat_noconsoleselector, repeat_targetoffline, repeat_unknownrepeattype, repeat_repeatall, repeat_repeatone, repeat_playall, repeat_playone, repeat_random, repeat_unavilableselector_near, repeat_unavilableselector_random, repeat_unavilableselector_all, uploadmusic_usage, uploadmusic_nopermission, uploadmusic_nopermissiontoken, uploadmusic_disabled, uploadmusic_start_url_click, uploadmusic_start_url_show, uploadmusic_drop_player_notplayer, uploadmusic_drop_player_nosession, uploadmusic_drop_player_success, uploadmusic_drop_token_invalid, uploadmusic_drop_token_nosession, uploadmusic_drop_token_success, uploadmusic_finish_player_notplayer, uploadmusic_finish_player_nosession, uploadmusic_finish_player_success, uploadmusic_finish_token_invalid, uploadmusic_finish_token_nosession, uploadmusic_finish_token_success;
-	
-	private static MessageSender messagesender;
+public final class LangLoader {
 	
 	private final static String defaultlang = new String();
 	
-	public static void loadLang(MessageSender messagesender, Path langfile, boolean rgb) {
-		LangOptions.messagesender = messagesender;
+	private final HashMap<String, EnumMap<LangOptions, String>> localizedmessages = new HashMap<String, EnumMap<LangOptions, String>>();
+	private final MessageSender messagesender;
+	
+	public LangLoader(Path langfile, String resource, MessageSender messagesender) {
+		this.messagesender = messagesender; 
 		byte[] buf = null;
 		InputStream is = null;
 		FileSystemProvider fs = langfile.getFileSystem().provider();
@@ -29,11 +29,17 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			BasicFileAttributes attributes = fs.readAttributes(langfile, BasicFileAttributes.class);
 			is = fs.newInputStream(langfile);
 			long filesize = attributes.size();
-			if(filesize > 0x7FFFFFFD) {
-				filesize = 0x7FFFFFFD;
+			if(filesize > 0x00FFFFFF) {
+				filesize = 0x00FFFFFF;
 			}
 			buf = new byte[(int)filesize];
-			size = is.read(buf, 0, buf.length);
+			int remaining = buf.length;
+			while (remaining > 0) {
+				int read = is.read(buf, size, remaining);
+				if (read < 0) break;
+				size += read;
+				remaining -= read;
+			}
 			is.close();
 		} catch (IOException e1) {
 			if(is != null) {
@@ -43,9 +49,15 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 				}
 			}
 			try {
-				is = LangOptions.class.getClassLoader().getResourceAsStream(rgb ? "lang_rgb.yml" : "lang_old.yml");
+				is = LangOptions.class.getClassLoader().getResourceAsStream(resource);
 				buf = new byte[0x3000];
-				size = is.read(buf, 0, buf.length);
+				int remaining = buf.length;
+				while (remaining > 0) {
+					int read = is.read(buf, size, remaining);
+					if (read < 0) break;
+					size += read;
+					remaining -= read;
+				}
 				is.close();
 				OutputStream os = null;
 				try {
@@ -70,23 +82,27 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			}
 		}
 		SimpleConfiguration sc = new SimpleConfiguration(buf, size);
+		
+		EnumMap<LangOptions, String> messages = new EnumMap<LangOptions, String>(LangOptions.class);
 		String replacelangkey = "replacelang\0", localisationkey = "localisation\0", localisation = "default", localisation0 = localisationkey.concat(localisation).concat("\0");
-		LangOptions[] values = values();
+		LangOptions[] values = LangOptions.values();
 		final int valuescount = values.length;
 		int i = valuescount;
 		while (--i > -1) {
 			LangOptions lang = values[i];
-			lang.text.clear();
 			String langname = lang.name();
 			String msg = sc.getStringOrDefault(localisation0.concat(langname.replace("_", "\0")), langname);
 			msg = msg.replace("\\n", "\n");
-			lang.text.put(defaultlang, msg);
+			messages.put(lang, msg);
 		}
+		this.localizedmessages.put(defaultlang, messages);
 		String[] localisationkeys = sc.getSubKeys(localisationkey);
 		i = localisationkeys.length;
 		while(--i > -1) {
 			localisation = localisationkeys[i];
 			if(localisation.equals("default")) continue;
+			messages = new EnumMap<LangOptions, String>(LangOptions.class);
+			this.localizedmessages.put(localisation, messages);
 			localisation0 = localisationkey.concat(localisation).concat("\0");
 			int j = valuescount;
 			while (--j > -1) {
@@ -94,7 +110,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 				String msg = sc.getStringOrDefault(localisation0.concat(lang.name().replace("_", "\0")), null);
 				if(msg==null) continue;
 				msg = msg.replace("\\n", "\n");
-				lang.text.put(localisation, msg);
+				messages.put(lang, msg);
 			}
 		}
 		String[] replacelangkeys = sc.getSubKeys(replacelangkey);
@@ -104,23 +120,29 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			String from = sc.getStringOrDefault(replacekey0, to);
 			int j = valuescount;
 			while (--j > -1) {
-				LangOptions lang = values[j];
-				lang.text.put(to, lang.text.get(from));
+				EnumMap<LangOptions, String> mesgs = this.localizedmessages.get(from);
+				if(mesgs == null) continue;
+				this.localizedmessages.put(to, mesgs);
 			}
 		}
 	}
-	private final Map<String, String> text = new HashMap<String, String>();
-
-	public void sendMsg(final Object target, final Placeholder... placeholders) {
-		String msg = null;
-		final String locale = messagesender.getLocale(target);
+	
+	public EnumMap<LangOptions, String> getMessages(String lang) {
+		EnumMap<LangOptions, String> msgs = this.localizedmessages.get(lang);
+		return msgs == null ? this.localizedmessages.get(defaultlang) : msgs;
+	}
+	
+	public void sendMsg(final Object target, LangOptions msgkey, final Placeholder... placeholders) {
+		EnumMap<LangOptions, String> msgs = null;
+		String msg;
+		final String locale = this.messagesender.getLocale(target);
 		if (locale != null) {
-			msg = text.get(locale);
+			msgs = this.localizedmessages.get(locale);
 		}
-		if(msg==null) {
-			msg = text.get(defaultlang);
+		if(msgs == null) {
+			msgs = this.localizedmessages.get(defaultlang);
 		}
-		if (msg==null || msg.isEmpty()) {
+		if (msgs==null || msgs.isEmpty() || (msg = msgs.get(msgkey)) == null) {
 			return;
 		}
 		int i = placeholders.length;
@@ -128,7 +150,7 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			Placeholder placeholder = placeholders[i];
 			msg = msg.replace(placeholder.placeholder, placeholder.value);
 		}
-		messagesender.send(target, msg);
+		this.messagesender.send(target, msg);
 	}
 	
 	public static class Placeholder {
@@ -162,4 +184,9 @@ loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_
 			return new String(filtered, StandardCharsets.US_ASCII);
 		}
 	}
+	
+	public static enum LangOptions {
+		loadmusic_usage, loadmusic_nopermission, loadmusic_nopermissionother, loadmusic_noconsoleselector, loadmusic_targetoffline, loadmusic_processing, loadmusic_noplaylist, loadmusic_loaderunavilable, loadmusic_success_removed, loadmusic_success_packed, loadmusic_success_dispatched, loadmusic_unavilableselector_near, loadmusic_unavilableselector_random, loadmusic_unavilableselector_all, playmusic_usage, playmusic_nopermission, playmusic_nopermissionother, playmusic_noconsoleselector, playmusic_targetoffline, playmusic_noplaylist, playmusic_missingtrack, playmusic_success, playmusic_stop, playmusic_unavilableselector_near, playmusic_unavilableselector_random, playmusic_unavilableselector_all, repeat_usage, repeat_nopermission, repeat_nopermissionother, repeat_noconsoleselector, repeat_targetoffline, repeat_unknownrepeattype, repeat_repeatall, repeat_repeatone, repeat_playall, repeat_playone, repeat_random, repeat_unavilableselector_near, repeat_unavilableselector_random, repeat_unavilableselector_all, uploadmusic_usage, uploadmusic_nopermission, uploadmusic_nopermissiontoken, uploadmusic_disabled, uploadmusic_start_url_click, uploadmusic_start_url_show, uploadmusic_drop_player_notplayer, uploadmusic_drop_player_nosession, uploadmusic_drop_player_success, uploadmusic_drop_token_invalid, uploadmusic_drop_token_nosession, uploadmusic_drop_token_success, uploadmusic_finish_player_notplayer, uploadmusic_finish_player_nosession, uploadmusic_finish_player_success, uploadmusic_finish_token_invalid, uploadmusic_finish_token_nosession, uploadmusic_finish_token_success;
+	}
+
 }

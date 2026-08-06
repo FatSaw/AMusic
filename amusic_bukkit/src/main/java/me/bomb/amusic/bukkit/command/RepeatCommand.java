@@ -1,7 +1,9 @@
 package me.bomb.amusic.bukkit.command;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -11,23 +13,36 @@ import org.bukkit.entity.Player;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.RepeatType;
-import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.permission.AMusicPermission;
+import me.bomb.amusic.util.LangLoader;
+import me.bomb.amusic.util.LangLoader.LangOptions;
 
 public final class RepeatCommand extends Command {
 	private final Server server;
 	private final AMusic amusic;
+	private final LangLoader lang;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final SelectorProcessor selectorprocessor;
-	public RepeatCommand(Server server, AMusic amusic, SelectorProcessor selectorprocessor) {
+	private final ArrayList<String> emptytab = new ArrayList<String>(0);
+	
+	public RepeatCommand(Server server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, SelectorProcessor selectorprocessor) {
 		super("repeat");
 		this.server = server;
 		this.amusic = amusic;
+		this.lang = lang;
+		this.playerspermission = playerspermission;
 		this.selectorprocessor = selectorprocessor;
 	}
 	
 	@Override
 	public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-		if (!sender.hasPermission("amusic.repeat")) {
-			LangOptions.repeat_nopermission.sendMsg(sender);
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			this.lang.sendMsg(sender, LangOptions.repeat_nopermission);
+			return true;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.REPEAT)) {
+			this.lang.sendMsg(sender, LangOptions.repeat_nopermission);
 			return true;
 		}
 		if (args.length > 1) {
@@ -35,18 +50,18 @@ public final class RepeatCommand extends Command {
 				if (sender instanceof Player) {
 					args[0] = ((Player) sender).getName();
 				} else {
-					LangOptions.repeat_noconsoleselector.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_noconsoleselector);
 					return true;
 				}
-			} else if (!sender.hasPermission("amusic.repeat.other")) {
-				LangOptions.repeat_nopermissionother.sendMsg(sender);
+			} else if (permissions != null && !permissions.contains(AMusicPermission.REPEAT_OTHER)) {
+				this.lang.sendMsg(sender, LangOptions.repeat_nopermissionother);
 				return true;
 			}
 			if (args[0].startsWith("@p")) {
 				String closestplayername = selectorprocessor.getNearest(sender, args[0].substring(2));
 				
 				if(closestplayername == null) {
-					LangOptions.repeat_unavilableselector_near.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_unavilableselector_near);
 					return true;
 				}
 				args[0] = closestplayername;
@@ -55,7 +70,7 @@ public final class RepeatCommand extends Command {
 			if (args[0].startsWith("@r")) {
 				String randomplayername = selectorprocessor.getRandom(sender, args[0].substring(2));
 				if(randomplayername == null) {
-					LangOptions.repeat_unavilableselector_random.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_unavilableselector_random);
 					return true;
 				}
 				args[0] = randomplayername;
@@ -64,7 +79,7 @@ public final class RepeatCommand extends Command {
 			if(args[0].startsWith("@a")) {
 				UUID[] targetarray = args[0].length() == 2 ? selectorprocessor.getAllGlobal() : selectorprocessor.getSameWorld(sender, args[0].substring(2)); 
 				if(targetarray == null) {
-					LangOptions.playmusic_unavilableselector_all.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_all);
 					return true;
 				}
 				this.executeCommand(sender, args[1].toLowerCase(), targetarray);
@@ -73,28 +88,32 @@ public final class RepeatCommand extends Command {
 			
 			Player target = server.getPlayerExact(args[0]);
 			if (target == null) {
-				LangOptions.repeat_targetoffline.sendMsg(sender);
+				this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 				return true;
 			}
 			this.executeCommand(sender, args[1].toLowerCase(), target.getUniqueId());
 			
 		} else {
-			LangOptions.repeat_usage.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_usage);
 		}
 		return true;
 	}
 	
 	@Override
 	public java.util.List<String> tabComplete(CommandSender sender, String alias, String[] args) throws CommandException, IllegalArgumentException {
-		if (!sender.hasPermission("amusic.repeat")) {
-			return null;
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			return emptytab;
+		}
+		if (permissions != null && !permissions.contains(AMusicPermission.REPEAT)) {
+			return emptytab;
 		}
 		ArrayList<String> tabcomplete = new ArrayList<String>();
 		if (args.length == 1) {
 			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if (sender.hasPermission("amusic.repeat.other")) {
+			if (permissions == null || permissions.contains(AMusicPermission.REPEAT_OTHER)) {
 				for (Player player : server.getOnlinePlayers()) {
 					if (player.getName().toLowerCase().startsWith(args[0].toLowerCase())) {
 						tabcomplete.add(player.getName());
@@ -128,56 +147,55 @@ public final class RepeatCommand extends Command {
 		case "playone":
 			for(UUID target : targets) {
 				if (target == null) {
-					LangOptions.repeat_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
 				amusic.setRepeatMode(target, null);
 			}
-			LangOptions.repeat_playone.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_playone);
 			return;
 		case "repeatone":
 			for(UUID target : targets) {
 				if (target == null) {
-					LangOptions.repeat_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
 				amusic.setRepeatMode(target, RepeatType.REPEATONE);
 			}
-			LangOptions.repeat_repeatone.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_repeatone);
 			return;
 		case "repeatall":
 			for(UUID target : targets) {
 				if (target == null) {
-					LangOptions.repeat_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
 				amusic.setRepeatMode(target, RepeatType.REPEATALL);
 			}
-			LangOptions.repeat_repeatall.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_repeatall);
 			return;
 		case "playall":
 			for(UUID target : targets) {
 				if (target == null) {
-					LangOptions.repeat_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
 				amusic.setRepeatMode(target, RepeatType.PLAYALL);
 			}
-			
-			LangOptions.repeat_playall.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_playall);
 			return;
 		case "random":
 			for(UUID target : targets) {
 				if (target == null) {
-					LangOptions.repeat_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
 				amusic.setRepeatMode(target, RepeatType.RANDOM);
 			}
-			LangOptions.repeat_random.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_random);
 			return;
 		default:
-			LangOptions.repeat_unknownrepeattype.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.repeat_unknownrepeattype);
 		}
 		
 	}

@@ -5,6 +5,8 @@ import java.net.InetAddress;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.EnumSet;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -30,10 +32,11 @@ import me.bomb.amusic.PositionTracker;
 import me.bomb.amusic.ServerAMusic;
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
+import me.bomb.amusic.permission.AMusicPermission;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.AMusicLogger;
-import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangLoader;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
@@ -49,6 +52,15 @@ public final class AMusicVelocity {
 	private final Configuration config;
 	private final LocalAMusic amusic;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
+	
+	private final LoadmusicCommand loadmusic;
+	private final PlaymusicCommand playmusic, playmusicuntrackable;
+	private final RepeatCommand repeat;
+	private final UploadmusicCommand uploadmusic;
+	
+	private final LoginHandler login;
+	private final DisconnectHandler disconnect;
+	private final PlayerResourcePackStatusHandler resourcepackstatus;
 	
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -87,6 +99,14 @@ public final class AMusicVelocity {
 			this.config = null;
 			this.amusic = null;
 			this.playerips = null;
+			this.loadmusic = null;
+			this.playmusic = null;
+			this.playmusicuntrackable = null;
+			this.repeat = null;
+			this.uploadmusic = null;
+			this.login = null;
+			this.disconnect = null;
+			this.resourcepackstatus = null;
 			return;
 		}
 		this.server = server;
@@ -100,7 +120,8 @@ public final class AMusicVelocity {
 		} catch (IOException e) {
 		}
 		this.playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-
+		boolean rgb = false;
+		
 		PackSender packsender = new VelocityPackSender(server);
 		LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(mergezip, config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 		PositionTracker positiontracker = new PositionTracker(new VelocitySoundStarter(server), new VelocitySoundStopper(server));
@@ -112,7 +133,36 @@ public final class AMusicVelocity {
 		} else {
 			this.amusic = new LocalAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
 		}
-		LangOptions.loadLang(new VelocityMessageSender(), langfile, false);
+		LangLoader lang = new LangLoader(langfile, rgb ? "lang_rgb.yml" : "lang_old.yml", new VelocityMessageSender());
+		final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission = new ConcurrentHashMap<UUID, EnumSet<AMusicPermission>>();
+		LoadmusicCommand loadmusic = null;
+		PlaymusicCommand playmusic = null, playmusicuntrackable = null;
+		RepeatCommand repeat = null;
+		UploadmusicCommand uploadmusic = null;
+		if(config.usecmd) {
+			loadmusic = new LoadmusicCommand(server, amusic, lang, playerspermission);
+			playmusic = new PlaymusicCommand(server, amusic, lang, playerspermission, true);
+			playmusicuntrackable = new PlaymusicCommand(server, amusic, lang, playerspermission, false);
+			repeat = new RepeatCommand(server, amusic, lang, playerspermission);
+			uploadmusic = new UploadmusicCommand(amusic, lang, playerspermission, config.uploadhost);
+		}
+		LoginHandler login = null;
+		DisconnectHandler disconnect = null;
+		PlayerResourcePackStatusHandler resourcepackstatus;
+		
+		login = new LoginHandler(amusic, playerspermission, playerips, config.joinplaylist);
+		disconnect = new DisconnectHandler(amusic, playerspermission, playerips, uploadmusic);
+		resourcepackstatus = new PlayerResourcePackStatusHandler(amusic.resourcemanager);
+		
+		this.loadmusic = loadmusic;
+		this.playmusic = playmusic;
+		this.playmusicuntrackable = playmusicuntrackable;
+		this.repeat = repeat;
+		this.uploadmusic = uploadmusic;
+		
+		this.login = login;
+		this.disconnect = disconnect;
+		this.resourcepackstatus = resourcepackstatus;
     }
 
 
@@ -125,27 +175,38 @@ public final class AMusicVelocity {
 			AMusicLogger.info("Geyser hook loaded");
 		} catch (NoClassDefFoundError e) {
 		}
-		UploadmusicCommand uploadmusic = null;
+		
 		
 		if(config.usecmd) {
-			LoadmusicCommand loadmusic = new LoadmusicCommand(server, amusic);
-			PlaymusicCommand playmusic = new PlaymusicCommand(server, amusic, true), playmusicuntrackable = new PlaymusicCommand(server, amusic, false);
-			RepeatCommand repeat = new RepeatCommand(server, amusic);
-			uploadmusic = new UploadmusicCommand(amusic, config.uploadhost);
-			CommandManager cmdmanager = server.getCommandManager();
-			CommandMeta loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build(), playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build(), playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build(), repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build(), uploadmusicmeta = cmdmanager.metaBuilder("uploadmusic").plugin(this).build();
-			cmdmanager.register(loadmusicmeta, loadmusic);
-			cmdmanager.register(playmusicmeta, playmusic);
-			cmdmanager.register(playmusicuntrackablemeta, playmusicuntrackable);
-			cmdmanager.register(repeatmeta, repeat);
-			cmdmanager.register(uploadmusicmeta, uploadmusic);
+			CommandManager cmdmanager = this.server.getCommandManager();
+			if(this.loadmusic != null) {
+				CommandMeta loadmusicmeta =  cmdmanager.metaBuilder("loadmusic").plugin(this).build();
+				cmdmanager.register(loadmusicmeta, this.loadmusic);
+			}
+			if(this.playmusic != null) {
+				CommandMeta playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build();
+				cmdmanager.register(playmusicmeta, this.playmusic);
+			}
+			if(this.playmusicuntrackable != null) {
+				CommandMeta playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build();
+				cmdmanager.register(playmusicuntrackablemeta, this.playmusicuntrackable);
+			}
+			if(this.repeat != null) {
+				CommandMeta repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build();
+				cmdmanager.register(repeatmeta, this.repeat);
+			}
+			if(this.uploadmusic != null) {
+				CommandMeta uploadmusicmeta = cmdmanager.metaBuilder("uploadmusic").plugin(this).build();
+				cmdmanager.register(uploadmusicmeta, this.uploadmusic);
+			}
 		}
-		
-		EventManager eventmanager = server.getEventManager();
-		eventmanager.register(this, ProxyShutdownEvent.class, new ProxyShutdownHandler(amusic, geyser));
-		eventmanager.register(this, LoginEvent.class, new LoginHandler(amusic, playerips, config.joinplaylist));
-		eventmanager.register(this, DisconnectEvent.class, new DisconnectHandler(amusic, playerips, uploadmusic));
-		eventmanager.register(this, PlayerResourcePackStatusEvent.class, new PlayerResourcePackStatusHandler(amusic.resourcemanager));
+
+		ProxyShutdownHandler proxyshutdown = new ProxyShutdownHandler(this.amusic, geyser);
+		EventManager eventmanager = this.server.getEventManager();
+		if(this.login != null) eventmanager.register(this, LoginEvent.class, this.login);
+		if(this.disconnect != null) eventmanager.register(this, DisconnectEvent.class, this.disconnect);
+		if(this.resourcepackstatus != null) eventmanager.register(this, PlayerResourcePackStatusEvent.class, this.resourcepackstatus);
+		eventmanager.register(this, ProxyShutdownEvent.class, proxyshutdown);
 	}
 	
 }

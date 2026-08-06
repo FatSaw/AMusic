@@ -8,8 +8,10 @@ import java.net.InetAddress;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -31,7 +33,7 @@ import me.bomb.amusic.SoundStarter;
 import me.bomb.amusic.ClientAMusic;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.AMusicLogger;
-import me.bomb.amusic.util.LangOptions;
+import me.bomb.amusic.util.LangLoader;
 import me.bomb.amusic.bukkit.command.LoadmusicCommand;
 import me.bomb.amusic.bukkit.command.PlaymusicCommand;
 import me.bomb.amusic.bukkit.command.RepeatCommand;
@@ -58,6 +60,7 @@ import me.bomb.amusic.bukkit.legacy.LegacyPackSender_1_10_R1;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_9_R2;
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
+import me.bomb.amusic.permission.AMusicPermission;
 import me.bomb.amusic.resourceserver.ResourceManager;
 import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_10_R1;
@@ -68,6 +71,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private static AMusic instance = null;
 	
 	private final AMusic amusic;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final boolean usecmd;
 	private GeyserHook geyserhook = null;
@@ -163,23 +167,45 @@ public final class AMusicBukkit extends JavaPlugin {
 				}
 				
 			}
-			
+			MessageSender messagesender;
+			switch (ver) {
+			case 7:
+				messagesender = new LegacyMessageSender_1_7_R4();
+			break;
+			case 8:
+				messagesender = new LegacyMessageSender_1_8_R3();
+			break;
+			case 9:
+				messagesender = new LegacyMessageSender_1_9_R2();
+			break;
+			case 10:
+				messagesender = new LegacyMessageSender_1_10_R1();
+			break;
+			case 11:
+				messagesender = new LegacyMessageSender_1_11_R1();
+			break;
+			default:
+				messagesender = new SpigotMessageSender();
+			break;
+			}
+			LangLoader lang = new LangLoader(langfile, ver > 15 ? "lang_rgb.yml" : "lang_old.yml", messagesender);
+			ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission = new ConcurrentHashMap<UUID, EnumSet<AMusicPermission>>();
+			PlayerJoinHandler playerjoin = null;
+			PlayerQuitHandler playerquit = null;
 			if(config.connectuse) {
 				this.playerips = null;
 				ClientAMusic amusic = new ClientAMusic(config.connectifip, config.connectremoteip, config.connectport, config.connectsocketfactory, config.executor);
 				this.amusic = amusic;
-				this.playerjoin = null;
-				this.playerquit = null;
 				this.playerchangedworld = null;
 				this.playerrespawn = null;
 				this.playerresourcepackstatus = null;
 				if(this.usecmd) {
 					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
-					loadmusiccmd = new LoadmusicCommand(server, amusic, selectorprocessor);
-					playmusiccmd = new PlaymusicCommand(server, amusic, selectorprocessor, true);
-					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, selectorprocessor, false);
-					repeatcmd = new RepeatCommand(server, amusic, selectorprocessor);
-					uploadmusiccmd = new UploadmusicCommand(amusic, config.uploadhost);
+					loadmusiccmd = new LoadmusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
+					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, true);
+					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, false);
+					repeatcmd = new RepeatCommand(server, amusic, lang, playerspermission, selectorprocessor);
+					uploadmusiccmd = new UploadmusicCommand(amusic, lang, playerspermission, config.uploadhost);
 				}
 			} else {
 				PackSender packsender;
@@ -232,25 +258,15 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.amusic = amusic;
 				if(this.usecmd) {
 					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
-					loadmusiccmd = new LoadmusicCommand(server, amusic, selectorprocessor);
-					playmusiccmd = new PlaymusicCommand(server, amusic, selectorprocessor, true);
-					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, selectorprocessor, false);
-					repeatcmd = new RepeatCommand(server, amusic, selectorprocessor);
-					uploadmusiccmd = new UploadmusicCommand(amusic, config.uploadhost);
+					loadmusiccmd = new LoadmusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
+					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, true);
+					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, false);
+					repeatcmd = new RepeatCommand(server, amusic, lang, playerspermission, selectorprocessor);
+					uploadmusiccmd = new UploadmusicCommand(amusic, lang, playerspermission, config.uploadhost);
 				}
-				PlayerJoinHandler playerjoin = null;
-				PlayerQuitHandler playerquit = null;
 				PlayerChangedWorldHandler playerchangedworld = null;
 				PlayerRespawnHandler playerrespawn = null;
 				PlayerResourcePackStatusHandler playerresourcepackstatus = null;
-				try {
-					playerjoin = new PlayerJoinHandler(this, amusic, playerips, config.joinplaylist);
-				} catch (NoClassDefFoundError e) {
-				}
-				try {
-					playerquit = new PlayerQuitHandler(this, amusic, playerips, uploadmusiccmd);
-				} catch (NoClassDefFoundError e) {
-				}
 				try {
 					playerchangedworld = new PlayerChangedWorldHandler(this, amusic.positiontracker);
 				} catch (NoClassDefFoundError e) {
@@ -265,39 +281,27 @@ public final class AMusicBukkit extends JavaPlugin {
 					} catch (NoClassDefFoundError e) {
 					}
 				}
-				this.playerjoin = playerjoin;
-				this.playerquit = playerquit;
 				this.playerchangedworld = playerchangedworld;
 				this.playerrespawn = playerrespawn;
 				this.playerresourcepackstatus = playerresourcepackstatus;
 			}
-			MessageSender messagesender;
-			switch (ver) {
-			case 7:
-				messagesender = new LegacyMessageSender_1_7_R4();
-			break;
-			case 8:
-				messagesender = new LegacyMessageSender_1_8_R3();
-			break;
-			case 9:
-				messagesender = new LegacyMessageSender_1_9_R2();
-			break;
-			case 10:
-				messagesender = new LegacyMessageSender_1_10_R1();
-			break;
-			case 11:
-				messagesender = new LegacyMessageSender_1_11_R1();
-			break;
-			default:
-				messagesender = new SpigotMessageSender();
-			break;
+			try {
+				playerjoin = new PlayerJoinHandler(this, amusic, playerspermission, playerips, config.joinplaylist);
+			} catch (NoClassDefFoundError e) {
 			}
-			LangOptions.loadLang(messagesender, langfile, ver > 15);
+			try {
+				playerquit = new PlayerQuitHandler(this, amusic, playerspermission, playerips, uploadmusiccmd);
+			} catch (NoClassDefFoundError e) {
+			}
+			this.playerjoin = playerjoin;
+			this.playerquit = playerquit;
+			this.playerspermission = playerspermission;
 			if(AMusicBukkit.instance == null) {
 				AMusicBukkit.instance = this.amusic;
 			}
 		} else {
 			this.usecmd = false;
+			this.playerspermission = null;
 			this.playerips = null;
 			this.amusic = null;
 			this.playerjoin = null;
@@ -366,10 +370,21 @@ public final class AMusicBukkit extends JavaPlugin {
 			if(this.playerrespawn != null) this.playerrespawn.register();
 			if(this.playerresourcepackstatus != null) this.playerresourcepackstatus.register();
 		}
-		if(playerips != null) {
-			playerips.clear();
+		if(this.playerips != null) {
+			this.playerips.clear();
 			for(Player player : server.getOnlinePlayers()) {
-				playerips.put(player, player.getAddress().getAddress());
+				this.playerips.put(player, player.getAddress().getAddress());
+			}
+		}
+		if(this.playerspermission != null) {
+			this.playerspermission.clear();
+			for(Player player : server.getOnlinePlayers()) {
+				this.playerips.put(player, player.getAddress().getAddress());
+				EnumSet<AMusicPermission> permissions = EnumSet.noneOf(AMusicPermission.class);
+				for (AMusicPermission permission : AMusicPermission.values()) {
+					if(player.hasPermission(permission.permission)) permissions.add(permission);
+				}
+				this.playerspermission.put(player.getUniqueId(), permissions);
 			}
 		}
 		this.amusic.enable();
@@ -422,13 +437,13 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.uploadmusiccmd.unregister(commandmap);
 			}
 		}
-		if(this.amusic instanceof LocalAMusic) {
-			if(this.playerjoin != null) this.playerjoin.unregister();
-			if(this.playerquit != null) this.playerquit.unregister();
-			if(this.playerchangedworld != null) this.playerchangedworld.unregister();
-			if(this.playerrespawn != null) this.playerrespawn.unregister();
-			if(this.playerresourcepackstatus != null) this.playerresourcepackstatus.unregister();
-		}
+		if(this.playerjoin != null) this.playerjoin.unregister();
+		if(this.playerquit != null) this.playerquit.unregister();
+		if(this.playerchangedworld != null) this.playerchangedworld.unregister();
+		if(this.playerrespawn != null) this.playerrespawn.unregister();
+		if(this.playerresourcepackstatus != null) this.playerresourcepackstatus.unregister();
+		if(this.playerips != null) this.playerips.clear();
+		if(this.playerspermission != null) this.playerspermission.clear();
 		this.amusic.disable();
 	}
 	//PLUGIN INIT END

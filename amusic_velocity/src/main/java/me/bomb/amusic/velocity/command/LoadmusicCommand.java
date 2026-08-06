@@ -1,9 +1,11 @@
 package me.bomb.amusic.velocity.command;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import com.velocitypowered.api.command.CommandSource;
@@ -13,49 +15,59 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 
 import me.bomb.amusic.AMusic;
+import me.bomb.amusic.permission.AMusicPermission;
 import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.StatusReport;
-import me.bomb.amusic.util.LangOptions;
-import me.bomb.amusic.util.LangOptions.Placeholder;
+import me.bomb.amusic.util.LangLoader;
+import me.bomb.amusic.util.LangLoader.LangOptions;
+import me.bomb.amusic.util.LangLoader.Placeholder;
 
 public final class LoadmusicCommand implements SimpleCommand {
 	
 	private final ProxyServer server;
 	private final AMusic amusic;
+	private final LangLoader lang;
+	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
-	public LoadmusicCommand(ProxyServer server, AMusic amusic) {
+	public LoadmusicCommand(ProxyServer server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission) {
 		this.server = server;
 		this.amusic = amusic;
+		this.lang = lang;
+		this.playerspermission = playerspermission;
 	}
 
 	@Override
 	public void execute(Invocation invocation) {
 		CommandSource sender = invocation.source();
-		if (!sender.hasPermission("amusic.loadmusic")) {
-			LangOptions.loadmusic_nopermission.sendMsg(sender);
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			this.lang.sendMsg(sender, LangOptions.loadmusic_nopermission);
+			return;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC)) {
+			this.lang.sendMsg(sender, LangOptions.loadmusic_nopermission);
 			return;
 		}
 		String[] args = invocation.arguments();
 		if (args.length > 1) {
 			UUID targetuuid = null;
-			if (!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update")) {
+			if (!args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE)) {
 				if (args[0].equals("@s")) {
 					if (sender instanceof Player) {
 						args[0] = ((Player) sender).getUsername();
 					} else {
-						LangOptions.loadmusic_noconsoleselector.sendMsg(sender);
+						this.lang.sendMsg(sender, LangOptions.loadmusic_noconsoleselector);
 						return;
 					}
-				} else if (!sender.hasPermission("amusic.loadmusic.other")) {
-
-					LangOptions.loadmusic_nopermissionother.sendMsg(sender);
+				} else if (permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_OTHER)) {
+					this.lang.sendMsg(sender, LangOptions.loadmusic_nopermissionother);
 					return;
 				}
 				
 				Optional<Player> target = server.getPlayer(args[0]);
 				if (target.isEmpty()) {
-					LangOptions.loadmusic_targetoffline.sendMsg(sender);
+					this.lang.sendMsg(sender, LangOptions.loadmusic_targetoffline);
 					return;
 				}
 				targetuuid = target.get().getUniqueId();
@@ -77,10 +89,10 @@ public final class LoadmusicCommand implements SimpleCommand {
 					if(status == null) {
 						return;
 					}
-					(status == EnumStatus.NOTEXSIST ? LangOptions.loadmusic_noplaylist : status == EnumStatus.UNAVILABLE ? LangOptions.loadmusic_loaderunavilable : status == EnumStatus.REMOVED ? LangOptions.loadmusic_success_removed : status == EnumStatus.PACKED ? LangOptions.loadmusic_success_packed : LangOptions.loadmusic_success_dispatched).sendMsg(sender, placeholder);
+					LoadmusicCommand.this.lang.sendMsg(sender, status == EnumStatus.NOTEXSIST ? LangOptions.loadmusic_noplaylist : status == EnumStatus.UNAVILABLE ? LangOptions.loadmusic_loaderunavilable : status == EnumStatus.REMOVED ? LangOptions.loadmusic_success_removed : status == EnumStatus.PACKED ? LangOptions.loadmusic_success_packed : LangOptions.loadmusic_success_dispatched, placeholder);
 				}
 			};
-			LangOptions.loadmusic_processing.sendMsg(sender, placeholder);
+			this.lang.sendMsg(sender, LangOptions.loadmusic_processing, placeholder);
 			amusic.loadPack(targetuuid == null ? null : new UUID[] {targetuuid}, name, targetuuid == null, statusreport);
 		} else if(args.length == 1 && args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 			Consumer<String[]> consumer = new Consumer<String[]>() {
@@ -97,7 +109,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 			};
 			amusic.getPlaylists(true, false, consumer);
 		} else {
-			LangOptions.loadmusic_usage.sendMsg(sender);
+			this.lang.sendMsg(sender, LangOptions.loadmusic_usage);
 		}
 		return;
 		
@@ -106,7 +118,11 @@ public final class LoadmusicCommand implements SimpleCommand {
 	@Override
 	public List<String> suggest(Invocation invocation) {
 		CommandSource sender = invocation.source();
-		if (!sender.hasPermission("amusic.loadmusic")) {
+		EnumSet<AMusicPermission> permissions = null;
+		if(sender instanceof Player && (permissions = this.playerspermission.get(((Player) sender).getUniqueId())) == null) {
+			return emptytab;
+		}
+		if(permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC)) {
 			return emptytab;
 		}
 		String[] args = invocation.arguments();
@@ -115,7 +131,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 			if (sender instanceof Player) {
 				tabcomplete.add("@s");
 			}
-			if (sender.hasPermission("amusic.loadmusic.other")) {
+			if (permissions == null || permissions.contains(AMusicPermission.LOADMUSIC_OTHER)) {
 				if(args.length == 0) {
 					for (Player player : server.getAllPlayers()) {
 						tabcomplete.add(player.getUsername());
@@ -167,7 +183,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 					}
 				}
 			};
-			boolean async = amusic.getPlaylists(!args[0].equals("@n") || !sender.hasPermission("amusic.loadmusic.update"), true, consumer);
+			boolean async = amusic.getPlaylists(!args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE), true, consumer);
 			if(async) {
 				try {
 					synchronized (tabcomplete) {

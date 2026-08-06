@@ -99,7 +99,7 @@ public final class ViaproxyPackSender implements PackSender {
 		if(version > 764) {
 			packetsize+=16;
 		}
-		ByteBuf buf = Unpooled.buffer(packetsize, packetsize);
+		ByteBuf buf = allocator.buffer(packetsize, packetsize);
 		buf.writeByte(pid);
 		if(version > 764) {
 			UUID urluuid = UUID.nameUUIDFromBytes(urlb);

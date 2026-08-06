@@ -593,9 +593,9 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		soundsjsonentryoffset = soundsjsonentryoffset - soundsjsonziplocalentryoffset;
 		soundsjsonentryoffset -= 30;
 		if(this.mergepack != null) {
-			System.arraycopy(this.mergepack, 0, resourcepack, 0, this.mergecdoffset);
-			System.arraycopy(this.mergepack, this.mergecdoffset, resourcepack, centraldirectoryoffset, this.mergecdsize);
-			System.arraycopy(this.mergepack, this.mergepack.length - this.mergecommentlength, resourcepack, resourcepack.length - this.mergecommentlength, this.mergecommentlength);
+			System.arraycopy(this.mergepack, 0, resourcepack, 0, this.mergecdoffset); //MERGE LOCAL ENTIES + DATA
+			System.arraycopy(this.mergepack, this.mergecdoffset, resourcepack, centraldirectoryoffset, this.mergecdsize); //MERGE GLOBAL ENTRIES
+			System.arraycopy(this.mergepack, this.mergepack.length - this.mergecommentlength, resourcepack, resourcepack.length - this.mergecommentlength, this.mergecommentlength); //MERGE COMMENT
 		}
 		try {
 			if(!executor.awaitTermination(1, TimeUnit.MINUTES)) {

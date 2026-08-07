@@ -363,13 +363,11 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.uploadmusiccmd.register(commandmap);
 			}
 		}
-		if(this.amusic instanceof LocalAMusic) {
-			if(this.playerjoin != null) this.playerjoin.register();
-			if(this.playerquit != null) this.playerquit.register();
-			if(this.playerchangedworld != null) this.playerchangedworld.register();
-			if(this.playerrespawn != null) this.playerrespawn.register();
-			if(this.playerresourcepackstatus != null) this.playerresourcepackstatus.register();
-		}
+		if(this.playerjoin != null) this.playerjoin.register();
+		if(this.playerquit != null) this.playerquit.register();
+		if(this.playerchangedworld != null) this.playerchangedworld.register();
+		if(this.playerrespawn != null) this.playerrespawn.register();
+		if(this.playerresourcepackstatus != null) this.playerresourcepackstatus.register();
 		if(this.playerips != null) {
 			this.playerips.clear();
 			for(Player player : server.getOnlinePlayers()) {

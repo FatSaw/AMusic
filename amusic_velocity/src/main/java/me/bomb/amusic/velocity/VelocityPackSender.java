@@ -14,7 +14,6 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
-import io.netty.util.ReferenceCountUtil;
 import me.bomb.amusic.PackSender;
 import net.kyori.adventure.resource.ResourcePackInfo;
 import net.kyori.adventure.resource.ResourcePackRequest;
@@ -58,7 +57,6 @@ public final class VelocityPackSender implements PackSender {
 			} else {
 				buf.release();
 			}
-			ReferenceCountUtil.release(buf); //
 			return;
 		}
 		ResourcePackInfo info = ResourcePackInfo.resourcePackInfo(UUID.nameUUIDFromBytes(url.getBytes(StandardCharsets.UTF_8)), URI.create(url), fromBytesToHex(sha1));

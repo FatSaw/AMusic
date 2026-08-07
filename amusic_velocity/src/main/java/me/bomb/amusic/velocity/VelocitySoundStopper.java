@@ -11,7 +11,6 @@ import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
-import io.netty.util.ReferenceCountUtil;
 import me.bomb.amusic.SoundStopper;
 import me.bomb.amusic.util.HexUtils;
 import me.bomb.amusic.util.SendSilence;
@@ -99,7 +98,6 @@ public final class VelocitySoundStopper implements SoundStopper {
 			} else {
 				buf.release();
 			}
-			ReferenceCountUtil.release(buf); //
 			return;
 		}
 		int packetsize = 16 + songidb.length;
@@ -121,7 +119,6 @@ public final class VelocitySoundStopper implements SoundStopper {
 		} else {
 			buf.release();
 		}
-		ReferenceCountUtil.release(buf); //
 	}
 
 }

@@ -379,7 +379,6 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(this.playerspermission != null) {
 			this.playerspermission.clear();
 			for(Player player : server.getOnlinePlayers()) {
-				this.playerips.put(player, player.getAddress().getAddress());
 				EnumSet<AMusicPermission> permissions = EnumSet.noneOf(AMusicPermission.class);
 				for (AMusicPermission permission : AMusicPermission.values()) {
 					if(player.hasPermission(permission.permission)) permissions.add(permission);

@@ -62,7 +62,7 @@ public final class LangLoader {
 				OutputStream os = null;
 				try {
 					os = fs.newOutputStream(langfile);
-					os.write(buf);
+					os.write(buf, 0, size);
 					os.close();
 				} catch (IOException e3) {
 					if(os != null) {

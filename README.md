@@ -8,7 +8,6 @@ Music through resource pack
 - Supported versions: `1.7.10` - `1.21.11`
 - GeyserMC supported (single resourcepack compatible with java and bedrock, without sound data duplication)
 - Volume control in `Voice` sound setting (only for `1.13+`)
-- Web sound uploader with clientside transcoding
 
 ## Files and directories
 - `./config.yml` - configuration file
@@ -24,7 +23,6 @@ Music through resource pack
 - `/loadmusic <playername> <playlistname>` - loads playlist(resourcepack) to player, update flag true if playlist not loaded before or used null target `@n`
 - `/playmusic <playername> [soundname]` - starts sound "soundname" from playlist "playername", if no soundname, stop sound
 - `/repeat <playername> <repeat type>` - set repeat type
-- `/uploadmusic <start/finish/drop> <playlist>/[token]/[token]` - upload sound
 
 ### Permissions
 - `amusic.loadmusic` - load playlist(resourcepack), allows `@s` usage
@@ -34,8 +32,6 @@ Music through resource pack
 - `amusic.playmusic.other` - start/stop sound for other players
 - `amusic.repeat.other` - set repeat for other players
 - `amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
-- `amusic.uploadmusic` - start/finish/drop upload session
-- `amusic.uploadmusic.token` - allows start/finish/drop session by token
 
 ### Selectors <playername>:
 - `@n` - update playlist
@@ -81,10 +77,6 @@ Description: `Limits player count`
 ### GeyserMC (optional)
 - [GeyserMC source](https://github.com/GeyserMC/Geyser)
 - Viaproxy 3.x.x does not support optional dependency, to use viaproxy amusic implementation without GeyserMC need to remove depends from `viaproxy.yml` inside jar
-
-### FFmpeg.wasm
-- [FFmpeg.wasm source](https://github.com/FatSaw/ffmpeg.wasm)
-
 
 ## BUILD:
 

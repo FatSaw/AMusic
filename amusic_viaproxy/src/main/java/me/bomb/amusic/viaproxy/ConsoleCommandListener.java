@@ -9,15 +9,13 @@ import net.raphimc.viaproxy.plugins.events.ConsoleCommandEvent;
 public final class ConsoleCommandListener implements Consumer<ConsoleCommandEvent> {
 	
 	private final Logger logger;
-	private final Command loadmusic, playmusic, playmusicuntrackable, repeat, uploadmusic;
+	private final Command loadmusic, playmusic, repeat;
 	
-	public ConsoleCommandListener(Logger logger, Command loadmusic, Command playmusic, Command playmusicuntrackable, Command repeat, Command uploadmusic) {
+	public ConsoleCommandListener(Logger logger, Command loadmusic, Command playmusic, Command repeat) {
 		this.logger = logger;
 		this.loadmusic = loadmusic;
 		this.playmusic = playmusic;
-		this.playmusicuntrackable = playmusicuntrackable;
 		this.repeat = repeat;
-		this.uploadmusic = uploadmusic;
 	}
 
 	@Override
@@ -33,18 +31,8 @@ public final class ConsoleCommandListener implements Consumer<ConsoleCommandEven
 			event.setCancelled(true);
 			return;
 		}
-		if(cmd.equals("playmusicuntrackable")) {
-			playmusicuntrackable.handleConsole(this.logger, event.getArgs());
-			event.setCancelled(true);
-			return;
-		}
 		if(cmd.equals("repeat")) {
 			repeat.handleConsole(this.logger, event.getArgs());
-			event.setCancelled(true);
-			return;
-		}
-		if(cmd.equals("uploadmusic")) {
-			uploadmusic.handleConsole(this.logger, event.getArgs());
 			event.setCancelled(true);
 			return;
 		}

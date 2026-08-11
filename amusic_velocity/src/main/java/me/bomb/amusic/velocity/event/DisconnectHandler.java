@@ -11,20 +11,17 @@ import com.velocitypowered.api.proxy.Player;
 
 import me.bomb.amusic.AMusic;
 import me.bomb.amusic.permission.AMusicPermission;
-import me.bomb.amusic.velocity.command.UploadmusicCommand;
 
 public final class DisconnectHandler implements EventHandler<DisconnectEvent> {
 	
 	private final AMusic amusic;
 	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	private final UploadmusicCommand uploadmusic;
 	
-	public DisconnectHandler(AMusic amusic, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusic) {
+	public DisconnectHandler(AMusic amusic, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, ConcurrentHashMap<Object,InetAddress> playerips) {
 		this.amusic = amusic;
 		this.playerspermission = playerspermission;
 		this.playerips = playerips;
-		this.uploadmusic = uploadmusic;
 	}
 
 	@Override
@@ -33,7 +30,6 @@ public final class DisconnectHandler implements EventHandler<DisconnectEvent> {
 		UUID playeruuid = player.getUniqueId();
 		this.playerspermission.remove(playeruuid);
 		amusic.logout(playeruuid);
-		if(uploadmusic != null) uploadmusic.logoutUploader(player);
 		if(playerips == null) return;
 		playerips.remove(player);
 	}

@@ -30,14 +30,4 @@ public final class LegacySoundStarter_1_10_R1 implements SoundStarter {
 		player.getHandle().playerConnection.sendPacket(new PacketPlayOutCustomSoundEffect(musicid, SoundCategory.VOICE, loc.getX(), loc.getY(), loc.getZ(), 1.0E9f, 1.0f));
 	}
 
-	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte part, double x, double y, double z, float volume, float pitch) {
-		if(uuid == null || soundhash == null) {
-			return;
-		}
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
-		CraftPlayer player = (CraftPlayer) server.getPlayer(uuid);
-		player.getHandle().playerConnection.sendPacket(new PacketPlayOutCustomSoundEffect(musicid, SoundCategory.VOICE, x, y, z, volume, pitch));
-	}
-
 }

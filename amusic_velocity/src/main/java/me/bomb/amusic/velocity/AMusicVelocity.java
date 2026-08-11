@@ -34,13 +34,11 @@ import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
 import me.bomb.amusic.permission.AMusicPermission;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.LangLoader;
 import me.bomb.amusic.velocity.command.LoadmusicCommand;
 import me.bomb.amusic.velocity.command.PlaymusicCommand;
 import me.bomb.amusic.velocity.command.RepeatCommand;
-import me.bomb.amusic.velocity.command.UploadmusicCommand;
 import me.bomb.amusic.velocity.event.DisconnectHandler;
 import me.bomb.amusic.velocity.event.LoginHandler;
 import me.bomb.amusic.velocity.event.PlayerResourcePackStatusHandler;
@@ -54,9 +52,8 @@ public final class AMusicVelocity {
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	
 	private final LoadmusicCommand loadmusic;
-	private final PlaymusicCommand playmusic, playmusicuntrackable;
+	private final PlaymusicCommand playmusic;
 	private final RepeatCommand repeat;
-	private final UploadmusicCommand uploadmusic;
 	
 	private final LoginHandler login;
 	private final DisconnectHandler disconnect;
@@ -101,9 +98,7 @@ public final class AMusicVelocity {
 			this.playerips = null;
 			this.loadmusic = null;
 			this.playmusic = null;
-			this.playmusicuntrackable = null;
 			this.repeat = null;
-			this.uploadmusic = null;
 			this.login = null;
 			this.disconnect = null;
 			this.resourcepackstatus = null;
@@ -119,7 +114,7 @@ public final class AMusicVelocity {
 			fsp.createDirectory(packeddir);
 		} catch (IOException e) {
 		}
-		this.playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+		this.playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		boolean rgb = false;
 		
 		PackSender packsender = new VelocityPackSender(server);
@@ -127,38 +122,32 @@ public final class AMusicVelocity {
 		PositionTracker positiontracker = new PositionTracker(new VelocitySoundStarter(server), new VelocitySoundStopper(server));
 		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
 		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packeddir) : Data.getRamStorage(!config.processpack, lczs) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packeddir) : Data.getNoStorage(!config.processpack, lczs);
-		UploadManager uploadmanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips.values() : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 		if(config.connectuse) {
-			this.amusic = new ServerAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
+			this.amusic = new ServerAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
 		} else {
-			this.amusic = new LocalAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
+			this.amusic = new LocalAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 		}
 		LangLoader lang = new LangLoader(langfile, rgb ? "lang_rgb.yml" : "lang_old.yml", new VelocityMessageSender());
 		final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission = new ConcurrentHashMap<UUID, EnumSet<AMusicPermission>>();
 		LoadmusicCommand loadmusic = null;
-		PlaymusicCommand playmusic = null, playmusicuntrackable = null;
+		PlaymusicCommand playmusic = null;
 		RepeatCommand repeat = null;
-		UploadmusicCommand uploadmusic = null;
 		if(config.usecmd) {
 			loadmusic = new LoadmusicCommand(server, amusic, lang, playerspermission);
-			playmusic = new PlaymusicCommand(server, amusic, lang, playerspermission, true);
-			playmusicuntrackable = new PlaymusicCommand(server, amusic, lang, playerspermission, false);
+			playmusic = new PlaymusicCommand(server, amusic, lang, playerspermission);
 			repeat = new RepeatCommand(server, amusic, lang, playerspermission);
-			uploadmusic = new UploadmusicCommand(amusic, lang, playerspermission, config.uploadhost);
 		}
 		LoginHandler login = null;
 		DisconnectHandler disconnect = null;
 		PlayerResourcePackStatusHandler resourcepackstatus;
 		
 		login = new LoginHandler(amusic, playerspermission, playerips, config.joinplaylist);
-		disconnect = new DisconnectHandler(amusic, playerspermission, playerips, uploadmusic);
+		disconnect = new DisconnectHandler(amusic, playerspermission, playerips);
 		resourcepackstatus = new PlayerResourcePackStatusHandler(amusic.resourcemanager);
 		
 		this.loadmusic = loadmusic;
 		this.playmusic = playmusic;
-		this.playmusicuntrackable = playmusicuntrackable;
 		this.repeat = repeat;
-		this.uploadmusic = uploadmusic;
 		
 		this.login = login;
 		this.disconnect = disconnect;
@@ -187,17 +176,9 @@ public final class AMusicVelocity {
 				CommandMeta playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build();
 				cmdmanager.register(playmusicmeta, this.playmusic);
 			}
-			if(this.playmusicuntrackable != null) {
-				CommandMeta playmusicuntrackablemeta = cmdmanager.metaBuilder("playmusicuntrackable").plugin(this).build();
-				cmdmanager.register(playmusicuntrackablemeta, this.playmusicuntrackable);
-			}
 			if(this.repeat != null) {
 				CommandMeta repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build();
 				cmdmanager.register(repeatmeta, this.repeat);
-			}
-			if(this.uploadmusic != null) {
-				CommandMeta uploadmusicmeta = cmdmanager.metaBuilder("uploadmusic").plugin(this).build();
-				cmdmanager.register(uploadmusicmeta, this.uploadmusic);
 			}
 		}
 

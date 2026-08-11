@@ -38,7 +38,6 @@ import me.bomb.amusic.bukkit.command.LoadmusicCommand;
 import me.bomb.amusic.bukkit.command.PlaymusicCommand;
 import me.bomb.amusic.bukkit.command.RepeatCommand;
 import me.bomb.amusic.bukkit.command.SelectorProcessor;
-import me.bomb.amusic.bukkit.command.UploadmusicCommand;
 import me.bomb.amusic.bukkit.event.PlayerChangedWorldHandler;
 import me.bomb.amusic.bukkit.event.PlayerJoinHandler;
 import me.bomb.amusic.bukkit.event.PlayerQuitHandler;
@@ -62,7 +61,6 @@ import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
 import me.bomb.amusic.permission.AMusicPermission;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_10_R1;
 
 
@@ -79,7 +77,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final SimpleCommandMap commandmap;
 	private final HashMap<String, Command> mapcommand;
 	
-	private final Command loadmusiccmd, playmusiccmd, playmusicuntrackablecmd, repeatcmd, uploadmusiccmd;
+	private final Command loadmusiccmd, playmusiccmd, repeatcmd;
 	
 	private final PlayerJoinHandler playerjoin;
 	private final PlayerQuitHandler playerquit;
@@ -130,9 +128,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		HashMap<String, Command> mapcommand = null;
 		LoadmusicCommand loadmusiccmd = null;
 		PlaymusicCommand playmusiccmd = null;
-		PlaymusicCommand playmusicuntrackablecmd = null;
 		RepeatCommand repeatcmd = null;
-		UploadmusicCommand uploadmusiccmd = null;
 		if(config.use) {
 			try {
 				fsp.createDirectory(musicdir);
@@ -202,10 +198,8 @@ public final class AMusicBukkit extends JavaPlugin {
 				if(this.usecmd) {
 					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
 					loadmusiccmd = new LoadmusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, true);
-					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, false);
+					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
 					repeatcmd = new RepeatCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					uploadmusiccmd = new UploadmusicCommand(amusic, lang, playerspermission, config.uploadhost);
 				}
 			} else {
 				PackSender packsender;
@@ -248,21 +242,18 @@ public final class AMusicBukkit extends JavaPlugin {
 				break;
 				}
 				waitacception = config.waitacception;
-				playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+				playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(mergezip, config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PositionTracker positiontracker = new PositionTracker(soundstarter, soundstopper);
 				ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
 				Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packeddir) : Data.getRamStorage(!config.processpack, lczs) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packeddir) : Data.getNoStorage(!config.processpack, lczs);
-				UploadManager uploadmanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips.values() : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
-				LocalAMusic amusic = new LocalAMusic(logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
+				LocalAMusic amusic = new LocalAMusic(logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 				this.amusic = amusic;
 				if(this.usecmd) {
 					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
 					loadmusiccmd = new LoadmusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, true);
-					playmusicuntrackablecmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor, false);
+					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
 					repeatcmd = new RepeatCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					uploadmusiccmd = new UploadmusicCommand(amusic, lang, playerspermission, config.uploadhost);
 				}
 				PlayerChangedWorldHandler playerchangedworld = null;
 				PlayerRespawnHandler playerrespawn = null;
@@ -290,7 +281,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			} catch (NoClassDefFoundError e) {
 			}
 			try {
-				playerquit = new PlayerQuitHandler(this, amusic, playerspermission, playerips, uploadmusiccmd);
+				playerquit = new PlayerQuitHandler(this, amusic, playerspermission, playerips);
 			} catch (NoClassDefFoundError e) {
 			}
 			this.playerjoin = playerjoin;
@@ -314,9 +305,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		this.mapcommand = mapcommand;
 		this.loadmusiccmd = loadmusiccmd;
 		this.playmusiccmd = playmusiccmd;
-		this.playmusicuntrackablecmd = playmusicuntrackablecmd;
 		this.repeatcmd = repeatcmd;
-		this.uploadmusiccmd = uploadmusiccmd;
 	}
 	
 	public final static AMusic API() {
@@ -344,23 +333,11 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.mapcommand.put(cmdname, this.playmusiccmd);
 				this.playmusiccmd.register(commandmap);
 			}
-			if(this.playmusicuntrackablecmd != null) {
-				String cmdname = this.playmusicuntrackablecmd.getName();
-				this.mapcommand.put(prefix.concat(cmdname), this.playmusicuntrackablecmd);
-				this.mapcommand.put(cmdname, this.playmusicuntrackablecmd);
-				this.playmusicuntrackablecmd.register(commandmap);
-			}
 			if(this.repeatcmd != null) {
 				String cmdname = this.repeatcmd.getName();
 				this.mapcommand.put(prefix.concat(cmdname), this.repeatcmd);
 				this.mapcommand.put(cmdname, this.repeatcmd);
 				this.repeatcmd.register(commandmap);
-			}
-			if(this.uploadmusiccmd != null) {
-				String cmdname = this.uploadmusiccmd.getName();
-				this.mapcommand.put(prefix.concat(cmdname), this.uploadmusiccmd);
-				this.mapcommand.put(cmdname, this.uploadmusiccmd);
-				this.uploadmusiccmd.register(commandmap);
 			}
 		}
 		if(this.playerjoin != null) this.playerjoin.register();
@@ -415,23 +392,11 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.mapcommand.remove(cmdname, this.playmusiccmd);
 				this.playmusiccmd.unregister(commandmap);
 			}
-			if(this.playmusicuntrackablecmd != null) {
-				String cmdname = this.playmusicuntrackablecmd.getName();
-				this.mapcommand.remove(prefix.concat(cmdname), this.playmusicuntrackablecmd);
-				this.mapcommand.remove(cmdname, this.playmusicuntrackablecmd);
-				this.playmusicuntrackablecmd.unregister(commandmap);
-			}
 			if(this.repeatcmd != null) {
 				String cmdname = this.repeatcmd.getName();
 				this.mapcommand.remove(prefix.concat(cmdname), this.repeatcmd);
 				this.mapcommand.remove(cmdname, this.repeatcmd);
 				this.repeatcmd.unregister(commandmap);
-			}
-			if(this.uploadmusiccmd != null) {
-				String cmdname = this.uploadmusiccmd.getName();
-				this.mapcommand.remove(prefix.concat(cmdname), this.uploadmusiccmd);
-				this.mapcommand.remove(cmdname, this.uploadmusiccmd);
-				this.uploadmusiccmd.unregister(commandmap);
 			}
 		}
 		if(this.playerjoin != null) this.playerjoin.unregister();

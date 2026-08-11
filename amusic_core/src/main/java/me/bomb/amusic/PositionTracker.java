@@ -184,69 +184,6 @@ public final class PositionTracker implements Runnable {
 		Playing playing = trackers.get(uuid);
 		return playing.remaining;
 	}
-	
-	public void playMusicUntrackable(UUID uuid, String name, double x, double y, double z, float volume, float pitch) {
-		ResourcepackInfo info;
-		SoundInfo[] soundsinfo;
-		if ((info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
-			return;
-		}
-		short soundssize = (short) soundsinfo.length, id = soundssize;
-		SoundInfo soundinfo = null;
-		while (--id > -1) {
-			if ((soundinfo = soundsinfo[id]).name.equals(name))
-				break;
-		}
-		if (id == -1) {
-			return;
-		}
-		
-		final short fid = id;
-		final UUID soundhash = soundinfo.hash;
-		Runnable runnable = new Runnable() {
-			@Override
-			public void run() {
-				Playing playing = trackers.remove(uuid);
-				if(playing != null) {
-					soundstopper.stopSound(uuid, playing.soundhash, playing.currenttrack, (byte) 0);
-				}
-				soundstarter.startSound(uuid, soundhash, fid, (byte) 0, x, y, z, volume, pitch);
-			}
-		};
-		
-		if(trackers.containsKey(uuid) && soundstopper.isLock()) {
-			new Thread(runnable).start();
-		} else {
-			runnable.run();
-		}
-	}
-	
-	public void stopMusicUntrackable(UUID uuid) {
-		ResourcepackInfo info;
-		SoundInfo[] soundsinfo;
-		if ((info = getResourcepackInfo(uuid)) == null || (soundsinfo = info.getSounds()) == null) {
-			return;
-		}
-		trackers.remove(uuid);
-		if(soundstopper.isStopAll()) {
-			if(soundstopper.isLock()) {
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						soundstopper.stopSound(uuid, null, (short)0, (byte) 0);
-					}
-				};
-				new Thread(runnable).start();
-				return;
-			}
-			soundstopper.stopSound(uuid, null, (short)0, (byte) 0);
-			return;
-		}
-		short soundssize = (short) soundsinfo.length, id = soundssize;
-		while (--id > -1) {
-			soundstopper.stopSound(uuid, soundsinfo[id].hash, id, (byte) 0);
-		}
-	}
 
 	public void playMusic(UUID uuid, String name) {
 		ResourcepackInfo info;

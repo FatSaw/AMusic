@@ -20,13 +20,11 @@ import me.bomb.amusic.ServerAMusic;
 import me.bomb.amusic.packedinfo.Data;
 import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.viaproxy.command.Command;
 import me.bomb.amusic.viaproxy.command.LoadmusicCommand;
 import me.bomb.amusic.viaproxy.command.PlaymusicCommand;
 import me.bomb.amusic.viaproxy.command.RepeatCommand;
-import me.bomb.amusic.viaproxy.command.UploadmusicCommand;
 import net.lenni0451.lambdaevents.LambdaManager;
 import net.raphimc.viaproxy.ViaProxy;
 import net.raphimc.viaproxy.plugins.ViaProxyPlugin;
@@ -45,7 +43,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 	private ConcurrentHashMap<UUID,ProxyConnection> players;
 	private ConcurrentHashMap<Object,InetAddress> playerips;
 	private boolean usecmd;
-	private String configerrors, uploaderhost, joinplaylist;
+	private String configerrors, joinplaylist;
 	private GeyserHook geyserhook = null;
 	
 	public AMusicViaproxy() {
@@ -93,10 +91,9 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			} catch (IOException e) {
 			}
 			this.usecmd = config.usecmd;
-			this.uploaderhost = config.uploadhost;
 			this.joinplaylist = config.joinplaylist;
 			players = new ConcurrentHashMap<UUID,ProxyConnection>(16,0.75f,1);
-			playerips = config.sendpackstrictaccess || config.uploadstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+			playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 
 			PackSender packsender = new ViaproxyPackSender(this.players);
 	        
@@ -104,11 +101,10 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			PositionTracker positiontracker = new PositionTracker(new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players));
 			ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
 			Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packeddir) : Data.getRamStorage(!config.processpack, lczs) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packeddir) : Data.getNoStorage(!config.processpack, lczs);
-			UploadManager uploadmanager = config.uploaduse ? new UploadManager(config.uploadlifetime, config.uploadlimitsize, config.uploadlimitcount, config.musicdir, config.uploadstrictaccess ? playerips.values() : null, config.uploadifip, config.uploadport, config.uploadbacklog, config.uploadtimeout, config.uploadserverfactory, (short) 2) : null;
 			if(config.connectuse) {
-				this.amusic = new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
+				this.amusic = new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
 			} else {
-				this.amusic = new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, uploadmanager);
+				this.amusic = new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 			}
 			if(AMusicViaproxy.instance == null) {
 				AMusicViaproxy.instance = this.amusic;
@@ -117,7 +113,6 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			this.usecmd = false;
 			this.players = null;
 			this.playerips = null;
-			this.uploaderhost = null;
 			this.joinplaylist = null;
 			this.resourcemanager = null;
 			this.amusic = null;
@@ -132,8 +127,8 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		ConcurrentHashMap<String, UUID> uuidByPlayername = new ConcurrentHashMap<String, UUID>(16,0.75f,1);
 		LambdaManager eventManager = ViaProxy.EVENT_MANAGER;
 		if(this.usecmd) {
-			Command loadmusic = new LoadmusicCommand(this.amusic, uuidByPlayername), playmusic = new PlaymusicCommand(this.amusic, uuidByPlayername, true), playmusicuntrackable = new PlaymusicCommand(this.amusic, uuidByPlayername, false), repeat = new RepeatCommand(this.amusic, uuidByPlayername), uploadmusic = new UploadmusicCommand(this.amusic, this.uploaderhost);
-			eventManager.registerConsumer(new ConsoleCommandListener(this.logger, loadmusic, playmusic, playmusicuntrackable, repeat, uploadmusic), ConsoleCommandEvent.class);
+			Command loadmusic = new LoadmusicCommand(this.amusic, uuidByPlayername), playmusic = new PlaymusicCommand(this.amusic, uuidByPlayername), repeat = new RepeatCommand(this.amusic, uuidByPlayername);
+			eventManager.registerConsumer(new ConsoleCommandListener(this.logger, loadmusic, playmusic, repeat), ConsoleCommandEvent.class);
 		}
 		
 		if(this.resourcemanager != null) {

@@ -13,12 +13,10 @@ public final class PlaymusicCommand implements Command {
 	
 	private final AMusic amusic;
 	private final ConcurrentHashMap<String, UUID> uuidByPlayername;
-	private final boolean trackable;
 	
-	public PlaymusicCommand(AMusic amusic, ConcurrentHashMap<String, UUID> uuidByPlayername, boolean trackable) {
+	public PlaymusicCommand(AMusic amusic, ConcurrentHashMap<String, UUID> uuidByPlayername) {
 		this.amusic = amusic;
 		this.uuidByPlayername = uuidByPlayername;
-		this.trackable = trackable;
 	}
 
 	@Override
@@ -33,11 +31,7 @@ public final class PlaymusicCommand implements Command {
 				logger.info("Target player offline");
 				return;
 			}
-			if(trackable) {
-				amusic.stopSound(targetuuid);
-			} else {
-				amusic.stopSoundUntrackable(targetuuid);
-			}
+			amusic.stopSound(targetuuid);
 			logger.info("Stopping playing...");
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
@@ -124,11 +118,7 @@ public final class PlaymusicCommand implements Command {
 					}
 					for(String soundname : soundnames) {
 						if(soundname.equals(args[1])) {
-							if(trackable) {
-								amusic.playSound(targetuuid,args[1]);
-							} else {
-								amusic.playSoundUntrackable(targetuuid,args[1],0d,0d,0d,1.0f,1.0f);
-							}
+							amusic.playSound(targetuuid,args[1]);
 							logger.info("Starting playing... ".concat(args[1]));
 							return;
 						}

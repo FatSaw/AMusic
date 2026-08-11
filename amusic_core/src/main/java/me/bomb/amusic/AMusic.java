@@ -115,52 +115,12 @@ public interface AMusic {
 	public boolean stopSound(UUID playeruuid);
 	
 	/**
-	 * Stop untrackable sound from loaded pack.
-	 * 
-	 * @return true if async used.
-	 */
-	public boolean stopSoundUntrackable(UUID playeruuid);
-
-	/**
 	 * Play sound from loaded pack.
 	 * 
 	 * @return true if async used.
 	 */
 	public boolean playSound(UUID playeruuid, String name);
 
-	/**
-	 * Play untrackable sound from loaded pack.
-	 * 
-	 * @return true if async used.
-	 */
-	public boolean playSoundUntrackable(UUID playeruuid, String name, double x, double y, double z, float volume, float pitch);
-	
-	/**
-	 * Open upload session.
-	 * 
-	 * @return true if async used.
-	 */
-	public boolean openUploadSession(String playlistname, Consumer<UUID> resultConsumer);
-	
-	/**
-	 * Get upload sessions.
-	 * 
-	 * @return true if async used.
-	 */
-	public boolean getUploadSessions(Consumer<UUID[]> resultConsumer);
-	
-	/**
-	 * Close upload session.
-	 * 
-	 * @return true if async used.
-	 */
-	public boolean closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer);
-
-	/**
-	 * Close upload session.
-	 */
-	public void closeUploadSession(UUID token, boolean save);
-	
 	/**
 	 * Get resourcepack info.
 	 */

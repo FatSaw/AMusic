@@ -26,17 +26,15 @@ public final class PlaymusicCommand extends Command {
 	private final LangLoader lang;
 	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final SelectorProcessor selectorprocessor;
-	private final boolean trackable;
 	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
-	public PlaymusicCommand(Server server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, SelectorProcessor selectorprocessor, boolean trackable) {
-		super(trackable ? "playmusic" : "playmusicuntrackable");
+	public PlaymusicCommand(Server server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, SelectorProcessor selectorprocessor) {
+		super("playmusic");
 		this.server = server;
 		this.amusic = amusic;
 		this.lang = lang;
 		this.playerspermission = playerspermission;
 		this.selectorprocessor = selectorprocessor;
-		this.trackable = trackable;
 	}
 	
 	@Override
@@ -86,14 +84,8 @@ public final class PlaymusicCommand extends Command {
 						this.lang.sendMsg(sender, LangOptions.playmusic_unavilableselector_all);
 						return true;
 					}
-					if(trackable) {
-						for(int i = targetarray.length; --i > -1;) {
-							amusic.stopSound(targetarray[i]);
-						}
-					} else {
-						for(int i = targetarray.length; --i > -1;) {
-							amusic.stopSoundUntrackable(targetarray[i]);
-						}
+					for(int i = targetarray.length; --i > -1;) {
+						amusic.stopSound(targetarray[i]);
 					}
 					this.lang.sendMsg(sender, LangOptions.playmusic_stop);
 					return true;
@@ -106,12 +98,7 @@ public final class PlaymusicCommand extends Command {
 				this.lang.sendMsg(sender, LangOptions.playmusic_targetoffline);
 				return true;
 			}
-			if(trackable) {
-				amusic.stopSound(target.getUniqueId());
-			} else {
-				amusic.stopSoundUntrackable(target.getUniqueId());
-			}
-			
+			amusic.stopSound(target.getUniqueId());
 			this.lang.sendMsg(sender, LangOptions.playmusic_stop);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
@@ -353,16 +340,9 @@ public final class PlaymusicCommand extends Command {
 	}
 	
 	private void executeCommand(String soundname, UUID... targetuuids) {
-		if(trackable) {
-			for(UUID targetuuid : targetuuids) {
-				amusic.playSound(targetuuid,soundname);
-			}
-		} else {
-			for(UUID targetuuid : targetuuids) {
-				amusic.playSoundUntrackable(targetuuid,soundname,0d,0d,0d,1.0f,1.0f);
-			}
+		for(UUID targetuuid : targetuuids) {
+			amusic.playSound(targetuuid,soundname);
 		}
-		
 	}
 
 }

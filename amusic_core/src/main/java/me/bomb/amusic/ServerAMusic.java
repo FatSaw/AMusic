@@ -26,7 +26,6 @@ import me.bomb.amusic.resource.EnumStatus;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.ByteArraysOutputStream;
 import me.bomb.amusic.util.Logger;
 
@@ -38,8 +37,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private ServerSocket server;
 	private final Executor serverexecutor;
 	
-	public ServerAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, UploadManager uploadermanager, InetAddress hostip, InetAddress remoteip, int port, int backlog, ServerSocketFactory connectserverfactory, Executor serverexecutor) {
-		super(logger, executor, soundsource, positiontracker, resourcemanager, datamanager, uploadermanager);
+	public ServerAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, InetAddress hostip, InetAddress remoteip, int port, int backlog, ServerSocketFactory connectserverfactory, Executor serverexecutor) {
+		super(logger, executor, soundsource, positiontracker, resourcemanager, datamanager);
 		this.hostip = hostip;
 		this.remoteip = remoteip;
 		this.port = port;
@@ -737,45 +736,6 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		positiontracker.stopMusic(playeruuid);
 	}
 	
-	public final void stopSoundUntrackableBytes(byte[] playeruuidb) {
-		if(playeruuidb.length != 16) {
-			return;
-		}
-		long lsb = 0L, msb = 0L;
-		lsb = playeruuidb[0x0F] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidb[0x0E] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidb[0x0D] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidb[0x0C] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidb[0x0B] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidb[0x0A] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidb[0x09] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidb[0x08] & 0xFF;
-		msb = playeruuidb[0x07] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidb[0x06] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidb[0x05] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidb[0x04] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidb[0x03] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidb[0x02] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidb[0x01] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidb[0x00] & 0xFF;
-		final UUID playeruuid = new UUID(msb, lsb);
-		positiontracker.stopMusicUntrackable(playeruuid);
-	}
-	
 	public final void playSoundBytes(byte[] playeruuidnameb) {
 		if(playeruuidnameb.length < 0x10 || playeruuidnameb.length > 0x10F) {
 			return;
@@ -817,247 +777,6 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		String name = new String(nameb, StandardCharsets.UTF_8);*/
 		String name = new String(playeruuidnameb, 0x10, playeruuidnameb.length - 0x10, StandardCharsets.UTF_8);
 		positiontracker.playMusic(playeruuid, name);
-	}
-	
-	public final void playSoundUntrackableBytes(byte[] playeruuidnameb) {
-		if(playeruuidnameb.length < 0x30 || playeruuidnameb.length > 0x12F) {
-			return;
-		}
-		long lb = 0;
-		lb = playeruuidnameb[0x2F] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x2E] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x2D] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x2C] & 0xFF;
-		float pitch = Float.intBitsToFloat((int) lb);
-		lb = 0;
-		lb |= playeruuidnameb[0x2B] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x2A] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x29] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x28] & 0xFF;
-		float volume = Float.intBitsToFloat((int) lb);
-		lb = 0;
-		lb = playeruuidnameb[0x27] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x26] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x25] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x24] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x23] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x22] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x21] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x20] & 0xFF;
-		double z = Double.longBitsToDouble(lb);
-		lb = 0;
-		lb = playeruuidnameb[0x1F] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x1E] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x1D] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x1C] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x1B] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x1A] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x19] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x18] & 0xFF;
-		double y = Double.longBitsToDouble(lb);
-		lb = 0;
-		lb = playeruuidnameb[0x17] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x16] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x15] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x14] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x13] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x12] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x11] & 0xFF;
-		lb<<=8;
-		lb |= playeruuidnameb[0x10] & 0xFF;
-		double x = Double.longBitsToDouble(lb);
-		long lsb = 0L, msb = 0L;
-		lsb = playeruuidnameb[0x0F] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidnameb[0x0E] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidnameb[0x0D] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidnameb[0x0C] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidnameb[0x0B] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidnameb[0x0A] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidnameb[0x09] & 0xFF;
-		lsb<<=8;
-		lsb |= playeruuidnameb[0x08] & 0xFF;
-		msb = playeruuidnameb[0x07] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidnameb[0x06] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidnameb[0x05] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidnameb[0x04] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidnameb[0x03] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidnameb[0x02] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidnameb[0x01] & 0xFF;
-		msb<<=8;
-		msb |= playeruuidnameb[0x00] & 0xFF;
-		final UUID playeruuid = new UUID(msb, lsb);
-		/*byte[] nameb = new byte[playeruuidnameb.length - 0x30];
-		System.arraycopy(playeruuidnameb, 0x30, nameb, 0, nameb.length);
-		String name = new String(nameb, StandardCharsets.UTF_8);*/
-		String name = new String(playeruuidnameb, 0x30, playeruuidnameb.length - 0x30, StandardCharsets.UTF_8);
-		positiontracker.playMusicUntrackable(playeruuid, name, x, y, z, volume, pitch);
-	}
-	
-	public final byte[] openUploadSessionBytes(byte[] playlistnameb) {
-		if(uploadermanager == null || playlistnameb.length > 255 || playlistnameb.length < 1) {
-			return new byte[0];
-		}
-		String playlistname = new String(playlistnameb, StandardCharsets.UTF_8);
-		UUID token = uploadermanager.startSession(playlistname);
-		long msb = token.getMostSignificantBits(), lsb = token.getLeastSignificantBits();
-		byte[] response = new byte[0x10];
-		response[0x00] = (byte) msb;
-		msb>>>=8;
-		response[0x01] = (byte) msb;
-		msb>>>=8;
-		response[0x02] = (byte) msb;
-		msb>>>=8;
-		response[0x03] = (byte) msb;
-		msb>>>=8;
-		response[0x04] = (byte) msb;
-		msb>>>=8;
-		response[0x05] = (byte) msb;
-		msb>>>=8;
-		response[0x06] = (byte) msb;
-		msb>>>=8;
-		response[0x07] = (byte) msb;
-		response[0x08] = (byte) lsb;
-		lsb>>>=8;
-		response[0x09] = (byte) lsb;
-		lsb>>>=8;
-		response[0x0A] = (byte) lsb;
-		lsb>>>=8;
-		response[0x0B] = (byte) lsb;
-		lsb>>>=8;
-		response[0x0C] = (byte) lsb;
-		lsb>>>=8;
-		response[0x0D] = (byte) lsb;
-		lsb>>>=8;
-		response[0x0E] = (byte) lsb;
-		lsb>>>=8;
-		response[0x0F] = (byte) lsb;
-		return response;
-	}
-	
-	public final byte[] getUploadSessionsBytes() {
-		if(uploadermanager == null) {
-			return new byte[0];
-		}
-		UUID[] sessions = uploadermanager.getSessions();
-		int i = sessions.length, j = 3;
-		byte[] response = new byte[4 + (i<<4)];
-		response[0] = (byte)i;
-		response[1] = (byte) (i>>>8);
-		response[2] = (byte) (i>>>16);
-		response[3] = (byte) (i>>>24);
-		while(--i > -1) {
-			UUID session = sessions[i];
-			long msb = session.getMostSignificantBits(), lsb = session.getLeastSignificantBits();
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-		}
-		return response;
-	}
-	
-	public final byte[] closeUploadSessionBytes(byte[] tokensaveb) {
-		if(uploadermanager == null || tokensaveb.length != 17) {
-			return new byte[0];
-		}
-		boolean save = tokensaveb[0x10] == 1;
-		long lsb = 0L, msb = 0L;
-		lsb = tokensaveb[0x0F] & 0xFF;
-		lsb<<=8;
-		lsb |= tokensaveb[0x0E] & 0xFF;
-		lsb<<=8;
-		lsb |= tokensaveb[0x0D] & 0xFF;
-		lsb<<=8;
-		lsb |= tokensaveb[0x0C] & 0xFF;
-		lsb<<=8;
-		lsb |= tokensaveb[0x0B] & 0xFF;
-		lsb<<=8;
-		lsb |= tokensaveb[0x0A] & 0xFF;
-		lsb<<=8;
-		lsb |= tokensaveb[0x09] & 0xFF;
-		lsb<<=8;
-		lsb |= tokensaveb[0x08] & 0xFF;
-		msb = tokensaveb[0x07] & 0xFF;
-		msb<<=8;
-		msb |= tokensaveb[0x06] & 0xFF;
-		msb<<=8;
-		msb |= tokensaveb[0x05] & 0xFF;
-		msb<<=8;
-		msb |= tokensaveb[0x04] & 0xFF;
-		msb<<=8;
-		msb |= tokensaveb[0x03] & 0xFF;
-		msb<<=8;
-		msb |= tokensaveb[0x02] & 0xFF;
-		msb<<=8;
-		msb |= tokensaveb[0x01] & 0xFF;
-		msb<<=8;
-		msb |= tokensaveb[0x00] & 0xFF;
-		final UUID token = new UUID(msb, lsb);
-		return new byte[] {uploadermanager.endSession(token, save) ? (byte) 1 : (byte) 0};
 	}
 	
 	@Override
@@ -1206,16 +925,16 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			return;
 		}
 		
-		if(packetid == 0x07 || packetid == 0x13) {
+		if(packetid == 0x07) {
 			ibuf = new byte[0x11];
 			is.read(ibuf);
-		} else if(packetid == 0x04 || packetid == 0x06 || packetid == 0x08 || packetid == 0x09 || packetid == 0x0A || packetid == 0x0C || packetid == 0x0D || packetid == 0x0E) {
+		} else if(packetid == 0x04 || packetid == 0x06 || packetid == 0x08 || packetid == 0x09 || packetid == 0x0A || packetid == 0x0C || packetid == 0x0D) {
 			ibuf = new byte[0x10];
 			is.read(ibuf);
 		} else if(packetid == 0x02) {
 			ibuf = new byte[0x01];
 			is.read(ibuf);
-		} else if(packetid != 0x12) {
+		} else {
 			ibuf = new byte[4];
 			is.read(ibuf);
 			int length = (0xFF & ibuf[3]) << 24 | (0xFF & ibuf[2]) << 16 | (0xFF & ibuf[1]) << 8 | 0xFF & ibuf[0];
@@ -1355,34 +1074,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		case 0x0D:
 			this.stopSoundBytes(ibuf);
 		break;
-		case 0x0E:
-			this.stopSoundUntrackableBytes(ibuf);
-		break;
 		case 0x0F:
 			this.playSoundBytes(ibuf);
-		break;
-		case 0x10:
-			this.playSoundUntrackableBytes(ibuf);
-		break;
-		case 0x11:
-			baos.write(this.openUploadSessionBytes(ibuf));
-		break;
-		case 0x12:
-			obuf = this.getUploadSessionsBytes();
-			size = obuf.length;
-			sizeb = new byte[4];
-			sizeb[0] = (byte)size;
-			size>>>=8;
-			sizeb[1] = (byte)size;
-			size>>>=8;
-			sizeb[2] = (byte)size;
-			size>>>=8;
-			sizeb[3] = (byte)size;
-			baos.write(sizeb);
-			baos.write(obuf);
-		break;
-		case 0x13:
-			baos.write(this.closeUploadSessionBytes(ibuf));
 		break;
 		}
 		baos.writeTo(connected.getOutputStream());

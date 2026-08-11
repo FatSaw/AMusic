@@ -14,7 +14,6 @@ import me.bomb.amusic.packedinfo.SourceEntry;
 import me.bomb.amusic.resource.ResourceFactory;
 import me.bomb.amusic.resource.StatusReport;
 import me.bomb.amusic.resourceserver.ResourceManager;
-import me.bomb.amusic.uploader.UploadManager;
 import me.bomb.amusic.util.Logger;
 
 public class LocalAMusic implements AMusic {
@@ -24,16 +23,14 @@ public class LocalAMusic implements AMusic {
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final Data datamanager;
-	public final UploadManager uploadermanager;
 	private final Executor executor;
 	
-	public LocalAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, UploadManager uploadermanager) {
+	public LocalAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager) {
 		this.logger = logger;
 		this.soundsource = soundsource;
 		this.positiontracker = positiontracker;
 		this.resourcemanager = resourcemanager;
 		this.datamanager = datamanager;
-		this.uploadermanager = uploadermanager;
 		this.executor = executor;
 	}
 	
@@ -41,7 +38,6 @@ public class LocalAMusic implements AMusic {
 		positiontracker.start();
 		resourcemanager.start();
 		datamanager.start();
-		if(this.uploadermanager != null) uploadermanager.start();
 		datamanager.load();
 	}
 	
@@ -49,7 +45,6 @@ public class LocalAMusic implements AMusic {
 		positiontracker.end();
 		resourcemanager.end();
 		datamanager.end();
-		if(this.uploadermanager != null) uploadermanager.end();
 	}
 	
 	public void logout(UUID playeruuid) {
@@ -269,19 +264,6 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
-	public final boolean stopSoundUntrackable(UUID playeruuid) {
-		if(playeruuid == null) {
-			return false;
-		}
-		Runnable r = new Runnable() {
-			public void run() {
-				positiontracker.stopMusicUntrackable(playeruuid);
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
 	public final boolean playSound(UUID playeruuid, String name) {
 		if(playeruuid == null || name == null) {
 			return false;
@@ -293,70 +275,6 @@ public class LocalAMusic implements AMusic {
 		};
 		executor.execute(r);
 		return true;
-	}
-	
-	public final boolean playSoundUntrackable(UUID playeruuid, String name, double x, double y, double z, float volume, float pitch) {
-		if(playeruuid == null || name == null) {
-			return false;
-		}
-		Runnable r = new Runnable() {
-			public void run() {
-				positiontracker.playMusicUntrackable(playeruuid, name, x, y, z, volume, pitch);
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
-	public final boolean openUploadSession(String playlistname, Consumer<UUID> resultConsumer) {
-		if(playlistname == null) {
-			return false;
-		}
-		Runnable r = new Runnable() {
-			public void run() {
-				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.startSession(playlistname));
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
-	public final boolean getUploadSessions(Consumer<UUID[]> resultConsumer) {
-		Runnable r = new Runnable() {
-			public void run() {
-				resultConsumer.accept(uploadermanager == null ? null : uploadermanager.getSessions());
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
-	public final boolean closeUploadSession(UUID token, boolean save, Consumer<Boolean> resultConsumer) {
-		if(token == null) {
-			return false;
-		}
-		Runnable r = new Runnable() {
-			public void run() {
-				resultConsumer.accept(uploadermanager == null ? false : uploadermanager.endSession(token, save));
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
-	public final void closeUploadSession(UUID token, boolean save) {
-		if(token == null) {
-			return;
-		}
-		Runnable r = new Runnable() {
-			public void run() {
-				if(uploadermanager ==null) {
-					return;
-				}
-				uploadermanager.endSession(token, save);
-			}
-		};
-		r.run();
 	}
 	
 	public final boolean getResourcepackInfo(String resourcepackname, Consumer<ResourcepackInfo> resultConsumer) {

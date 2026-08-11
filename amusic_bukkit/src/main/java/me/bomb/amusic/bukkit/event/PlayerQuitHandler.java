@@ -16,7 +16,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredListener;
 
 import me.bomb.amusic.AMusic;
-import me.bomb.amusic.bukkit.command.UploadmusicCommand;
 import me.bomb.amusic.permission.AMusicPermission;
 
 public class PlayerQuitHandler extends RegisteredListener {
@@ -25,14 +24,12 @@ public class PlayerQuitHandler extends RegisteredListener {
 	private final AMusic amusic;
 	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
-	private final UploadmusicCommand uploadmusiccmd;
 
-	public PlayerQuitHandler(Plugin plugin, AMusic amusic, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, ConcurrentHashMap<Object,InetAddress> playerips, UploadmusicCommand uploadmusiccmd) throws NoClassDefFoundError {
+	public PlayerQuitHandler(Plugin plugin, AMusic amusic, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, ConcurrentHashMap<Object,InetAddress> playerips) throws NoClassDefFoundError {
 		super(null, null, null, plugin, true);
 		this.amusic = amusic;
 		this.playerspermission = playerspermission;
 		this.playerips = playerips;
-		this.uploadmusiccmd = uploadmusiccmd;
 		this.handlerlist = PlayerQuitEvent.getHandlerList();
 	}
 	
@@ -66,7 +63,6 @@ public class PlayerQuitHandler extends RegisteredListener {
 		UUID playeruuid = player.getUniqueId();
 		this.playerspermission.remove(playeruuid);
 		amusic.logout(playeruuid);
-		if(uploadmusiccmd != null) uploadmusiccmd.logoutUploader(player);
 		if(this.playerips != null) this.playerips.remove(playeruuid);
 	}
 	

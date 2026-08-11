@@ -40,26 +40,26 @@ public final class Configuration {
 	
 	public final Executor executor, serverexecutor, sendpackexecutorchecker, sendpackexecutorsender;
 	
-	public final boolean use, usecmd, uploaduse, connectuse, uploadhttps, connecttls;
+	public final boolean use, usecmd, connectuse, connecttls;
 	
-	public final String uploadhost, sendpackhost, joinplaylist;
-	public final InetAddress sendpackifip, uploadifip, connectifip, connectremoteip;
-	public final int sendpackport, uploadport, connectport;
-	public final int sendpackbacklog, uploadbacklog, connectbacklog;
-	public final int sendpacktimeout, uploadtimeout;
+	public final String sendpackhost, joinplaylist;
+	public final InetAddress sendpackifip, connectifip, connectremoteip;
+	public final int sendpackport, connectport;
+	public final int sendpackbacklog, connectbacklog;
+	public final int sendpacktimeout;
 	
-	public final boolean uploadstrictaccess, sendpackstrictaccess;
+	public final boolean sendpackstrictaccess;
 	
 	public final boolean processpack, ramcache, diskstore, waitacception;
-	public final int uploadlifetime, uploadlimitsize, uploadlimitcount, packsizelimit;
+	public final int packsizelimit;
 	public final short packthreadlimitcount;
 	public final float packthreadcoefficient;
 	
 	public final byte[] tokensalt;
-	public final ServerSocketFactory sendpackserverfactory, uploadserverfactory, connectserverfactory;
+	public final ServerSocketFactory sendpackserverfactory, connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean uploaduse, boolean sendpackuse, boolean connectuse, boolean uploadhttps, boolean connecthttps, String uploadhost, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress uploadifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int uploadport, int connectport, int sendpackbacklog, int uploadbacklog, int connectbacklog, int sendpacktimeout, int uploadtimeout, boolean uploadstrictaccess, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, boolean waitacception, int uploadlifetime, int uploadlimitsize, int uploadlimitcount, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory uploadserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, boolean waitacception, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.musicdir = musicdir;
@@ -69,40 +69,28 @@ public final class Configuration {
 		this.sendpackexecutorchecker = sendpackexecutorchecker;
 		this.sendpackexecutorsender = sendpackexecutorsender;
 		this.usecmd = usecmd;
-		this.uploaduse = uploaduse;
 		this.connectuse = connectuse;
-		this.uploadhttps = uploadhttps;
 		this.connecttls = connecthttps;
-		this.uploadhost = uploadhost;
 		this.sendpackhost = sendpackhost;
 		this.joinplaylist = joinplaylist;
 		this.sendpackifip = sendpackifip;
-		this.uploadifip = uploadifip;
 		this.connectifip = connectifip;
 		this.connectremoteip = connectremoteip;
 		this.sendpackport = sendpackport;
-		this.uploadport = uploadport;
 		this.connectport = connectport;
 		this.sendpackbacklog = sendpackbacklog;
-		this.uploadbacklog = uploadbacklog;
 		this.connectbacklog = connectbacklog;
 		this.sendpacktimeout = sendpacktimeout;
-		this.uploadtimeout = uploadtimeout;
-		this.uploadstrictaccess = uploadstrictaccess;
 		this.sendpackstrictaccess = sendpackstrictaccess;
 		this.processpack = processpack;
 		this.ramcache = ramcache;
 		this.diskstore = diskstore;
 		this.waitacception = waitacception;
-		this.uploadlifetime = uploadlifetime;
-		this.uploadlimitsize = uploadlimitsize;
-		this.uploadlimitcount = uploadlimitcount;
 		this.packsizelimit = packsizelimit;
 		this.packthreadlimitcount = packthreadlimitcount;
 		this.packthreadcoefficient = packthreadcoefficient;
 		this.tokensalt = tokensalt;
 		this.sendpackserverfactory = sendpackserverfactory;
-		this.uploadserverfactory = uploadserverfactory;
 		this.connectserverfactory = connectserverfactory;
 		this.connectsocketfactory = connectsocketfactory;
 	}
@@ -166,7 +154,6 @@ public final class Configuration {
 			this.musicdir = musicdir;
 			this.packeddir = packeddir;
 			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
-			this.uploaduse = sc.getBooleanOrError("amusic\0server\0upload\0use", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			String executorcfg = sc.getStringOrDefault("amusic\0executor", EMPTY);
 			ExecutorConfiguration executorconfig = executorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0executor") : new ExecutorConfiguration("executor_".concat(executorcfg).concat(".yml"));
@@ -175,109 +162,6 @@ public final class Configuration {
 				errors.append(executorconfig.errors);
 			}
 			this.executor = executorconfig.createExecutor();
-			if(defaultremoteclient && connectuse) {
-				this.uploadhost = sc.getStringOrError("amusic\0server\0upload\0host", errors);
-				this.uploadhttps = false;
-				this.uploadserverfactory = null;
-				this.uploadifip = null;
-				this.uploadport = 0;
-				this.uploadbacklog = 0;
-				this.uploadtimeout = 0;
-				this.uploadstrictaccess = false;
-				this.uploadlifetime = 0;
-				this.uploadlimitsize = 0;
-				this.uploadlimitcount = 0;
-			} else if(this.uploaduse) {
-				this.uploadhost = sc.getStringOrError("amusic\0server\0upload\0host", errors);
-				this.uploadhttps = sc.getBooleanOrError("amusic\0server\0upload\0https\0use", errors);
-				if(uploadhttps) {
-					KeyStore keystore = null;
-					SSLServerSocketFactory sslserverfactory = null;
-					final String uploadercertpath = sc.getStringOrError("amusic\0server\0upload\0https\0path", errors);
-					Path certfile = null;
-					try {
-						certfile = fs.getPath(uploadercertpath);
-					} catch (InvalidPathException e) {
-						appendError("Filed to read upload https certificate file (path invalid)", errors);
-					}
-					
-					final String certpassword;
-					if(certfile != null && (certpassword = sc.getStringOrError("amusic\0server\0upload\0https\0password", errors)) != null) {
-						is = null;
-						try {
-							is = fs.provider().newInputStream(certfile);
-						} catch (SecurityException e1) {
-							if(is != null) {
-								try {
-									is.close();
-								} catch (IOException e2) {
-								}
-							}
-							appendError("Filed to read upload https certificate file (no permission)", errors);
-						} catch (IOException e) {
-							appendError("Filed to read upload https certificate file (not found)", errors);
-						}
-						try {
-							keystore = KeyStore.getInstance("PKCS12");
-						} catch (KeyStoreException e) {
-							keystore = null;
-							appendError("Filed to initialize upload https certificate (filed to get PKCS12 instance)", errors);
-						}
-						try {
-							keystore.load(is, certpassword.toCharArray());
-						} catch (CertificateException | NoSuchAlgorithmException | IOException e) {
-							keystore = null;
-							appendError("Filed to initialize upload https certificate", errors);
-						}
-						try {
-							TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-							trustManagerFactory.init(keystore);
-							TrustManager[] trustmanagers = trustManagerFactory.getTrustManagers();
-							KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-							keyManagerFactory.init(keystore, certpassword.toCharArray());
-							KeyManager[] keymanagers = keyManagerFactory.getKeyManagers();
-							SSLContext tlscontext = SSLContext.getInstance("TLSv1.2");
-							tlscontext.init(keymanagers, trustmanagers, SecureRandom.getInstanceStrong());
-							sslserverfactory = tlscontext.getServerSocketFactory();
-						} catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException | KeyManagementException e) {
-							sslserverfactory = null;
-						}
-					}
-					this.uploadserverfactory = sslserverfactory;
-				} else {
-					this.uploadserverfactory = new SimpleServerSocketFactory();
-				}
-				
-				InetAddress uploadifip = null;
-				String uploadipstr = sc.getStringOrError("amusic\0server\0upload\0ip", errors);
-				if(uploadipstr!=null) {
-					try {
-						uploadifip = InetAddress.getByName(uploadipstr);
-					} catch (UnknownHostException e) {
-						appendError("Filed to get uploader local interface ip", errors);
-					}
-				}
-				this.uploadifip = uploadifip;
-				this.uploadport = sc.getIntOrError("amusic\0server\0upload\0port", errors);
-				this.uploadbacklog = sc.getIntOrError("amusic\0server\0upload\0backlog", errors);
-				this.uploadstrictaccess = sc.getBooleanOrError("amusic\0server\0upload\0strictaccess", errors);
-				this.uploadlifetime = sc.getIntOrError("amusic\0server\0upload\0lifetime", errors);
-				this.uploadtimeout = sc.getIntOrError("amusic\0server\0upload\0timeout", errors);
-				this.uploadlimitsize = sc.getIntOrError("amusic\0server\0upload\0limit\0size", errors);
-				this.uploadlimitcount = sc.getIntOrError("amusic\0server\0upload\0limit\0count", errors);
-			} else {
-				this.uploadhost = null;
-				this.uploadhttps = false;
-				this.uploadserverfactory = null;
-				this.uploadifip = null;
-				this.uploadport = 0;
-				this.uploadbacklog = 0;
-				this.uploadtimeout = 0;
-				this.uploadstrictaccess = false;
-				this.uploadlifetime = 0;
-				this.uploadlimitsize = 0;
-				this.uploadlimitcount = 0;
-			}
 			
 			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0checker", EMPTY);
 			ExecutorConfiguration sendpackexecutorconfig = sendpackexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0sendpack\0executor\0checker") : new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
@@ -505,20 +389,8 @@ public final class Configuration {
 			this.packeddir = null;
 			this.executor = null;
 			this.serverexecutor = null;
-			this.uploaduse = false;
 			this.connectuse = false;
-			this.uploadhost = null;
-			this.uploadhttps = false;
 			this.sendpackserverfactory = null;
-			this.uploadserverfactory = null;
-			this.uploadifip = null;
-			this.uploadport = 0;
-			this.uploadbacklog = 0;
-			this.uploadtimeout = 0;
-			this.uploadstrictaccess = false;
-			this.uploadlifetime = 0;
-			this.uploadlimitsize = 0;
-			this.uploadlimitcount = 0;
 			this.sendpackexecutorchecker = null;
 			this.sendpackexecutorsender = null;
 			this.sendpackhost = null;

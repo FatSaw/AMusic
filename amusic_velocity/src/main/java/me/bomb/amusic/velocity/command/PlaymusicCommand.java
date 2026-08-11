@@ -26,15 +26,13 @@ public final class PlaymusicCommand implements SimpleCommand  {
 	private final AMusic amusic;
 	private final LangLoader lang;
 	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
-	private final boolean trackable;
 	private final ArrayList<String> emptytab = new ArrayList<String>(0);
 	
-	public PlaymusicCommand(ProxyServer server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission, boolean trackable) {
+	public PlaymusicCommand(ProxyServer server, AMusic amusic, LangLoader lang, ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission) {
 		this.server = server;
 		this.amusic = amusic;
 		this.lang = lang;
 		this.playerspermission = playerspermission;
-		this.trackable = trackable;
 	}
 	
 	@Override
@@ -68,11 +66,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 				return;
 			}
 			Player target = otarget.get();
-			if(trackable) {
-				amusic.stopSound(target.getUniqueId());
-			} else {
-				amusic.stopSoundUntrackable(target.getUniqueId());
-			}
+			amusic.stopSound(target.getUniqueId());
 			this.lang.sendMsg(sender, LangOptions.playmusic_stop);
 		} else if(args.length>1) {
 			if(args[0].equals("@s")) {
@@ -168,11 +162,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 					placeholders[0] = new Placeholder("%soundname%",args[1],true);
 					for(String soundname : soundnames) {
 						if(soundname.equals(args[1])) {
-							if(trackable) {
-								amusic.playSound(target.getUniqueId(),args[1]);
-							} else {
-								amusic.playSoundUntrackable(target.getUniqueId(),args[1],0d,0d,0d,1.0f,1.0f);
-							}
+							amusic.playSound(target.getUniqueId(),args[1]);
 							PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_success, placeholders);
 							return;
 						}

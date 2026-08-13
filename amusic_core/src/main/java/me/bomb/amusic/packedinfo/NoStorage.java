@@ -7,11 +7,12 @@ import me.bomb.amusic.util.HexUtils;
 public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 	
 	private final LocalConvertedZerocopySource lczs;
+	private final PackMergeSource pms;
 	
-	
-	protected NoStorage(boolean lockwrite, LocalConvertedZerocopySource lczs) {
+	protected NoStorage(boolean lockwrite, LocalConvertedZerocopySource lczs, PackMergeSource pms) {
 		super(lockwrite);
 		this.lczs = lczs;
+		this.pms = pms;
 	}
 	
 	/**
@@ -31,13 +32,13 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 			if(resourcepack == null) {
 				continue;
 			}
-			final PackedResourcepack packedresourcepack = this.lczs.get(resourcepack);
+			final PackedResourcepack packedresourcepack = this.lczs.get(resourcepack, this.pms.get(resourcepack));
 			
 			if(packedresourcepack == null) {
 				continue;
 			}
 			ResourcepackInfo info = packedresourcepack.info;
-			options.put(resourcepack, new NoDataEntry(null, info, this.lczs));
+			options.put(resourcepack, new NoDataEntry(null, info, this.lczs, this.pms));
 			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(info.sha1)));
 		}
 		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
@@ -61,7 +62,7 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 		if(this.lockwrite || id == null) {
 			return UpdateResult.UNAVILABLE;
 		}
-		PackedResourcepack packer = this.lczs.get(id);
+		PackedResourcepack packer = this.lczs.get(id, this.pms.get(id));
 		if(packer == null) {
 			DataEntry data = options.remove(id);
 			if(data == null) {
@@ -73,7 +74,7 @@ public class NoStorage extends me.bomb.amusic.packedinfo.Data {
 		if(packer.resourcepack == null) {
 			return UpdateResult.PACKED_FAILED;
 		}
-		options.put(id, new NoDataEntry(null, packer.info, this.lczs));
+		options.put(id, new NoDataEntry(null, packer.info, this.lczs, this.pms));
 		this.printRamUsageInfo();
 		return UpdateResult.PACKED_SUCCESS;
 	}

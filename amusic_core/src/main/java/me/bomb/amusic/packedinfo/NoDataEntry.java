@@ -9,15 +9,17 @@ import me.bomb.amusic.packedinfo.LocalConvertedZerocopySource.PackedResourcepack
 public class NoDataEntry extends DataEntry {
 
 	private final LocalConvertedZerocopySource lczs;
+	private final PackMergeSource pms;
 	
-	protected NoDataEntry(String storeid, ResourcepackInfo info, LocalConvertedZerocopySource lczs) {
+	protected NoDataEntry(String storeid, ResourcepackInfo info, LocalConvertedZerocopySource lczs, PackMergeSource pms) {
 		super(storeid, info);
 		this.lczs = lczs;
+		this.pms = pms;
 	}
 
 	@Override
 	public byte[] getPack() {
-		final PackedResourcepack packedresourcepack = this.lczs.get(info.packname);
+		final PackedResourcepack packedresourcepack = this.lczs.get(info.packname, this.pms.get(info.packname));
 		if(packedresourcepack == null) {
 			return null;
 		}

@@ -5,7 +5,7 @@ public interface SoundSource<T extends SourceEntry> {
 	/**
 	 * {@link SourceEntry} ready on return.
 	 */
-	public abstract T get(String entrykey);
+	public abstract T get(String entrykey, PackMergeEntry packmerge);
 	
 	/**
 	 * @return true if entry has at least one element

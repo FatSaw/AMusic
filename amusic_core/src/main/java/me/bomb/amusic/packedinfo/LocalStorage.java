@@ -29,12 +29,14 @@ public class LocalStorage extends me.bomb.amusic.packedinfo.Data {
     };
 
 	private final LocalConvertedZerocopySource lczs;
+	private final PackMergeSource pms;
 	private final FileSystemProvider fsp;
 	private final Path packeddirectory;
 	
-	protected LocalStorage(boolean lockwrite, LocalConvertedZerocopySource lczs, Path packeddirectory) {
+	protected LocalStorage(boolean lockwrite, LocalConvertedZerocopySource lczs, PackMergeSource pms, Path packeddirectory) {
 		super(lockwrite);
 		this.lczs = lczs;
+		this.pms = pms;
 		this.fsp = packeddirectory.getFileSystem().provider();
 		this.packeddirectory = packeddirectory;
 	}
@@ -171,7 +173,7 @@ public class LocalStorage extends me.bomb.amusic.packedinfo.Data {
 		if(this.lockwrite || id == null) {
 			return UpdateResult.UNAVILABLE;
 		}
-		PackedResourcepack packer = this.lczs.get(id);
+		PackedResourcepack packer = this.lczs.get(id, this.pms.get(id));
 		if(packer == null) {
 			DataEntry data = options.remove(id);
 			if(data == null) {

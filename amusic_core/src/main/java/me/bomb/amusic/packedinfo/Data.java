@@ -22,8 +22,8 @@ public abstract class Data {
 	 * Generate resourcepack for each request
 	 * @return no storage
 	 */
-	public static NoStorage getNoStorage(boolean lockwrite, LocalConvertedZerocopySource source) {
-		return new NoStorage(lockwrite, source);
+	public static NoStorage getNoStorage(boolean lockwrite, LocalConvertedZerocopySource soundsource, PackMergeSource packmergesource) {
+		return new NoStorage(lockwrite, soundsource, packmergesource);
 	}
 	
 	/**
@@ -31,8 +31,8 @@ public abstract class Data {
 	 * Store resourcepack on ram
 	 * @return ram storage
 	 */
-	public static RamStorage getRamStorage(boolean lockwrite, LocalConvertedZerocopySource source) {
-		return new RamStorage(lockwrite, source);
+	public static RamStorage getRamStorage(boolean lockwrite, LocalConvertedZerocopySource soundsource, PackMergeSource packmergesource) {
+		return new RamStorage(lockwrite, soundsource, packmergesource);
 	}
 	
 	/**
@@ -40,8 +40,8 @@ public abstract class Data {
 	 * Store resourcepack on disk
 	 * @return local storage
 	 */
-	public static LocalStorage getLocalStorage(boolean lockwrite, LocalConvertedZerocopySource source, Path packeddirectory) {
-		return new LocalStorage(lockwrite, source, packeddirectory);
+	public static LocalStorage getLocalStorage(boolean lockwrite, LocalConvertedZerocopySource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
+		return new LocalStorage(lockwrite, soundsource, packmergesource, packeddirectory);
 	}
 	
 	/**
@@ -49,8 +49,8 @@ public abstract class Data {
 	 * Store resourcepack on disk and on ram
 	 * @return local cached storage
 	 */
-	public static LocalCachedStorage getLocalCachedStorage(boolean lockwrite, LocalConvertedZerocopySource source, Path packeddirectory) {
-		return new LocalCachedStorage(lockwrite, source, packeddirectory);
+	public static LocalCachedStorage getLocalCachedStorage(boolean lockwrite, LocalConvertedZerocopySource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
+		return new LocalCachedStorage(lockwrite, soundsource, packmergesource, packeddirectory);
 	}
 	
 	/**

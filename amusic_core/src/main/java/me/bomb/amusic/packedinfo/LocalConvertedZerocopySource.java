@@ -1,5 +1,7 @@
 package me.bomb.amusic.packedinfo;
 
+import static me.bomb.amusic.util.NameFilter.filterName;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -287,9 +289,6 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		soundsjsonpath = "assets/minecraft/sounds.json".getBytes(StandardCharsets.US_ASCII);
 		sounddefenitionspath = "sounds/sound_definitions.json".getBytes(StandardCharsets.US_ASCII);
 	}
-
-	private final byte[] mergepack;
-	private final int mregeentriescount, mergecdsize, mergecdoffset, mergecommentlength;
 	
 	private final FileSystemProvider fsp;
 	private final RegularFileFilter regularfilefilter;
@@ -299,66 +298,8 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 	private final float threadcoefficient;
 	private final short threadcountlimit;
 	
-	public LocalConvertedZerocopySource(Path mergepack, Path musicdir, int maxresourcepacksize, int maxsoundsize, float threadcoefficient, short threadcountlimit) {
-		byte[] mergepackb = null;
-		int mregeentriescount = 0, mergecdsize = 0, mergecdoffset = 0, mergecommentlength = 0;
-		if(mergepack != null) {
-			try {
-				FileSystemProvider fsp = mergepack.getFileSystem().provider();
-				BasicFileAttributes attributes = fsp.readAttributes(mergepack, BasicFileAttributes.class);
-				final long size = attributes.size();
-				if(attributes.isRegularFile() && size <= maxresourcepacksize) {
-					byte[] buf = new byte[(int) size];
-					InputStream is = null;
-					try {
-						is = fsp.newInputStream(mergepack);
-						{
-							int off = 0;
-							int remaining = buf.length;
-							while (remaining > 0) {
-								int read = is.read(buf, off, remaining);
-								if (read < 0) throw new EOFException();
-								off += read;
-								remaining -= read;
-							}
-						}
-					} catch (IOException e) {
-						throw new IllegalStateException(e);
-					} finally {
-						if(is != null) {
-							try {
-								is.close();
-							} catch (IOException e2) {
-							}
-						}
-					}
-					int i = buf.length;
-					if(i > 21) {
-						int end = buf.length - 65558;
-						if(end < -1) end = -1;
-						i -= 21;
-						while (--i > end) {
-							int commentlength; //THIS WILL BE USED LATER
-							if(buf[i] == 0x50 && buf[1+i] == 0x4B && buf[2+i] == 0x05 && buf[3+i] == 0x06 && buf.length == (commentlength = ((buf[21+i] & 0xFF) << 8) | (buf[20+i] & 0xFF)) + i + 22) {
-								mregeentriescount = ((buf[i + 11] & 0xFF) << 8) | (buf[i + 10] & 0xFF);
-								mergecdsize = ((buf[i + 15] & 0xFF) << 24) | ((buf[i + 14] & 0xFF) << 16) | ((buf[i + 13] & 0xFF) << 8) | (buf[i + 12] & 0xFF);
-								mergecdoffset = ((buf[i + 19] & 0xFF) << 24) | ((buf[i + 18] & 0xFF) << 16) | ((buf[i + 17] & 0xFF) << 8) | (buf[i + 16] & 0xFF);
-								mergecommentlength = commentlength;
-								mergepackb = buf;
-								break;
-							}
-						}
-					}
-				}
-			} catch (IOException e) {
-			}
-		}
-		this.mergepack = mergepackb;
-		this.mregeentriescount = mregeentriescount;
-		this.mergecdsize = mergecdsize;
-		this.mergecdoffset = mergecdoffset;
-		this.mergecommentlength = mergecommentlength;
-		
+	//TODO: ADD RESOURCEPACK NAME AND SOUND NAME ENTRY FOR PLAYSOUND IF NO INVALID CHARACTERS IN NAME
+	public LocalConvertedZerocopySource(Path musicdir, int maxresourcepacksize, int maxsoundsize, float threadcoefficient, short threadcountlimit) {
 		this.fsp = musicdir.getFileSystem().provider();
 		this.regularfilefilter = new RegularFileFilter(this.fsp);
 		this.directoryfilter = new DirectoryFilter(this.fsp);
@@ -378,9 +319,9 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		this.threadcountlimit = threadcountlimit;
 	}
 	
-	public PackedResourcepack get(String entrykey) {
+	public PackedResourcepack get(String entrykey, PackMergeEntry packmerge) {
 		DirectoryStream<Path> ds = null;
-		Path musicdir = null;
+		/*Path musicdir = null;
 		try {
 			ds = fsp.newDirectoryStream(this.musicdir, this.directoryfilter);
 			final Iterator<Path> it = ds.iterator();
@@ -402,7 +343,8 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 				}
 			}
 		}
-		ds = null;
+		ds = null;*/
+		Path musicdir = this.musicdir.resolve(filterName(entrykey));
 		MessageDigest sha1hash, sha256hash;
 		try {
 			sha1hash = MessageDigest.getInstance("SHA-1");
@@ -417,6 +359,21 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		if(musicdir == null) {
 			return null;
 		}
+		final byte[] mergepack;
+		final int mergecdoffset, mergecdsize, mergecommentlength, mregeentriescount;
+		if(packmerge == null) {
+			mergepack = null;
+			mergecdoffset = 0;
+			mergecdsize = 0;
+			mergecommentlength = 0;
+			mregeentriescount = 0;
+		} else {
+			mergepack = packmerge.getMergePack();
+			mergecdoffset = packmerge.cdOffset();
+			mergecdsize = packmerge.cdSize();
+			mergecommentlength = packmerge.commentLength();
+			mregeentriescount = packmerge.entryCount();
+		}
 		int infosize = 102;
 		byte[] entrykeyb = entrykey.getBytes(StandardCharsets.UTF_8);
 		int entrykeylength = entrykeyb.length;
@@ -430,9 +387,9 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		final byte[] splits;
 		final short[] lengths;
 		int offset = 0, totalsize = 0;
-		if(this.mergepack != null) {
-			offset += this.mergecdoffset;
-			totalsize += this.mergecdoffset;
+		if(mergepack != null) {
+			offset += mergecdoffset;
+			totalsize += mergecdoffset;
 		}
 		final Iterator<Path> it;
 		HashMap<Path, Integer> filesm;
@@ -489,12 +446,12 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		final int bedrockpackidlength = totalsize;
 		totalsize += packmcmeta.length; //PACK MCMETA + LOCAL HEADER 
 		totalsize += manifestjson.length; //MANIFEST JSON + LOCAL HEADER 
-		final int centraldirectoryoffset = totalsize, centraldirectorylength = this.mergecdsize + silencesoundglobalheader.length + packmcmetaglobalheader.length + manifestjsonglobalheader.length + 149 + 229 * count;
+		final int centraldirectoryoffset = totalsize, centraldirectorylength = mergecdsize + silencesoundglobalheader.length + packmcmetaglobalheader.length + manifestjsonglobalheader.length + 149 + 229 * count;
 		int globalheaderoffset = totalsize; //all sizes except global header and zip end should be calculated before this
-		if(this.mergepack != null) {
-			totalsize += this.mergecdsize;
-			totalsize += this.mergecommentlength;
-			globalheaderoffset += this.mergecdsize;
+		if(mergepack != null) {
+			totalsize += mergecdsize;
+			totalsize += mergecommentlength;
+			globalheaderoffset += mergecdsize;
 		}
 		totalsize += silencesoundglobalheader.length; //ZIP GLOBAL SILENCE SOUND HEADERS WITH PATHS
 		totalsize += 74; //SOUNDS JSON GLOBAL HEADER
@@ -592,10 +549,10 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		offset += 153;
 		soundsjsonentryoffset = soundsjsonentryoffset - soundsjsonziplocalentryoffset;
 		soundsjsonentryoffset -= 30;
-		if(this.mergepack != null) {
-			System.arraycopy(this.mergepack, 0, resourcepack, 0, this.mergecdoffset); //MERGE LOCAL ENTIES + DATA
-			System.arraycopy(this.mergepack, this.mergecdoffset, resourcepack, centraldirectoryoffset, this.mergecdsize); //MERGE GLOBAL ENTRIES
-			System.arraycopy(this.mergepack, this.mergepack.length - this.mergecommentlength, resourcepack, resourcepack.length - this.mergecommentlength, this.mergecommentlength); //MERGE COMMENT
+		if(mergepack != null) {
+			System.arraycopy(mergepack, 0, resourcepack, 0, mergecdoffset); //MERGE LOCAL ENTIES + DATA
+			System.arraycopy(mergepack, mergecdoffset, resourcepack, centraldirectoryoffset, mergecdsize); //MERGE GLOBAL ENTRIES
+			System.arraycopy(mergepack, mergepack.length - mergecommentlength, resourcepack, resourcepack.length - mergecommentlength, mergecommentlength); //MERGE COMMENT
 		}
 		try {
 			if(!executor.awaitTermination(1, TimeUnit.MINUTES)) {
@@ -868,7 +825,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		offset += manifestjson.length;
 		
 		
-		v = 6 + (count << 1) + this.mregeentriescount;
+		v = 6 + (count << 1) + mregeentriescount;
 		byte[] end = new byte[] {0x50, 0x4b, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		end[8] = (byte) (v & 0xFF);
 		end[9] = (byte) ((v >>> 8) & 0xFF);
@@ -884,7 +841,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		end[17] = (byte) ((v >>> 8) & 0xFF);
 		end[18] = (byte) ((v >>> 16) & 0xFF);
 		end[19] = (byte) ((v >>> 24) & 0xFF);
-		v = this.mergecommentlength;
+		v = mergecommentlength;
 		end[20] = (byte) (v & 0xFF);
 		end[21] = (byte) ((v >>> 8) & 0xFF);
 		System.arraycopy(end, 0, resourcepack, ++globalheaderoffset, end.length);
@@ -902,7 +859,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 	
 	public boolean exists(String entrykey) {
 		DirectoryStream<Path> ds = null;
-		Path musicdir = null;
+		/*Path musicdir = null;
 		try {
 			ds = fsp.newDirectoryStream(this.musicdir, this.directoryfilter);
 			final Iterator<Path> it = ds.iterator();
@@ -924,7 +881,8 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 				}
 			}
 		}
-		ds = null;
+		ds = null;*/
+		Path musicdir = this.musicdir.resolve(filterName(entrykey));
 		if(musicdir == null) {
 			return false;
 		}
@@ -1018,7 +976,7 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 
 	public String[] getSounds(String entrykey) {
 		DirectoryStream<Path> ds = null;
-		Path musicdir = null;
+		/*Path musicdir = null;
 		try {
 			ds = fsp.newDirectoryStream(this.musicdir, this.directoryfilter);
 			final Iterator<Path> it = ds.iterator();
@@ -1040,7 +998,8 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 				}
 			}
 		}
-		ds = null;
+		ds = null;*/
+		Path musicdir = this.musicdir.resolve(filterName(entrykey));
 		if(musicdir == null) {
 			return null;
 		}

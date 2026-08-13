@@ -7,11 +7,12 @@ import me.bomb.amusic.util.HexUtils;
 public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 	
 	private final LocalConvertedZerocopySource lczs;
+	private final PackMergeSource pms;
 	
-	
-	protected RamStorage(boolean lockwrite, LocalConvertedZerocopySource lczs) {
+	protected RamStorage(boolean lockwrite, LocalConvertedZerocopySource lczs, PackMergeSource pms) {
 		super(lockwrite);
 		this.lczs = lczs;
+		this.pms = pms;
 	}
 	
 	/**
@@ -31,7 +32,7 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 			if(resourcepack == null) {
 				continue;
 			}
-			final PackedResourcepack packedresourcepack = this.lczs.get(resourcepack);
+			final PackedResourcepack packedresourcepack = this.lczs.get(resourcepack, this.pms.get(resourcepack));
 			
 			if(packedresourcepack == null) {
 				continue;
@@ -61,7 +62,7 @@ public class RamStorage extends me.bomb.amusic.packedinfo.Data {
 		if(this.lockwrite || id == null) {
 			return UpdateResult.UNAVILABLE;
 		}
-		PackedResourcepack packer = this.lczs.get(id);
+		PackedResourcepack packer = this.lczs.get(id, this.pms.get(id));
 		if(packer == null) {
 			DataEntry data = options.remove(id);
 			if(data == null) {

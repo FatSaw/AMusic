@@ -298,7 +298,6 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 	private final float threadcoefficient;
 	private final short threadcountlimit;
 	
-	//TODO: ADD RESOURCEPACK NAME AND SOUND NAME ENTRY FOR PLAYSOUND IF NO INVALID CHARACTERS IN NAME
 	public LocalConvertedZerocopySource(Path musicdir, int maxresourcepacksize, int maxsoundsize, float threadcoefficient, short threadcountlimit) {
 		this.fsp = musicdir.getFileSystem().provider();
 		this.regularfilefilter = new RegularFileFilter(this.fsp);
@@ -381,6 +380,9 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			entrykeylength = 0xFF;
 		}
 		infosize += entrykeylength;
+		final byte[][] soundnames;
+		final Path[] filepaths;
+		final int[] filesizes;
 		final byte[] resourcepack;
 		final UUID[] soundhashs;
 		final String[] names;
@@ -427,6 +429,46 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		if (count == 0) {
 			return null;
 		}
+		int i, j, v;
+		i = count;
+		soundnames = new byte[i][];
+		names = new String[i];
+		filepaths = new Path[i];
+		filesizes = new int[i];
+		Iterator<Entry<Path, Integer>> fiterator = filesm.entrySet().iterator();
+		while(--i > -1) {
+			final Entry<Path, Integer> filee = fiterator.next();
+			final Path file = filee.getKey();
+			filepaths[i] = filee.getKey();
+			filesizes[i] = filee.getValue();
+			String songname = file.getFileName().toString();
+			j = songname.lastIndexOf(".");
+			if (j != -1) {
+				songname = songname.substring(0, j);
+			}
+			byte[] songnameb = songname.getBytes(StandardCharsets.UTF_8);
+			j = songnameb.length;
+			if(j > 0xFF) {
+				j = 0xFF;
+				byte[] nsongnameb = new byte[j];
+				System.arraycopy(songnameb, 0, nsongnameb, 0, j);
+				songnameb = nsongnameb;
+			}
+			infosize += j;
+			names[i] = new String(songnameb, 0, j, StandardCharsets.UTF_8);
+			while(--j > -1) {
+				byte ch = songnameb[j];
+				if(ch < 0x2D || ch > 0x7A || (ch < 0x5F && ch > 0x39) || ch == 0x60) break;
+			}
+			if(j != -1) {
+				continue;
+			}
+			soundnames[i] = songnameb;
+		}
+		
+		filesm = null;
+		fiterator = null;
+		
 		infosize += count<<4;
 		infosize += count<<2;
 		int resultthreadcount = count;
@@ -438,10 +480,28 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		totalsize += 30 * count; //ZIP LOCAL SOUND HEADERS
 		int soundsjsonentryoffset = totalsize;
 		totalsize += 255 * count; //18 + 42 + 118 + 42 + 35 = 255 JAVA SOUNDLIST ENTRY
+		i = count;
+		while(--i > -1) {
+			byte[] soundname = soundnames[i];
+			if(soundname != null) {
+				//11+195+SOUNDNAME
+				totalsize += 206;
+				totalsize += soundname.length;
+			}
+		}
 		totalsize += 177; //JAVA SOUNDLIST SILENCE SOUND PATH INCLUDED + LOCAL HEADER 
 		int sounddefenitionsentryoffset = totalsize;
 		totalsize += 308 * count; //19 + 42 + 146 + 42 + 59 = 308 BEDROCK SOUNDLIST ENTRY
-		totalsize += 234; //BEDROCK SOUNDLIST SILENCE SOUND PATH INCLUDED + LOCAL HEADER 
+		i = count;
+		while(--i > -1) {
+			byte[] soundname = soundnames[i];
+			if(soundname != null) {
+				//11+195+SOUNDNAME
+				totalsize += 259;
+				totalsize += soundname.length;
+			}
+		}
+		totalsize += 238; //BEDROCK SOUNDLIST SILENCE SOUND PATH INCLUDED + LOCAL HEADER 
 
 		final int bedrockpackidlength = totalsize;
 		totalsize += packmcmeta.length; //PACK MCMETA + LOCAL HEADER 
@@ -464,7 +524,6 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			return null;
 		}
 		resourcepack = new byte[totalsize];
-		int i, j, v;
 		byte b;
 		System.arraycopy(silencesound, 0, resourcepack, offset, silencesound.length);
 		System.arraycopy(silencesoundglobalheader, 0, resourcepack, globalheaderoffset, silencesoundglobalheader.length);
@@ -493,7 +552,6 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		
 		i = count;
 		soundhashs = new UUID[i];
-		names = new String[i];
 		splits = new byte[i];
 		lengths = new short[i];
 		int soundsjsonziplocalentryoffset = soundsjsonentryoffset;
@@ -503,34 +561,30 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		soundsjsonentryoffset += 30;
 		sounddefenitionsentryoffset += 30;
 		System.arraycopy(soundsjsonstart, 0, resourcepack, soundsjsonentryoffset, soundsjsonstart.length); //2
-		System.arraycopy(sounddefenitionsstart, 0, resourcepack, sounddefenitionsentryoffset, sounddefenitionsstart.length); //51
+		System.arraycopy(sounddefenitionsstart, 0, resourcepack, sounddefenitionsentryoffset, sounddefenitionsstart.length); //55
 		soundsjsonentryoffset += 2;
-		sounddefenitionsentryoffset += 51;
-		Iterator<Entry<Path, Integer>> fiterator = filesm.entrySet().iterator();
+		sounddefenitionsentryoffset += 55;
 		while(--i > -1) {
 			offset += 30;
-			final Entry<Path, Integer> filee = fiterator.next();
-			final Path file = filee.getKey();
-			String songname = file.getFileName().toString();
-			j = songname.lastIndexOf(".");
-			if (j != -1) {
-				songname = songname.substring(0, j);
-			}
-			byte[] songnameb = songname.getBytes(StandardCharsets.UTF_8);
-			int songnamelength = songnameb.length;
-			if(songnamelength > 0xFF) {
-				songnamelength = 0xFF;
-			}
-			infosize += songnamelength;
-			names[i] = new String(songnameb, 0, songnamelength, StandardCharsets.UTF_8);
+			final Path file = filepaths[i];
+			byte[] soundname = soundnames[i];
 			splits[i] = 0x01; //HARDCODE SPLITS FEATURE NOT SUPPORTED FOR THIS IMPLEMENTATION
-			int size = filee.getValue();
-			LocalConvertedZerocopySource.ReadSoundZerocopy run = new LocalConvertedZerocopySource.ReadSoundZerocopy(this.fsp, file, (short)i, resourcepack, offset, size, globalheaderoffset, soundsjsonentryoffset, sounddefenitionsentryoffset, soundhashs, lengths);
+			int size = filesizes[i];
+			LocalConvertedZerocopySource.ReadSoundZerocopy run = new LocalConvertedZerocopySource.ReadSoundZerocopy(this.fsp, file, (short)i, resourcepack, offset, size, globalheaderoffset, soundsjsonentryoffset, sounddefenitionsentryoffset, soundname, soundhashs, lengths);
 			queue.add(run);
 			offset += size;
 			globalheaderoffset += 229;
 			soundsjsonentryoffset += 255;
 			sounddefenitionsentryoffset += 308;
+			if(soundname == null) {
+				continue;
+			}
+			//11+195+SOUNDNAME
+			//12+247+SOUNDNAME
+			soundsjsonentryoffset += 206;
+			soundsjsonentryoffset += soundname.length;
+			sounddefenitionsentryoffset += 259;
+			sounddefenitionsentryoffset += soundname.length;
 		}
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(resultthreadcount, resultthreadcount, 0, TimeUnit.MILLISECONDS, queue);
 		executor.shutdown();
@@ -539,14 +593,23 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		System.arraycopy(sounddefenitionssilence, 0, resourcepack, sounddefenitionsentryoffset, sounddefenitionssilence.length); //153
 		soundsjsonentryoffset += 145;
 		sounddefenitionsentryoffset += 153;
+		offset = sounddefenitionsentryoffset;
+		/*i = count;
 		offset += 30;
 		offset += 30;
 		offset += 2;
-		offset += 51;
+		offset += 55;
 		offset += 255 * count;
 		offset += 308 * count;
+		while(--i > -1) {
+			byte[] soundname = soundnames[i];
+			if(soundname != null) {
+				offset += 465;
+				offset += soundname.length << 1;
+			}
+		}
 		offset += 145;
-		offset += 153;
+		offset += 153;*/
 		soundsjsonentryoffset = soundsjsonentryoffset - soundsjsonziplocalentryoffset;
 		soundsjsonentryoffset -= 30;
 		if(mergepack != null) {
@@ -1050,11 +1113,19 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 	
 	protected static final class ReadSoundZerocopy implements Runnable {
 		
-		private static final byte[] soundsjavaentry, soundsbedrockentry, javapath, bedrockpath, ogg;
+		private static final byte[] soundsjavaentry, soundsnamejavaentry1, soundsnamejavaentry2, soundsbedrockentry, soundsnamebedrockentry1, soundsnamebedrockentry2, javapath, bedrockpath, ogg;
 		
 		static {
+			//11+195+SOUNDNAME
+			//12+247+SOUNDNAME
+			//ADDITIONAL LENGTH IF SOUNDNAME PRESENT 11+195+12+247=465
+			
 			soundsjavaentry = "\t\"amusic.internal.00000000-0000-0000-0000-000000000000000000\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"minecraft:amusic/00000000-0000-0000-0000-000000000000000000\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n".getBytes(StandardCharsets.US_ASCII);
+			soundsnamejavaentry1 = "\t\"amusic._.".getBytes(StandardCharsets.US_ASCII); //11
+			soundsnamejavaentry2 = "\": {\n\t\t\"category\": \"master\",\n\t\t\"sounds\": [\n\t\t\t{\n\t\t\t\t\"attenuation_distance\": 2147483647,\n\t\t\t\t\"name\": \"minecraft:amusic/00000000-0000-0000-0000-000000000000000000\",\n\t\t\t\t\"stream\": true\n\t\t\t}\n\t\t]\n\t},\n".getBytes(StandardCharsets.US_ASCII); //195
 			soundsbedrockentry = "\t\t\"amusic.internal.00000000-0000-0000-0000-000000000000000000\": {\n\t\t\t\"category\": \"voice\",\n\t\t\t\"min_distance\": 3.4028235e+38,\n\t\t\t\"max_distance\": 3.4028235e+38,\n\t\t\t\"sounds\": [\n\t\t\t\t{\n\t\t\t\t\t\"name\": \"sounds/amusic/00000000-0000-0000-0000-000000000000000000\",\n\t\t\t\t\t\"stream\": true,\n\t\t\t\t\t\"is3D\": false\n\t\t\t\t}\n\t\t\t]\n\t\t},\n".getBytes(StandardCharsets.US_ASCII);
+			soundsnamebedrockentry1 = "\t\t\"amusic._.".getBytes(StandardCharsets.US_ASCII); //12
+			soundsnamebedrockentry2 = "\": {\n\t\t\t\"category\": \"voice\",\n\t\t\t\"min_distance\": 3.4028235e+38,\n\t\t\t\"max_distance\": 3.4028235e+38,\n\t\t\t\"sounds\": [\n\t\t\t\t{\n\t\t\t\t\t\"name\": \"sounds/amusic/00000000-0000-0000-0000-000000000000000000\",\n\t\t\t\t\t\"stream\": true,\n\t\t\t\t\t\"is3D\": false\n\t\t\t\t}\n\t\t\t]\n\t\t},\n".getBytes(StandardCharsets.US_ASCII); //247
 			javapath = "assets/minecraft/sounds/amusic/".getBytes(StandardCharsets.US_ASCII);
 			bedrockpath = "sounds/amusic/".getBytes(StandardCharsets.US_ASCII);
 			ogg = ".ogg".getBytes(StandardCharsets.US_ASCII);
@@ -1063,19 +1134,20 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 		private final FileSystemProvider fsp;
 		private final Path file;
 		private final short num;
-		private final byte[] resourcepack;
+		private final byte[] resourcepack, soundname;
 		private final int offset, length, globalentryoffset, soundsjsonentryoffset, sounddefenitionsentryoffset;
 		private final UUID[] soundhashs;
 		private final short[] lengths;
 		private final CRC32 crc32;
 		private final MessageDigest md5hash;
 		
-		private ReadSoundZerocopy(FileSystemProvider fsp, Path file, short num, byte[] resourcepack, int offset, int length, int globalentryoffset, int soundsjsonentryoffset, int sounddefenitionsentryoffset, UUID[] soundhashs, short[] lengths) {
+		private ReadSoundZerocopy(FileSystemProvider fsp, Path file, short num, byte[] resourcepack, int offset, int length, int globalentryoffset, int soundsjsonentryoffset, int sounddefenitionsentryoffset, byte[] soundname, UUID[] soundhashs, short[] lengths) {
 			this.fsp = fsp;
 			this.file = file;
 			this.num = num;
 			this.resourcepack = resourcepack;
 			this.offset = offset;
+			this.soundname = soundname;
 			this.soundhashs = soundhashs;
 			this.length = length;
 			this.globalentryoffset = --globalentryoffset;
@@ -1262,6 +1334,25 @@ public final class LocalConvertedZerocopySource implements SoundSource<SourceEnt
 			System.arraycopy(ubuf, 0, this.resourcepack, sounddefenitionsentryoffset + 19, ubuf.length);
 			System.arraycopy(ubuf, 0, this.resourcepack, soundsjsonentryoffset + 178, ubuf.length);
 			System.arraycopy(ubuf, 0, this.resourcepack, sounddefenitionsentryoffset + 207, ubuf.length);
+			if(this.soundname == null) {
+				return;
+			}
+			int soundsnamejsonentryoffset = soundsjsonentryoffset + soundsjavaentry.length;
+			int soundnamedefenitionsentryoffset = sounddefenitionsentryoffset + soundsbedrockentry.length;
+			System.arraycopy(soundsnamejavaentry1, 0, this.resourcepack, soundsnamejsonentryoffset, soundsnamejavaentry1.length);
+			System.arraycopy(soundsnamebedrockentry1, 0, this.resourcepack, soundnamedefenitionsentryoffset, soundsnamebedrockentry1.length);
+			soundsnamejsonentryoffset += soundsnamejavaentry1.length;
+			soundnamedefenitionsentryoffset += soundsnamebedrockentry1.length;
+			System.arraycopy(this.soundname, 0, this.resourcepack, soundsnamejsonentryoffset, this.soundname.length);
+			System.arraycopy(this.soundname, 0, this.resourcepack, soundnamedefenitionsentryoffset, this.soundname.length);
+			soundsnamejsonentryoffset += this.soundname.length;
+			soundnamedefenitionsentryoffset += this.soundname.length;
+			System.arraycopy(soundsnamejavaentry2, 0, this.resourcepack, soundsnamejsonentryoffset, soundsnamejavaentry2.length);
+			System.arraycopy(soundsnamebedrockentry2, 0, this.resourcepack, soundnamedefenitionsentryoffset, soundsnamebedrockentry2.length);
+			soundsnamejsonentryoffset += 118;
+			soundnamedefenitionsentryoffset += 146;
+			System.arraycopy(ubuf, 0, this.resourcepack, soundsnamejsonentryoffset, ubuf.length);
+			System.arraycopy(ubuf, 0, this.resourcepack, soundnamedefenitionsentryoffset, ubuf.length);
 		}
 		
 		protected static int calculateDuration(final byte[] buf, final int offset, final int length) {

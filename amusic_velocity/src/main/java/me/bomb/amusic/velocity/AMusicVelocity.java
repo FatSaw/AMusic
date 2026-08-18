@@ -120,10 +120,10 @@ public final class AMusicVelocity {
 		boolean rgb = false;
 		
 		PackSender packsender = new VelocityPackSender(server);
-		LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+		LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 		PositionTracker positiontracker = new PositionTracker(new VelocitySoundStarter(server), new VelocitySoundStopper(server));
 		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
-		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(new PackMergeEntryFile(mergezip, config.packsizelimit), config.musicdir, config.packsizelimit);
+		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(new PackMergeEntryFile(mergezip, config.packsizelimit), musicdir, config.packsizelimit);
 		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
 		if(config.connectuse) {
 			this.amusic = new ServerAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
@@ -160,6 +160,9 @@ public final class AMusicVelocity {
 
 	@Subscribe
 	public void onProxyInitialize(ProxyInitializeEvent event) {
+		if(this.amusic == null) {
+			return;
+		}
 		this.amusic.enable();
 		GeyserHook geyser = null;
 		try {
@@ -168,25 +171,27 @@ public final class AMusicVelocity {
 		} catch (NoClassDefFoundError e) {
 		}
 		
+		CommandManager cmdmanager = null;
+		CommandMeta loadmusicmeta = null, playmusicmeta = null, repeatmeta = null;
 		
 		if(config.usecmd) {
-			CommandManager cmdmanager = this.server.getCommandManager();
+			cmdmanager = this.server.getCommandManager();
 			if(this.loadmusic != null) {
-				CommandMeta loadmusicmeta =  cmdmanager.metaBuilder("loadmusic").plugin(this).build();
+				loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build();
 				cmdmanager.register(loadmusicmeta, this.loadmusic);
 			}
 			if(this.playmusic != null) {
-				CommandMeta playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build();
+				playmusicmeta = cmdmanager.metaBuilder("playmusic").plugin(this).build();
 				cmdmanager.register(playmusicmeta, this.playmusic);
 			}
 			if(this.repeat != null) {
-				CommandMeta repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build();
+				repeatmeta = cmdmanager.metaBuilder("repeat").plugin(this).build();
 				cmdmanager.register(repeatmeta, this.repeat);
 			}
 		}
-
-		ProxyShutdownHandler proxyshutdown = new ProxyShutdownHandler(this.amusic, geyser);
 		EventManager eventmanager = this.server.getEventManager();
+		ProxyShutdownHandler proxyshutdown = new ProxyShutdownHandler(this.amusic, geyser, cmdmanager, loadmusicmeta, playmusicmeta, repeatmeta, eventmanager, this, this.login, this.disconnect, this.resourcepackstatus);
+		
 		if(this.login != null) eventmanager.register(this, LoginEvent.class, this.login);
 		if(this.disconnect != null) eventmanager.register(this, DisconnectEvent.class, this.disconnect);
 		if(this.resourcepackstatus != null) eventmanager.register(this, PlayerResourcePackStatusEvent.class, this.resourcepackstatus);

@@ -8,9 +8,9 @@
 	<properties>
 		<project.build.outputTimestamp>0</project.build.outputTimestamp>
 		<project.build.sourceEncoding>ASCII</project.build.sourceEncoding>
-    	<project.reporting.outputEncoding>ASCII</project.reporting.outputEncoding>
-    	<revision>0.19</revision>
-  	</properties>
+		<project.reporting.outputEncoding>ASCII</project.reporting.outputEncoding>
+		<revision>0.19</revision>
+	</properties>
 	<version>${revision}</version>
 	<packaging>pom</packaging>
 	<modules>

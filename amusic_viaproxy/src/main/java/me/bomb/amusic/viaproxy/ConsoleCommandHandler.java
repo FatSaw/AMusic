@@ -6,12 +6,12 @@ import me.bomb.amusic.util.Logger;
 import me.bomb.amusic.viaproxy.command.Command;
 import net.raphimc.viaproxy.plugins.events.ConsoleCommandEvent;
 
-public final class ConsoleCommandListener implements Consumer<ConsoleCommandEvent> {
+public final class ConsoleCommandHandler implements Consumer<ConsoleCommandEvent> {
 	
 	private final Logger logger;
 	private final Command loadmusic, playmusic, repeat;
 	
-	public ConsoleCommandListener(Logger logger, Command loadmusic, Command playmusic, Command repeat) {
+	public ConsoleCommandHandler(Logger logger, Command loadmusic, Command playmusic, Command repeat) {
 		this.logger = logger;
 		this.loadmusic = loadmusic;
 		this.playmusic = playmusic;

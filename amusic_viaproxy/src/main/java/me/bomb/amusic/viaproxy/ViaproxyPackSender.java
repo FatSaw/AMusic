@@ -8,7 +8,6 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import me.bomb.amusic.PackSender;
 import me.bomb.amusic.util.HexUtils;

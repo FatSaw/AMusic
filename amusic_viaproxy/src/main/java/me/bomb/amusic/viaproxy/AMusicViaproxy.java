@@ -36,17 +36,13 @@ import net.raphimc.viaproxy.proxy.session.ProxyConnection;
 
 public final class AMusicViaproxy extends ViaProxyPlugin {
 	
-	private static AMusic instance = null;
-	
 	private final me.bomb.amusic.util.Logger logger;
 	
-	private AMusic amusic;
-	private ResourceManager resourcemanager;
-	private ConcurrentHashMap<UUID,ProxyConnection> players;
-	private ConcurrentHashMap<Object,InetAddress> playerips;
-	private boolean usecmd;
-	private String configerrors, joinplaylist;
+	private final AMusic amusic;
 	private GeyserHook geyserhook = null;
+	
+	private final ConsoleCommandHandler consolecommand;
+	private final LoginLogoutHandler loginlogout;
 	
 	public AMusicViaproxy() {
 		this.logger = new me.bomb.amusic.util.Logger() {
@@ -69,10 +65,6 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			}
 		};
 		AMusicLogger.setLogger(this.logger);
-	}
-
-	@Override
-	public void onEnable() {
 		Path plugindir = this.getDataFolder().toPath(), mergezip = plugindir.resolve("resourcepack.zip"), configfile = plugindir.resolve("config.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
@@ -81,61 +73,58 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		} catch (IOException e) {
 		}
 		Configuration config = new Configuration(fs, configfile, musicdir, packeddir, false, false);
+		String configerrors = config.errors;
 		
-		this.configerrors = config.errors;
-		if(config.use) {
-			try {
-				fsp.createDirectory(musicdir);
-			} catch (IOException e) {
-			}
-			try {
-				fsp.createDirectory(packeddir);
-			} catch (IOException e) {
-			}
-			this.usecmd = config.usecmd;
-			this.joinplaylist = config.joinplaylist;
-			players = new ConcurrentHashMap<UUID,ProxyConnection>(16,0.75f,1);
-			playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-
-			PackSender packsender = new ViaproxyPackSender(this.players);
-	        
-			LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(config.musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
-			PositionTracker positiontracker = new PositionTracker(new ViaproxySoundStarter(this.players), new ViaproxySoundStopper(this.players));
-			ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
-			PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(new PackMergeEntryFile(mergezip, config.packsizelimit), config.musicdir, config.packsizelimit);
-			Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
-			if(config.connectuse) {
-				this.amusic = new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
-			} else {
-				this.amusic = new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
-			}
-			if(AMusicViaproxy.instance == null) {
-				AMusicViaproxy.instance = this.amusic;
-			}
-		} else {
-			this.usecmd = false;
-			this.players = null;
-			this.playerips = null;
-			this.joinplaylist = null;
-			this.resourcemanager = null;
+		if(!configerrors.isEmpty()) {
+			throw new IllegalStateException("AMusic config initialization errors: \n".concat(configerrors));
+		}
+		if(!config.use) {
 			this.amusic = null;
-		}
-		if(!this.configerrors.isEmpty()) {
-			this.logger.info("AMusic config initialization errors: \n".concat(configerrors));
+			this.consolecommand = null;
+			this.loginlogout = null;
 			return;
 		}
-		if(this.amusic == null) {
-			return;
+		try {
+			fsp.createDirectory(musicdir);
+		} catch (IOException e) {
+		}
+		try {
+			fsp.createDirectory(packeddir);
+		} catch (IOException e) {
+		}
+		ConcurrentHashMap<UUID,ProxyConnection> players = new ConcurrentHashMap<UUID,ProxyConnection>(16,0.75f,1);
+		ConcurrentHashMap<Object,InetAddress> playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+
+		PackSender packsender = new ViaproxyPackSender(players);
+        
+		LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+		PositionTracker positiontracker = new PositionTracker(new ViaproxySoundStarter(players), new ViaproxySoundStopper(players));
+		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(new PackMergeEntryFile(mergezip, config.packsizelimit), musicdir, config.packsizelimit);
+		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
+		if(config.connectuse) {
+			this.amusic = new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
+		} else {
+			this.amusic = new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 		}
 		ConcurrentHashMap<String, UUID> uuidByPlayername = new ConcurrentHashMap<String, UUID>(16,0.75f,1);
-		LambdaManager eventManager = ViaProxy.EVENT_MANAGER;
-		if(this.usecmd) {
+
+		ConsoleCommandHandler consolecommand = null;
+		LoginLogoutHandler loginlogout = null;
+		if(config.usecmd) {
 			Command loadmusic = new LoadmusicCommand(this.amusic, uuidByPlayername), playmusic = new PlaymusicCommand(this.amusic, uuidByPlayername), repeat = new RepeatCommand(this.amusic, uuidByPlayername);
-			eventManager.registerConsumer(new ConsoleCommandListener(this.logger, loadmusic, playmusic, repeat), ConsoleCommandEvent.class);
+			consolecommand = new ConsoleCommandHandler(this.logger, loadmusic, playmusic, repeat);
 		}
-		
-		if(this.resourcemanager != null) {
-			eventManager.registerConsumer(new LoginLogoutHandler(this.amusic, players, playerips, joinplaylist, uuidByPlayername), ClientLoggedInEvent.class);
+		loginlogout = new LoginLogoutHandler(this.amusic, players, playerips, config.joinplaylist, uuidByPlayername);
+
+		this.consolecommand = consolecommand;
+		this.loginlogout = loginlogout;
+	}
+
+	@Override
+	public void onEnable() {
+		if(this.amusic == null) {
+			return;
 		}
 		this.amusic.enable();
 		final Data data = ((LocalAMusic) this.amusic).datamanager;
@@ -159,6 +148,13 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 				}
 			}
 		}.start();
+		LambdaManager eventManager = ViaProxy.EVENT_MANAGER;
+		if(this.consolecommand != null) {
+			eventManager.registerConsumer(this.consolecommand, ConsoleCommandEvent.class);
+		}
+		if(this.loginlogout != null) {
+			eventManager.registerConsumer(this.loginlogout, ClientLoggedInEvent.class);
+		}
 	}
 	
 	@Override
@@ -168,6 +164,13 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		}
 		if(this.amusic == null) {
 			return;
+		}
+		LambdaManager eventManager = ViaProxy.EVENT_MANAGER;
+		if(this.consolecommand != null) {
+			eventManager.unregisterConsumer(this.consolecommand, ConsoleCommandEvent.class);
+		}
+		if(this.loginlogout != null) {
+			eventManager.unregisterConsumer(this.loginlogout, ClientLoggedInEvent.class);
 		}
 		this.amusic.disable();
 	}

@@ -36,7 +36,6 @@ import me.bomb.amusic.util.SimpleConfiguration;
 public final class Configuration {
 	
 	public final String errors;
-	public final Path musicdir, packeddir;
 	
 	public final Executor executor, serverexecutor, sendpackexecutorchecker, sendpackexecutorsender;
 	
@@ -59,11 +58,9 @@ public final class Configuration {
 	public final ServerSocketFactory sendpackserverfactory, connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(Path musicdir, Path packeddir, Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, boolean waitacception, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, boolean waitacception, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
-		this.musicdir = musicdir;
-		this.packeddir = packeddir;
 		this.executor = executor;
 		this.serverexecutor = serverexecutor;
 		this.sendpackexecutorchecker = sendpackexecutorchecker;
@@ -151,8 +148,6 @@ public final class Configuration {
 		if(bytes != null && (sc = new SimpleConfiguration(bytes, size)).getBooleanOrError("amusic\0use", errors)) {
 			final String EMPTY = new String();
 			this.use = true;
-			this.musicdir = musicdir;
-			this.packeddir = packeddir;
 			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			String executorcfg = sc.getStringOrDefault("amusic\0executor", EMPTY);
@@ -385,8 +380,6 @@ public final class Configuration {
 		} else {
 			this.use = false;
 			this.usecmd = false;
-			this.musicdir = null;
-			this.packeddir = null;
 			this.executor = null;
 			this.serverexecutor = null;
 			this.connectuse = false;

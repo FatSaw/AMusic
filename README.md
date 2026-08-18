@@ -69,6 +69,7 @@ Format: `<arg><operation><int_value>`
 Available operations: `=`
 Description: `Limits player count`
 </details>
+
 ### Commands for console without tab complete:
 
 - `loadmusic @l` - get packed playlist(resourcepack) list

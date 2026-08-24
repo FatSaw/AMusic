@@ -85,12 +85,11 @@ final class ResourceSender implements ServerWorker {
             	InputStream in = this.connected.getInputStream();
             	while (off < buf.length && (n = in.read(buf, off, rem)) != -1) {
             		off += n;
-            		rem -= off;
+            		rem -= n;
             		if(off < 4 || '\n' == buf[off - 1] && '\r' == buf[off - 2] && '\n' == buf[off - 3] && '\r' == buf[off - 4]) {
         				break;
         			}
             	}
-            	this.connected.shutdownInput(); //HTTPS NOT SUPPORT THIS
             } catch (SocketTimeoutException e) {
             	AMusicLogger.warn("Socket read timeout: ".concat(e.getMessage()));
             	this.close();

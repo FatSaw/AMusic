@@ -7,4 +7,8 @@ public interface ServerWorker {
 	
 	public abstract void processConnection(final Socket connected) throws IOException;
 
+	public void start();
+	
+	public void end();
+	
 }

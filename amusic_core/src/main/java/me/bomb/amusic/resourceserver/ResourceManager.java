@@ -34,7 +34,7 @@ public final class ResourceManager {
 	private final byte[] host;
 	private final int end;
 	
-	public ResourceManager(PackSender packsender, PositionTracker positiontracker, String host, int maxbuffersize, byte[] salt, boolean waitacception, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount, Executor executorchecker, Executor executorsender) {
+	public ResourceManager(PackSender packsender, PositionTracker positiontracker, String host, int maxbuffersize, byte[] salt, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount, Executor executorsender, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
 		if(packsender == null || positiontracker == null || host == null) {
 			throw new NullPointerException();
 		}
@@ -55,8 +55,8 @@ public final class ResourceManager {
 		
 		this.maxbuffersize = maxbuffersize;
 		this.salt = salt;
-		accepted = waitacception ? new ConcurrentSkipListSet<UUID>() : null;
-		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new ResourceSender(this, executorchecker, executorsender), connectcount);
+		accepted = waitacceptioncount != 0 ? new ConcurrentSkipListSet<UUID>() : null;
+		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new ResourceSender(this, executorsender, waitacceptioncount, waitacceptionwait, schedulerthreads), connectcount);
 	}
 	
 	

@@ -30,14 +30,20 @@ class ServerConnect extends Thread {
 				continue;
 			}
 			while(true) {
-				final Socket connected;
+				Socket connected = null;
 				try {
 					connected = server.accept();
 					connected.setSoTimeout(serverwatcher.timeout);
 					worker.processConnection(connected);
-				} catch (SocketTimeoutException e) {
+				} catch (SocketTimeoutException e1) {
+					if(connected != null) {
+						try {
+							connected.close();
+						} catch (IOException e2) {
+						}
+					}
 					continue;
-				} catch (SocketException e) {
+				} catch (SocketException e1) {
 					break;
 				} catch (IOException e1) {
 					break;

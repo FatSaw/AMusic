@@ -34,7 +34,7 @@ final class ConnectedServerConnect extends ServerConnect {
 				continue;
 			}
 			while(true) {
-				final Socket connected;
+				Socket connected = null;
 				try {
 					connected = server.accept();
 					if (onlineips.contains(connected.getInetAddress())) {
@@ -44,9 +44,15 @@ final class ConnectedServerConnect extends ServerConnect {
 						connected.getOutputStream().write(noaccess);
 						connected.close();
 					}
-				} catch (SocketTimeoutException e) {
+				} catch (SocketTimeoutException e1) {
+					if(connected != null) {
+						try {
+							connected.close();
+						} catch (IOException e2) {
+						}
+					}
 					continue;
-				} catch (SocketException e) {
+				} catch (SocketException e1) {
 					break;
 				} catch (IOException e1) {
 					break;

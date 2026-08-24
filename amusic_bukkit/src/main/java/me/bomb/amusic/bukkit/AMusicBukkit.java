@@ -120,8 +120,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			fsp.createDirectory(plugindir);
 		} catch (IOException e) {
 		}
-		boolean waitacception = ver == 7 ? false : true;
-		Configuration config = new Configuration(plugindir.getFileSystem(), configfile, musicdir, packeddir, waitacception, true);
+		Configuration config = new Configuration(plugindir.getFileSystem(), configfile, musicdir, packeddir, true);
 		String configerrors = config.errors;
 		if(!configerrors.isEmpty()) {
 			throw new IllegalStateException("AMusic config initialization errors: \n".concat(configerrors));
@@ -243,11 +242,10 @@ public final class AMusicBukkit extends JavaPlugin {
 					soundstopper = new BukkitSoundStopper(server);
 				break;
 				}
-				waitacception = config.waitacception;
 				playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 				LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PositionTracker positiontracker = new PositionTracker(soundstarter, soundstopper);
-				ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+				ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 				PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(new PackMergeEntryFile(mergezip, config.packsizelimit), musicdir, config.packsizelimit);
 				Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
 				LocalAMusic amusic = new LocalAMusic(logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
@@ -269,7 +267,7 @@ public final class AMusicBukkit extends JavaPlugin {
 					playerrespawn = new PlayerRespawnHandler(this, amusic.positiontracker);
 				} catch (NoClassDefFoundError e) {
 				}
-				if(waitacception) {
+				if(config.waitacceptioncount != 0) {
 					try {
 						playerresourcepackstatus = new PlayerResourcePackStatusHandler(this, amusic.resourcemanager);
 					} catch (NoClassDefFoundError e) {

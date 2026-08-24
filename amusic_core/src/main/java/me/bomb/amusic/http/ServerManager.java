@@ -42,17 +42,18 @@ public final class ServerManager {
 				connects[connectcount] = new ConnectedServerConnect(serverwatcher, worker, onlineips);
 			}
 		}
-		
-		serverwatcher.start();
+		this.worker.start();
+		this.serverwatcher.start();
 	}
 	
 	public void restart() {
-		serverwatcher.restart();
+		this.serverwatcher.restart();
 	}
 	
 	public void end() {
-		serverwatcher.end();
-		serverwatcher = null;
+		this.worker.end();
+		this.serverwatcher.end();
+		this.serverwatcher = null;
 	}
 
 }

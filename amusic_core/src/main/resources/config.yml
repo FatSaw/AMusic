@@ -24,8 +24,6 @@ amusic:
  server:
   sendpack:
    executor:
-    #Executor - resourcepack checker executor configuration preset
-    checker: sendpackchecker
     #Executor - resourcepack sender executor configuration preset
     sender: sendpacksender
    #Host - '<protocol>://<ip or hostname>:<port>/'
@@ -35,11 +33,16 @@ amusic:
    port: 25530
    backlog: 0
    #Connect timeout (in ms)
-   timeout: 0
+   timeout: 10000
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
-   #Wait acception - true resourcepack download start only after resourcepack status accepted recieved, false - resourcepack status ignored, blocked - auto
-   #waitacception: true
+   waitacception:
+    #Count - maximal acception check attempts before connection drop, if 0 waitacception check disabled
+    count: 0
+    #Wait - wait until next acception check (in miliseconds)
+    wait: 100
+    #Scheduler threads
+    schedulerthreads: 4
    #Token salt - recomended to replace this by random generated if clientside caching used
    tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
   #Connect api to other amusic instance

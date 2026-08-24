@@ -53,8 +53,6 @@ final class ServerWatcher extends Thread {
 			} catch (InterruptedException e) {
 			}
 			
-			
-			
 			while (!server.isClosed()) {
 				int i = connects.length;
 				while(--i > -1) {

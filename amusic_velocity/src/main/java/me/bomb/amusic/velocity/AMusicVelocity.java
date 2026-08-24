@@ -87,8 +87,7 @@ public final class AMusicVelocity {
 			fsp.createDirectory(plugindir);
 		} catch (IOException e) {
 		}
-		boolean waitacception = true;
-		Configuration config = new Configuration(fs, configfile, musicdir, packeddir, waitacception, false);
+		Configuration config = new Configuration(fs, configfile, musicdir, packeddir, false);
 		String configerrors = config.errors;
 		if(!configerrors.isEmpty()) {
 			throw new IllegalStateException("AMusic config initialization errors: \n".concat(configerrors));
@@ -122,7 +121,7 @@ public final class AMusicVelocity {
 		PackSender packsender = new VelocityPackSender(server);
 		LocalConvertedZerocopySource lczs = new LocalConvertedZerocopySource(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 		PositionTracker positiontracker = new PositionTracker(new VelocitySoundStarter(server), new VelocitySoundStopper(server));
-		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.waitacception, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorchecker, config.sendpackexecutorsender);
+		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackserverfactory, (short) 2, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(new PackMergeEntryFile(mergezip, config.packsizelimit), musicdir, config.packsizelimit);
 		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
 		if(config.connectuse) {

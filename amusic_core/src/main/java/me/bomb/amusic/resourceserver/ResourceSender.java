@@ -18,8 +18,7 @@ import me.bomb.amusic.util.AMusicLogger;
 
 final class ResourceSender implements ServerWorker {
 	
-	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(), responsepart1 = "\r\n\r\n".getBytes(), requestinvalid = "HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), tokeninvalid = "HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), packreadfail = "HTTP/1.1 500 Internal Server Error\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-	
+	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII), responsepart1 = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII), requestinvalid = "HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), tokeninvalid = "HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), packreadfail = "HTTP/1.1 500 Internal Server Error\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), waitacceptiontimeout = "HTTP/1.1 408 Request Timeout\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 	private final ResourceManager resourcemanager;
 	private final Executor senderexecutor;
 	private final int waitacceptioncount, waitacceptionwait, schedulerthreads;
@@ -35,7 +34,7 @@ final class ResourceSender implements ServerWorker {
 
 	@Override
 	public void processConnection(final Socket connected) throws IOException {
-		Runnable r = new RequestHandler(this.senderexecutor, connected, resourcemanager, scheduler);
+		Runnable r = new RequestHandler(this.senderexecutor, connected, resourcemanager, scheduler, this.waitacceptioncount, this.waitacceptionwait);
 		this.senderexecutor.execute(r);
 	}
 	
@@ -62,71 +61,74 @@ final class ResourceSender implements ServerWorker {
 		private final Socket connected;
 		private final ResourceManager resourcemanager;
 		private final ScheduledExecutorService scheduler;
+		private final int waitacceptioncount, waitacceptionwait;
 		
-		private RequestHandler(Executor senderexecutor, Socket connected, ResourceManager resourcemanager, ScheduledExecutorService scheduler) {
+		private RequestHandler(Executor senderexecutor, Socket connected, ResourceManager resourcemanager, ScheduledExecutorService scheduler, int waitacceptioncount, int waitacceptionwait) {
 			this.senderexecutor = senderexecutor;
 			this.connected = connected;
 			this.resourcemanager = resourcemanager;
 			this.scheduler = scheduler;
+			this.waitacceptioncount = waitacceptioncount;
+			this.waitacceptionwait = waitacceptionwait;
 		}
 		
 		private void close() {
 			try {
 				this.connected.close();
-            } catch (IOException e) {
-            }
+			} catch (IOException e) {
+			}
 		}
 
 		@Override
 		public void run() {
-			byte[] buf = new byte[0x200];
-            int off = 0, rem = buf.length, n;
-            try {
-            	InputStream in = this.connected.getInputStream();
-            	while (off < buf.length && (n = in.read(buf, off, rem)) != -1) {
-            		off += n;
-            		rem -= n;
-            		if(off < 4 || '\n' == buf[off - 1] && '\r' == buf[off - 2] && '\n' == buf[off - 3] && '\r' == buf[off - 4]) {
-        				break;
-        			}
-            	}
-            } catch (SocketTimeoutException e) {
-            	AMusicLogger.warn("Socket read timeout: ".concat(e.getMessage()));
-            	this.close();
-                return;
-            } catch (IOException e) {
-            	this.close();
-                return;
-            }
-            if(off < 54 || !(buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/' && buf[41] == '.' && buf[42] == 'z' && buf[43] == 'i' && buf[44] == 'p' && buf[45] == ' ' && buf[46] == 'H' && buf[47] == 'T' && buf[48] == 'T' && buf[49] == 'P' && buf[50] == '/' && buf[51] == '1' && buf[52] == '.' && buf[53] == '1')) {
-            	try {
-                	OutputStream out = this.connected.getOutputStream();
-    				out.write(requestinvalid);
-            	} catch (IOException e) {
-                }
-            	this.close();
-                return;
-            }
-            final UUID token;
-            try {
-            	token = UUID.fromString(new String(buf, 5, 36, StandardCharsets.US_ASCII));
-            } catch (IndexOutOfBoundsException | IllegalArgumentException e1) {
-            	try {
-            		OutputStream out = this.connected.getOutputStream();
-    				out.write(requestinvalid);
-    				this.connected.close();
-            	} catch (IOException e2) {
-                }
-            	this.close();
-                return;
-            }
-            ResponseSender responsesender = new ResponseSender(this.connected, this.resourcemanager, token);
-            if(this.scheduler != null && this.resourcemanager.waitAcception(token)) {
-            	WaitAcception sendresponse = new WaitAcception(this.scheduler, this.senderexecutor, this.resourcemanager, responsesender);
-            	this.scheduler.schedule(sendresponse, waitacceptionwait, TimeUnit.MILLISECONDS);
-            	return;
-            }
-            responsesender.run();
+			byte[] buf = new byte[0x400];
+			int off = 0, rem = buf.length, n;
+			try {
+				InputStream in = this.connected.getInputStream();
+				while (off < buf.length && (n = in.read(buf, off, rem)) != -1) {
+					off += n;
+					rem -= n;
+					if(off < 4 || '\n' == buf[off - 1] && '\r' == buf[off - 2] && '\n' == buf[off - 3] && '\r' == buf[off - 4]) {
+						break;
+					}
+				}
+			} catch (SocketTimeoutException e) {
+				AMusicLogger.warn("Socket read timeout: ".concat(e.getMessage()));
+				this.close();
+				return;
+			} catch (IOException e) {
+				this.close();
+				return;
+			}
+			if(off < 54 || !(buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/' && buf[41] == '.' && buf[42] == 'z' && buf[43] == 'i' && buf[44] == 'p' && buf[45] == ' ' && buf[46] == 'H' && buf[47] == 'T' && buf[48] == 'T' && buf[49] == 'P' && buf[50] == '/' && buf[51] == '1' && buf[52] == '.' && buf[53] == '1')) {
+				try {
+					OutputStream out = this.connected.getOutputStream();
+					out.write(requestinvalid);
+				} catch (IOException e) {
+				}
+				this.close();
+				return;
+			}
+			final UUID token;
+			try {
+				token = UUID.fromString(new String(buf, 5, 36, StandardCharsets.US_ASCII));
+			} catch (IndexOutOfBoundsException | IllegalArgumentException e1) {
+				try {
+					OutputStream out = this.connected.getOutputStream();
+					out.write(requestinvalid);
+					this.connected.close();
+				} catch (IOException e2) {
+				}
+				this.close();
+				return;
+			}
+			ResponseSender responsesender = new ResponseSender(this.connected, this.resourcemanager, token);
+			if(this.scheduler != null && this.resourcemanager.waitAcception(token)) {
+				WaitAcception sendresponse = new WaitAcception(this.scheduler, this.senderexecutor, this.resourcemanager, responsesender, this.waitacceptioncount, this.waitacceptionwait);
+				this.scheduler.schedule(sendresponse, waitacceptionwait, TimeUnit.MILLISECONDS);
+				return;
+			}
+			responsesender.run();
 		}
 	}
 	
@@ -136,13 +138,16 @@ final class ResourceSender implements ServerWorker {
 		private final Executor senderexecutor;
 		private final ResourceManager resourcemanager;
 		private final ResponseSender responsesender;
-		private int i = waitacceptioncount;
+		private final int waitacceptionwait;
+		private int i;
 
-		private WaitAcception(ScheduledExecutorService scheduler, Executor senderexecutor, ResourceManager resourcemanager, ResponseSender responsesender) {
+		private WaitAcception(ScheduledExecutorService scheduler, Executor senderexecutor, ResourceManager resourcemanager, ResponseSender responsesender, int waitacceptioncount, int waitacceptionwait) {
 			this.scheduler = scheduler;
 			this.senderexecutor = senderexecutor;
 			this.resourcemanager = resourcemanager;
 			this.responsesender = responsesender;
+			this.waitacceptionwait = waitacceptionwait;
+			i = waitacceptioncount;
 		}
 
 		@Override
@@ -150,7 +155,17 @@ final class ResourceSender implements ServerWorker {
 			if (this.resourcemanager.waitAcception(this.responsesender.token)) {
 				if(0 != i && !this.scheduler.isShutdown()) {
 					--i;
-					this.scheduler.schedule(this, waitacceptionwait, TimeUnit.MILLISECONDS);
+					this.scheduler.schedule(this, this.waitacceptionwait, TimeUnit.MILLISECONDS);
+					return;
+				}
+				try {
+					OutputStream out = this.responsesender.connected.getOutputStream();
+					out.write(waitacceptiontimeout);
+					} catch (IOException e) {
+				}
+				try {
+					this.responsesender.connected.close();
+				} catch (IOException e) {
 				}
 				return;
 			}
@@ -173,8 +188,8 @@ final class ResourceSender implements ServerWorker {
 		private void close() {
 			try {
 				this.connected.close();
-            } catch (IOException e) {
-            }
+			} catch (IOException e) {
+			}
 		}
 		
 		@Override
@@ -184,8 +199,8 @@ final class ResourceSender implements ServerWorker {
 				try {
 					OutputStream out = this.connected.getOutputStream();
 					out.write(tokeninvalid);
-	            } catch (IOException e) {
-	            }
+				} catch (IOException e) {
+				}
 				this.close();
 				return;
 			}
@@ -194,8 +209,8 @@ final class ResourceSender implements ServerWorker {
 				try {
 					OutputStream out = this.connected.getOutputStream();
 					out.write(packreadfail);
-	            } catch (IOException e) {
-	            }
+				} catch (IOException e) {
+				}
 				this.close();
 				return;
 			}

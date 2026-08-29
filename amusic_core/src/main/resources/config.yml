@@ -31,7 +31,10 @@ amusic:
    #Interface ip
    ip: 0.0.0.0
    port: 25530
-   backlog: 0
+   #Accept threads - thread count for accept connection
+   acceptthreads: 2
+   #Backlog - maximum pending connections count if 0 used default value
+   backlog: 127
    #Connect timeout (in ms)
    timeout: 10000
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)

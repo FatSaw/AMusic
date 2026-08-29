@@ -46,6 +46,7 @@ public final class Configuration {
 	public final int sendpackport, connectport;
 	public final int sendpackbacklog, connectbacklog;
 	public final int sendpacktimeout;
+	public final short sendpackacceptthreads;
 
 	public final int waitacceptioncount;
 	public final int waitacceptionschedulerthreads;
@@ -62,7 +63,7 @@ public final class Configuration {
 	public final ServerSocketFactory sendpackserverfactory, connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.executor = executor;
@@ -81,6 +82,7 @@ public final class Configuration {
 		this.sendpackbacklog = sendpackbacklog;
 		this.connectbacklog = connectbacklog;
 		this.sendpacktimeout = sendpacktimeout;
+		this.sendpackacceptthreads = sendpackacceptthreads;
 		this.sendpackstrictaccess = sendpackstrictaccess;
 		this.processpack = processpack;
 		this.ramcache = ramcache;
@@ -188,8 +190,14 @@ public final class Configuration {
 			this.sendpackbacklog = sc.getIntOrError("amusic\0server\0sendpack\0backlog", errors);
 			this.sendpacktimeout = sc.getIntOrError("amusic\0server\0sendpack\0timeout", errors);
 			this.sendpackstrictaccess = sc.getBooleanOrError("amusic\0server\0sendpack\0strictaccess", errors);
-
-			
+			int sendpackacceptthreads = sc.getIntOrError("amusic\0server\0sendpack\0acceptthreads", errors);
+			if(sendpackacceptthreads < 1) {
+				sendpackacceptthreads = 1;
+			}
+			if(sendpackacceptthreads > 32767) {
+				sendpackacceptthreads = 32767;
+			}
+			this.sendpackacceptthreads = (short) sendpackacceptthreads;
 
 			this.waitacceptioncount = sc.getIntOrError("amusic\0server\0sendpack\0waitacception\0count", errors);
 			if(this.waitacceptioncount > 0) {
@@ -401,6 +409,7 @@ public final class Configuration {
 			this.sendpackbacklog = 0;
 			this.sendpacktimeout = 0;
 			this.sendpackstrictaccess = false;
+			this.sendpackacceptthreads = 0;
 			this.waitacceptioncount = 0;
 			this.waitacceptionwait = 0;
 			this.waitacceptionschedulerthreads = 0;

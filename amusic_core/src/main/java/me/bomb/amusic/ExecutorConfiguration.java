@@ -32,9 +32,9 @@ final class ExecutorConfiguration {
 		final long keepAlive = sc.getLongOrError(parentsection.concat("\0keepalive\0value"), errors);
 		TimeUnit timeUnit = null;
 		final boolean linkedqueue;
-		if(queuetype.equals("LINKED")) {
+		if("LINKED".equals(queuetype)) {
 			linkedqueue = true;
-		} else if(queuetype.equals("ARRAY")) {
+		} else if("ARRAY".equals(queuetype)) {
 			linkedqueue = false;
 		} else {
 			linkedqueue = false;
@@ -54,7 +54,7 @@ final class ExecutorConfiguration {
 		}
 		try {
 			timeUnit = TimeUnit.valueOf(keepAliveTimeUnit);
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException | NullPointerException e) {
 			appendError("Unknown time unit type", errors);
 		}
 		this.linkedqueue = linkedqueue;
@@ -97,9 +97,9 @@ final class ExecutorConfiguration {
 		final long keepAlive = sc.getLongOrError("executor\0keepalive\0value", errors);
 		TimeUnit timeUnit = null;
 		final boolean linkedqueue;
-		if(queuetype.equals("LINKED")) {
+		if("LINKED".equals(queuetype)) {
 			linkedqueue = true;
-		} else if(queuetype.equals("ARRAY")) {
+		} else if("ARRAY".equals(queuetype)) {
 			linkedqueue = false;
 		} else {
 			linkedqueue = false;
@@ -119,7 +119,7 @@ final class ExecutorConfiguration {
 		}
 		try {
 			timeUnit = TimeUnit.valueOf(keepAliveTimeUnit);
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException | NullPointerException e) {
 			appendError("Unknown time unit type", errors);
 		}
 		this.linkedqueue = linkedqueue;

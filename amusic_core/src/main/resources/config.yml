@@ -23,9 +23,18 @@ amusic:
   diskstore: true
  server:
   sendpack:
-   executor:
-    #Executor - resourcepack sender executor configuration preset
-    sender: sendpacksender
+   #Executor - resourcepack sender executor configuration preset, options below used if value not specified
+   executor: sendpacksender
+    queue:
+     #Type - LINKED,ARRAY
+     type: LINKED
+     size: 1024
+    poolsize:
+     core: 2
+     maximum: 16
+    keepalive:
+     timeunit: MINUTES
+     value: 1
    #Host - '<protocol>://<ip or hostname>:<port>/'
    host: http://127.0.0.1:25530/
    #Interface ip

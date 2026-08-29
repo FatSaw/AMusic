@@ -165,10 +165,10 @@ public final class Configuration {
 			}
 			this.executor = executorconfig.createExecutor();
 			
-			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0checker", EMPTY);
+			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor", EMPTY);
 
-			sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor\0sender", EMPTY);
-			ExecutorConfiguration sendpackexecutorconfig = sendpackexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0sendpack\0executor\0sender") : new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
+			sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor", EMPTY);
+			ExecutorConfiguration sendpackexecutorconfig = sendpackexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0sendpack\0executor") : new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
 			if(sendpackexecutorconfig.errors.length() != 0) {
 				appendError("Filed to load sendpack executor sender configuration", errors);
 				errors.append(sendpackexecutorconfig.errors);

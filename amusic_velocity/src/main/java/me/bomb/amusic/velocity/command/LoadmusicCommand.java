@@ -107,7 +107,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 				}
 				
 			};
-			amusic.getPlaylists(true, false, consumer);
+			amusic.getListResourcepackInfo(consumer);
 		} else {
 			this.lang.sendMsg(sender, LangOptions.loadmusic_usage);
 		}
@@ -183,14 +183,20 @@ public final class LoadmusicCommand implements SimpleCommand {
 					}
 				}
 			};
-			boolean async = amusic.getPlaylists(!args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE), true, consumer);
-			if(async) {
-				try {
-					synchronized (tabcomplete) {
-						tabcomplete.wait(200);
+			final boolean packed = !args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE);
+			String[] resourcepacknames = packed ? amusic.getListResourcepackInfoCached() : amusic.getListResourcepackCached();
+			if(resourcepacknames == null) {
+				boolean async = packed ? amusic.getListResourcepackInfo(consumer) : amusic.getListResourcepack(consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
 					}
-				} catch (InterruptedException e) {
 				}
+			} else {
+				consumer.accept(resourcepacknames);
 			}
 		}
 		return tabcomplete;

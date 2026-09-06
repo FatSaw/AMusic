@@ -1,14 +1,16 @@
 package me.bomb.amusic.packedinfo;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.UUID;
 
 public final class ResourcepackInfo {
 	
-	private static final byte VERSION = 7;
+	private final static byte[] FORMATID = new byte[]{'a', 'm', 'p', 'i', 0x00, 0x00, 0x00, 0x00, 0x07};	
 	
 	protected int infosize;
 	
@@ -69,15 +71,8 @@ public final class ResourcepackInfo {
 		}
 		int infosize = 102;
 		int soundcount = info.sounds.length;
-		os.write('a'); //FORMATID
-		os.write('m'); //FORMATID
-		os.write('p'); //FORMATID
-		os.write('i'); //FORMATID
-		os.write(0); //FORMATID
-		os.write(0); //0
-		os.write(0); //0
-		os.write(0); //FORMATID
-		os.write(VERSION); //VERSION
+		os.write(FORMATID, 0, FORMATID.length); //FORMATID + VERSION
+		
 		int entryfilesize = info.packsize;
 		//fos.write(dataentry.size);
 		os.write((byte)entryfilesize); //FILESIZE
@@ -272,26 +267,60 @@ public final class ResourcepackInfo {
 			throw new IllegalArgumentException();
 		}
 		int infosize = 102;
-		byte[] buf = new byte[8];
-		if(is.read(buf) != 8 || buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'p' || buf[3] != 'i' || buf[4] != 0 || buf[7] != 0) {
+		byte[] buf = new byte[FORMATID.length];
+		int off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		if(!Arrays.equals(FORMATID, buf)) {
 			is.close();
 			//INVALID HEADER
 			return null;
 		}
-		byte version = (byte) is.read();
+		
 		buf = new byte[4];
 		byte[] sha1 = new byte[20];
 		byte[] sha256 = new byte[0x20];
 		byte[] buuids = new byte[0x20];
 		int packednamelength;
-		is.read(buf);
-		is.read(sha1);
-		is.read(sha256);
-		is.read(buuids);
-		if(version != VERSION || (packednamelength = is.read()) == -1) {
-			is.close();
-			//INVALID VERSION
-			return null;
+		off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		off = 0;
+		while(off < sha1.length) {
+			int n = is.read(sha1, off, sha1.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		off = 0;
+		while(off < sha256.length) {
+			int n = is.read(sha256, off, sha256.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		off = 0;
+		while(off < buuids.length) {
+			int n = is.read(buuids, off, buuids.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		if((packednamelength = is.read()) == -1) {
+	        throw new EOFException();
 		}
 		infosize+=packednamelength;
 		int packedsize = (0xFF & buf[3]) << 24 | (0xFF & buf[2]) << 16 | (0xFF & buf[1]) << 8 | 0xFF & buf[0];
@@ -305,16 +334,37 @@ public final class ResourcepackInfo {
 			bres = new UUID(msb, lsb);
 		}
 		buf = new byte[packednamelength];
-		is.read(buf);
+		off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
 		String packedname = new String(buf, StandardCharsets.UTF_8);
 		buf = new byte[2];
-		is.read(buf);
+		off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
 		int soundcount = 0x0000FFFF;
 		soundcount &= 0xFF & buf[0] | buf[1] << 8;
 		infosize+=soundcount<<4; //SOUND HASH
 		infosize+=soundcount<<2;
 		buf = new byte[soundcount<<4];
-		is.read(buf);
+		off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
 		UUID[] soundhashs = new UUID[soundcount];
 		int i = soundcount, j = soundcount << 4;
 		//--j;
@@ -324,10 +374,31 @@ public final class ResourcepackInfo {
 		}
 		byte[] namelengths = new byte[soundcount], splits = new byte[soundcount];
 		buf = new byte[soundcount<<1];
-		is.read(namelengths);
-		is.read(splits);
+		off = 0;
+		while(off < namelengths.length) {
+			int n = is.read(namelengths, off, namelengths.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		off = 0;
+		while(off < splits.length) {
+			int n = is.read(splits, off, splits.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
 		short[] lengths = new short[soundcount];
-		is.read(buf);
+		off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
 		i = soundcount;
 		j = soundcount<<1;
 		while(--i > -1) {
@@ -338,13 +409,27 @@ public final class ResourcepackInfo {
 		i = soundcount;
 		while(--i > -1) {
 			buf = new byte[0xFF & namelengths[i]];
-			is.read(buf);
+			off = 0;
+			while(off < buf.length) {
+				int n = is.read(buf, off, buf.length - off);
+				if (n == -1) {
+			        throw new EOFException();
+			    }
+				off += n;
+			}
 			infosize+=buf.length;
 			sounds[i] = new SoundInfo(new String(buf, StandardCharsets.UTF_8), soundhashs[i], lengths[i], splits[i]);
 		}
 		byte[] customdata = null;
 		buf = new byte[2];
-		is.read(buf);
+		off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
 		int customdatalength = (buf[1] & 0xFF | buf[0]<<8);
 		infosize += customdatalength;
 		if(customdatalength > 0) {

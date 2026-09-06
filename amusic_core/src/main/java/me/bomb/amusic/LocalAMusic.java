@@ -34,6 +34,11 @@ public class LocalAMusic implements AMusic {
 		this.executor = executor;
 	}
 	
+	@Override
+	public boolean updateCache() {
+		return false;
+	}
+	
 	public void enable() {
 		positiontracker.start();
 		resourcemanager.start();
@@ -47,6 +52,11 @@ public class LocalAMusic implements AMusic {
 		datamanager.end();
 	}
 	
+	@Override
+	public void login(UUID playeruuid) {
+	}
+	
+	@Override
 	public void logout(UUID playeruuid) {
 		positiontracker.remove(playeruuid);
 		resourcemanager.remove(playeruuid);
@@ -66,46 +76,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
-	public final boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
-		Runnable r = new Runnable() {
-			public void run() {
-				resultConsumer.accept(packed ? datamanager.listResourcepacks() : soundsource.listResourcepacks());
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
-	public final boolean getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer) {
-		if(playlistname == null) {
-			return false;
-		}
-		Runnable r = new Runnable() {
-			public void run() {
-				if(packed) {
-					SoundInfo[] soundinfos;
-					ResourcepackInfo info;
-					DataEntry dataentry;
-					if((dataentry = datamanager.getResourcepack(playlistname)) == null || (info = dataentry.info) == null || (soundinfos = info.getSounds()) == null) {
-						resultConsumer.accept(null);
-						return;
-					}
-					int i = soundinfos.length;
-					String[] soundnames = new String[i];
-					while(--i > -1) {
-						soundnames[i] = soundinfos[i].name;
-					}
-
-					resultConsumer.accept(soundnames);
-				} else {
-					resultConsumer.accept(soundsource.getSounds(playlistname));
-				}
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
+	@Override
 	public final boolean getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -130,31 +101,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
-	public final boolean getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer) {
-		if(playlistname == null) {
-			return false;
-		}
-		Runnable r = new Runnable() {
-			public void run() {
-				SoundInfo[] soundinfos;
-				ResourcepackInfo info;
-				DataEntry dataentry;
-				if((dataentry = datamanager.getResourcepack(playlistname)) == null || (info = dataentry.info) == null || (soundinfos = info.getSounds()) == null) {
-					resultConsumer.accept(null);
-					return;
-				}
-				int i = soundinfos.length;
-				short[] soundlengths = new short[i];
-				while(--i > -1) {
-					soundlengths[i] = soundinfos[i].length;
-				}
-				resultConsumer.accept(soundlengths);
-			}
-		};
-		executor.execute(r);
-		return true;
-	}
-	
+	@Override
 	public final boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -179,6 +126,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean setRepeatMode(UUID playeruuid, RepeatType repeattype) {
 		if(playeruuid == null) {
 			return false;
@@ -192,6 +140,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean getPlayingSoundName(UUID playeruuid, Consumer<String> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -205,6 +154,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean getPlayingSoundSize(UUID playeruuid, Consumer<Short> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -218,6 +168,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean getPlayingSoundRemain(UUID playeruuid, Consumer<Short> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -231,12 +182,14 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport) {
 		Runnable r = new ResourceFactory(name, playeruuid, datamanager, resourcemanager, update, statusreport);
 		executor.execute(r);
 		return true;
 	}
 	
+	@Override
 	public final boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -251,6 +204,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean stopSound(UUID playeruuid) {
 		if(playeruuid == null) {
 			return false;
@@ -264,6 +218,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean playSound(UUID playeruuid, String name) {
 		if(playeruuid == null || name == null) {
 			return false;
@@ -277,6 +232,12 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
+	public ResourcepackInfo getResourcepackInfoCached(String resourcepackname) {
+		return null;
+	}
+	
+	@Override
 	public final boolean getResourcepackInfo(String resourcepackname, Consumer<ResourcepackInfo> resultConsumer) {
 		if(resourcepackname == null) {
 			return false;
@@ -291,6 +252,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean getResourcepackInfo(UUID playeruuid, Consumer<ResourcepackInfo> resultConsumer) {
 		if(playeruuid == null) {
 			return false;
@@ -304,6 +266,7 @@ public class LocalAMusic implements AMusic {
 		return true;
 	}
 	
+	@Override
 	public final boolean setResourcepackCustomData(String resourcepackname, byte[] customdata, Consumer<Boolean> resultConsumer) {
 		if(resourcepackname == null || customdata == null) {
 			return false;
@@ -316,6 +279,57 @@ public class LocalAMusic implements AMusic {
 					return;
 				}
 				resultConsumer.accept(((CustomDatastore)dataentry).updateCustomdata(customdata));
+			}
+		};
+		executor.execute(r);
+		return true;
+	}
+	
+	@Override
+	public String[] getListResourcepackInfoCached() {
+		return null;
+	}
+	
+	@Override
+	public final boolean getListResourcepackInfo(Consumer<String[]> resultConsumer) {
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(datamanager.listResourcepacks());
+			}
+		};
+		executor.execute(r);
+		return true;
+	}
+	
+	@Override
+	public String[] getListResourcepackCached() {
+		return null;
+	}
+	
+	@Override
+	public String[] getListResourcepackSoundsCached(String resourcepackname) {
+		return null;
+	}
+	
+	@Override
+	public boolean getListResourcepackSounds(String resourcepackname, Consumer<String[]> resultConsumer) {
+		if(resourcepackname == null) {
+			return false;
+		}
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(soundsource.getSounds(resourcepackname));
+			}
+		};
+		executor.execute(r);
+		return true;
+	}
+	
+	@Override
+	public final boolean getListResourcepack(Consumer<String[]> resultConsumer) {
+		Runnable r = new Runnable() {
+			public void run() {
+				resultConsumer.accept(soundsource.listResourcepacks());
 			}
 		};
 		executor.execute(r);

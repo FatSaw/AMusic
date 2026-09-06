@@ -139,7 +139,7 @@ public final class LoadmusicCommand extends Command {
 				}
 				
 			};
-			amusic.getPlaylists(true, false, consumer);
+			amusic.getListResourcepackInfo(consumer);
 			
 		} else {
 			this.lang.sendMsg(sender, LangOptions.loadmusic_usage);
@@ -190,13 +190,13 @@ public final class LoadmusicCommand extends Command {
 						++lastspace;
 						if(lastspace == 0) {
 							for (String playlist : playlists) {
-								if (playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
+								if (playlist != null && playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
 									tabcomplete.add(playlist);
 								}
 							}
 						} else {
 							for (String playlist : playlists) {
-								if (lastspace < playlist.length() && playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
+								if (playlist != null && lastspace < playlist.length() && playlist.startsWith(args[1]) && playlist.indexOf(0xA7) == -1) {
 									playlist = playlist.substring(lastspace);
 									tabcomplete.add(playlist);
 								}
@@ -208,14 +208,20 @@ public final class LoadmusicCommand extends Command {
 					}
 				}
 			};
-			boolean async = amusic.getPlaylists(!args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE), true, consumer);
-			if(async) {
-				try {
-					synchronized (tabcomplete) {
-						tabcomplete.wait(200);
+			final boolean packed = !args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE);
+			String[] resourcepacknames = packed ? amusic.getListResourcepackInfoCached() : amusic.getListResourcepackCached();
+			if(resourcepacknames == null) {
+				boolean async = packed ? amusic.getListResourcepackInfo(consumer) : amusic.getListResourcepack(consumer);
+				if(async) {
+					try {
+						synchronized (tabcomplete) {
+							tabcomplete.wait(200);
+						}
+					} catch (InterruptedException e) {
 					}
-				} catch (InterruptedException e) {
 				}
+			} else {
+				consumer.accept(resourcepacknames);
 			}
 		}
 		return tabcomplete;

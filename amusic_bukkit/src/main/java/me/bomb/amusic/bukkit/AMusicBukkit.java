@@ -191,7 +191,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			PlayerQuitHandler playerquit = null;
 			if(config.connectuse) {
 				this.playerips = null;
-				ClientAMusic amusic = new ClientAMusic(config.connectifip, config.connectremoteip, config.connectport, config.connectsocketfactory, config.executor);
+				ClientAMusic amusic = new ClientAMusic(logger, config.connectifip, config.connectremoteip, config.connectport, config.connectsocketfactory, config.executor);
 				this.amusic = amusic;
 				this.playerchangedworld = null;
 				this.playerrespawn = null;

@@ -341,7 +341,7 @@ public final class PlaymusicCommand extends Command {
 	
 	private void executeCommand(String soundname, UUID... targetuuids) {
 		for(UUID targetuuid : targetuuids) {
-			amusic.playSound(targetuuid,soundname);
+			amusic.playSound(targetuuid, soundname);
 		}
 	}
 

@@ -9,6 +9,13 @@ import me.bomb.amusic.resource.StatusReport;
 public interface AMusic {
 	
 	/**
+	 * Update cached values.
+	 *
+	 * @return true if cache supported.
+	 */
+	public boolean updateCache();
+	
+	/**
 	 * Starts threads.
 	 */
 	public void enable();
@@ -17,6 +24,11 @@ public interface AMusic {
 	 * Stops threads.
 	 */
 	public void disable();
+	
+	/**
+	 * Handle login.
+	 */
+	public void login(UUID playeruuid);
 	
 	/**
 	 * Handle logout.
@@ -29,40 +41,21 @@ public interface AMusic {
 	 * @return true if async used.
 	 */
 	public boolean getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer);
-	
-	/**
-	 * Get the names of playlists that were loaded at least once.
-	 *
-	 * @return true if async used.
-	 */
-	public boolean getPlaylists(boolean packed, boolean useCache, Consumer<String[]> resultConsumer);
-
-	/**
-	 * Get the names of sounds in playlist.
-	 *
-	 * @return true if async used.
-	 */
-	public boolean getPlaylistSoundnames(String playlistname, boolean packed, boolean useCache, Consumer<String[]> resultConsumer);
 
 	/**
 	 * Get the names of sounds in playlist that loaded to player.
 	 *
 	 * @return true if async used.
 	 */
+	@Deprecated //TODO: Write new implementation, this is still used
 	public boolean getPlaylistSoundnames(UUID playeruuid, boolean useCache, Consumer<String[]> resultConsumer);
-
-	/**
-	 * Get the lenghs of sounds in playlist.
-	 *
-	 * @return true if async used.
-	 */
-	public boolean getPlaylistSoundlengths(String playlistname, boolean useCache, Consumer<short[]> resultConsumer);
 
 	/**
 	 * Get the lenghs of sounds in playlist that loaded to player.
 	 *
 	 * @return true if async used.
 	 */
+	@Deprecated
 	public boolean getPlaylistSoundlengths(UUID playeruuid, boolean useCache, Consumer<short[]> resultConsumer);
 	
 	/**
@@ -101,13 +94,6 @@ public interface AMusic {
 	public boolean loadPack(UUID[] playeruuid, String name, boolean update, StatusReport statusreport);
 
 	/**
-	 * Get loaded pack name.
-	 *
-	 * @return true if async used.
-	 */
-	public boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer);
-
-	/**
 	 * Stop sound from loaded pack.
 	 * 
 	 * @return true if async used.
@@ -120,12 +106,17 @@ public interface AMusic {
 	 * @return true if async used.
 	 */
 	public boolean playSound(UUID playeruuid, String name);
+	
+	/**
+	 * Get cached resourcepack info.
+	 */
+	public ResourcepackInfo getResourcepackInfoCached(String resourcepackname);
 
 	/**
 	 * Get resourcepack info.
 	 */
 	public boolean getResourcepackInfo(String resourcepackname, Consumer<ResourcepackInfo> resultConsumer);
-
+	
 	/**
 	 * Get resourcepack info.
 	 */
@@ -135,5 +126,33 @@ public interface AMusic {
 	 * Set resourcepack customdata.
 	 */
 	public boolean setResourcepackCustomData(String resourcepackname, byte[] customdata, Consumer<Boolean> resultConsumer);
+
+	public String[] getListResourcepackInfoCached();
+	
+	public boolean getListResourcepackInfo(Consumer<String[]> resultConsumer);
+	
+	public String[] getListResourcepackCached();
+	
+	public boolean getListResourcepack(Consumer<String[]> resultConsumer);
+	
+	
+	/**
+	 * Get not packed soundnames.
+	 */
+	public String[] getListResourcepackSoundsCached(String resourcepackname);
+	
+	/**
+	 * Get not packed soundnames.
+	 *
+	 * @return true if async used.
+	 */
+	public boolean getListResourcepackSounds(String resourcepackname, Consumer<String[]> resultConsumer);
+	
+	/**
+	 * Get loaded pack name.
+	 *
+	 * @return true if async used.
+	 */
+	public boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer);
 
 }

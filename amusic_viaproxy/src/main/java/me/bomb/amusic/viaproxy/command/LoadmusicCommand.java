@@ -90,7 +90,7 @@ public final class LoadmusicCommand implements Command {
 				}
 				
 			};
-			amusic.getPlaylists(true, false, consumer);
+			amusic.getListResourcepackInfo(consumer);
 		} else {
 			logger.info("Usage: loadmusic <player> <playlist>");
 		}

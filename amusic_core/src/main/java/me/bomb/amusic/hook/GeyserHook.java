@@ -1,0 +1,203 @@
+package me.bomb.amusic.hook;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.NonWritableChannelException;
+import java.nio.channels.SeekableByteChannel;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.function.Consumer;
+
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.event.EventBus;
+import org.geysermc.geyser.api.event.EventRegistrar;
+import org.geysermc.geyser.api.event.bedrock.SessionLoadResourcePacksEvent;
+import org.geysermc.geyser.api.event.lifecycle.GeyserDefineResourcePacksEvent;
+import org.geysermc.geyser.api.pack.PackCodec;
+import org.geysermc.geyser.api.pack.ResourcePack;
+import org.geysermc.geyser.api.pack.option.PriorityOption;
+import org.geysermc.geyser.pack.GeyserResourcePack;
+import org.geysermc.geyser.pack.GeyserResourcePack.Builder;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest.Header;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest.Module;
+import org.geysermc.geyser.pack.GeyserResourcePackManifest.Version;
+
+import me.bomb.amusic.resourcepack.Data;
+import me.bomb.amusic.resourcepack.DataEntry;
+
+public final class GeyserHook {
+	
+	private final EventBus<EventRegistrar> eventbus;
+	private final EventRegistrar registrar;
+
+	public GeyserHook(Object plugin, Data datamanager) throws NoClassDefFoundError {
+		this.eventbus = GeyserApi.api().eventBus();
+		this.registrar = EventRegistrar.of(plugin);
+		if(datamanager.lockwrite) {
+			this.eventbus.subscribe(this.registrar, GeyserDefineResourcePacksEvent.class, new GeyserDefineResourcePacksHandler(datamanager));
+		} else {
+			this.eventbus.subscribe(this.registrar, SessionLoadResourcePacksEvent.class, new SessionLoadResourcePacksHandler(datamanager));
+		}
+	}
+	
+	public void unregister() {
+		this.eventbus.unregisterAll(registrar);
+	}
+	
+	public final static class GeyserDefineResourcePacksHandler implements Consumer<GeyserDefineResourcePacksEvent> {
+
+		private final Data datamanager;
+		
+		protected GeyserDefineResourcePacksHandler(Data datamanager) {
+			this.datamanager = datamanager;
+		}
+		
+		@Override
+		public void accept(GeyserDefineResourcePacksEvent event) {
+			String[] resourcepacks = this.datamanager.listResourcepacks();
+			int i = resourcepacks.length;
+			while(--i > -1) {
+				DataEntry entry = this.datamanager.getResourcepack(resourcepacks[i]);
+				if(entry == null) {
+					continue;
+				}
+				ResourcePack pack = new BufPackCodec(entry, true).create();
+				event.register(pack, PriorityOption.NORMAL);
+			}
+		}
+	}
+	
+	public final static class SessionLoadResourcePacksHandler implements Consumer<SessionLoadResourcePacksEvent> {
+		
+		private final Data datamanager;
+		
+		protected SessionLoadResourcePacksHandler(Data datamanager) {
+			this.datamanager = datamanager;
+		}
+		
+		@Override
+		public void accept(SessionLoadResourcePacksEvent event) {
+			String[] playlists = this.datamanager.listResourcepacks();
+			int i = playlists.length;
+			while(--i > -1) {
+				DataEntry entry = this.datamanager.getResourcepack(playlists[i]);
+				if(entry == null) {
+					continue;
+				}
+				ResourcePack pack = new BufPackCodec(entry, false).create();
+				event.register(pack, PriorityOption.NORMAL);
+			}
+		}
+	}
+	
+	public final static class BufPackCodec extends PackCodec {
+
+		private final DataEntry entry;
+		private final boolean threadsafe;
+		private SeekableByteChannel cachedchannel = null;
+
+		protected BufPackCodec(DataEntry entry, boolean threadsafe) {
+			this.entry = entry;
+			this.threadsafe = threadsafe;
+		}
+
+		@Override
+		public byte[] sha256() {
+			return this.entry.info.sha256();
+		}
+
+		@Override
+		public long size() {
+			return this.entry.info.getPacksize();
+		}
+
+		@Override
+		public SeekableByteChannel serialize() throws IOException {
+			return this.threadsafe ? new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel;
+		}
+
+		@Override
+	    protected ResourcePack create() {
+			return createBuilder().build();
+	    }
+
+		@Override
+		protected Builder createBuilder() {
+			Version version = new Version(1, 0, 0);
+			Header header = new Header(entry.info.getBhea(), version, "AMusic resourcepack", "DESCRIPTION", new Version(1, 14, 0));
+			Module module = new Module(entry.info.getBres(), version, "resources", "");
+			HashSet<Module> modules = new HashSet<>(1);
+			modules.add(module);
+			GeyserResourcePackManifest manifest = new GeyserResourcePackManifest(2, header, modules, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+			return new GeyserResourcePack.Builder(this, manifest, entry.info.getPackname());
+		}
+		
+		public final class ReadOnlyByteArrayChannel implements SeekableByteChannel {
+			
+			private int offset;
+			private final byte[] data;
+
+			public ReadOnlyByteArrayChannel(byte[] data) {
+				if (data == null) {
+					throw new IllegalArgumentException("Data array cannot be null");
+				}
+				this.data = data;
+			}
+
+			@Override
+			public int read(ByteBuffer dst) throws IOException {
+				int remaining = data.length - offset;
+				if(remaining < 1) {
+					return -1;
+				}
+				int dremaining = dst.remaining();
+				if(dremaining < remaining) {
+					remaining = dremaining;
+				}
+				dst.put(data, offset, remaining);
+				offset += remaining;
+				return remaining;
+			}
+
+			@Override
+			public long position() throws IOException {
+				return offset;
+			}
+
+			@Override
+			public SeekableByteChannel position(long newPosition) throws IOException {
+				if (newPosition < 0 || newPosition > data.length) {
+					throw new IllegalArgumentException("Invalid position: " + newPosition);
+				}
+				offset = (int) newPosition;
+				return this;
+			}
+
+			@Override
+			public long size() throws IOException {
+				return data.length;
+			}
+
+			@Override
+			public boolean isOpen() {
+				return true;
+			}
+
+			@Override
+			public void close() {
+			}
+
+			@Override
+			public int write(ByteBuffer src) {
+				throw new NonWritableChannelException();
+			}
+
+			@Override
+			public SeekableByteChannel truncate(long size) {
+				throw new NonWritableChannelException();
+			}
+		}
+
+	}
+}

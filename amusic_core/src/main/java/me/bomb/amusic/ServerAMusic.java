@@ -15,6 +15,7 @@ import java.util.concurrent.Executor;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLServerSocket;
 
 import me.bomb.amusic.api.RepeatType;
 import me.bomb.amusic.resourcepack.CustomDatastore;
@@ -72,6 +73,10 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		while (run) {
 			try {
 				server = connectserverfactory.createServerSocket(port, backlog, hostip);
+				if(server instanceof SSLServerSocket) {
+					SSLServerSocket sslserver = ((SSLServerSocket)server);
+					sslserver.setNeedClientAuth(true);
+				}
 				server.setSoTimeout(timeout);
 			} catch (IOException | SecurityException | IllegalArgumentException e) {
 				e.printStackTrace();
@@ -90,8 +95,12 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 							public void run() {
 								try {
 									processConnection(fconnected);
-									fconnected.close();
 								} catch(SocketException | SSLException e) {
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+								try {
+									fconnected.close();
 								} catch (IOException e) {
 									e.printStackTrace();
 								}
@@ -754,8 +763,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	private final void processConnection(Socket connected) throws IOException {
-
-		InputStream is = connected.getInputStream();
+		final InputStream is = connected.getInputStream();
 		final byte packetid;
 		{
 			byte[] buf = new byte[0x09];
@@ -772,68 +780,54 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			}
 			packetid = buf[8];
 		}
-		
 		if(packetid == 0x14) {//
 			processGetResourcepackInfoName(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x15) {//
 			processGetResourcepackInfoUUID(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x16) {//
 			processSetResourcepackCustomData(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x17) {//
 			processGetListResourcepackInfo(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x18) {//
 			processGetListResourcepack(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x19) {//
 			processGetListResourcepackSounds(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x1a) {//
 			processGetPackName(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x1b) {//
 			processGetPlayersLoaded(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x1c) {//
 			processStopSound(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x1d) {//
 			processPlaySound(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x1e) {//
 			processLoadPack(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
 		if(packetid == 0x1f) {//
 			processSetRepeatMode(is, connected.getOutputStream());
-			connected.close();
 			return;
 		}
-		connected.close();
 	}
 	
 	/*private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);

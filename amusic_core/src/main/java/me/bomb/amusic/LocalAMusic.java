@@ -94,7 +94,7 @@ public class LocalAMusic implements AMusic {
 	}
 	
 	@Override
-	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, Consumer<LoadPackResult> resultConsumer) {
+	public boolean loadPack(UUID[] playeruuid, String name, boolean update, Consumer<LoadPackResult> resultConsumer) {
 		Runnable r = new Runnable() {
 			@Override
 			public void run() {

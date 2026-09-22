@@ -11,12 +11,15 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLServerSocket;
 
+import me.bomb.amusic.api.LoadPackResult;
 import me.bomb.amusic.api.RepeatType;
 import me.bomb.amusic.resourcepack.CustomDatastore;
 import me.bomb.amusic.resourcepack.Data;
@@ -36,16 +39,18 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private volatile boolean run;
 	private ServerSocket server;
 	private final Executor serverexecutor;
+	private final ConcurrentSkipListSet<UUID> cacheupdatemarker;
 	
-	public ServerAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, InetAddress hostip, InetAddress remoteip, int port, int backlog, ServerSocketFactory connectserverfactory, Executor serverexecutor) {
+	public ServerAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, InetAddress hostip, InetAddress remoteip, int port, int timeout, int backlog, ServerSocketFactory connectserverfactory, Executor serverexecutor) {
 		super(logger, executor, soundsource, positiontracker, resourcemanager, datamanager);
 		this.hostip = hostip;
 		this.remoteip = remoteip;
 		this.port = port;
-		this.timeout = 5000;
+		this.timeout = timeout;
 		this.backlog = backlog;
 		this.connectserverfactory = connectserverfactory;
 		this.serverexecutor = serverexecutor;
+		this.cacheupdatemarker = new ConcurrentSkipListSet<UUID>();
 	}
 
 	@Override
@@ -65,6 +70,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			server.close();
 		} catch (IOException e) {
 		}
+		this.cacheupdatemarker.clear();
 		this.logger.info("AMusic connect server stopped!");
 	}
 	
@@ -584,6 +590,14 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		os.write(buf, 0, 1);
 	}
 	
+	@Override
+	public final boolean loadPack(UUID[] playeruuid, String name, boolean update, Consumer<LoadPackResult> resultConsumer) {
+		if(update) {
+			this.cacheupdatemarker.clear();
+		}
+		return super.loadPack(playeruuid, name, update, resultConsumer);
+	}
+	
 	public final void processLoadPack(InputStream is, OutputStream os) throws IOException {
 		byte[] buf = new byte[0xFF];
 		int off = 0;
@@ -634,6 +648,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		}
 		
 		if(update) {
+			this.cacheupdatemarker.clear();
 			UpdateResult result = datamanager.update(name);
 			switch(result) {
 			case UNAVILABLE:
@@ -762,6 +777,24 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		positiontracker.setRepeater(playeruuid, repeat == 1 ? RepeatType.PLAYALL : repeat == 2 ? RepeatType.RANDOM : repeat == 3 ? RepeatType.REPEATALL : repeat == 4 ? RepeatType.REPEATONE : null);
 	}
 	
+	public final void processCheckCacheUpdate(InputStream is, OutputStream os) throws IOException {
+		byte[] buf = new byte[0x10];
+		int off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		byte flag = 0;
+		if(this.cacheupdatemarker.add(new UUID((buf[--off] & 0xFFL) | (buf[--off] & 0xFFL) << 8 | (buf[--off] & 0xFFL) << 16 | (buf[--off] & 0xFFL) << 24 | (buf[--off] & 0xFFL) << 32 | (buf[--off] & 0xFFL) << 40 | (buf[--off] & 0xFFL) << 48 | (buf[--off] & 0xFFL) << 56, (buf[--off] & 0xFFL) | (buf[--off] & 0xFFL) << 8 | (buf[--off] & 0xFFL) << 16 | (buf[--off] & 0xFFL) << 24 | (buf[--off] & 0xFFL) << 32 | (buf[--off] & 0xFFL) << 40 | (buf[--off] & 0xFFL) << 48 | (buf[--off] & 0xFFL) << 56))) {
+			flag |= 0x01;
+		}
+		buf[0x00] = flag;
+		os.write(buf, 0, 1);
+	}
+	
 	private final void processConnection(Socket connected) throws IOException {
 		final InputStream is = connected.getInputStream();
 		final byte packetid;
@@ -826,6 +859,10 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		}
 		if(packetid == 0x1f) {//
 			processSetRepeatMode(is, connected.getOutputStream());
+			return;
+		}
+		if(packetid == 0xff) {//
+			processCheckCacheUpdate(is, connected.getOutputStream());
 			return;
 		}
 	}

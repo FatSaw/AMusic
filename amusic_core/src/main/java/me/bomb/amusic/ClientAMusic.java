@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -30,17 +32,21 @@ public final class ClientAMusic implements AMusic {
 	public final Logger logger;
 	private final InetAddress hostip, remoteip;
 	private final int port, timeout;
+	private final long cachetimeoutfail, cachetimeoutsuccess;
 	private final SocketFactory socketfactory;
 	private final Executor executor;
 	
 	private ResourcepackInfoCache resourcepackinfocache;
 	
-	public ClientAMusic(Logger logger, InetAddress hostip, InetAddress remoteip, int port, SocketFactory socketfactory, Executor executor) {
+	
+	public ClientAMusic(Logger logger, InetAddress hostip, InetAddress remoteip, int port, int timeout, long cachetimeoutfail, long cachetimeoutsuccess, SocketFactory socketfactory, Executor executor) {
 		this.logger = logger;
 		this.hostip = hostip;
 		this.remoteip = remoteip;
 		this.port = port;
-		this.timeout = 5000;
+		this.timeout = timeout;
+		this.cachetimeoutfail = cachetimeoutfail;
+		this.cachetimeoutsuccess = cachetimeoutsuccess;
 		this.socketfactory = socketfactory;
 		this.executor = executor;
 	}
@@ -53,7 +59,7 @@ public final class ClientAMusic implements AMusic {
 
 	@Override
 	public void enable() {
-		ResourcepackInfoCache resourcepackinfocache = new ResourcepackInfoCache(this, 60000L, Long.MAX_VALUE);
+		ResourcepackInfoCache resourcepackinfocache = new ResourcepackInfoCache(this, this.cachetimeoutfail, this.cachetimeoutsuccess);
 		resourcepackinfocache.run = true;
 		resourcepackinfocache.start();
 		this.resourcepackinfocache = resourcepackinfocache;
@@ -1088,7 +1094,7 @@ public final class ClientAMusic implements AMusic {
 	public final static class ResourcepackInfoCache extends Thread {
 		
 		private final ClientAMusic amusic;
-		private final long synchronizationdelayfailed, synchronizationdelay;
+		private final long synchronizationdelayfailed, synchronizationdelaysuccess;
 		private final HashMap<String, ResourcepackInfoImpl> defaultresourcepacksmap = new HashMap<String, ResourcepackInfoImpl>(0);
 		private final HashMap<String, String[]> defaultsoundnamesmap = new HashMap<String, String[]>(0);
 		protected String[] resourcepackinfolist = null, resourcepacklist = null;
@@ -1096,16 +1102,71 @@ public final class ClientAMusic implements AMusic {
 		protected HashMap<String, String[]> resourcepacksoundnames = this.defaultsoundnamesmap;
 		protected volatile boolean run;
 		
-		private ResourcepackInfoCache(ClientAMusic amusic, long synchronizationdelayfailed, long synchronizationdelay) {
+		private ResourcepackInfoCache(ClientAMusic amusic, long synchronizationdelayfailed, long synchronizationdelaysuccess) {
 			this.amusic = amusic;
 			this.synchronizationdelayfailed = synchronizationdelayfailed;
-			this.synchronizationdelay = synchronizationdelay;
+			this.synchronizationdelaysuccess = synchronizationdelaysuccess;
 		}
 		
 		@Override
 		public void run() {
+			byte[] checkcacheupdatepacket = new byte[0x19];
+			try {
+				SecureRandom sr = SecureRandom.getInstanceStrong();
+				sr.nextBytes(checkcacheupdatepacket);
+			} catch (NoSuchAlgorithmException e) {
+			}
+			checkcacheupdatepacket[0x00] = 'a';
+			checkcacheupdatepacket[0x01] = 'm';
+			checkcacheupdatepacket[0x02] = 'r';
+			checkcacheupdatepacket[0x03] = 'a';
+			checkcacheupdatepacket[0x04] = 0x00;
+			checkcacheupdatepacket[0x05] = 0x00;
+			checkcacheupdatepacket[0x06] = 0x00;
+			checkcacheupdatepacket[0x07] = 0x00;
+			checkcacheupdatepacket[0x08] = (byte) 0xFF;
+			String synchronizationfailedmsg = "Resourcepack info synchronization failed, next try after : ".concat(Long.toString(this.synchronizationdelayfailed)).concat(" milliseconds!");
+			String synchronizationnotneedmsg = "Resourcepack info synchronization not need, next try after : ".concat(Long.toString(this.synchronizationdelaysuccess)).concat(" milliseconds!");
+			
 			while(this.run) {
 				Socket socket = null;
+				boolean requestsuccess = false, needcacheupdate = false;
+				try {
+					socket = this.amusic.socket();
+					OutputStream os = socket.getOutputStream();
+					os.write(checkcacheupdatepacket, 0, 0x19);
+					InputStream is = socket.getInputStream();
+					int flags = is.read();
+					if(flags == -1) {
+						throw new EOFException();
+					}
+					needcacheupdate = (flags & 0x01) == 0x01;
+					requestsuccess = true;
+				} catch (IOException e) {
+				} finally {
+					this.amusic.packetend(socket);
+				}
+				
+				if(!requestsuccess) {
+					this.amusic.logger.warn(synchronizationfailedmsg);
+					try {
+						Thread.sleep(this.synchronizationdelayfailed);
+					} catch (InterruptedException e2) {
+						Thread.interrupted();
+					}
+					continue;
+				}
+				
+				if(!needcacheupdate) {
+					this.amusic.logger.info(synchronizationnotneedmsg);
+					try {
+						Thread.sleep(this.synchronizationdelaysuccess);
+					} catch (InterruptedException e) {
+						Thread.interrupted();
+					}
+					continue;
+				}
+				
 				byte[] lengths = null;
 				byte[][] namesbytes = null;
 				try {
@@ -1160,12 +1221,6 @@ public final class ClientAMusic implements AMusic {
 					this.amusic.packetend(socket);
 				}
 				if(lengths == null || namesbytes == null) {
-					this.amusic.logger.warn("Resourcepack info synchronization failed!");
-					try {
-						Thread.sleep(this.synchronizationdelayfailed);
-					} catch (InterruptedException e) {
-						Thread.interrupted();
-					}
 					continue;
 				}
 				int i = namesbytes.length, j = 0;
@@ -1211,11 +1266,6 @@ public final class ClientAMusic implements AMusic {
 				this.amusic.logger.info("Resourcepack info synchronized (" + Integer.toString(j) + "/" + Integer.toString(i) + ")");
 				
 				this.synchronizeDirs();
-				try {
-					Thread.sleep(this.synchronizationdelay);
-				} catch (InterruptedException e) {
-					Thread.interrupted();
-				}
 			}
 			this.resourcepackinfolist = null;
 			this.resourcepacks = this.defaultresourcepacksmap;

@@ -71,6 +71,13 @@ amusic:
     #Remote server ip
     serverip: 0.0.0.0
     port: 25534
+    timeout: 5000
+    cache:
+     timeout:
+      #Success - amount of time in milliseconds to next cache update check after success
+      success: 3600000
+	  #Fail - amount of time in milliseconds to next cache update check after failed
+      fail: 60000
    #Server used on velocity, viaproxy
    server:
     #Executor - api call (for remote requests) executor configuration preset
@@ -78,4 +85,5 @@ amusic:
     #Remote client ip
     clientip: 0.0.0.0
     port: 25534
-    backlog: 0
+    timeout: 5000
+    backlog: 127

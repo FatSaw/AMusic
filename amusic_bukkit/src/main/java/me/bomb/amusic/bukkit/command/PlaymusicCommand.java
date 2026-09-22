@@ -90,15 +90,12 @@ public final class PlaymusicCommand extends Command {
 					Consumer<Boolean> consumer = new Consumer<Boolean>() {
 						@Override
 						public void accept(Boolean success) {
-							if(success.booleanValue()) {
-								PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_stop);
-							}
+							PlaymusicCommand.this.lang.sendMsg(sender, (success.booleanValue() ? LangOptions.playmusic_stop_success : LangOptions.playmusic_stop_fail));
 						}
 					};
 					for(int i = targetarray.length; --i > -1;) {
 						amusic.stopSound(targetarray[i], consumer);
 					}
-					this.lang.sendMsg(sender, LangOptions.playmusic_stop);
 					return true;
 				}
 				
@@ -112,9 +109,7 @@ public final class PlaymusicCommand extends Command {
 			Consumer<Boolean> consumer = new Consumer<Boolean>() {
 				@Override
 				public void accept(Boolean success) {
-					if(success.booleanValue()) {
-						PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_stop);
-					}
+					PlaymusicCommand.this.lang.sendMsg(sender, (success.booleanValue() ? LangOptions.playmusic_stop_success : LangOptions.playmusic_stop_fail));
 				}
 			};
 			amusic.stopSound(target.getUniqueId(), consumer);
@@ -195,7 +190,7 @@ public final class PlaymusicCommand extends Command {
 						private final Placeholder[] placeholders = new Placeholder[] {new Placeholder("%soundname%", soundname, true)};
 						@Override
 						public void accept(Boolean success) {
-							PlaymusicCommand.this.lang.sendMsg(sender, success.booleanValue() ? LangOptions.playmusic_success : LangOptions.playmusic_missingtrack, placeholders);
+							PlaymusicCommand.this.lang.sendMsg(sender, success.booleanValue() ? LangOptions.playmusic_play_success : LangOptions.playmusic_play_fail, placeholders);
 						}
 					};
 					for(UUID targetuuid : targetuuids) {
@@ -226,7 +221,7 @@ public final class PlaymusicCommand extends Command {
 			Consumer<Boolean> consumer = new Consumer<Boolean>() {
 				@Override
 				public void accept(Boolean success) {
-					PlaymusicCommand.this.lang.sendMsg(sender, success.booleanValue() ? LangOptions.playmusic_success : LangOptions.playmusic_missingtrack, placeholders);
+					PlaymusicCommand.this.lang.sendMsg(sender, success.booleanValue() ? LangOptions.playmusic_play_success : LangOptions.playmusic_play_fail, placeholders);
 				}
 			};
 			amusic.playSound(target.getUniqueId(), soundname, consumer);

@@ -26,9 +26,12 @@ localisation:
    noconsoleselector: {"color":"red","text":"This selector unavilable from console"}
    targetoffline: {"color":"red","text":"Target player offline"}
    noplaylist: {"color":"red","text":"Playlist not loaded fot that player"}
-   missingtrack: [{"color":"red","text":"Sound "},{"color":"yellow","text":"%soundname%"},{"color":"red","text":" not exist"}]
-   success: [{"color":"green","text":"Starting playing... "},{"color":"yellow","text":"%soundname%"}]
-   stop: {"color":"green","text":"Stopping playing..."}
+   play:
+    success: [{"color":"green","text":"Sound "},{"color":"yellow","text":"%soundname%"},{"color":"green","text":" started"}]
+    fail: [{"color":"red","text":"Sound "},{"color":"yellow","text":"%soundname%"},{"color":"red","text":" not exist"}]
+   stop:
+    success: {"color":"green","text":"Sound stopped"}
+    fail: {"color":"red","text":"Sound not stopped"}
    unavilableselector:
     near: {"color":"red","text":"Selector @p unavilable for this source"}
     random: {"color":"red","text":"Selector @r unavilable for this source"}
@@ -70,9 +73,12 @@ localisation:
    noconsoleselector: {"color":"red","text":"Этот селектор недоступен из консоли"}
    targetoffline: {"color":"red","text":"Целевой игрок не в сети"}
    noplaylist: {"color":"red","text":"Плейлист не загружен для этого игрока"}
-   missingtrack: [{"color":"red","text":"Звук "},{"color":"yellow","text":"%soundname%"},{"color":"red","text":" не существует"}]
-   success: [{"color":"green","text":"Начинаем воспроизведение... "},{"color":"yellow","text":"%soundname%"}]
-   stop: {"color":"green","text":"Останавливаем воспроизведение..."}
+   play:
+    success: [{"color":"green","text":"Звук "},{"color":"yellow","text":"%soundname%"},{"color":"green","text":" запущен"}]
+    fail: [{"color":"red","text":"Звук "},{"color":"yellow","text":"%soundname%"},{"color":"red","text":" не существует"}]
+   stop:
+    success: {"color":"green","text":"Звук остановлен"}
+    fail: {"color":"red","text":"Звук не остановлен"}
   repeat:
    usage: [{"color":"gray","text":"Использование: "},{"color":"gray","italic":true,"text":"/repeat <player> <repeatmode>"}]
    nopermission: {"color":"red","text":"Нет прав"}

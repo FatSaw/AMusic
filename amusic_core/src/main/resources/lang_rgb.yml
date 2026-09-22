@@ -26,9 +26,12 @@ localisation:
    noconsoleselector: {"color":"#ee2222","text":"This selector unavilable from console"}
    targetoffline: {"color":"#ee2222","text":"Target player offline"}
    noplaylist: {"color":"#ee2222","text":"Playlist not loaded fot that player"}
-   missingtrack: [{"color":"#ee2222","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" not exist"}]
-   success: [{"color":"#22ee22","text":"Starting playing... "},{"color":"#eeee22","text":"%soundname%"}]
-   stop: {"color":"#22ee22","text":"Stopping playing..."}
+   play:
+    success: [{"color":"#22ee22","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#22ee22","text":" started"}]
+    fail: [{"color":"#ee2222","text":"Sound "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" not exist"}]
+   stop:
+    success: {"color":"#22ee22","text":"Sound stopped"}
+    fail: {"color":"#ee2222","text":"Sound not stopped"}
    unavilableselector:
     near: {"color":"#ee2222","text":"Selector @p unavilable for this source"}
     random: {"color":"#ee2222","text":"Selector @r unavilable for this source"}
@@ -70,9 +73,12 @@ localisation:
    noconsoleselector: {"color":"#ee2222","text":"Этот селектор недоступен из консоли"}
    targetoffline: {"color":"#ee2222","text":"Целевой игрок не в сети"}
    noplaylist: {"color":"#ee2222","text":"Плейлист не загружен для этого игрока"}
-   missingtrack: [{"color":"#ee2222","text":"Звук "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" не существует"}]
-   success: [{"color":"#22ee22","text":"Начинаем воспроизведение... "},{"color":"#eeee22","text":"%soundname%"}]
-   stop: {"color":"#22ee22","text":"Останавливаем воспроизведение..."}
+   play:
+    success: [{"color":"#22ee22","text":"Звук "},{"color":"#eeee22","text":"%soundname%"},{"color":"#22ee22","text":" запущен"}]
+    fail: [{"color":"#ee2222","text":"Звук "},{"color":"#eeee22","text":"%soundname%"},{"color":"#ee2222","text":" не существует"}]
+   stop:
+    success: {"color":"#22ee22","text":"Звук остановлен"}
+    fail: {"color":"#ee2222","text":"Звук не остановлен"}
   repeat:
    usage: [{"color":"#cccccc","text":"Использование: "},{"color":"#cccccc","italic":true,"text":"/repeat <player> <repeatmode>"}]
    nopermission: {"color":"#ee2222","text":"Нет прав"}

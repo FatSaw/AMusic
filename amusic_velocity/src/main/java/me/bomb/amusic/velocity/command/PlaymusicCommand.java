@@ -72,9 +72,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 			Consumer<Boolean> consumer = new Consumer<Boolean>() {
 				@Override
 				public void accept(Boolean success) {
-					if(success.booleanValue()) {
-						PlaymusicCommand.this.lang.sendMsg(sender, LangOptions.playmusic_stop);
-					}
+					PlaymusicCommand.this.lang.sendMsg(sender, (success.booleanValue() ? LangOptions.playmusic_stop_success : LangOptions.playmusic_stop_fail));
 				}
 			};
 			amusic.stopSound(target.getUniqueId(), consumer);
@@ -136,7 +134,7 @@ public final class PlaymusicCommand implements SimpleCommand  {
 			Consumer<Boolean> consumer = new Consumer<Boolean>() {
 				@Override
 				public void accept(Boolean success) {
-					PlaymusicCommand.this.lang.sendMsg(sender, success.booleanValue() ? LangOptions.playmusic_success : LangOptions.playmusic_missingtrack, placeholders);
+					PlaymusicCommand.this.lang.sendMsg(sender, success.booleanValue() ? LangOptions.playmusic_play_success : LangOptions.playmusic_play_fail, placeholders);
 				}
 			};
 			amusic.playSound(target.getUniqueId(), soundname, consumer);

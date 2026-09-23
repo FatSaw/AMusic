@@ -1124,10 +1124,11 @@ public final class ClientAMusic implements AMusic {
 			checkcacheupdatepacket[0x05] = 0x00;
 			checkcacheupdatepacket[0x06] = 0x00;
 			checkcacheupdatepacket[0x07] = 0x00;
-			checkcacheupdatepacket[0x08] = (byte) 0xFF;
-			String synchronizationfailedmsg = "Resourcepack info synchronization failed, next try after : ".concat(Long.toString(this.synchronizationdelayfailed)).concat(" milliseconds!");
-			String synchronizationnotneedmsg = "Resourcepack info synchronization not need, next try after : ".concat(Long.toString(this.synchronizationdelaysuccess)).concat(" milliseconds!");
-			
+			checkcacheupdatepacket[0x08] = -0x80;
+			String synchronizationfailedmsg = "Resourcepack info synchronization: FAIL\nNext synchronization through: ".concat(Long.toString(this.synchronizationdelayfailed)).concat(" milliseconds");
+			//String synchronizationnotneedmsg = "Resourcepack info synchronization: NOT NEED\nNext synchronization through: ".concat(Long.toString(this.synchronizationdelaysuccess)).concat(" milliseconds");
+			String synchronizationsuccessmsg = "Resourcepack info synchronization: SUCCESS\nNext synchronization through: ".concat(Long.toString(this.synchronizationdelaysuccess)).concat(" milliseconds");
+			boolean cacheupdated = false;
 			while(this.run) {
 				Socket socket = null;
 				boolean requestsuccess = false, needcacheupdate = false;
@@ -1158,7 +1159,11 @@ public final class ClientAMusic implements AMusic {
 				}
 				
 				if(!needcacheupdate) {
-					this.amusic.logger.info(synchronizationnotneedmsg);
+					if(cacheupdated) {
+						this.amusic.logger.info(synchronizationsuccessmsg);
+					}
+					//this.amusic.logger.info(cacheupdated ? synchronizationsuccessmsg : synchronizationnotneedmsg);
+					cacheupdated = false;
 					try {
 						Thread.sleep(this.synchronizationdelaysuccess);
 					} catch (InterruptedException e) {
@@ -1257,7 +1262,7 @@ public final class ClientAMusic implements AMusic {
 						String resourcepackname = info.getPackname();
 						resourcepackinfolist[i] = resourcepackname;
 						resourcepacks.put(resourcepackname, info);
-						this.amusic.logger.info("Resourcepack info added to cache (" + resourcepackname + ")");
+						//this.amusic.logger.info("Resourcepack info synchronized (" + resourcepackname + ")");
 					}
 				}
 				i = namesbytes.length;
@@ -1266,6 +1271,7 @@ public final class ClientAMusic implements AMusic {
 				this.amusic.logger.info("Resourcepack info synchronized (" + Integer.toString(j) + "/" + Integer.toString(i) + ")");
 				
 				this.synchronizeDirs();
+				cacheupdated = true;
 			}
 			this.resourcepackinfolist = null;
 			this.resourcepacks = this.defaultresourcepacksmap;

@@ -12,6 +12,7 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1115,6 +1116,8 @@ public final class ClientAMusic implements AMusic {
 				SecureRandom sr = SecureRandom.getInstanceStrong();
 				sr.nextBytes(checkcacheupdatepacket);
 			} catch (NoSuchAlgorithmException e) {
+				Random r = new Random();
+				r.nextBytes(checkcacheupdatepacket);
 			}
 			checkcacheupdatepacket[0x00] = 'a';
 			checkcacheupdatepacket[0x01] = 'm';
@@ -1465,7 +1468,7 @@ public final class ClientAMusic implements AMusic {
 				this.resourcepacks = newresourcepacks;
 				this.resourcepackinfolist = resourcepackinfolist;
 			}
-			this.amusic.logger.info("AMusic resourcepack info cached add (" + resourcepackname + ")");
+			//this.amusic.logger.info("AMusic resourcepack info cached add (" + resourcepackname + ")");
 			this.synchronizeDirs();
 			return true;
 		}
@@ -1512,7 +1515,7 @@ public final class ClientAMusic implements AMusic {
 				}
 				resourcepacks.put(resourcepackname, info);
 			}
-			this.amusic.logger.info("AMusic resourcepack info cached update (" + resourcepackname + ")");
+			//this.amusic.logger.info("AMusic resourcepack info cached update (" + resourcepackname + ")");
 			return true;
 		}
 		
@@ -1545,7 +1548,7 @@ public final class ClientAMusic implements AMusic {
 				this.resourcepacks = newresourcepacks;
 				this.resourcepackinfolist = resourcepackinfolist;
 			}
-			this.amusic.logger.info("AMusic resourcepack info cached remove (" + resourcepackname + ")");
+			//this.amusic.logger.info("AMusic resourcepack info cached remove (" + resourcepackname + ")");
 			this.synchronizeDirs();
 			return true;
 		}

@@ -861,7 +861,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			processSetRepeatMode(is, connected.getOutputStream());
 			return;
 		}
-		if(packetid == 0xff) {//
+		if(packetid == -0x80) {//
 			processCheckCacheUpdate(is, connected.getOutputStream());
 			return;
 		}

@@ -419,7 +419,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final void processGetPlayersLoaded(InputStream is, OutputStream os) throws IOException {
-		byte[] buf = new byte[0xFF];
+		byte[] buf = new byte[0x100];
 		int off = 0;
 		while(off < 1) {
 			int n = is.read(buf, off, 1 - off);
@@ -443,46 +443,61 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			playeruuids = new UUID[0];
 		}
 		
-		int i = playeruuids.length, j = 1;
-		if(i > 0xFFFF) {
-			i = 0xFFFF;
+		int uuidcount = playeruuids.length;
+		if(uuidcount > 0xFFFF) {
+			uuidcount = 0xFFFF;
 		}
-		byte[] response = new byte[2 + (i<<4)];
-		response[0] = (byte)i;
-		response[1] = (byte) (i>>>8);
-		while(--i > -1) {
-			UUID playeruuid = playeruuids[i];
-			long msb = playeruuid.getMostSignificantBits(), lsb = playeruuid.getLeastSignificantBits();
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			msb>>>=8;
-			response[++j] = (byte) msb;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
-			lsb>>>=8;
-			response[++j] = (byte) lsb;
+
+		buf[0] = (byte)uuidcount;
+		buf[1] = (byte) (uuidcount>>>8);
+		os.write(buf, 0, 2);
+		
+		if(uuidcount > 0) {
+			int i = uuidcount >> 4;
+			++i;
+			while(--i > -1) {
+				int j = uuidcount;
+				if(j > 0x10) {
+					j = 0x10;
+				}
+				int wbl = j << 4;
+				off = wbl;
+				while(--j > -1) {
+					UUID uuid = playeruuids[--uuidcount];
+					long msb = uuid.getMostSignificantBits(), lsb = uuid.getLeastSignificantBits();
+					buf[--off] = (byte) msb;
+					msb>>>=8;
+					buf[--off] = (byte) msb;
+					msb>>>=8;
+					buf[--off] = (byte) msb;
+					msb>>>=8;
+					buf[--off] = (byte) msb;
+					msb>>>=8;
+					buf[--off] = (byte) msb;
+					msb>>>=8;
+					buf[--off] = (byte) msb;
+					msb>>>=8;
+					buf[--off] = (byte) msb;
+					msb>>>=8;
+					buf[--off] = (byte) msb;
+					buf[--off] = (byte) lsb;
+					lsb>>>=8;
+					buf[--off] = (byte) lsb;
+					lsb>>>=8;
+					buf[--off] = (byte) lsb;
+					lsb>>>=8;
+					buf[--off] = (byte) lsb;
+					lsb>>>=8;
+					buf[--off] = (byte) lsb;
+					lsb>>>=8;
+					buf[--off] = (byte) lsb;
+					lsb>>>=8;
+					buf[--off] = (byte) lsb;
+					lsb>>>=8;
+					buf[--off] = (byte) lsb;
+				}
+				os.write(buf, 0, wbl);
+			}
 		}
 	}
 	
@@ -599,7 +614,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	}
 	
 	public final void processLoadPack(InputStream is, OutputStream os) throws IOException {
-		byte[] buf = new byte[0xFF];
+		byte[] buf = new byte[0x100];
 		int off = 0;
 		while(off < 0x04) {
 			int n = is.read(buf, off, 0x04 - off);

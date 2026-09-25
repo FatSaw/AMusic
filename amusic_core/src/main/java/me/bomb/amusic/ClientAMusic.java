@@ -971,7 +971,7 @@ public final class ClientAMusic implements AMusic {
 				try {
 					socket = ClientAMusic.this.socket();
 					OutputStream os = socket.getOutputStream();
-					byte[] buf = new byte[0x0a];
+					byte[] buf = new byte[0x100];
 					buf[0x00] = 'a';
 					buf[0x01] = 'm';
 					buf[0x02] = 'r';
@@ -987,7 +987,7 @@ public final class ClientAMusic implements AMusic {
 						length = 0xFF;
 					}
 					buf[0x09] = (byte) length;
-					os.write(buf, 0, buf.length);
+					os.write(buf, 0, 0x0a);
 					os.write(playlistnameb, 0, length);
 					playlistnameb = null;
 					InputStream is = socket.getInputStream();
@@ -1000,51 +1000,30 @@ public final class ClientAMusic implements AMusic {
 						off += n;
 					}
 					int count = (0xFF & buf[1]) << 8 | 0xFF & buf[0];
-					buf = new byte[count << 4];
-					int i = buf.length;
-					off = 0;
-					while(off < i) {
-						int n = is.read(buf, off, i - off);
-						if (n == -1) {
-					        throw new EOFException();
-					    }
-						off += n;
-					}
-					players = new UUID[count];
-					while(--count > -1) {
-						long lsb = 0L, msb = 0L;
-						lsb = buf[--i] & 0xFF;
-						lsb<<=8;
-						lsb |= buf[--i] & 0xFF;
-						lsb<<=8;
-						lsb |= buf[--i] & 0xFF;
-						lsb<<=8;
-						lsb |= buf[--i] & 0xFF;
-						lsb<<=8;
-						lsb |= buf[--i] & 0xFF;
-						lsb<<=8;
-						lsb |= buf[--i] & 0xFF;
-						lsb<<=8;
-						lsb |= buf[--i] & 0xFF;
-						lsb<<=8;
-						lsb |= buf[--i] & 0xFF;
-						msb = buf[--i] & 0xFF;
-						msb<<=8;
-						msb |= buf[--i] & 0xFF;
-						msb<<=8;
-						msb |= buf[--i] & 0xFF;
-						msb<<=8;
-						msb |= buf[--i] & 0xFF;
-						msb<<=8;
-						msb |= buf[--i] & 0xFF;
-						msb<<=8;
-						msb |= buf[--i] & 0xFF;
-						msb<<=8;
-						msb |= buf[--i] & 0xFF;
-						msb<<=8;
-						msb |= buf[--i] & 0xFF;
-						final UUID player = new UUID(msb, lsb);
-						players[count] = player;
+					
+					if(count > 0) {
+						players = new UUID[count];
+						int i = count >> 4;
+						++i;
+						while(--i > -1) {
+							int j = count;
+							if(j > 0x10) {
+								j = 0x10;
+							}
+							int rbl = j << 4;
+							off = 0;
+							while(off < rbl) {
+								int n = is.read(buf, off, rbl - off);
+								if (n == -1) {
+							        throw new EOFException();
+							    }
+								off += n;
+							}
+							while(--j > -1) {
+								long msb = (buf[--off] & 0xFFL) | (buf[--off] & 0xFFL) << 8 | (buf[--off] & 0xFFL) << 16 | (buf[--off] & 0xFFL) << 24 | (buf[--off] & 0xFFL) << 32 | (buf[--off] & 0xFFL) << 40 | (buf[--off] & 0xFFL) << 48 | (buf[--off] & 0xFFL) << 56, lsb = (buf[--off] & 0xFFL) | (buf[--off] & 0xFFL) << 8 | (buf[--off] & 0xFFL) << 16 | (buf[--off] & 0xFFL) << 24 | (buf[--off] & 0xFFL) << 32 | (buf[--off] & 0xFFL) << 40 | (buf[--off] & 0xFFL) << 48 | (buf[--off] & 0xFFL) << 56;
+								players[--count] = new UUID(msb, lsb);
+							}
+						}
 					}
 				} catch (IOException e) {
 				} finally {

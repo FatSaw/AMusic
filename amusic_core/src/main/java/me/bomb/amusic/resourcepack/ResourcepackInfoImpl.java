@@ -452,7 +452,7 @@ public final class ResourcepackInfoImpl implements ResourcepackInfo {
 		    }
 			off += n;
 		}
-		int customdatalength = (buf[1] & 0xFF | buf[0]<<8);
+		int customdatalength = (buf[1] & 0xFF) << 8 | (buf[0] & 0xFF);
 		infosize += customdatalength;
 		if(customdatalength > 0) {
 			customdata = new byte[customdatalength];

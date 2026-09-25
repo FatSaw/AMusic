@@ -69,7 +69,7 @@ public final class PlayerJoinHandler extends RegisteredListener {
 		}
 		this.playerspermission.put(playeruuid, permissions);
 		if(this.playerips != null) this.playerips.put(playeruuid, player.getAddress().getAddress());
-		if(this.joinplaylist != null) this.amusic.loadPack(new UUID[] {playeruuid}, this.joinplaylist, false, null);
+		if(this.joinplaylist != null) this.amusic.loadResourcepack(new UUID[] {playeruuid}, this.joinplaylist, false, null);
 	}
 	
 	@Override

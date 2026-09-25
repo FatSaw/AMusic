@@ -32,26 +32,20 @@ public interface AMusic {
 	 */
 	public void logout(UUID playeruuid);
 	
-	/**
-	 * Get player uuids that loaded specific playlistname.
-	 *
-	 * @return true if async used.
-	 */
-	public boolean getPlayersLoaded(String playlistname, Consumer<UUID[]> resultConsumer);
-
-	/**
-	 * Set sound repeat mode, null to not repeat.
-	 * 
-	 * @return true if async used.
-	 */
-	public boolean setRepeatMode(UUID playeruuid, RepeatType repeattype);
-
+	
 	/**
 	 * Loads resource pack to player.
 	 * 
 	 * @return true if async used.
 	 */
-	public boolean loadPack(UUID[] playeruuid, String name, boolean update, Consumer<LoadPackResult> resultConsumer);
+	public boolean loadResourcepack(UUID[] playeruuid, String name, boolean update, Consumer<LoadPackResult> resultConsumer);
+	
+	/**
+	 * Play sound from loaded pack.
+	 * 
+	 * @return true if async used.
+	 */
+	public boolean playSound(UUID playeruuid, String name, Consumer<Boolean> resultConsumer);
 
 	/**
 	 * Stop sound from loaded pack.
@@ -61,11 +55,45 @@ public interface AMusic {
 	public boolean stopSound(UUID playeruuid, Consumer<Boolean> resultConsumer);
 	
 	/**
-	 * Play sound from loaded pack.
+	 * Set sound repeat mode, null to not repeat.
 	 * 
 	 * @return true if async used.
 	 */
-	public boolean playSound(UUID playeruuid, String name, Consumer<Boolean> resultConsumer);
+	public boolean setRepeat(UUID playeruuid, RepeatType repeattype);
+	
+	/**
+	 * Set resourcepack customdata.
+	 * 
+	 * @return true if async used.
+	 */
+	public boolean setResourcepackCustomdata(String resourcepackname, byte[] customdata, Consumer<Boolean> resultConsumer);
+	
+	
+	/**
+	 * Get player uuids that loaded specific resourcepackname.
+	 *
+	 * @return true if async used.
+	 */
+	public boolean getLoadedPlayers(String resourcepackname, Consumer<UUID[]> resultConsumer);
+	
+	/**
+	 * Get loaded pack name.
+	 *
+	 * @return true if async used.
+	 */
+	public boolean getLoadedResourcepackName(UUID playeruuid, Consumer<String> resultConsumer);
+	
+	
+	/**
+	 * Get cached resourcepack info list.
+	 */
+	public String[] getResourcepackInfoListCached();
+	/**
+	 * Get resourcepack info list.
+	 * 
+	 * @return true if async used.
+	 */
+	public boolean getResourcepackInfoList(Consumer<String[]> resultConsumer);
 	
 	/**
 	 * Get cached resourcepack info.
@@ -74,6 +102,8 @@ public interface AMusic {
 
 	/**
 	 * Get resourcepack info.
+	 * 
+	 * @return true if async used.
 	 */
 	public boolean getResourcepackInfo(String resourcepackname, Consumer<ResourcepackInfo> resultConsumer);
 	
@@ -84,40 +114,32 @@ public interface AMusic {
 	
 	/**
 	 * Get resourcepack info.
+	 * 
+	 * @return true if async used.
 	 */
 	public boolean getResourcepackInfo(UUID playeruuid, Consumer<ResourcepackInfo> resultConsumer);
 
+		
 	/**
-	 * Set resourcepack customdata.
+	 * Get not packed resourcepack list.
 	 */
-	public boolean setResourcepackCustomData(String resourcepackname, byte[] customdata, Consumer<Boolean> resultConsumer);
-
-	public String[] getListResourcepackInfoCached();
-	
-	public boolean getListResourcepackInfo(Consumer<String[]> resultConsumer);
-	
-	public String[] getListResourcepackCached();
-	
-	public boolean getListResourcepack(Consumer<String[]> resultConsumer);
-	
-	
+	public String[] getSourceResourcepackNameListCached();
 	/**
-	 * Get not packed soundnames.
-	 */
-	public String[] getListResourcepackSoundsCached(String resourcepackname);
-	
-	/**
-	 * Get not packed soundnames.
+	 * Get not packed resourcepack list.
 	 *
 	 * @return true if async used.
 	 */
-	public boolean getListResourcepackSounds(String resourcepackname, Consumer<String[]> resultConsumer);
+	public boolean getSourceResourcepackNameList(Consumer<String[]> resultConsumer);
 	
 	/**
-	 * Get loaded pack name.
+	 * Get not packed soundnames list.
+	 */
+	public String[] getSourceSoundnameListCached(String resourcepackname);
+	
+	/**
+	 * Get not packed soundnames list.
 	 *
 	 * @return true if async used.
 	 */
-	public boolean getPackName(UUID playeruuid, Consumer<String> resultConsumer);
-
+	public boolean getSourceSoundnameList(String resourcepackname, Consumer<String[]> resultConsumer);
 }

@@ -92,7 +92,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 				}
 			};
 			this.lang.sendMsg(sender, LangOptions.loadmusic_processing, placeholder);
-			amusic.loadPack(targetuuid == null ? null : new UUID[] {targetuuid}, name, targetuuid == null, consumer);
+			amusic.loadResourcepack(targetuuid == null ? null : new UUID[] {targetuuid}, name, targetuuid == null, consumer);
 		} else if(args.length == 1 && args[0].equals("@l") && sender instanceof ConsoleCommandSource) {
 			Consumer<String[]> consumer = new Consumer<String[]>() {
 				@Override
@@ -106,7 +106,7 @@ public final class LoadmusicCommand implements SimpleCommand {
 				}
 				
 			};
-			amusic.getListResourcepackInfo(consumer);
+			amusic.getResourcepackInfoList(consumer);
 		} else {
 			this.lang.sendMsg(sender, LangOptions.loadmusic_usage);
 		}
@@ -183,9 +183,9 @@ public final class LoadmusicCommand implements SimpleCommand {
 				}
 			};
 			final boolean packed = !args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE);
-			String[] resourcepacknames = packed ? amusic.getListResourcepackInfoCached() : amusic.getListResourcepackCached();
+			String[] resourcepacknames = packed ? amusic.getResourcepackInfoListCached() : amusic.getSourceResourcepackNameListCached();
 			if(resourcepacknames == null) {
-				boolean async = packed ? amusic.getListResourcepackInfo(consumer) : amusic.getListResourcepack(consumer);
+				boolean async = packed ? amusic.getResourcepackInfoList(consumer) : amusic.getSourceResourcepackNameList(consumer);
 				if(async) {
 					try {
 						synchronized (tabcomplete) {

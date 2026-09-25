@@ -33,23 +33,23 @@ public final class RepeatCommand implements Command {
 			}
 			switch (args[1].toLowerCase()) {
 			case "playone":
-				amusic.setRepeatMode(targetplayer, null);
+				amusic.setRepeat(targetplayer, null);
 				logger.info("Repeat mode set to: play one");
 				return;
 			case "repeatone":
-				amusic.setRepeatMode(targetplayer, RepeatType.REPEATONE);
+				amusic.setRepeat(targetplayer, RepeatType.REPEATONE);
 				logger.info("Repeat mode set to: repeat one");
 				return;
 			case "repeatall":
-				amusic.setRepeatMode(targetplayer, RepeatType.REPEATALL);
+				amusic.setRepeat(targetplayer, RepeatType.REPEATALL);
 				logger.info("Repeat mode set to: repeat all");
 				return;
 			case "playall":
-				amusic.setRepeatMode(targetplayer, RepeatType.PLAYALL);
+				amusic.setRepeat(targetplayer, RepeatType.PLAYALL);
 				logger.info("Repeat mode set to: play all");
 				return;
 			case "random":
-				amusic.setRepeatMode(targetplayer, RepeatType.RANDOM);
+				amusic.setRepeat(targetplayer, RepeatType.RANDOM);
 				logger.info("Repeat mode set to: random");
 				return;
 			default:

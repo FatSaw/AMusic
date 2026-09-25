@@ -66,23 +66,23 @@ public final class RepeatCommand implements SimpleCommand {
 			Player target = otarget.get();
 			switch (args[1].toLowerCase()) {
 			case "playone":
-				amusic.setRepeatMode(target.getUniqueId(), null);
+				amusic.setRepeat(target.getUniqueId(), null);
 				this.lang.sendMsg(sender, LangOptions.repeat_playone);
 				return;
 			case "repeatone":
-				amusic.setRepeatMode(target.getUniqueId(), RepeatType.REPEATONE);
+				amusic.setRepeat(target.getUniqueId(), RepeatType.REPEATONE);
 				this.lang.sendMsg(sender, LangOptions.repeat_repeatone);
 				return;
 			case "repeatall":
-				amusic.setRepeatMode(target.getUniqueId(), RepeatType.REPEATALL);
+				amusic.setRepeat(target.getUniqueId(), RepeatType.REPEATALL);
 				this.lang.sendMsg(sender, LangOptions.repeat_repeatall);
 				return;
 			case "playall":
-				amusic.setRepeatMode(target.getUniqueId(), RepeatType.PLAYALL);
+				amusic.setRepeat(target.getUniqueId(), RepeatType.PLAYALL);
 				this.lang.sendMsg(sender, LangOptions.repeat_playall);
 				return;
 			case "random":
-				amusic.setRepeatMode(target.getUniqueId(), RepeatType.RANDOM);
+				amusic.setRepeat(target.getUniqueId(), RepeatType.RANDOM);
 				this.lang.sendMsg(sender, LangOptions.repeat_random);
 				return;
 			default:

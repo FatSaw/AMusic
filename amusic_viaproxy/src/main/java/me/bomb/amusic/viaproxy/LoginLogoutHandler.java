@@ -44,7 +44,7 @@ public final class LoginLogoutHandler implements Consumer<ClientLoggedInEvent> {
 		players.put(playeruuid, proxyConnection);
 		uuidByPlayername.put(playername, playeruuid);
 		if(playerips != null) playerips.put(playeruuid, address);
-		if(joinplaylist != null) amusic.loadPack(new UUID[] {playeruuid}, joinplaylist, false, null);
+		if(joinplaylist != null) amusic.loadResourcepack(new UUID[] {playeruuid}, joinplaylist, false, null);
 	}
 	
 	public final static class DisconnectHandler implements ChannelFutureListener {

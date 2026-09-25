@@ -75,7 +75,7 @@ public final class LoadmusicCommand implements Command {
 			};
 			 
 			logger.info("Processing ".concat(name));
-			amusic.loadPack(targetuuid == null ? null : new UUID[] {targetuuid}, name, targetuuid == null, consumer);
+			amusic.loadResourcepack(targetuuid == null ? null : new UUID[] {targetuuid}, name, targetuuid == null, consumer);
 		} else if(args.length == 1 && args[0].equals("@l")) {
 			Consumer<String[]> consumer = new Consumer<String[]>() {
 				@Override
@@ -89,7 +89,7 @@ public final class LoadmusicCommand implements Command {
 				}
 				
 			};
-			amusic.getListResourcepackInfo(consumer);
+			amusic.getResourcepackInfoList(consumer);
 		} else {
 			logger.info("Usage: loadmusic <player> <playlist>");
 		}

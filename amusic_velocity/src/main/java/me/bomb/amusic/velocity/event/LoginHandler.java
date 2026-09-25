@@ -36,7 +36,7 @@ public final class LoginHandler implements EventHandler<LoginEvent> {
 		}
 		this.playerspermission.put(playeruuid, permissions);
 		if(playerips != null) playerips.put(player, player.getRemoteAddress().getAddress());
-		if(joinplaylist != null) amusic.loadPack(new UUID[] {playeruuid}, joinplaylist, false, null);
+		if(joinplaylist != null) amusic.loadResourcepack(new UUID[] {playeruuid}, joinplaylist, false, null);
 	}
 
 }

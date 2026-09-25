@@ -150,7 +150,7 @@ public final class RepeatCommand extends Command {
 					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
-				amusic.setRepeatMode(target, null);
+				amusic.setRepeat(target, null);
 			}
 			this.lang.sendMsg(sender, LangOptions.repeat_playone);
 			return;
@@ -160,7 +160,7 @@ public final class RepeatCommand extends Command {
 					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
-				amusic.setRepeatMode(target, RepeatType.REPEATONE);
+				amusic.setRepeat(target, RepeatType.REPEATONE);
 			}
 			this.lang.sendMsg(sender, LangOptions.repeat_repeatone);
 			return;
@@ -170,7 +170,7 @@ public final class RepeatCommand extends Command {
 					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
-				amusic.setRepeatMode(target, RepeatType.REPEATALL);
+				amusic.setRepeat(target, RepeatType.REPEATALL);
 			}
 			this.lang.sendMsg(sender, LangOptions.repeat_repeatall);
 			return;
@@ -180,7 +180,7 @@ public final class RepeatCommand extends Command {
 					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
-				amusic.setRepeatMode(target, RepeatType.PLAYALL);
+				amusic.setRepeat(target, RepeatType.PLAYALL);
 			}
 			this.lang.sendMsg(sender, LangOptions.repeat_playall);
 			return;
@@ -190,7 +190,7 @@ public final class RepeatCommand extends Command {
 					this.lang.sendMsg(sender, LangOptions.repeat_targetoffline);
 					return;
 				}
-				amusic.setRepeatMode(target, RepeatType.RANDOM);
+				amusic.setRepeat(target, RepeatType.RANDOM);
 			}
 			this.lang.sendMsg(sender, LangOptions.repeat_random);
 			return;

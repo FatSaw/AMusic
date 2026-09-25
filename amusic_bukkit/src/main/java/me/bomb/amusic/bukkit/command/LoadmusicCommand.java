@@ -138,7 +138,7 @@ public final class LoadmusicCommand extends Command {
 				}
 				
 			};
-			amusic.getListResourcepackInfo(consumer);
+			amusic.getResourcepackInfoList(consumer);
 			
 		} else {
 			this.lang.sendMsg(sender, LangOptions.loadmusic_usage);
@@ -208,9 +208,9 @@ public final class LoadmusicCommand extends Command {
 				}
 			};
 			final boolean packed = !args[0].equals("@n") || permissions != null && !permissions.contains(AMusicPermission.LOADMUSIC_UPDATE);
-			String[] resourcepacknames = packed ? amusic.getListResourcepackInfoCached() : amusic.getListResourcepackCached();
+			String[] resourcepacknames = packed ? amusic.getResourcepackInfoListCached() : amusic.getSourceResourcepackNameListCached();
 			if(resourcepacknames == null) {
-				boolean async = packed ? amusic.getListResourcepackInfo(consumer) : amusic.getListResourcepack(consumer);
+				boolean async = packed ? amusic.getResourcepackInfoList(consumer) : amusic.getSourceResourcepackNameList(consumer);
 				if(async) {
 					try {
 						synchronized (tabcomplete) {
@@ -238,7 +238,7 @@ public final class LoadmusicCommand extends Command {
 			}
 		};
 		this.lang.sendMsg(sender, LangOptions.loadmusic_processing, placeholder);
-		amusic.loadPack(targetuuids, playlistname, targetuuids == null, consumer);
+		amusic.loadResourcepack(targetuuids, playlistname, targetuuids == null, consumer);
 	}
 	
 }

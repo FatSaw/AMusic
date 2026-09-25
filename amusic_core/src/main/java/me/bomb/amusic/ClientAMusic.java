@@ -857,7 +857,14 @@ public final class ClientAMusic implements AMusic {
 					soundnames = new String[i];
 					while(--i > -1) {
 						int len = bufl[i] & 0xFF;
-						is.read(buf, 0, len);
+						off = 0;
+						while(off < len) {
+							int n = is.read(buf, off, len - off);
+							if (n == -1) {
+						        throw new EOFException();
+						    }
+							off += n;
+						}
 						soundnames[i] = new String(buf, 0, len, StandardCharsets.UTF_8);
 					}
 				} catch (IOException e) {

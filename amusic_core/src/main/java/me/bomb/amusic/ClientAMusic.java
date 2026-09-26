@@ -1265,7 +1265,15 @@ public final class ClientAMusic implements AMusic {
 						os.write(buf, 0, buf.length);
 						os.write(resourcepacknameb, 0, len & 0xFF);
 						InputStream is = socket.getInputStream();
-						info = ResourcepackInfoImpl.deserialize(is);
+						int off = 0;
+						while(off < 1) {
+							int n = is.read(buf, off, 1 - off);
+							if (n == -1) {
+						        throw new EOFException();
+						    }
+							off += n;
+						}
+						info = (buf[0x00] & 0x01) == 0x01 ? ResourcepackInfoImpl.deserialize(is) : null;
 						++j;
 					} catch (IOException e) {
 					} finally {
@@ -1450,7 +1458,15 @@ public final class ClientAMusic implements AMusic {
 					os.write(buf, 0, buf.length);
 					os.write(resourcepacknameb, 0, length);
 					InputStream is = socket.getInputStream();
-					info = ResourcepackInfoImpl.deserialize(is);
+					int off = 0;
+					while(off < 1) {
+						int n = is.read(buf, off, 1 - off);
+						if (n == -1) {
+					        throw new EOFException();
+					    }
+						off += n;
+					}
+					info = (buf[0x00] & 0x01) == 0x01 ? ResourcepackInfoImpl.deserialize(is) : null;
 				} catch (IOException e) {
 					this.amusic.logger.warn(e.getMessage());
 				} finally {
@@ -1514,7 +1530,15 @@ public final class ClientAMusic implements AMusic {
 					os.write(buf, 0, buf.length);
 					os.write(resourcepacknameb, 0, length);
 					InputStream is = socket.getInputStream();
-					info = ResourcepackInfoImpl.deserialize(is);
+					int off = 0;
+					while(off < 1) {
+						int n = is.read(buf, off, 1 - off);
+						if (n == -1) {
+					        throw new EOFException();
+					    }
+						off += n;
+					}
+					info = (buf[0x00] & 0x01) == 0x01 ? ResourcepackInfoImpl.deserialize(is) : null;
 				} catch (IOException e) {
 					this.amusic.logger.warn(e.getMessage());
 				} finally {

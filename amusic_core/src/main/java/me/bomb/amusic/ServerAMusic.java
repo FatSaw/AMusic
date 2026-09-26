@@ -628,7 +628,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		os.write(buf, 0, buf.length);
 		i = buf.length;
 		while(--i > -1) {
-			os.write(strsbytes[i], 0, buf[i]);
+			os.write(strsbytes[i], 0, 0xFF & buf[i]);
 		}
 	}
 	
@@ -733,7 +733,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		os.write(buf, 0, buf.length);
 		i = buf.length;
 		while(--i > -1) {
-			os.write(strsbytes[i], 0, buf[i]);
+			os.write(strsbytes[i], 0, 0xFF & buf[i]);
 		}
 	}
 	

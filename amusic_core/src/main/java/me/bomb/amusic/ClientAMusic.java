@@ -731,7 +731,7 @@ public final class ClientAMusic implements AMusic {
 					    }
 						off += n;
 					}
-					int i = 0xFF & buf[0] | 0xFF & buf[1] << 8;
+					int i = 0xFF & buf[0] | (0xFF & buf[1]) << 8;
 					byte[] bufl = new byte[i];
 					off = 0;
 					while(off < bufl.length) {
@@ -803,10 +803,17 @@ public final class ClientAMusic implements AMusic {
 					}
 					buf[0x09] = (byte) length;
 					os.write(buf, 0, buf.length);
-					buf = null;
 					os.write(resourcepacknameb, 0, length);
 					InputStream is = socket.getInputStream();
-					info = ResourcepackInfoImpl.deserialize(is);
+					int off = 0;
+					while(off < 1) {
+						int n = is.read(buf, off, 1 - off);
+						if (n == -1) {
+					        throw new EOFException();
+					    }
+						off += n;
+					}
+					info = (buf[0x00] & 0x01) == 0x01 ? ResourcepackInfoImpl.deserialize(is) : null;
 				} catch (IOException e) {
 				} finally {
 					ClientAMusic.this.packetend(socket);
@@ -874,21 +881,37 @@ public final class ClientAMusic implements AMusic {
 				buf[0x17] = (byte) lsb;
 				lsb>>>=8;
 				buf[0x18] = (byte) lsb;
+
+				boolean success = false;
 				ResourcepackInfoImpl info = null;
 				Socket socket = null;
 				try {
 					socket = ClientAMusic.this.socket();
 					OutputStream os = socket.getOutputStream();
 					os.write(buf, 0, buf.length);
-					buf = null;
 					InputStream is = socket.getInputStream();
-					info = ResourcepackInfoImpl.deserialize(is);
+					int off = 0;
+					while(off < 1) {
+						int n = is.read(buf, off, 1 - off);
+						if (n == -1) {
+					        throw new EOFException();
+					    }
+						off += n;
+					}
+					info = (buf[0x00] & 0x01) == 0x01 ? ResourcepackInfoImpl.deserialize(is) : null;
+					success = true;
 				} catch (IOException e) {
 				} finally {
 					ClientAMusic.this.packetend(socket);
 				}
 				resultConsumer.accept(info);
-				cachePlayerResourcepackInfos.put(playeruuid, info);
+				if(success) {
+					if(info == null) {
+						cachePlayerResourcepackInfos.remove(playeruuid);
+					} else {
+						cachePlayerResourcepackInfos.put(playeruuid, info);
+					}
+				}
 			}
 		};
 		executor.execute(r);
@@ -930,7 +953,7 @@ public final class ClientAMusic implements AMusic {
 					    }
 						off += n;
 					}
-					int i = 0xFF & buf[0] | 0xFF & buf[1] << 8;
+					int i = 0xFF & buf[0] | (0xFF & buf[1]) << 8;
 					byte[] bufl = new byte[i];
 					off = 0;
 					while(off < bufl.length) {
@@ -1009,7 +1032,7 @@ public final class ClientAMusic implements AMusic {
 					    }
 						off += n;
 					}
-					int i = 0xFF & buf[0] | 0xFF & buf[1] << 8;
+					int i = 0xFF & buf[0] | (0xFF & buf[1]) << 8;
 					
 					byte[] bufl = new byte[i];
 					off = 0;
@@ -1187,7 +1210,7 @@ public final class ClientAMusic implements AMusic {
 					    }
 						off += n;
 					}
-					int i = 0xFF & buf[0] | 0xFF & buf[1] << 8;
+					int i = 0xFF & buf[0] | (0xFF & buf[1]) << 8;
 					lengths = new byte[i];
 					off = 0;
 					while(off < lengths.length) {
@@ -1298,7 +1321,7 @@ public final class ClientAMusic implements AMusic {
 				    }
 					off += n;
 				}
-				i = 0xFF & buf[0] | 0xFF & buf[1] << 8;
+				i = 0xFF & buf[0] | (0xFF & buf[1]) << 8;
 				lengths = new byte[i];
 				off = 0;
 				while(off < lengths.length) {
@@ -1362,7 +1385,7 @@ public final class ClientAMusic implements AMusic {
 					    }
 						off += n;
 					}
-					j = 0xFF & buf[0] | 0xFF & buf[1] << 8;
+					j = 0xFF & buf[0] | (0xFF & buf[1]) << 8;
 					byte[] bufl = new byte[j];
 					off = 0;
 					while(off < j) {

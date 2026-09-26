@@ -493,7 +493,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			uuidcount = 0xFFFF;
 		}
 
-		buf[0] = (byte)uuidcount;
+		buf[0] = (byte) uuidcount;
 		buf[1] = (byte) (uuidcount>>>8);
 		os.write(buf, 0, 2);
 		

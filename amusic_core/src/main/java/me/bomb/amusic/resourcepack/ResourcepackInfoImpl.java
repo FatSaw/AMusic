@@ -275,9 +275,9 @@ public final class ResourcepackInfoImpl implements ResourcepackInfo {
 				customdatalength = 0xFFFF;
 			}
 			infosize += customdatalength;
+			
 			os.write(customdatalength);
-			customdatalength >>>= 8;
-			os.write(customdatalength);
+			os.write(customdatalength >>> 8);
 			os.write(info.customdata, 0, customdatalength);
 		}
 		info.infosize = infosize;
@@ -375,7 +375,7 @@ public final class ResourcepackInfoImpl implements ResourcepackInfo {
 			off += n;
 		}
 		int soundcount = 0x0000FFFF;
-		soundcount &= 0xFF & buf[0] | buf[1] << 8;
+		soundcount &= 0xFF & buf[0] | (0xFF & buf[1]) << 8;
 		infosize+=soundcount<<4; //SOUND HASH
 		infosize+=soundcount<<2;
 		buf = new byte[soundcount<<4];
@@ -424,9 +424,9 @@ public final class ResourcepackInfoImpl implements ResourcepackInfo {
 		i = soundcount;
 		j = soundcount<<1;
 		while(--i > -1) {
-			lengths[i] = (short) (buf[--j] & 0xFF | buf[--j]<<8);
+			lengths[i] = (short) (buf[--j] & 0xFF | (buf[--j] & 0xFF) <<8);
 		}
-		soundcount = (short) lengths.length;
+		soundcount = lengths.length;
 		SoundInfo[] sounds = new SoundInfo[soundcount];
 		i = soundcount;
 		while(--i > -1) {

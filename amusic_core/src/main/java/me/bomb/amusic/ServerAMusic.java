@@ -113,6 +113,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 							}
 						};
 						this.serverexecutor.execute(r);
+					} else {
+						connected.close();
 					}
 				} catch (SocketTimeoutException e) {
 					continue;
@@ -148,8 +150,8 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		    }
 			off += n;
 		}
-		int namesize = buf[0];
-		int targetcount = 0xFF & buf[1] | 0xFF & buf[2] << 8;
+		int namesize = 0xFF & buf[0];
+		int targetcount = 0xFF & buf[1] | (0xFF & buf[2]) << 8;
 		byte flags = buf[3];
 		final boolean update = (flags & 0x01) == 0x01, reportstatus = (flags & 0x02) == 0x02;
 		off = 0;
@@ -432,7 +434,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			off += n;
 		}
 		int resourcepacknamelength = buf[0] & 0xFF;
-		int customdatalength = (buf[1] & 0xFF) | (buf[2]<<8);
+		int customdatalength = buf[1] & 0xFF | (buf[2] & 0xFF) << 8;
 		buf = new byte[resourcepacknamelength];
 		off = 0;
 		while(off < buf.length) {
@@ -655,8 +657,12 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		final DataEntry dataentry = datamanager.getResourcepack(resourcepackname);
 		ResourcepackInfoImpl info;
 		if(dataentry == null || (info = dataentry.info) == null) {
+			buf[0] = 0x00;
+			os.write(buf, 0, 1);
 			return;
 		}
+		buf[0] = 0x01;
+		os.write(buf, 0, 1);
 		ResourcepackInfoImpl.serialize(os, info);
 	}
 	
@@ -703,6 +709,13 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		msb |= buf[0x00] & 0xFF;
 		final UUID playeruuid = new UUID(msb, lsb);
 		ResourcepackInfoImpl info = positiontracker.getResourcepackInfo(playeruuid);
+		if(info == null) {
+			buf[0] = 0x00;
+			os.write(buf, 0, 1);
+			return;
+		}
+		buf[0] = 0x01;
+		os.write(buf, 0, 1);
 		ResourcepackInfoImpl.serialize(os, info);
 	}
 	
@@ -791,7 +804,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		os.write(buf, 0, length);
 		i = length;
 		while(--i > -1) {
-			os.write(strsbytes[i], 0, buf[i]);
+			os.write(strsbytes[i], 0, 0xFF & buf[i]);
 		}
 	}
 	

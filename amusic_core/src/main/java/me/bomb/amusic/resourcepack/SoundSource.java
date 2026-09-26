@@ -1,0 +1,19 @@
+package me.bomb.amusic.resourcepack;
+
+public interface SoundSource<T extends SourceEntry> {
+
+	/**
+	 * {@link SourceEntry} ready on return.
+	 */
+	public abstract T get(String entrykey, PackMergeEntry packmerge);
+	
+	/**
+	 * @return true if entry has at least one element
+	 */
+	public abstract boolean exists(String entrykey);
+	
+	public abstract String[] listResourcepacks();
+	
+	public abstract String[] getSounds(String playlistname);
+	
+}

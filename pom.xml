@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>me.bomb</groupId>
+	<artifactId>amusic</artifactId>
+	<properties>
+		<project.build.outputTimestamp>0</project.build.outputTimestamp>
+		<project.build.sourceEncoding>ASCII</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>ASCII</project.reporting.outputEncoding>
+		<revision>0.19</revision>
+	</properties>
+	<version>${revision}</version>
+	<packaging>pom</packaging>
+	<modules>
+		<module>amusic_core</module>
+		<module>amusic_velocity</module>
+		<module>amusic_viaproxy</module>
+		<module>amusic_bukkit</module>
+	</modules>
+</project>

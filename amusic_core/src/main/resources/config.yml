@@ -1,0 +1,89 @@
+amusic:
+ #Use - set it to false if api mode used
+ use: true
+ #Executor - api call executor configuration preset
+ executor: apicall
+ #Usecmd - register commands
+ usecmd: true
+ resourcepack:
+  #Processpack - if false resourcepack modification not allowed
+  processpack: true
+  #Joinplaylist - apply resourcepack on join
+  #joinplaylist: playlistname
+  #Size limit - max packed resourcepack size recomended values for specific versions (select the value for lowest version with which you can join the server): 1.7.10-1.15.2 '52428800', 1.16-1.17.1 '104857600', 1.18+ '262144000'
+  sizelimit: 262144000
+  packthread:
+   #Limit count - limit maximal thread count per packer
+   limitcount: 4
+   #Coefficient - allowed value range 0.0 - 1.0, calculates thread count, works if limitcount greater than 1
+   coefficient: 0.125
+  #Cache - cache resourcepack in ram
+  cache: true
+  #Diskstore - store packed resourcepack
+  diskstore: true
+ server:
+  sendpack:
+   #Executor - resourcepack sender executor configuration preset, options below used if value not specified
+   executor: sendpacksender
+    queue:
+     #Type - LINKED,ARRAY
+     type: LINKED
+     size: 1024
+    poolsize:
+     core: 2
+     maximum: 16
+    keepalive:
+     timeunit: MINUTES
+     value: 1
+   #Host - '<protocol>://<ip or hostname>:<port>/'
+   host: http://127.0.0.1:25530/
+   #Interface ip
+   ip: 0.0.0.0
+   port: 25530
+   #Accept threads - thread count for accept connection
+   acceptthreads: 2
+   #Backlog - maximum pending connections count if 0 used default value
+   backlog: 127
+   #Connect timeout (in ms)
+   timeout: 10000
+   #Allow connection only from ips that connected to MC server (may not work if proxy server used)
+   strictaccess: true
+   waitacception:
+    #Count - maximal acception check attempts before connection drop, if 0 waitacception check disabled
+    count: 0
+    #Wait - wait until next acception check (in miliseconds)
+    wait: 100
+    #Scheduler threads
+    schedulerthreads: 4
+   #Token salt - recomended to replace this by random generated if clientside caching used
+   tokensalt: PlaceHereARandomBase64StringIfClientCacheEnabled
+  #Connect api to other amusic instance
+  connect:
+   use: false
+   #Interface ip
+   ip: 0.0.0.0
+   tls:
+    use: false
+    path: connectcert.p12
+    password: passwordkey
+   #Client used on bukkit
+   client:
+    #Remote server ip
+    serverip: 0.0.0.0
+    port: 25534
+    timeout: 5000
+    cache:
+     timeout:
+      #Success - amount of time in milliseconds to next cache update check after success
+      success: 60000
+	  #Fail - amount of time in milliseconds to next cache update check after failed
+      fail: 60000
+   #Server used on velocity, viaproxy
+   server:
+    #Executor - api call (for remote requests) executor configuration preset
+    executor: apicallremote
+    #Remote client ip
+    clientip: 0.0.0.0
+    port: 25534
+    timeout: 5000
+    backlog: 127

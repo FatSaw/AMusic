@@ -432,7 +432,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			off += n;
 		}
 		int resourcepacknamelength = buf[0] & 0xFF;
-		int customdatalength = (buf[1] & 0xFF | buf[2]<<8);
+		int customdatalength = (buf[1] & 0xFF) | (buf[2]<<8);
 		buf = new byte[resourcepacknamelength];
 		off = 0;
 		while(off < buf.length) {
@@ -613,7 +613,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			buf1 = new byte[0x02];
 		}
 		buf1[0] = (byte) i;
-		buf1[1] = (byte) (i >>> 1);
+		buf1[1] = (byte) (i >>> 8);
 		os.write(buf1, 0, 0x02);
 		byte[][] strsbytes = new byte[i][];
 		while(--i > -1) {
@@ -718,7 +718,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			buf1 = new byte[0x02];
 		}
 		buf1[0] = (byte) i;
-		buf1[1] = (byte) (i >>> 1);
+		buf1[1] = (byte) (i >>> 8);
 		os.write(buf1, 0, 0x02);
 		byte[][] strsbytes = new byte[i][];
 		while(--i > -1) {
@@ -770,7 +770,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		}
 		final int length = i;
 		buf[0] = (byte) length;
-		buf[1] = (byte) (length >> 1);
+		buf[1] = (byte) (length >>> 8);
 		os.write(buf, 0, 0x02);
 		if(length == 0) {
 			return;

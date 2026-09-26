@@ -75,7 +75,7 @@ amusic:
     cache:
      timeout:
       #Success - amount of time in milliseconds to next cache update check after success
-      success: 3600000
+      success: 60000
 	  #Fail - amount of time in milliseconds to next cache update check after failed
       fail: 60000
    #Server used on velocity, viaproxy

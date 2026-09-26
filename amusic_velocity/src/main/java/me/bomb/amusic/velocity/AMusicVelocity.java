@@ -87,7 +87,7 @@ public final class AMusicVelocity {
 			fsp.createDirectory(plugindir);
 		} catch (IOException e) {
 		}
-		Configuration config = new Configuration(fs, configfile, musicdir, packeddir, false);
+		Configuration config = new Configuration(fs, configfile, "config.yml", false);
 		String configerrors = config.errors;
 		if(!configerrors.isEmpty()) {
 			throw new IllegalStateException("AMusic config initialization errors: \n".concat(configerrors));

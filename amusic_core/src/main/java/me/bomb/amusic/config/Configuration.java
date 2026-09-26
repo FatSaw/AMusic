@@ -104,7 +104,7 @@ public final class Configuration {
 		this.connectsocketfactory = connectsocketfactory;
 	}
 	
-	public Configuration(FileSystem fs, final Path configfile, final Path musicdir, final Path packeddir, final boolean defaultremoteclient) {
+	public Configuration(FileSystem fs, final Path configfile, final String resource, final boolean defaultremoteclient) {
 		byte[] bytes = null;
 		final StringBuilder errors = new StringBuilder();
 		InputStream is = null;
@@ -128,7 +128,7 @@ public final class Configuration {
 				}
 			}
 			try {
-				is = Configuration.class.getClassLoader().getResourceAsStream("config.yml");
+				is = Configuration.class.getClassLoader().getResourceAsStream(resource);
 				bytes = new byte[0x1000];
 				size = is.read(bytes, 0, bytes.length);
 				is.close();

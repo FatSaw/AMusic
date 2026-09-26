@@ -72,7 +72,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			fsp.createDirectory(plugindir);
 		} catch (IOException e) {
 		}
-		Configuration config = new Configuration(fs, configfile, musicdir, packeddir, false);
+		Configuration config = new Configuration(fs, configfile, "config.yml", false);
 		String configerrors = config.errors;
 		
 		if(!configerrors.isEmpty()) {

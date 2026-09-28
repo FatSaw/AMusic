@@ -28,7 +28,7 @@ public final class VelocityPackSender implements PackSender {
 
 	private final ProxyServer server;
 	
-	protected VelocityPackSender(ProxyServer server) {
+	public VelocityPackSender(ProxyServer server) {
 		this.server = server;
 	}
 	

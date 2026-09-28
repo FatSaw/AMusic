@@ -13,7 +13,7 @@ public final class VelocityMessageSender implements MessageSender {
 	
 	private final JSONComponentSerializer serializer;
 	
-	protected VelocityMessageSender() {
+	public VelocityMessageSender() {
 		serializer = JSONComponentSerializer.json();
 	}
 

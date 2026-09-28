@@ -42,7 +42,7 @@ public final class VelocitySoundStarter implements SoundStarter {
 	
 	private final ProxyServer server;
 
-	protected VelocitySoundStarter(ProxyServer server) {
+	public VelocitySoundStarter(ProxyServer server) {
 		this.server = server;
 	}
 	

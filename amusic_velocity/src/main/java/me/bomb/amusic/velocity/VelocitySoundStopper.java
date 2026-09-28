@@ -44,7 +44,7 @@ public final class VelocitySoundStopper implements SoundStopper {
 
 	private final ProxyServer server;
 	
-	protected VelocitySoundStopper(ProxyServer server) {
+	public VelocitySoundStopper(ProxyServer server) {
 		this.server = server;
 	}
 	

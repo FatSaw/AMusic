@@ -4,6 +4,3 @@ before_install:
 
 jdk:
   - openjdk25
-
-install:
-  - mvn clean install -DskipTests -Drevision=${JITPACK_VERSION}

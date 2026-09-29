@@ -1,0 +1,7 @@
+name: AMusic
+main: me.bomb.amusic.bukkit.AMusicBukkit
+version: ${revision}
+api-version: 1.13
+author: Bomb
+folia-supported: true
+softdepend: ["Geyser-Spigot"]

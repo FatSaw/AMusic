@@ -2,6 +2,8 @@ package me.bomb.amusic.resourcepack;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 
@@ -23,6 +25,16 @@ public final class LocalCachedDataEntry extends DataEntry implements CustomDatas
 	@Override
 	public byte[] getPack() {
 		return this.pack;
+	}
+	
+	@Override
+	public void sendTo(SocketChannel channel) throws IOException {
+		channel.write(ByteBuffer.wrap(this.pack));
+	}
+	
+	@Override
+	public int getLength() {
+		return this.info.packsize;
 	}
 	
 	@Override

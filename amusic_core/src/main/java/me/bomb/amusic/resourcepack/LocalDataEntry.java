@@ -3,15 +3,28 @@ package me.bomb.amusic.resourcepack;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.spi.FileSystemProvider;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import me.bomb.amusic.util.AMusicLogger;
 
 public final class LocalDataEntry extends DataEntry implements CustomDatastore {
+	
+	private static final HashSet<OpenOption> OPENOPTION_READ;
+	
+	static {
+		HashSet<OpenOption> set = new HashSet<OpenOption>(1);
+		set.add(StandardOpenOption.READ);
+		OPENOPTION_READ = set;
+	}
 	
 	private final FileSystemProvider fsp;
 	protected final Path datapath;
@@ -52,6 +65,28 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 			return null;
 		}
 		return buf;
+	}
+	
+	@Override
+	public void sendTo(SocketChannel channel) throws IOException {
+		try (FileChannel fileChannel = this.fsp.newFileChannel(this.datapath, LocalDataEntry.OPENOPTION_READ)) {
+			long pos = info.infosize, size = info.packsize, n;
+			while (pos < size) {
+				n = fileChannel.transferTo(pos, size - pos, channel);
+				if (n < 1L) {
+					if (!channel.isOpen()) {
+						throw new IOException("Connection closed by remote peer during transfer");
+					}
+					Thread.yield(); 
+				}
+				pos += n;
+			}
+		}
+	}
+	
+	@Override
+	public int getLength() {
+		return this.info.packsize;
 	}
 	
 	@Override

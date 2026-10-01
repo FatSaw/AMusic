@@ -18,7 +18,7 @@ import me.bomb.amusic.util.AMusicLogger;
 
 final class ResourceSender implements ServerWorker {
 	
-	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII), responsepart1 = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII), requestinvalid = "HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), tokeninvalid = "HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), packreadfail = "HTTP/1.1 500 Internal Server Error\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), waitacceptiontimeout = "HTTP/1.1 408 Request Timeout\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII), responsepart1 = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII), requestinvalid = "HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), tokeninvalid = "HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), serverfail = "HTTP/1.1 500 Internal Server Error\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), waitacceptiontimeout = "HTTP/1.1 408 Request Timeout\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
 	private final ResourceManager resourcemanager;
 	private final Executor senderexecutor;
 	private final int waitacceptioncount, waitacceptionwait, schedulerthreads;
@@ -204,23 +204,14 @@ final class ResourceSender implements ServerWorker {
 				this.close();
 				return;
 			}
-			byte[] buf;
-			if ((buf = entry.getPack()) == null) {
-				try {
-					OutputStream out = this.connected.getOutputStream();
-					out.write(packreadfail);
-				} catch (IOException e) {
-				}
-				this.close();
-				return;
-			}
-			
-			try(OutputStream out = connected.getOutputStream()) {
+			int length = entry.getLength();
+			try {
+				OutputStream out = this.connected.getOutputStream();
 				out.write(responsepart0);
-				out.write(Integer.toString(buf.length).getBytes());
+				out.write(Integer.toString(length).getBytes());
 				out.write(responsepart1);
-				out.write(buf);
-			} catch(IOException e) {
+				entry.sendTo(connected.getChannel());
+			} catch (IOException e) {
 			} finally {
 				this.close();
 			}

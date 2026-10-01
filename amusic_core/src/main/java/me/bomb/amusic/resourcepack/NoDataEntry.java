@@ -1,5 +1,9 @@
 package me.bomb.amusic.resourcepack;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.SocketChannel;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -33,6 +37,16 @@ public class NoDataEntry extends DataEntry {
 		sha1hash.update(resourcepack);
 		byte[] sha1 = sha1hash.digest();
 		return Arrays.equals(sha1, info.sha1) ? resourcepack : null;
+	}
+	
+	@Override
+	public void sendTo(SocketChannel channel) throws IOException {
+		channel.write(ByteBuffer.wrap(this.getPack()));
+	}
+	
+	@Override
+	public int getLength() {
+		return this.info.packsize;
 	}
 
 }

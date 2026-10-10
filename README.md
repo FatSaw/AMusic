@@ -4,8 +4,8 @@ Music through resource pack
 - Clientside, serverside caching
 - Resourcepack merge (for versions before `1.20.3`)
 - Optional sound repeat, repeat types: (`repeatone`, `repeatall`, `playone`, `playall`, `random`)
-- Supported cores: `Bukkit`, `Velocity`, `ViaProxy`
-- Supported versions: `1.7.10` - `1.21.11`
+- Supported cores: `Bukkit`, `Velocity` `4.2.0+`, `ViaProxy` `3.4.14+`
+- Supported client versions: `1.7.10` - `1.21.11`, `26.1` - `26.3`
 - GeyserMC supported (single resourcepack compatible with java and bedrock, without sound data duplication)
 - Volume control in `Voice` sound setting (only for `1.13+`)
 
@@ -33,7 +33,7 @@ Music through resource pack
 - `amusic.loadmusic.other` - load playlist(resourcepack) for other players
 - `amusic.playmusic.other` - start/stop sound for other players
 - `amusic.repeat.other` - set repeat for other players
-- `amusic.loadmusic.update` - reconvert(if enabled), repack playlist(resourcepack), allows `@n` usage
+- `amusic.loadmusic.update` - repack playlist(resourcepack), allows `@n` usage
 
 ### Selectors <playername>:
 - `@n` - update playlist
@@ -73,15 +73,17 @@ Description: `Limits player count`
 ### Commands for console without tab complete:
 
 - `loadmusic @l` - get packed playlist(resourcepack) list
-- `playmusic @l <playername>` - get loaded to player soundnames, currently playing sound name and time
+- `playmusic @l <playername>` - get loaded to player soundnames
 
 ## Dependencies
 
 ### GeyserMC (optional)
 - [GeyserMC source](https://github.com/GeyserMC/Geyser)
-- Viaproxy 3.x.x does not support optional dependency, to use viaproxy amusic implementation without GeyserMC need to remove depends from `viaproxy.yml` inside jar
+- ViaProxy 3.x.x does not support optional dependencies
 
 ## BUILD:
+
+Java version: `25`
 
 1) Clone repository https://github.com/FatSaw/AMusic.git
 2) Build project with: `mvn package`

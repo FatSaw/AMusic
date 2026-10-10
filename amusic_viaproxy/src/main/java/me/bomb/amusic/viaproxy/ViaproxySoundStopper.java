@@ -20,7 +20,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 	private final static byte[] stopsound;
 
 	static {
-		int i = 777;
+		int i = 778;
 		packetid = new byte[i];
 		byte id;
 		while (--i > -1) {
@@ -42,6 +42,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 			if (i > 0x301 && i < 0x305) id = 0x70;
 			if (i > 0x304 && i < 0x307) id = 0x75;
 			if (i > 0x306 && i < 0x309) id = 0x77;
+			if(i == 0x309) id = 0x79;
 			packetid[i] = id;
 		}
 

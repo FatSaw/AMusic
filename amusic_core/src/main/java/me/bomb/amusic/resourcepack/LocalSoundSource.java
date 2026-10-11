@@ -515,11 +515,15 @@ public final class LocalSoundSource implements SoundSource<SourceEntry> {
 		totalsize += 238; //BEDROCK SOUNDLIST SILENCE SOUND PATH INCLUDED + LOCAL HEADER 
 
 		final int bedrockpackidlength = totalsize;
-		totalsize += packmcmeta.length; //PACK MCMETA + LOCAL HEADER 
+		if(mergepack == null) {
+			totalsize += packmcmeta.length; //PACK MCMETA + LOCAL HEADER 
+		}
 		totalsize += manifestjson.length; //MANIFEST JSON + LOCAL HEADER 
-		final int centraldirectoryoffset = totalsize, centraldirectorylength = mergecdsize + silencesoundglobalheader.length + packmcmetaglobalheader.length + manifestjsonglobalheader.length + 149 + 229 * count;
+		final int centraldirectoryoffset = totalsize, centraldirectorylength = mergecdsize + silencesoundglobalheader.length + (mergepack == null ? packmcmetaglobalheader.length : 0) + manifestjsonglobalheader.length + 149 + 229 * count;
 		int globalheaderoffset = totalsize; //all sizes except global header and zip end should be calculated before this
-		if(mergepack != null) {
+		if(mergepack == null) {
+			totalsize += packmcmetaglobalheader.length; //GLOBAL HEADER PACK MCMETA
+		} else {
 			totalsize += mergecdsize;
 			totalsize += mergecommentlength;
 			globalheaderoffset += mergecdsize;
@@ -527,7 +531,6 @@ public final class LocalSoundSource implements SoundSource<SourceEntry> {
 		totalsize += silencesoundglobalheader.length; //ZIP GLOBAL SILENCE SOUND HEADERS WITH PATHS
 		totalsize += 74; //SOUNDS JSON GLOBAL HEADER
 		totalsize += 75; //SOUND DEFENITIONS GLOBAL HEADER
-		totalsize += packmcmetaglobalheader.length; //GLOBAL HEADER PACK MCMETA
 		totalsize += manifestjsonglobalheader.length; //GLOBAL HEADER MANIFEST JSON
 		totalsize += 229 * count; //ZIP GLOBAL SOUND HEADERS WITH PATHS
 		totalsize += 22; //ZIP GLOBAL END HEADER
@@ -834,24 +837,25 @@ public final class LocalSoundSource implements SoundSource<SourceEntry> {
 			bhea = new UUID((buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56, (buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56);
 			bres = new UUID((buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56, (buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56);
 		}
-		
-		System.arraycopy(packmcmeta, 0, resourcepack, offset, packmcmeta.length);
-		v = offset;
-		offset += packmcmeta.length;
-		System.arraycopy(packmcmetaglobalheader, 0, resourcepack, globalheaderoffset, packmcmetaglobalheader.length);
-		globalheaderoffset += 41;
-		b = (byte) (v & 0xFF);
-		resourcepack[++globalheaderoffset] = b;
-		v >>>= 8;
-		b = (byte) (v & 0xFF);
-		resourcepack[++globalheaderoffset] = b;
-		v >>>= 8;
-		b = (byte) (v & 0xFF);
-		resourcepack[++globalheaderoffset] = b;
-		v >>>= 8;
-		b = (byte) (v & 0xFF);
-		resourcepack[++globalheaderoffset] = b;
-		globalheaderoffset += 12;
+		if(mergepack == null) {
+			System.arraycopy(packmcmeta, 0, resourcepack, offset, packmcmeta.length);
+			v = offset;
+			offset += packmcmeta.length;
+			System.arraycopy(packmcmetaglobalheader, 0, resourcepack, globalheaderoffset, packmcmetaglobalheader.length);
+			globalheaderoffset += 41;
+			b = (byte) (v & 0xFF);
+			resourcepack[++globalheaderoffset] = b;
+			v >>>= 8;
+			b = (byte) (v & 0xFF);
+			resourcepack[++globalheaderoffset] = b;
+			v >>>= 8;
+			b = (byte) (v & 0xFF);
+			resourcepack[++globalheaderoffset] = b;
+			v >>>= 8;
+			b = (byte) (v & 0xFF);
+			resourcepack[++globalheaderoffset] = b;
+			globalheaderoffset += 12;
+		}
 		
 		System.arraycopy(manifestjson, 0, resourcepack, offset, manifestjson.length);
 		System.arraycopy(manifestjsonglobalheader, 0, resourcepack, globalheaderoffset, manifestjsonglobalheader.length);

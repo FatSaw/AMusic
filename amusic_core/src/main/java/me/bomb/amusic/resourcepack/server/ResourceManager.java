@@ -216,24 +216,14 @@ public final class ResourceManager {
 	
 	/**
 	 * Get resource bytes by token
-	 * Remove token
-	 * Clears accept status
 	 * @return null if token invalid
 	 */
 	protected DataEntry get(UUID token) {
-		/*UUID target;
+		UUID target;
 		if (token == null || (target = tokens.get(token)) == null || !token.equals(targets.get(target))) {
 			return null;
 		}
-		return tokenres.get(token);*/
-		UUID target;
-		if (token == null || (target = tokens.remove(token)) == null || !token.equals(targets.remove(target))) {
-			return null;
-		}
-		if(accepted != null) {
-			accepted.remove(token);
-		}
-		return tokenres.remove(token);
+		return tokenres.get(token);
 	}
 	
 	/**

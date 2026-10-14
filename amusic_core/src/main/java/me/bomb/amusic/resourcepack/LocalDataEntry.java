@@ -70,16 +70,17 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 	@Override
 	public void sendTo(SocketChannel channel) throws IOException {
 		try (FileChannel fileChannel = this.fsp.newFileChannel(this.datapath, LocalDataEntry.OPENOPTION_READ)) {
-			long pos = info.infosize, size = info.packsize, n;
-			while (pos < size) {
-				n = fileChannel.transferTo(pos, size - pos, channel);
+			long pos = info.infosize, rem = info.packsize, n;
+			while (rem > 0L) {
+				n = fileChannel.transferTo(pos, rem, channel);
 				if (n < 1L) {
 					if (!channel.isOpen()) {
-						throw new IOException("Connection closed by remote peer during transfer");
+						throw new IOException("Connection closed by remote peer during resourcepack transfer");
 					}
-					Thread.yield(); 
+					Thread.yield();
 				}
 				pos += n;
+				rem -= n;
 			}
 		}
 	}

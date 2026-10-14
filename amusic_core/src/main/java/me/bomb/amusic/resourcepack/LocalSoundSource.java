@@ -373,7 +373,7 @@ public final class LocalSoundSource implements SoundSource<SourceEntry> {
 			mergecdoffset = 0;
 			mergecdsize = 0;
 			mergecommentlength = 0;
-			mregeentriescount = 0;
+			mregeentriescount = 1;
 		} else {
 			mergepack = packmerge.getMergePack();
 			mergecdoffset = packmerge.cdOffset();
@@ -903,7 +903,7 @@ public final class LocalSoundSource implements SoundSource<SourceEntry> {
 		offset += manifestjson.length;
 		
 		
-		v = 6 + (count << 1) + mregeentriescount;
+		v = 5 + (count << 1) + mregeentriescount;
 		byte[] end = new byte[] {0x50, 0x4b, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		end[8] = (byte) (v & 0xFF);
 		end[9] = (byte) ((v >>> 8) & 0xFF);

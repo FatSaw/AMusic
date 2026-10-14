@@ -1,10 +1,7 @@
 package me.bomb.amusic.http;
 
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.SocketAddress;
-import java.net.SocketException;
-import java.net.StandardSocketOptions;
 import java.nio.channels.ServerSocketChannel;
 
 final class ServerWatcher extends Thread {
@@ -41,32 +38,17 @@ final class ServerWatcher extends Thread {
 			ServerSocketChannel server;
 			try {
 				server = ServerSocketChannel.open();
-				this.server = server;
-			} catch (IOException e) {
-				e.printStackTrace();
-				return;
-			}
-			try {
-				server.setOption(StandardSocketOptions.TCP_NODELAY, Boolean.TRUE);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			try {
-				server.bind(this.address, backlog);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return;
-			}
-			try {
 				server.configureBlocking(true);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			ServerSocket serversocket = server.socket();
-			try {
-				serversocket.setSoTimeout(this.timeout);
-			} catch (SocketException e) {
-				e.printStackTrace();
+				server.socket().setSoTimeout(this.timeout);
+				server.bind(this.address, backlog);
+				this.server = server;
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				try {
+					sleep(10000L);
+				} catch (InterruptedException e2) {
+				}
+				continue;
 			}
 			
 			try {
@@ -74,7 +56,7 @@ final class ServerWatcher extends Thread {
 			} catch (InterruptedException e) {
 			}
 			
-			while (!serversocket.isClosed()) {
+			while (server.isOpen()) {
 				int i = connects.length;
 				while(--i > -1) {
 					try {

@@ -1,29 +1,24 @@
 package me.bomb.amusic.http;
 
 import java.net.InetAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
-
-import javax.net.ServerSocketFactory;
 
 public final class ServerManager {
 	
-	private final InetAddress ip;
-	private final int port;
+	private final SocketAddress address;
 	private final int backlog;
 	private final int timeout;
-	private final ServerSocketFactory serverfactory;
 	private final Collection<InetAddress> onlineips;
 	private final ServerWorker worker;
 	private final short connectcount;
 	
 	private ServerWatcher serverwatcher;
 	
-	public ServerManager(final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final Collection<InetAddress> onlineips, final ServerWorker worker, final short connectcount) {
-		this.ip = ip;
-		this.port = port;
+	public ServerManager(final SocketAddress address, final int backlog, final int timeout, final Collection<InetAddress> onlineips, final ServerWorker worker, final short connectcount) {
+		this.address = address;
 		this.backlog = backlog;
 		this.timeout = timeout;
-		this.serverfactory = serverfactory;
 		this.onlineips = onlineips;
 		this.worker = worker;
 		this.connectcount = connectcount;
@@ -32,7 +27,7 @@ public final class ServerManager {
 	public void start() {
 		short connectcount = this.connectcount;
 		ServerConnect[] connects = new ServerConnect[connectcount];
-		this.serverwatcher = new ServerWatcher(ip, port, backlog, timeout, serverfactory, connects);
+		this.serverwatcher = new ServerWatcher(address, backlog, timeout, connects);
 		if(onlineips == null) {
 			while(--connectcount > -1) {
 				connects[connectcount] = new ServerConnect(serverwatcher, worker);

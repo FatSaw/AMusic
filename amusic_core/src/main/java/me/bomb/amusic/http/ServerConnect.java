@@ -1,10 +1,10 @@
 package me.bomb.amusic.http;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 class ServerConnect extends Thread {
 	
@@ -19,21 +19,21 @@ class ServerConnect extends Thread {
 	@Override
 	public void run() {
 		while (serverwatcher.run) {
-			final ServerSocket server = serverwatcher.server;
+			final ServerSocketChannel server = serverwatcher.server;
 			synchronized (this) {
 				try {
 					this.wait();
 				} catch (InterruptedException e) {
 				}
 			}
-			if(server == null || server.isClosed()) {
+			if(server == null || !server.isOpen()) {
 				continue;
 			}
 			while(true) {
-				Socket connected = null;
+				SocketChannel connected = null;
 				try {
 					connected = server.accept();
-					connected.setSoTimeout(serverwatcher.timeout);
+					connected.socket().setSoTimeout(serverwatcher.timeout);
 					worker.processConnection(connected);
 				} catch (SocketTimeoutException e1) {
 					if(connected != null) {

@@ -1,6 +1,7 @@
 package me.bomb.amusic.resourcepack.server;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestException;
 import java.security.MessageDigest;
@@ -10,8 +11,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executor;
-
-import javax.net.ServerSocketFactory;
 
 import me.bomb.amusic.api.PackSender;
 import me.bomb.amusic.http.ServerManager;
@@ -27,14 +26,14 @@ public final class ResourceManager {
 
 	public final int maxbuffersize;
 	private final byte[] salt;
-	private final ServerManager server;
 	
 	private final PackSender packsender;
 	private final PositionTracker positiontracker;
 	private final byte[] host;
 	private final int end;
+	private final ServerManager server;
 	
-	public ResourceManager(PackSender packsender, PositionTracker positiontracker, String host, int maxbuffersize, byte[] salt, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, final short connectcount, Executor executorsender, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
+	public ResourceManager(PackSender packsender, PositionTracker positiontracker, String host, int maxbuffersize, byte[] salt, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final short connectcount, Executor executorsender, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
 		if(packsender == null || positiontracker == null || host == null) {
 			throw new NullPointerException();
 		}
@@ -56,17 +55,18 @@ public final class ResourceManager {
 		this.maxbuffersize = maxbuffersize;
 		this.salt = salt;
 		accepted = waitacceptioncount != 0 ? new ConcurrentSkipListSet<UUID>() : null;
-		this.server = new ServerManager(ip, port, backlog, timeout, serverfactory, onlineips, new ResourceSender(this, executorsender, waitacceptioncount, waitacceptionwait, schedulerthreads), connectcount);
+		this.server = new ServerManager(new InetSocketAddress(ip, port), backlog, timeout, onlineips, new ResourceSender(this, executorsender, waitacceptioncount, waitacceptionwait, schedulerthreads), connectcount);
+	
 	}
 	
 	
 
 	public void start() {
-		server.start();
+		this.server.start();
 	}
 	
 	public void end() {
-		server.end();
+		this.server.end();
 	}
 	
 	/**

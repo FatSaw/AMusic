@@ -1,10 +1,9 @@
 package me.bomb.amusic.resourcepack.server;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -18,13 +17,25 @@ import me.bomb.amusic.util.AMusicLogger;
 
 final class ResourceSender implements ServerWorker {
 	
-	private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII), responsepart1 = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII), requestinvalid = "HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), tokeninvalid = "HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), waitacceptiontimeout = "HTTP/1.1 408 Request Timeout\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+	private static final ByteBuffer responsepart0 = ByteBuffer.wrap("HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII)), responsepart1 = ByteBuffer.wrap("\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
+	//private static final byte[] responsepart0 = "HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII), responsepart1 = "\r\n\r\n".getBytes(StandardCharsets.US_ASCII), requestinvalid = "HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), tokeninvalid = "HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII), waitacceptiontimeout = "HTTP/1.1 408 Request Timeout\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+	private static final ByteBuffer requestinvalid = ByteBuffer.wrap(
+			"HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+					.getBytes(StandardCharsets.US_ASCII)).asReadOnlyBuffer(),
+			tokeninvalid = ByteBuffer.wrap(
+					"HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+							.getBytes(StandardCharsets.US_ASCII)).asReadOnlyBuffer(),
+			waitacceptiontimeout = ByteBuffer.wrap(
+					"HTTP/1.1 408 Request Timeout\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+							.getBytes(StandardCharsets.US_ASCII)).asReadOnlyBuffer();
+
 	private final ResourceManager resourcemanager;
 	private final Executor senderexecutor;
 	private final int waitacceptioncount, waitacceptionwait, schedulerthreads;
 	private ScheduledExecutorService scheduler = null;
 
-	protected ResourceSender(ResourceManager resourcemanager, Executor senderexecutor, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
+	protected ResourceSender(ResourceManager resourcemanager, Executor senderexecutor,
+			int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
 		this.resourcemanager = resourcemanager;
 		this.senderexecutor = senderexecutor;
 		this.waitacceptioncount = waitacceptioncount;
@@ -33,37 +44,47 @@ final class ResourceSender implements ServerWorker {
 	}
 
 	@Override
-	public void processConnection(final Socket connected) throws IOException {
-		Runnable r = new RequestHandler(this.senderexecutor, connected, resourcemanager, scheduler, this.waitacceptioncount, this.waitacceptionwait);
+	public void processConnection(final SocketChannel connected) throws IOException {
+		Runnable r = new RequestHandler(this.senderexecutor, connected, resourcemanager,
+				scheduler, this.waitacceptioncount, this.waitacceptionwait);
 		this.senderexecutor.execute(r);
 	}
-	
+
 	@Override
 	public void start() {
-		if(this.schedulerthreads < 0) {
+		if (this.schedulerthreads < 0) {
 			return;
 		}
 		this.scheduler = new ScheduledThreadPoolExecutor(this.schedulerthreads);
 	}
-	
+
 	@Override
 	public void end() {
-		if(this.scheduler == null) {
+		if (this.scheduler == null) {
 			return;
 		}
 		this.scheduler.shutdown();
 		this.scheduler = null;
 	}
-	
+
+	private static void write(SocketChannel connected, ByteBuffer response) throws IOException {
+		ByteBuffer buffer = response.duplicate();
+		while (buffer.hasRemaining()) {
+			connected.write(buffer);
+		}
+	}
+
 	private final class RequestHandler implements Runnable {
-		
+
 		private final Executor senderexecutor;
-		private final Socket connected;
+		private final SocketChannel connected;
 		private final ResourceManager resourcemanager;
 		private final ScheduledExecutorService scheduler;
 		private final int waitacceptioncount, waitacceptionwait;
-		
-		private RequestHandler(Executor senderexecutor, Socket connected, ResourceManager resourcemanager, ScheduledExecutorService scheduler, int waitacceptioncount, int waitacceptionwait) {
+
+		private RequestHandler(Executor senderexecutor, SocketChannel connected,
+				ResourceManager resourcemanager, ScheduledExecutorService scheduler,
+				int waitacceptioncount, int waitacceptionwait) {
 			this.senderexecutor = senderexecutor;
 			this.connected = connected;
 			this.resourcemanager = resourcemanager;
@@ -71,7 +92,7 @@ final class ResourceSender implements ServerWorker {
 			this.waitacceptioncount = waitacceptioncount;
 			this.waitacceptionwait = waitacceptionwait;
 		}
-		
+
 		private void close() {
 			try {
 				this.connected.close();
@@ -81,59 +102,89 @@ final class ResourceSender implements ServerWorker {
 
 		@Override
 		public void run() {
-			byte[] buf = new byte[0x400];
-			int off = 0, rem = buf.length, n;
+			ByteBuffer buf = ByteBuffer.allocate(0x400);
+			int n;
+
 			try {
-				InputStream in = this.connected.getInputStream();
-				while (off < buf.length && (n = in.read(buf, off, rem)) != -1) {
-					off += n;
-					rem -= n;
-					if(off < 4 || '\n' == buf[off - 1] && '\r' == buf[off - 2] && '\n' == buf[off - 3] && '\r' == buf[off - 4]) {
+				while (buf.hasRemaining() && (n = this.connected.read(buf)) != -1) {
+					int off = buf.position();
+
+					if (off < 4 || buf.get(off - 1) == '\n'
+							&& buf.get(off - 2) == '\r'
+							&& buf.get(off - 3) == '\n'
+							&& buf.get(off - 4) == '\r') {
 						break;
 					}
 				}
-			} catch (SocketTimeoutException e) {
-				AMusicLogger.warn("Socket read timeout: ".concat(e.getMessage()));
-				this.close();
-				return;
 			} catch (IOException e) {
+				if (e instanceof SocketTimeoutException) {
+					AMusicLogger.warn("Socket read timeout: ".concat(e.getMessage()));
+				}
 				this.close();
 				return;
 			}
-			if(off < 54 || !(buf[0] == 'G' && buf[1] == 'E' && buf[2] == 'T' && buf[3] == ' ' && buf[4] == '/' && buf[41] == '.' && buf[42] == 'z' && buf[43] == 'i' && buf[44] == 'p' && buf[45] == ' ' && buf[46] == 'H' && buf[47] == 'T' && buf[48] == 'T' && buf[49] == 'P' && buf[50] == '/' && buf[51] == '1' && buf[52] == '.' && buf[53] == '1')) {
+
+			int off = buf.position();
+
+			if (off < 54 || !(buf.get(0) == 'G'
+					&& buf.get(1) == 'E'
+					&& buf.get(2) == 'T'
+					&& buf.get(3) == ' '
+					&& buf.get(4) == '/'
+					&& buf.get(41) == '.'
+					&& buf.get(42) == 'z'
+					&& buf.get(43) == 'i'
+					&& buf.get(44) == 'p'
+					&& buf.get(45) == ' '
+					&& buf.get(46) == 'H'
+					&& buf.get(47) == 'T'
+					&& buf.get(48) == 'T'
+					&& buf.get(49) == 'P'
+					&& buf.get(50) == '/'
+					&& buf.get(51) == '1'
+					&& buf.get(52) == '.'
+					&& buf.get(53) == '1')) {
 				try {
-					OutputStream out = this.connected.getOutputStream();
-					out.write(requestinvalid);
+					write(this.connected, requestinvalid);
 				} catch (IOException e) {
 				}
 				this.close();
 				return;
 			}
+
 			final UUID token;
 			try {
-				token = UUID.fromString(new String(buf, 5, 36, StandardCharsets.US_ASCII));
+				ByteBuffer tokenbuffer = buf.duplicate();
+				tokenbuffer.position(5);
+				tokenbuffer.limit(41);
+				byte[] tokenbytes = new byte[36];
+				tokenbuffer.get(tokenbytes);
+				token = UUID.fromString(new String(tokenbytes, StandardCharsets.US_ASCII));
 			} catch (IndexOutOfBoundsException | IllegalArgumentException e1) {
 				try {
-					OutputStream out = this.connected.getOutputStream();
-					out.write(requestinvalid);
-					this.connected.close();
+					write(this.connected, requestinvalid);
 				} catch (IOException e2) {
 				}
 				this.close();
 				return;
 			}
+
 			ResponseSender responsesender = new ResponseSender(this.connected, this.resourcemanager, token);
-			if(this.scheduler != null && this.resourcemanager.waitAcception(token)) {
-				WaitAcception sendresponse = new WaitAcception(this.scheduler, this.senderexecutor, this.resourcemanager, responsesender, this.waitacceptioncount, this.waitacceptionwait);
+
+			if (this.scheduler != null && this.resourcemanager.waitAcception(token)) {
+				WaitAcception sendresponse = new WaitAcception(this.scheduler,
+						this.senderexecutor, this.resourcemanager, responsesender,
+						this.waitacceptioncount, this.waitacceptionwait);
 				this.scheduler.schedule(sendresponse, waitacceptionwait, TimeUnit.MILLISECONDS);
 				return;
 			}
+
 			responsesender.run();
 		}
 	}
-	
+
 	private final class WaitAcception implements Runnable {
-		
+
 		private final ScheduledExecutorService scheduler;
 		private final Executor senderexecutor;
 		private final ResourceManager resourcemanager;
@@ -141,7 +192,9 @@ final class ResourceSender implements ServerWorker {
 		private final int waitacceptionwait;
 		private int i;
 
-		private WaitAcception(ScheduledExecutorService scheduler, Executor senderexecutor, ResourceManager resourcemanager, ResponseSender responsesender, int waitacceptioncount, int waitacceptionwait) {
+		private WaitAcception(ScheduledExecutorService scheduler, Executor senderexecutor,
+				ResourceManager resourcemanager, ResponseSender responsesender,
+				int waitacceptioncount, int waitacceptionwait) {
 			this.scheduler = scheduler;
 			this.senderexecutor = senderexecutor;
 			this.resourcemanager = resourcemanager;
@@ -153,33 +206,35 @@ final class ResourceSender implements ServerWorker {
 		@Override
 		public void run() {
 			if (this.resourcemanager.waitAcception(this.responsesender.token)) {
-				if(0 != i && !this.scheduler.isShutdown()) {
+				if (0 != i && !this.scheduler.isShutdown()) {
 					--i;
 					this.scheduler.schedule(this, this.waitacceptionwait, TimeUnit.MILLISECONDS);
 					return;
 				}
+
 				try {
-					OutputStream out = this.responsesender.connected.getOutputStream();
-					out.write(waitacceptiontimeout);
-					} catch (IOException e) {
+					write(this.responsesender.connected, waitacceptiontimeout);
+				} catch (IOException e) {
 				}
+
 				try {
 					this.responsesender.connected.close();
 				} catch (IOException e) {
 				}
 				return;
 			}
+
 			this.senderexecutor.execute(this.responsesender);
 		}
 	}
 	
 	private final class ResponseSender implements Runnable {
 		
-		private final Socket connected;
+		private final SocketChannel connected;
 		private final ResourceManager resourcemanager;
 		private final UUID token;
 		
-		private ResponseSender(Socket connected, ResourceManager resourcemanager, UUID token) {
+		private ResponseSender(SocketChannel connected, ResourceManager resourcemanager, UUID token) {
 			this.connected = connected;
 			this.resourcemanager = resourcemanager;
 			this.token = token;
@@ -197,8 +252,7 @@ final class ResourceSender implements ServerWorker {
 			DataEntry entry;
 			if ((entry = this.resourcemanager.get(this.token)) == null) {
 				try {
-					OutputStream out = this.connected.getOutputStream();
-					out.write(tokeninvalid);
+					this.connected.write(tokeninvalid);
 				} catch (IOException e) {
 				}
 				this.close();
@@ -206,11 +260,12 @@ final class ResourceSender implements ServerWorker {
 			}
 			int length = entry.getLength();
 			try {
-				OutputStream out = this.connected.getOutputStream();
-				out.write(responsepart0);
-				out.write(Integer.toString(length).getBytes());
-				out.write(responsepart1);
-				entry.sendTo(connected.getChannel());
+				ByteBuffer[] p1 = new ByteBuffer[3];
+				p1[0] = responsepart0;
+				p1[1] = ByteBuffer.wrap(Integer.toString(length).getBytes(StandardCharsets.US_ASCII));
+				p1[2] = responsepart1;
+				this.connected.write(p1);
+				entry.sendTo(this.connected);
 			} catch (IOException e) {
 			} finally {
 				this.close();

@@ -1,25 +1,23 @@
 package me.bomb.amusic.http;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
-
-import javax.net.ServerSocketFactory;
+import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.StandardSocketOptions;
+import java.nio.channels.ServerSocketChannel;
 
 final class ServerWatcher extends Thread {
 
-	private final ServerSocketFactory serverfactory;
-	private final InetAddress ip;
-	private final int port, backlog;
+	private final SocketAddress address;
+	private final int backlog;
 	protected final int timeout;
 	protected volatile boolean run = false;
-	protected ServerSocket server = null;
+	protected ServerSocketChannel server = null;
 	private ServerConnect[] connects;
 
-	protected ServerWatcher(final InetAddress ip, final int port, final int backlog, final int timeout, final ServerSocketFactory serverfactory, ServerConnect... connects) {
-		this.serverfactory = serverfactory;
-		this.ip = ip;
-		this.port = port;
+	protected ServerWatcher(final SocketAddress address, final int backlog, final int timeout, ServerConnect... connects) {
+		this.address = address;
 		this.backlog = backlog;
 		this.timeout = timeout;
 		this.connects = connects;
@@ -40,20 +38,43 @@ final class ServerWatcher extends Thread {
 
 	public void run() {
 		while (run) {
+			ServerSocketChannel server;
 			try {
-				server = serverfactory.createServerSocket(port, backlog, ip);
-				server.setSoTimeout(timeout);
-			} catch (IOException | SecurityException | IllegalArgumentException | NullPointerException e) {
+				server = ServerSocketChannel.open();
+				this.server = server;
+			} catch (IOException e) {
 				e.printStackTrace();
 				return;
 			}
+			try {
+				server.setOption(StandardSocketOptions.TCP_NODELAY, Boolean.TRUE);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				server.bind(this.address, backlog);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
+			try {
+				server.configureBlocking(true);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			ServerSocket serversocket = server.socket();
+			try {
+				serversocket.setSoTimeout(this.timeout);
+			} catch (SocketException e) {
+				e.printStackTrace();
+			}
 			
 			try {
-				sleep(1000L);
+				sleep(100L);
 			} catch (InterruptedException e) {
 			}
 			
-			while (!server.isClosed()) {
+			while (!serversocket.isClosed()) {
 				int i = connects.length;
 				while(--i > -1) {
 					try {
@@ -65,7 +86,7 @@ final class ServerWatcher extends Thread {
 					}
 				}
 				try {
-					sleep(1000L);
+					sleep(100L);
 				} catch (InterruptedException e) {
 				}
 			}

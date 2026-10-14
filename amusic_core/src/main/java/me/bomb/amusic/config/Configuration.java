@@ -62,10 +62,10 @@ public final class Configuration {
 	public final float packthreadcoefficient;
 	
 	public final byte[] tokensalt;
-	public final ServerSocketFactory sendpackserverfactory, connectserverfactory;
+	public final ServerSocketFactory connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory sendpackserverfactory, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.executor = executor;
@@ -99,7 +99,6 @@ public final class Configuration {
 		this.packthreadlimitcount = packthreadlimitcount;
 		this.packthreadcoefficient = packthreadcoefficient;
 		this.tokensalt = tokensalt;
-		this.sendpackserverfactory = sendpackserverfactory;
 		this.connectserverfactory = connectserverfactory;
 		this.connectsocketfactory = connectsocketfactory;
 	}
@@ -213,7 +212,6 @@ public final class Configuration {
 				this.waitacceptionschedulerthreads = 0;
 			}
 			this.tokensalt = sc.getBytesBase64OrDefault("amusic\0server\0sendpack\0tokensalt", null);
-			this.sendpackserverfactory = new SimpleServerSocketFactory();
 			if(this.connectuse) {
 				InetAddress connectifip = null;
 				String connectipstr = sc.getStringOrError("amusic\0server\0connect\0ip", errors);
@@ -415,7 +413,6 @@ public final class Configuration {
 			this.executor = null;
 			this.serverexecutor = null;
 			this.connectuse = false;
-			this.sendpackserverfactory = null;
 			this.sendpackexecutorsender = null;
 			this.sendpackhost = null;
 			this.sendpackifip = null;

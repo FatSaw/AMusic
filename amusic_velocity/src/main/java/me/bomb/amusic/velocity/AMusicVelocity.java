@@ -49,9 +49,8 @@ import me.bomb.amusic.velocity.event.ProxyShutdownHandler;
 public final class AMusicVelocity {
 	
 	private final ProxyServer server;
-	private final Configuration config;
 	private final LocalAMusic amusic;
-	private final ConcurrentHashMap<Object,InetAddress> playerips;
+	private final boolean usecmd;
 	
 	private final LoadmusicCommand loadmusic;
 	private final PlaymusicCommand playmusic;
@@ -94,9 +93,8 @@ public final class AMusicVelocity {
 		}
 		if(!config.use) {
 			this.server = null;
-			this.config = null;
 			this.amusic = null;
-			this.playerips = null;
+			this.usecmd = false;
 			this.loadmusic = null;
 			this.playmusic = null;
 			this.repeat = null;
@@ -106,7 +104,7 @@ public final class AMusicVelocity {
 			return;
 		}
 		this.server = server;
-		this.config = config;
+		this.usecmd = config.usecmd;
 		try {
 			fsp.createDirectory(musicdir);
 		} catch (IOException e) {
@@ -115,7 +113,7 @@ public final class AMusicVelocity {
 			fsp.createDirectory(packeddir);
 		} catch (IOException e) {
 		}
-		this.playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
+		ConcurrentHashMap<Object,InetAddress> playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
 		boolean rgb = false;
 		
 		PackSender packsender = new VelocityPackSender(server);
@@ -124,28 +122,24 @@ public final class AMusicVelocity {
 		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackacceptthreads, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(fsp.exists(mergezip) ? new PackMergeEntryFile(mergezip, config.packsizelimit) : null, musicdir, config.packsizelimit);
 		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
-		if(config.connectuse) {
-			this.amusic = new ServerAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
-		} else {
-			this.amusic = new LocalAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
-		}
-		LangLoader lang = new LangLoader(langfile, rgb ? "lang_rgb.yml" : "lang_old.yml", new VelocityMessageSender());
+		this.amusic = config.connectuse ? new ServerAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectbacklog, config.connectserverfactory, config.serverexecutor) : new LocalAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 		final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission = new ConcurrentHashMap<UUID, EnumSet<AMusicPermission>>();
 		LoadmusicCommand loadmusic = null;
 		PlaymusicCommand playmusic = null;
 		RepeatCommand repeat = null;
-		if(config.usecmd) {
-			loadmusic = new LoadmusicCommand(server, amusic, lang, playerspermission);
-			playmusic = new PlaymusicCommand(server, amusic, lang, playerspermission);
-			repeat = new RepeatCommand(server, amusic, lang, playerspermission);
+		if(this.usecmd) {
+			LangLoader lang = new LangLoader(langfile, rgb ? "lang_rgb.yml" : "lang_old.yml", new VelocityMessageSender());
+			loadmusic = new LoadmusicCommand(server, this.amusic, lang, playerspermission);
+			playmusic = new PlaymusicCommand(server, this.amusic, lang, playerspermission);
+			repeat = new RepeatCommand(server, this.amusic, lang, playerspermission);
 		}
 		LoginHandler login = null;
 		DisconnectHandler disconnect = null;
 		PlayerResourcePackStatusHandler resourcepackstatus;
 		
-		login = new LoginHandler(amusic, playerspermission, playerips, config.joinplaylist);
-		disconnect = new DisconnectHandler(amusic, playerspermission, playerips);
-		resourcepackstatus = new PlayerResourcePackStatusHandler(amusic.resourcemanager);
+		login = new LoginHandler(this.amusic, playerspermission, playerips, config.joinplaylist);
+		disconnect = new DisconnectHandler(this.amusic, playerspermission, playerips);
+		resourcepackstatus = new PlayerResourcePackStatusHandler(this.amusic.resourcemanager);
 		
 		this.loadmusic = loadmusic;
 		this.playmusic = playmusic;
@@ -173,7 +167,7 @@ public final class AMusicVelocity {
 		CommandManager cmdmanager = null;
 		CommandMeta loadmusicmeta = null, playmusicmeta = null, repeatmeta = null;
 		
-		if(config.usecmd) {
+		if(this.usecmd) {
 			cmdmanager = this.server.getCommandManager();
 			if(this.loadmusic != null) {
 				loadmusicmeta = cmdmanager.metaBuilder("loadmusic").plugin(this).build();

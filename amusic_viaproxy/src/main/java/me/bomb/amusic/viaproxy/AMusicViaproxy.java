@@ -102,11 +102,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackacceptthreads, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(fsp.exists(mergezip) ? new PackMergeEntryFile(mergezip, config.packsizelimit) : null, musicdir, config.packsizelimit);
 		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
-		if(config.connectuse) {
-			this.amusic = new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectbacklog, config.connectserverfactory, config.serverexecutor);
-		} else {
-			this.amusic = new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
-		}
+		this.amusic = config.connectuse ? new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectbacklog, config.connectserverfactory, config.serverexecutor) : new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 		ConcurrentHashMap<String, UUID> uuidByPlayername = new ConcurrentHashMap<String, UUID>(16,0.75f,1);
 
 		ConsoleCommandHandler consolecommand = null;

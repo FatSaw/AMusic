@@ -131,61 +131,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		PlaymusicCommand playmusiccmd = null;
 		RepeatCommand repeatcmd = null;
 		if(config.use) {
-			try {
-				fsp.createDirectory(musicdir);
-			} catch (IOException e) {
-			}
-			try {
-				fsp.createDirectory(packeddir);
-			} catch (IOException e) {
-			}
 			this.usecmd = config.usecmd;
-			if(this.usecmd) {
-				try {
-					{
-						PluginManager pluginmanager = server.getPluginManager();
-						Field field = pluginmanager.getClass().getDeclaredField("commandMap");
-						field.setAccessible(true);
-						commandmap = (SimpleCommandMap) field.get(pluginmanager);
-					}
-					try {
-						Method method = commandmap.getClass().getDeclaredMethod("getKnownCommands");
-						mapcommand = (HashMap<String, Command>) method.invoke(commandmap);
-					} catch (NoSuchMethodException | InvocationTargetException | SecurityException | IllegalArgumentException | IllegalAccessException e2) {
-						try {
-							Field field = commandmap.getClass().getDeclaredField("knownCommands");
-							field.setAccessible(true);
-							mapcommand = (HashMap<String, Command>) field.get(commandmap);
-						} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e3) {
-						}
-					}
-				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
-					e1.printStackTrace();
-				}
-				
-			}
-			MessageSender messagesender;
-			switch (ver) {
-			case 7:
-				messagesender = new LegacyMessageSender_1_7_R4();
-			break;
-			case 8:
-				messagesender = new LegacyMessageSender_1_8_R3();
-			break;
-			case 9:
-				messagesender = new LegacyMessageSender_1_9_R2();
-			break;
-			case 10:
-				messagesender = new LegacyMessageSender_1_10_R1();
-			break;
-			case 11:
-				messagesender = new LegacyMessageSender_1_11_R1();
-			break;
-			default:
-				messagesender = new SpigotMessageSender();
-			break;
-			}
-			LangLoader lang = new LangLoader(langfile, ver > 15 ? "lang_rgb.yml" : "lang_old.yml", messagesender);
 			ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission = new ConcurrentHashMap<UUID, EnumSet<AMusicPermission>>();
 			PlayerJoinHandler playerjoin = null;
 			PlayerQuitHandler playerquit = null;
@@ -196,13 +142,15 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.playerchangedworld = null;
 				this.playerrespawn = null;
 				this.playerresourcepackstatus = null;
-				if(this.usecmd) {
-					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
-					loadmusiccmd = new LoadmusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					repeatcmd = new RepeatCommand(server, amusic, lang, playerspermission, selectorprocessor);
-				}
 			} else {
+				try {
+					fsp.createDirectory(musicdir);
+				} catch (IOException e) {
+				}
+				try {
+					fsp.createDirectory(packeddir);
+				} catch (IOException e) {
+				}
 				PackSender packsender;
 				SoundStarter soundstarter;
 				SoundStopper soundstopper;
@@ -250,12 +198,6 @@ public final class AMusicBukkit extends JavaPlugin {
 				Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
 				LocalAMusic amusic = new LocalAMusic(logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 				this.amusic = amusic;
-				if(this.usecmd) {
-					SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
-					loadmusiccmd = new LoadmusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					playmusiccmd = new PlaymusicCommand(server, amusic, lang, playerspermission, selectorprocessor);
-					repeatcmd = new RepeatCommand(server, amusic, lang, playerspermission, selectorprocessor);
-				}
 				PlayerChangedWorldHandler playerchangedworld = null;
 				PlayerRespawnHandler playerrespawn = null;
 				PlayerResourcePackStatusHandler playerresourcepackstatus = null;
@@ -277,12 +219,61 @@ public final class AMusicBukkit extends JavaPlugin {
 				this.playerrespawn = playerrespawn;
 				this.playerresourcepackstatus = playerresourcepackstatus;
 			}
+			if(this.usecmd) {
+				try {
+					{
+						PluginManager pluginmanager = server.getPluginManager();
+						Field field = pluginmanager.getClass().getDeclaredField("commandMap");
+						field.setAccessible(true);
+						commandmap = (SimpleCommandMap) field.get(pluginmanager);
+					}
+					try {
+						Method method = commandmap.getClass().getDeclaredMethod("getKnownCommands");
+						mapcommand = (HashMap<String, Command>) method.invoke(commandmap);
+					} catch (NoSuchMethodException | InvocationTargetException | SecurityException | IllegalArgumentException | IllegalAccessException e2) {
+						try {
+							Field field = commandmap.getClass().getDeclaredField("knownCommands");
+							field.setAccessible(true);
+							mapcommand = (HashMap<String, Command>) field.get(commandmap);
+						} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e3) {
+						}
+					}
+				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e1) {
+					e1.printStackTrace();
+				}
+				MessageSender messagesender;
+				switch (ver) {
+				case 7:
+					messagesender = new LegacyMessageSender_1_7_R4();
+				break;
+				case 8:
+					messagesender = new LegacyMessageSender_1_8_R3();
+				break;
+				case 9:
+					messagesender = new LegacyMessageSender_1_9_R2();
+				break;
+				case 10:
+					messagesender = new LegacyMessageSender_1_10_R1();
+				break;
+				case 11:
+					messagesender = new LegacyMessageSender_1_11_R1();
+				break;
+				default:
+					messagesender = new SpigotMessageSender();
+				break;
+				}
+				LangLoader lang = new LangLoader(langfile, ver > 15 ? "lang_rgb.yml" : "lang_old.yml", messagesender);
+				SelectorProcessor selectorprocessor = new SelectorProcessor(server, new Random());
+				loadmusiccmd = new LoadmusicCommand(server, this.amusic, lang, playerspermission, selectorprocessor);
+				playmusiccmd = new PlaymusicCommand(server, this.amusic, lang, playerspermission, selectorprocessor);
+				repeatcmd = new RepeatCommand(server, this.amusic, lang, playerspermission, selectorprocessor);
+			}
 			try {
-				playerjoin = new PlayerJoinHandler(this, amusic, playerspermission, playerips, config.joinplaylist);
+				playerjoin = new PlayerJoinHandler(this, this.amusic, playerspermission, playerips, config.joinplaylist);
 			} catch (NoClassDefFoundError e) {
 			}
 			try {
-				playerquit = new PlayerQuitHandler(this, amusic, playerspermission, playerips);
+				playerquit = new PlayerQuitHandler(this, this.amusic, playerspermission, playerips);
 			} catch (NoClassDefFoundError e) {
 			}
 			this.playerjoin = playerjoin;

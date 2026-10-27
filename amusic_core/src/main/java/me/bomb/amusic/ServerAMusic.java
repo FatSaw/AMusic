@@ -114,7 +114,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 							@Override
 							public void run() {
 								try {
-									processConnection(fconnected);
+									while(processPacket(fconnected));
 								} catch(SocketException | SSLException e) {
 								} catch (IOException e) {
 									e.printStackTrace();
@@ -841,81 +841,94 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 		os.write(buf, 0, 1);
 	}
 	
-	private final void processConnection(Socket connected) throws IOException {
+	private static final byte[] PACKET_HEADER = new byte[] {'a', 'm', 'r', 'a', 0x00, 0x00, 0x00, 0x00};
+	
+	private final byte readPacketId(InputStream is) throws IOException {
+		byte[] buf = new byte[0x09];
+		int off = 0;
+		while(off < buf.length) {
+			int n = is.read(buf, off, buf.length - off);
+			if (n == -1) {
+		        throw new EOFException();
+		    }
+			off += n;
+		}
+		if(off != buf.length) {
+			return -1;
+		}
+		off = PACKET_HEADER.length;
+		while (--off > -1 && PACKET_HEADER[off] == buf[off]);
+		if(off != -1) {
+			return -1;
+		}
+		return buf[0x08];
+	}
+	
+	private final boolean processPacket(Socket connected) throws IOException {
 		final InputStream is = connected.getInputStream();
-		final byte packetid;
-		{
-			byte[] buf = new byte[0x09];
-			int off = 0;
-			while(off < buf.length) {
-				int n = is.read(buf, off, buf.length - off);
-				if (n == -1) {
-			        throw new EOFException();
-			    }
-				off += n;
-			}
-			if(buf[0] != 'a' || buf[1] != 'm' || buf[2] != 'r' || buf[3] != 'a' || buf[4] != 0 || buf[7] != 0) {
-				return;
-			}
-			packetid = buf[8];
+		final byte packetid = readPacketId(is);
+		
+		if(packetid == -1) {
+			return false;
 		}
 		
 		if(packetid == 0x00) {//
 			processCheckCacheUpdate(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		
 		if(packetid == 0x01) {
 			processLoadResourcepack(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x02) {
 			processPlaySound(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x03) {
 			processStopSound(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x04) {
 			processSetRepeat(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x05) {
 			processSetResourcepackCustomdata(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		
 		if(packetid == 0x06) {
 			processGetLoadedPlayers(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x07) {
 			processGetLoadedResourcepackName(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		
 		if(packetid == 0x08) {
 			processGetResourcepackInfoList(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x09) {
 			processGetResourcepackInfoName(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x0A) {
 			processGetResourcepackInfoUUID(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		
 		if(packetid == 0x0B) {
 			processGetSourceResourcepackNameList(is, connected.getOutputStream());
-			return;
+			return true;
 		}
 		if(packetid == 0x0C) {
 			processGetSourceSoundnameList(is, connected.getOutputStream());
-			return;
+			return true;
 		}
+		return false;
 	}
 	
 	/*private static final byte[] HEX_ARRAY = "0123456789ABCDEF".getBytes(StandardCharsets.US_ASCII);

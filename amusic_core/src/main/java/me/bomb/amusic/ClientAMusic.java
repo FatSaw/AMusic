@@ -91,6 +91,8 @@ public final class ClientAMusic implements AMusic {
 		cachePlayerResourcepackInfos.remove(playeruuid);
 	}
 	
+	
+	
 	@Override
 	public boolean loadResourcepack(UUID[] playeruuid, String name, boolean update, Consumer<LoadPackResult> resultConsumer) {
 		if(name == null) {
@@ -246,7 +248,7 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 			}
 		};
@@ -328,7 +330,7 @@ public final class ClientAMusic implements AMusic {
 					success = result == 0 ? Boolean.FALSE : Boolean.TRUE;
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(success);
 			}
@@ -404,7 +406,7 @@ public final class ClientAMusic implements AMusic {
 					success = result == 0 ? Boolean.FALSE : Boolean.TRUE;
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(success);
 			}
@@ -469,7 +471,7 @@ public final class ClientAMusic implements AMusic {
 					os.write(buf, 0, buf.length);
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 			}
 		};
@@ -527,7 +529,7 @@ public final class ClientAMusic implements AMusic {
 					success = buf[0] == 1;
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(success);
 			}
@@ -605,7 +607,7 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(players);
 			}
@@ -692,7 +694,7 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(packname);
 			}
@@ -761,7 +763,7 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(names);
 			}
@@ -821,7 +823,7 @@ public final class ClientAMusic implements AMusic {
 					info = (buf[0x00] & 0x01) == 0x01 ? ResourcepackInfoImpl.deserialize(is) : null;
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(info);
 			}
@@ -907,7 +909,7 @@ public final class ClientAMusic implements AMusic {
 					success = true;
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(info);
 				if(success) {
@@ -983,7 +985,7 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(names);
 			}
@@ -1063,7 +1065,7 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					ClientAMusic.this.packetend(socket);
+					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(soundnames);
 			}
@@ -1072,18 +1074,24 @@ public final class ClientAMusic implements AMusic {
 		return true;
 	}
 	
+	private static final byte[] PACKET_CLOSE = new byte[] {'a', 'm', 'r', 'a', 0x00, 0x00, 0x00, 0x00, -1};
+	
 	private Socket socket() throws IOException {
 		Socket socket = this.socketfactory.createSocket(this.remoteip, this.port, this.hostip, 0);
 		socket.setSoTimeout(this.timeout);
 		return socket;
 	}
 	
-	private void packetend(Socket socket) {
-		if(socket != null) {
-			try {
-				socket.close();
-			} catch (IOException e) {
-			}
+	private void socketclose(Socket socket) {
+		if(socket == null || socket.isClosed()) return;
+		try {
+			OutputStream os = socket.getOutputStream();
+			os.write(PACKET_CLOSE, 0, PACKET_CLOSE.length);
+		} catch (IOException e) {
+		}
+		try {
+			socket.close();
+		} catch (IOException e) {
 		}
 	}
 	
@@ -1109,6 +1117,7 @@ public final class ClientAMusic implements AMusic {
 	
 	public final static class ResourcepackInfoCache extends Thread {
 		
+		private final boolean reusesocket = true;
 		private final ClientAMusic amusic;
 		private final long synchronizationdelayfailed, synchronizationdelaysuccess;
 		private final HashMap<String, ResourcepackInfoImpl> defaultresourcepacksmap = new HashMap<String, ResourcepackInfoImpl>(0);
@@ -1144,14 +1153,17 @@ public final class ClientAMusic implements AMusic {
 			checkcacheupdatepacket[0x07] = 0x00;
 			checkcacheupdatepacket[0x08] = 0x00; //PACKET ID
 			String synchronizationfailedmsg = "Resourcepack info synchronization: FAIL\nNext synchronization through: ".concat(Long.toString(this.synchronizationdelayfailed)).concat(" milliseconds");
-			//String synchronizationnotneedmsg = "Resourcepack info synchronization: NOT NEED\nNext synchronization through: ".concat(Long.toString(this.synchronizationdelaysuccess)).concat(" milliseconds");
 			String synchronizationsuccessmsg = "Resourcepack info synchronization: SUCCESS\nNext synchronization through: ".concat(Long.toString(this.synchronizationdelaysuccess)).concat(" milliseconds");
 			boolean cacheupdated = false;
+			boolean needclose = false;
+			Socket socket = null;
 			while(this.run) {
-				Socket socket = null;
 				boolean requestsuccess = false, needcacheupdate = false;
 				try {
-					socket = this.amusic.socket();
+					needclose = !this.reusesocket;
+					if(needclose || socket == null || socket.isClosed()) {
+						socket = this.amusic.socket();
+					}
 					OutputStream os = socket.getOutputStream();
 					os.write(checkcacheupdatepacket, 0, 0x19);
 					InputStream is = socket.getInputStream();
@@ -1163,7 +1175,10 @@ public final class ClientAMusic implements AMusic {
 					requestsuccess = true;
 				} catch (IOException e) {
 				} finally {
-					this.amusic.packetend(socket);
+					if(needclose || !needcacheupdate) {
+						this.amusic.socketclose(socket);
+						socket = null;
+					}
 				}
 				
 				if(!requestsuccess) {
@@ -1193,7 +1208,10 @@ public final class ClientAMusic implements AMusic {
 				byte[] lengths = null;
 				byte[][] namesbytes = null;
 				try {
-					socket = this.amusic.socket();
+					needclose = !this.reusesocket;
+					if(needclose || socket == null || socket.isClosed()) {
+						socket = this.amusic.socket();
+					}
 					OutputStream os = socket.getOutputStream();
 					byte[] buf = new byte[0xFF];
 					buf[0x00] = 'a';
@@ -1241,7 +1259,10 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					this.amusic.packetend(socket);
+					if(needclose) {
+						this.amusic.socketclose(socket);
+						socket = null;
+					}
 				}
 				if(lengths == null || namesbytes == null) {
 					continue;
@@ -1254,7 +1275,10 @@ public final class ClientAMusic implements AMusic {
 					byte len = lengths[i];
 					ResourcepackInfoImpl info = null;
 					try {
-						socket = this.amusic.socket();
+						needclose = !this.reusesocket;
+						if(needclose || socket == null || socket.isClosed()) {
+							socket = this.amusic.socket();
+						}
 						OutputStream os = socket.getOutputStream();
 						byte[] buf = new byte[0x0a];
 						buf[0x00] = 'a';
@@ -1282,7 +1306,10 @@ public final class ClientAMusic implements AMusic {
 						++j;
 					} catch (IOException e) {
 					} finally {
-						this.amusic.packetend(socket);
+						if(needclose) {
+							this.amusic.socketclose(socket);
+							socket = null;
+						}
 					}
 					if(info != null) {
 						String resourcepackname = info.getPackname();
@@ -1296,23 +1323,27 @@ public final class ClientAMusic implements AMusic {
 				this.resourcepacks = resourcepacks;
 				this.amusic.logger.info("Resourcepack info synchronized (" + Integer.toString(j) + "/" + Integer.toString(i) + ")");
 				
-				this.synchronizeDirs();
+				socket = this.synchronizeDirs(this.reusesocket ? socket : null);
 				cacheupdated = true;
 			}
+			this.amusic.socketclose(socket);
 			this.resourcepackinfolist = null;
 			this.resourcepacks = this.defaultresourcepacksmap;
 			this.resourcepacklist = null;
 			this.resourcepacksoundnames = this.defaultsoundnamesmap;
 		}
 		
-		private void synchronizeDirs() {
-			Socket socket = null;
+		private Socket synchronizeDirs(Socket socket) {
+			boolean needclose = false;
 			int i = 0, j = 0;
 			byte[] lengths = null;
 			byte[][] resourcepacklistbytes = null;
 			String[] resourcepacklist = null;
 			try {
-				socket = this.amusic.socket();
+				needclose = !this.reusesocket;
+				if(needclose || socket == null || socket.isClosed()) {
+					socket = this.amusic.socket();
+				}
 				OutputStream os = socket.getOutputStream();
 				byte[] buf = new byte[0x09];
 				buf[0x00] = 'a';
@@ -1362,7 +1393,10 @@ public final class ClientAMusic implements AMusic {
 				}
 			} catch (IOException e) {
 			} finally {
-				this.amusic.packetend(socket);
+				if(needclose) {
+					this.amusic.socketclose(socket);
+					socket = null;
+				}
 			}
 			this.resourcepacklist = resourcepacklist;
 			HashMap<String, String[]> resourcepacksoundnames = new HashMap<String, String[]>(0);
@@ -1372,9 +1406,11 @@ public final class ClientAMusic implements AMusic {
 				byte len = lengths[i];
 				
 				String[] soundnames = null;
-				socket = null;
 				try {
-					socket = this.amusic.socket();
+					needclose = !this.reusesocket;
+					if(needclose || socket == null || socket.isClosed()) {
+						socket = this.amusic.socket();
+					}
 					OutputStream os = socket.getOutputStream();
 					byte[] buf = new byte[0xFF];
 					buf[0x00] = 'a';
@@ -1423,16 +1459,21 @@ public final class ClientAMusic implements AMusic {
 					}
 				} catch (IOException e) {
 				} finally {
-					this.amusic.packetend(socket);
+					if(needclose) {
+						this.amusic.socketclose(socket);
+						socket = null;
+					}
 				}
 				resourcepacksoundnames.put(resourcepacklist[i], soundnames);
 			}
-			
 			this.resourcepacksoundnames = resourcepacksoundnames;
 			this.amusic.logger.info("Music directory list synchronized (" + Integer.toString(resourcepacklist.length) + ")");
+			return socket;
 		}
 		
 		public boolean addResourcepackInfo(String resourcepackname) {
+			boolean needclose = false;
+			Socket socket = null;
 			HashMap<String, ResourcepackInfoImpl> resourcepacks = this.resourcepacks;
 			synchronized(resourcepacks) {
 				ResourcepackInfoImpl oinfo = resourcepacks.get(resourcepackname);
@@ -1440,9 +1481,11 @@ public final class ClientAMusic implements AMusic {
 					return false;
 				}
 				ResourcepackInfoImpl info = null;
-				Socket socket = null;
 				try {
-					socket = this.amusic.socket();
+					needclose = !this.reusesocket;
+					if(needclose || socket == null || socket.isClosed()) {
+						socket = this.amusic.socket();
+					}
 					OutputStream os = socket.getOutputStream();
 					byte[] buf = new byte[0x0a];
 					buf[0x00] = 'a';
@@ -1475,7 +1518,10 @@ public final class ClientAMusic implements AMusic {
 				} catch (IOException e) {
 					this.amusic.logger.warn(e.getMessage());
 				} finally {
-					this.amusic.packetend(socket);
+					if(needclose) {
+						this.amusic.socketclose(socket);
+						socket = null;
+					}
 				}
 				if(info == null) {
 					return false;
@@ -1500,7 +1546,10 @@ public final class ClientAMusic implements AMusic {
 				this.resourcepackinfolist = resourcepackinfolist;
 			}
 			//this.amusic.logger.info("AMusic resourcepack info cached add (" + resourcepackname + ")");
-			this.synchronizeDirs();
+			socket = this.synchronizeDirs(this.reusesocket ? socket : null);
+			if(this.reusesocket) {
+				this.amusic.socketclose(socket);
+			}
 			return true;
 		}
 		
@@ -1547,7 +1596,7 @@ public final class ClientAMusic implements AMusic {
 				} catch (IOException e) {
 					this.amusic.logger.warn(e.getMessage());
 				} finally {
-					this.amusic.packetend(socket);
+					this.amusic.socketclose(socket);
 				}
 				if(info == null) {
 					return false;
@@ -1588,7 +1637,10 @@ public final class ClientAMusic implements AMusic {
 				this.resourcepackinfolist = resourcepackinfolist;
 			}
 			//this.amusic.logger.info("AMusic resourcepack info cached remove (" + resourcepackname + ")");
-			this.synchronizeDirs();
+			Socket socket = this.synchronizeDirs(null);
+			if(this.reusesocket) {
+				this.amusic.socketclose(socket);
+			}
 			return true;
 		}
 	}

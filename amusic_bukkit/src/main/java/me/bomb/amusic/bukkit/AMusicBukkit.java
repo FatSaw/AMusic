@@ -367,6 +367,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(this.geyserhook != null) {
 			this.geyserhook.unregister();
 		}
+		AMusicBukkit.instance = null;
 		if(this.amusic == null) {
 			return;
 		}

@@ -97,10 +97,10 @@ public final class LoadmusicCommand implements SimpleCommand {
 			Consumer<String[]> consumer = new Consumer<String[]>() {
 				@Override
 				public void accept(String[] playlists) {
-					StringBuilder sb = new StringBuilder("Playlists: ");
+					StringBuilder sb = new StringBuilder("Playlists:");
 					for(String playlistname : playlists) {
+						sb.append('\n');
 						sb.append(playlistname);
-						sb.append(' ');
 					}
 					sender.sendPlainMessage(sb.toString());
 				}

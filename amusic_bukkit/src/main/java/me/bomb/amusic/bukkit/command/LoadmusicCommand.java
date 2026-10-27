@@ -129,10 +129,10 @@ public final class LoadmusicCommand extends Command {
 			Consumer<String[]> consumer = new Consumer<String[]>() {
 				@Override
 				public void accept(String[] playlists) {
-					StringBuilder sb = new StringBuilder("Playlists: ");
+					StringBuilder sb = new StringBuilder("Playlists:");
 					for(String playlistname : playlists) {
+						sb.append('\n');
 						sb.append(playlistname);
-						sb.append(' ');
 					}
 					sender.sendMessage(sb.toString());
 				}

@@ -10,9 +10,9 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Executor;
 
 import me.bomb.amusic.api.PackSender;
+import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.http.ServerManager;
 import me.bomb.amusic.resourcepack.DataEntry;
 import me.bomb.amusic.tracker.PositionTracker;
@@ -33,7 +33,7 @@ public final class ResourceManager {
 	private final int end;
 	private final ServerManager server;
 	
-	public ResourceManager(PackSender packsender, PositionTracker positiontracker, String host, int maxbuffersize, byte[] salt, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final short connectcount, Executor executorsender, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
+	public ResourceManager(PackSender packsender, PositionTracker positiontracker, String host, int maxbuffersize, byte[] salt, final Collection<InetAddress> onlineips, final InetAddress ip, final int port, final int backlog, final int timeout, final short connectcount, ExecutorConfiguration executorsender, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
 		if(packsender == null || positiontracker == null || host == null) {
 			throw new NullPointerException();
 		}

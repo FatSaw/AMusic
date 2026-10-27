@@ -37,7 +37,7 @@ public final class Configuration {
 	
 	public final String errors;
 	
-	public final Executor executor, serverexecutor, sendpackexecutorsender;
+	public final ExecutorConfiguration executor, serverexecutor, sendpackexecutorsender;
 	
 	public final boolean use, usecmd, connectuse, connecttls;
 	
@@ -65,7 +65,7 @@ public final class Configuration {
 	public final ServerSocketFactory connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(Executor executor, Executor serverexecutor, Executor sendpackexecutorchecker, Executor sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(ExecutorConfiguration executor, ExecutorConfiguration serverexecutor, Executor sendpackexecutorchecker, ExecutorConfiguration sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.executor = executor;
@@ -167,7 +167,7 @@ public final class Configuration {
 				appendError("Filed to load executor configuration", errors);
 				errors.append(executorconfig.errors);
 			}
-			this.executor = executorconfig.createExecutor();
+			this.executor = executorconfig;
 			
 			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor", EMPTY);
 
@@ -177,7 +177,7 @@ public final class Configuration {
 				appendError("Filed to load sendpack executor sender configuration", errors);
 				errors.append(sendpackexecutorconfig.errors);
 			}
-			this.sendpackexecutorsender = sendpackexecutorconfig.createExecutor();
+			this.sendpackexecutorsender = sendpackexecutorconfig;
 			
 			this.sendpackhost = sc.getStringOrError("amusic\0server\0sendpack\0host", errors);
 			InetAddress sendpackifip = null;
@@ -308,7 +308,7 @@ public final class Configuration {
 						appendError("Filed to load server executor configuration", errors);
 						errors.append(serverexecutorconfig.errors);
 					}
-					this.serverexecutor = serverexecutorconfig.createExecutor();
+					this.serverexecutor = serverexecutorconfig;
 					InetAddress connectclientip = null;
 					String connectclientipstr = sc.getStringOrError("amusic\0server\0connect\0server\0clientip", errors);
 					if(connectclientipstr != null && !connectclientipstr.equals("0.0.0.0")) {

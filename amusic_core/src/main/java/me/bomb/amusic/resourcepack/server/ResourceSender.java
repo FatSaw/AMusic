@@ -8,10 +8,12 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.http.ServerWorker;
 import me.bomb.amusic.resourcepack.DataEntry;
 import me.bomb.amusic.util.AMusicLogger;
@@ -21,13 +23,14 @@ final class ResourceSender implements ServerWorker {
 	private static final ByteBuffer responsepart0 = ByteBuffer.wrap("HTTP/1.1 200 OK\r\nServer: AMusic server\r\nContent-Type: application/zip\r\nConnection: close\r\nContent-Length: ".getBytes(StandardCharsets.US_ASCII)), responsepart1 = ByteBuffer.wrap("\r\n\r\n".getBytes(StandardCharsets.US_ASCII)), requestinvalid = ByteBuffer.wrap("HTTP/1.1 400 Bad Request\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII)).asReadOnlyBuffer(), tokeninvalid = ByteBuffer.wrap("HTTP/1.1 401 Unauthorized\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII)).asReadOnlyBuffer(), waitacceptiontimeout = ByteBuffer.wrap("HTTP/1.1 408 Request Timeout\r\nServer: AMusic server\r\nContent-Length: 0\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.US_ASCII)).asReadOnlyBuffer();
 
 	private final ResourceManager resourcemanager;
-	private final Executor senderexecutor;
+	private final ExecutorConfiguration senderexecutorcfg;
 	private final int waitacceptioncount, waitacceptionwait, schedulerthreads;
+	private ExecutorService senderexecutor = null;
 	private ScheduledExecutorService scheduler = null;
 
-	protected ResourceSender(ResourceManager resourcemanager, Executor senderexecutor, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
+	protected ResourceSender(ResourceManager resourcemanager, ExecutorConfiguration senderexecutorcfg, int waitacceptioncount, int waitacceptionwait, int schedulerthreads) {
 		this.resourcemanager = resourcemanager;
-		this.senderexecutor = senderexecutor;
+		this.senderexecutorcfg = senderexecutorcfg;
 		this.waitacceptioncount = waitacceptioncount;
 		this.waitacceptionwait = waitacceptionwait;
 		this.schedulerthreads = schedulerthreads;
@@ -41,6 +44,7 @@ final class ResourceSender implements ServerWorker {
 
 	@Override
 	public void start() {
+		this.senderexecutor = this.senderexecutorcfg.createExecutor();
 		if (this.schedulerthreads < 0) {
 			return;
 		}
@@ -49,6 +53,8 @@ final class ResourceSender implements ServerWorker {
 
 	@Override
 	public void end() {
+		this.senderexecutor.shutdown();
+		this.senderexecutor = null;
 		if (this.scheduler == null) {
 			return;
 		}

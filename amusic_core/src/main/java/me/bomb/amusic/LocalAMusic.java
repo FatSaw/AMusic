@@ -1,13 +1,14 @@
 package me.bomb.amusic;
 
 import java.util.UUID;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.api.LoadPackResult;
 import me.bomb.amusic.api.RepeatType;
 import me.bomb.amusic.api.ResourcepackInfo;
+import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.resourcepack.CustomDatastore;
 import me.bomb.amusic.resourcepack.Data;
 import me.bomb.amusic.resourcepack.DataEntry;
@@ -26,15 +27,16 @@ public class LocalAMusic implements AMusic {
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
 	public final Data datamanager;
-	private final Executor executor;
+	private final ExecutorConfiguration executorcfg;
+	private ExecutorService executor;
 	
-	public LocalAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager) {
+	public LocalAMusic(Logger logger, ExecutorConfiguration executorcfg, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager) {
 		this.logger = logger;
 		this.soundsource = soundsource;
 		this.positiontracker = positiontracker;
 		this.resourcemanager = resourcemanager;
 		this.datamanager = datamanager;
-		this.executor = executor;
+		this.executorcfg = executorcfg;
 	}
 	
 	@Override
@@ -47,12 +49,15 @@ public class LocalAMusic implements AMusic {
 		resourcemanager.start();
 		datamanager.start();
 		datamanager.load();
+		this.executor = this.executorcfg.createExecutor();
 	}
 	
 	public void disable() {
 		positiontracker.end();
 		resourcemanager.end();
 		datamanager.end();
+		this.executor.shutdown();
+		this.executor = null;
 	}
 	
 	@Override

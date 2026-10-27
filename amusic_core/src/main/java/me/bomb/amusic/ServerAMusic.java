@@ -12,7 +12,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import javax.net.ServerSocketFactory;
@@ -21,6 +21,7 @@ import javax.net.ssl.SSLServerSocket;
 
 import me.bomb.amusic.api.LoadPackResult;
 import me.bomb.amusic.api.RepeatType;
+import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.resourcepack.CustomDatastore;
 import me.bomb.amusic.resourcepack.Data;
 import me.bomb.amusic.resourcepack.DataEntry;
@@ -36,20 +37,22 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
 	private final int port, timeout, backlog;
 	private final ServerSocketFactory connectserverfactory;
+	private final ExecutorConfiguration serverexecutorcfg;
+	private final ConcurrentSkipListSet<UUID> cacheupdatemarker;
 	private volatile boolean run;
 	private ServerSocket server;
-	private final Executor serverexecutor;
-	private final ConcurrentSkipListSet<UUID> cacheupdatemarker;
+	private ExecutorService serverexecutor;
+	private Thread accepterthread;
 	
-	public ServerAMusic(Logger logger, Executor executor, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, InetAddress hostip, InetAddress remoteip, int port, int timeout, int backlog, ServerSocketFactory connectserverfactory, Executor serverexecutor) {
-		super(logger, executor, soundsource, positiontracker, resourcemanager, datamanager);
+	public ServerAMusic(Logger logger, ExecutorConfiguration executorcfg, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, InetAddress hostip, InetAddress remoteip, int port, int timeout, int backlog, ServerSocketFactory connectserverfactory, ExecutorConfiguration serverexecutorcfg) {
+		super(logger, executorcfg, soundsource, positiontracker, resourcemanager, datamanager);
 		this.hostip = hostip;
 		this.remoteip = remoteip;
 		this.port = port;
 		this.timeout = timeout;
 		this.backlog = backlog;
 		this.connectserverfactory = connectserverfactory;
-		this.serverexecutor = serverexecutor;
+		this.serverexecutorcfg = serverexecutorcfg;
 		this.cacheupdatemarker = new ConcurrentSkipListSet<UUID>();
 	}
 
@@ -57,20 +60,31 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	public void enable() {
 		super.enable();
 		this.run = true;
-		new Thread(this).start();
+		this.serverexecutor = this.serverexecutorcfg.createExecutor();
+		Thread accepterthread = new Thread(this);
+		this.accepterthread = accepterthread;
+		accepterthread.start();
 		this.logger.info("AMusic connect server started!");
 	}
 
 	@Override
 	public void disable() {
 		super.disable();
-		run = false;
-		if(server==null) return;
-		try {
-			server.close();
-		} catch (IOException e) {
+		this.run = false;
+		Thread accepterthread = this.accepterthread;
+		if(accepterthread != null) {
+			accepterthread.interrupt();
+		}
+		if(this.server != null) {
+			try {
+				this.server.close();
+				this.server = null;
+			} catch (IOException e) {
+			}
 		}
 		this.cacheupdatemarker.clear();
+		this.serverexecutor.shutdown();
+		this.serverexecutor = null;
 		this.logger.info("AMusic connect server stopped!");
 	}
 	
@@ -128,6 +142,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 			try {
 				Thread.sleep(1000L);
 			} catch (InterruptedException e) {
+				Thread.interrupted();
 			}
 		}
 	}

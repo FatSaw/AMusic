@@ -3,7 +3,7 @@ package me.bomb.amusic.config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import me.bomb.amusic.util.SimpleConfiguration;
 
-final class ExecutorConfiguration {
+public final class ExecutorConfiguration {
 	protected final String errors;
 	
 	private final boolean linkedqueue;
@@ -131,11 +131,21 @@ final class ExecutorConfiguration {
 		this.errors = errors.toString();
 	}
 	
-	public Executor createExecutor() {
+	public ExecutorConfiguration(boolean linkedqueue, int queuesize, int corePoolSize, int maximumPoolSize, TimeUnit timeUnit, long keepAlive) {
+		this.linkedqueue = linkedqueue;
+		this.queuesize = queuesize;
+		this.corePoolSize = corePoolSize;
+		this.maximumPoolSize = maximumPoolSize;
+		this.keepAlive = keepAlive;
+		this.timeUnit = timeUnit;
+		this.errors = null;
+	}
+	
+	public ExecutorService createExecutor() {
 		if(errors.length() != 0) {
 			return null;
 		}
-		Executor executor;
+		ExecutorService executor;
 		try {
 			executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAlive, timeUnit, this.linkedqueue ? new LinkedBlockingQueue<>(queuesize) : new ArrayBlockingQueue<>(queuesize, false));
 		} catch (IllegalArgumentException | NullPointerException e) {
@@ -144,11 +154,11 @@ final class ExecutorConfiguration {
 		return executor;
 	}
 	
-	public Executor createExecutor(ThreadFactory threadFactory, RejectedExecutionHandler handler) {
+	public ExecutorService createExecutor(ThreadFactory threadFactory, RejectedExecutionHandler handler) {
 		if(errors.length() != 0) {
 			return null;
 		}
-		Executor executor;
+		ExecutorService executor;
 		try {
 			executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAlive, timeUnit, this.linkedqueue ? new LinkedBlockingQueue<>(queuesize) : new ArrayBlockingQueue<>(queuesize, false), threadFactory, handler);
 		} catch (IllegalArgumentException | NullPointerException e) {

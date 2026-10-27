@@ -16,7 +16,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
 import javax.net.SocketFactory;
@@ -25,6 +25,7 @@ import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.api.LoadPackResult;
 import me.bomb.amusic.api.RepeatType;
 import me.bomb.amusic.api.ResourcepackInfo;
+import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
 import me.bomb.amusic.util.Logger;
 
@@ -35,12 +36,13 @@ public final class ClientAMusic implements AMusic {
 	private final int port, timeout;
 	private final long cachetimeoutfail, cachetimeoutsuccess;
 	private final SocketFactory socketfactory;
-	private final Executor executor;
+	private final ExecutorConfiguration executorcfg;
+	private ExecutorService executor = null;
 	
 	private ResourcepackInfoCache resourcepackinfocache;
 	private ConcurrentHashMap<UUID, ResourcepackInfoImpl> cachePlayerResourcepackInfos = new ConcurrentHashMap<>();
 	
-	public ClientAMusic(Logger logger, InetAddress hostip, InetAddress remoteip, int port, int timeout, long cachetimeoutfail, long cachetimeoutsuccess, SocketFactory socketfactory, Executor executor) {
+	public ClientAMusic(Logger logger, InetAddress hostip, InetAddress remoteip, int port, int timeout, long cachetimeoutfail, long cachetimeoutsuccess, SocketFactory socketfactory, ExecutorConfiguration executorcfg) {
 		this.logger = logger;
 		this.hostip = hostip;
 		this.remoteip = remoteip;
@@ -49,7 +51,7 @@ public final class ClientAMusic implements AMusic {
 		this.cachetimeoutfail = cachetimeoutfail;
 		this.cachetimeoutsuccess = cachetimeoutsuccess;
 		this.socketfactory = socketfactory;
-		this.executor = executor;
+		this.executorcfg = executorcfg;
 	}
 	
 	@Override
@@ -64,6 +66,7 @@ public final class ClientAMusic implements AMusic {
 		resourcepackinfocache.run = true;
 		resourcepackinfocache.start();
 		this.resourcepackinfocache = resourcepackinfocache;
+		this.executor = this.executorcfg.createExecutor();
 		this.logger.info("AMusic connect client started!");
 	}
 
@@ -73,6 +76,8 @@ public final class ClientAMusic implements AMusic {
 		resourcepackinfocache.run = false;
 		resourcepackinfocache.interrupt();
 		cachePlayerResourcepackInfos.clear();
+		this.executor.shutdown();
+		this.executor = null;
 		this.logger.info("AMusic connect client stopped!");
 	}
 	

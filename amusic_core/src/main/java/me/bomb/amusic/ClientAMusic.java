@@ -34,6 +34,7 @@ public final class ClientAMusic implements AMusic {
 	public final Logger logger;
 	private final InetAddress hostip, remoteip;
 	private final int port, timeout;
+	private final boolean cachereusesocket;
 	private final long cachetimeoutfail, cachetimeoutsuccess;
 	private final SocketFactory socketfactory;
 	private final ExecutorConfiguration executorcfg;
@@ -48,6 +49,7 @@ public final class ClientAMusic implements AMusic {
 		this.remoteip = remoteip;
 		this.port = port;
 		this.timeout = timeout;
+		this.cachereusesocket = true;
 		this.cachetimeoutfail = cachetimeoutfail;
 		this.cachetimeoutsuccess = cachetimeoutsuccess;
 		this.socketfactory = socketfactory;
@@ -62,7 +64,7 @@ public final class ClientAMusic implements AMusic {
 
 	@Override
 	public void enable() {
-		ResourcepackInfoCache resourcepackinfocache = new ResourcepackInfoCache(this, this.cachetimeoutfail, this.cachetimeoutsuccess);
+		ResourcepackInfoCache resourcepackinfocache = new ResourcepackInfoCache(this, this.cachereusesocket, this.cachetimeoutfail, this.cachetimeoutsuccess);
 		resourcepackinfocache.run = true;
 		resourcepackinfocache.start();
 		this.resourcepackinfocache = resourcepackinfocache;
@@ -1117,8 +1119,8 @@ public final class ClientAMusic implements AMusic {
 	
 	public final static class ResourcepackInfoCache extends Thread {
 		
-		private final boolean reusesocket = true;
 		private final ClientAMusic amusic;
+		private final boolean reusesocket;
 		private final long synchronizationdelayfailed, synchronizationdelaysuccess;
 		private final HashMap<String, ResourcepackInfoImpl> defaultresourcepacksmap = new HashMap<String, ResourcepackInfoImpl>(0);
 		private final HashMap<String, String[]> defaultsoundnamesmap = new HashMap<String, String[]>(0);
@@ -1127,8 +1129,9 @@ public final class ClientAMusic implements AMusic {
 		protected HashMap<String, String[]> resourcepacksoundnames = this.defaultsoundnamesmap;
 		protected volatile boolean run;
 		
-		private ResourcepackInfoCache(ClientAMusic amusic, long synchronizationdelayfailed, long synchronizationdelaysuccess) {
+		private ResourcepackInfoCache(ClientAMusic amusic, boolean reusesocket, long synchronizationdelayfailed, long synchronizationdelaysuccess) {
 			this.amusic = amusic;
+			this.reusesocket = reusesocket;
 			this.synchronizationdelayfailed = synchronizationdelayfailed;
 			this.synchronizationdelaysuccess = synchronizationdelaysuccess;
 		}

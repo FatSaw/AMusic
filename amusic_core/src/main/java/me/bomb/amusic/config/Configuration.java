@@ -39,7 +39,7 @@ public final class Configuration {
 	
 	public final ExecutorConfiguration executor, serverexecutor, sendpackexecutorsender;
 	
-	public final boolean use, usecmd, connectuse, connecttls;
+	public final boolean use, usecmd, connectuse, connecttls, connectusecache, connectcachereusesocket;
 	
 	public final String sendpackhost, joinplaylist;
 	public final InetAddress sendpackifip, connectifip, connectremoteip;
@@ -65,7 +65,7 @@ public final class Configuration {
 	public final ServerSocketFactory connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(ExecutorConfiguration executor, ExecutorConfiguration serverexecutor, Executor sendpackexecutorchecker, ExecutorConfiguration sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecthttps, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(ExecutorConfiguration executor, ExecutorConfiguration serverexecutor, Executor sendpackexecutorchecker, ExecutorConfiguration sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecttls, boolean connectusecache, boolean connectcachereusesocket, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.executor = executor;
@@ -73,7 +73,9 @@ public final class Configuration {
 		this.sendpackexecutorsender = sendpackexecutorsender;
 		this.usecmd = usecmd;
 		this.connectuse = connectuse;
-		this.connecttls = connecthttps;
+		this.connecttls = connecttls;
+		this.connectusecache = connectusecache;
+		this.connectcachereusesocket = connectcachereusesocket;
 		this.sendpackhost = sendpackhost;
 		this.joinplaylist = joinplaylist;
 		this.sendpackifip = sendpackifip;
@@ -240,6 +242,8 @@ public final class Configuration {
 					this.connectremoteip = connectserverip;
 					this.connectport = sc.getIntOrError("amusic\0server\0connect\0client\0port", errors);
 					this.connecttimeout = sc.getIntOrError("amusic\0server\0connect\0client\0timeout", errors);
+					this.connectusecache = sc.getBooleanOrError("amusic\0server\0connect\0client\0cache\0use", errors);
+					this.connectcachereusesocket = sc.getBooleanOrError("amusic\0server\0connect\0client\0cache\0reusesocket", errors);
 					this.connectcachetimeoutsuccess = sc.getLongOrError("amusic\0server\0connect\0client\0cache\0timeout\0success", errors);
 					this.connectcachetimeoutfail = sc.getLongOrError("amusic\0server\0connect\0client\0cache\0timeout\0fail", errors);
 					this.connectbacklog = 0;
@@ -321,6 +325,8 @@ public final class Configuration {
 					this.connectremoteip = connectclientip;
 					this.connectport = sc.getIntOrError("amusic\0server\0connect\0server\0port", errors);
 					this.connecttimeout = sc.getIntOrError("amusic\0server\0connect\0server\0timeout", errors);
+					this.connectusecache = false;
+					this.connectcachereusesocket = false;
 					this.connectcachetimeoutsuccess = 0L;
 					this.connectcachetimeoutfail = 0L;
 					this.connectbacklog = sc.getIntOrError("amusic\0server\0connect\0server\0backlog", errors);
@@ -391,6 +397,8 @@ public final class Configuration {
 				this.connectport = 0;
 				this.connectbacklog = 0;
 				this.connecttimeout = 0;
+				this.connectusecache = false;
+				this.connectcachereusesocket = false;
 				this.connectcachetimeoutsuccess = 0L;
 				this.connectcachetimeoutfail = 0L;
 				this.connectserverfactory = null;
@@ -431,6 +439,8 @@ public final class Configuration {
 			this.connectport = 0;
 			this.connectbacklog = 0;
 			this.connecttimeout = 0;
+			this.connectusecache = false;
+			this.connectcachereusesocket = false;
 			this.connectcachetimeoutsuccess = 0L;
 			this.connectcachetimeoutfail = 0L;
 			this.connectserverfactory = null;

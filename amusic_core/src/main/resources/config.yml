@@ -73,6 +73,10 @@ amusic:
     port: 25534
     timeout: 5000
     cache:
+     #Use - use cache
+     use: true
+     #Reusesocket - reuse socket for cache requests
+     reusesocket: true
      timeout:
       #Success - amount of time in milliseconds to next cache update check after success
       success: 60000

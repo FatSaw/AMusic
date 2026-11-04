@@ -34,22 +34,23 @@ public final class ClientAMusic implements AMusic {
 	public final Logger logger;
 	private final InetAddress hostip, remoteip;
 	private final int port, timeout;
-	private final boolean cachereusesocket;
+	private final boolean usecache, cachereusesocket;
 	private final long cachetimeoutfail, cachetimeoutsuccess;
 	private final SocketFactory socketfactory;
 	private final ExecutorConfiguration executorcfg;
 	private ExecutorService executor = null;
 	
-	private ResourcepackInfoCache resourcepackinfocache;
-	private ConcurrentHashMap<UUID, ResourcepackInfoImpl> cachePlayerResourcepackInfos = new ConcurrentHashMap<>();
+	private ResourcepackInfoCache resourcepackinfocache = null;
+	private ConcurrentHashMap<UUID, ResourcepackInfoImpl> cachePlayerResourcepackInfos = null;
 	
-	public ClientAMusic(Logger logger, InetAddress hostip, InetAddress remoteip, int port, int timeout, long cachetimeoutfail, long cachetimeoutsuccess, SocketFactory socketfactory, ExecutorConfiguration executorcfg) {
+	public ClientAMusic(Logger logger, InetAddress hostip, InetAddress remoteip, int port, int timeout, boolean usecache, boolean cachereusesocket, long cachetimeoutfail, long cachetimeoutsuccess, SocketFactory socketfactory, ExecutorConfiguration executorcfg) {
 		this.logger = logger;
 		this.hostip = hostip;
 		this.remoteip = remoteip;
 		this.port = port;
 		this.timeout = timeout;
-		this.cachereusesocket = true;
+		this.usecache = usecache;
+		this.cachereusesocket = cachereusesocket;
 		this.cachetimeoutfail = cachetimeoutfail;
 		this.cachetimeoutsuccess = cachetimeoutsuccess;
 		this.socketfactory = socketfactory;
@@ -58,16 +59,23 @@ public final class ClientAMusic implements AMusic {
 	
 	@Override
 	public boolean updateCache() {
-		this.resourcepackinfocache.interrupt();
-		return true;
+		ResourcepackInfoCache resourcepackinfocache = this.resourcepackinfocache;
+		if(resourcepackinfocache != null) {
+			resourcepackinfocache.interrupt();
+			return true;
+		}
+		return false;
 	}
 
 	@Override
 	public void enable() {
-		ResourcepackInfoCache resourcepackinfocache = new ResourcepackInfoCache(this, this.cachereusesocket, this.cachetimeoutfail, this.cachetimeoutsuccess);
-		resourcepackinfocache.run = true;
-		resourcepackinfocache.start();
-		this.resourcepackinfocache = resourcepackinfocache;
+		if(this.usecache) {
+			ResourcepackInfoCache resourcepackinfocache = new ResourcepackInfoCache(this, this.cachereusesocket, this.cachetimeoutfail, this.cachetimeoutsuccess);
+			resourcepackinfocache.run = true;
+			resourcepackinfocache.start();
+			this.resourcepackinfocache = resourcepackinfocache;
+			this.cachePlayerResourcepackInfos = new ConcurrentHashMap<>();
+		}
 		this.executor = this.executorcfg.createExecutor();
 		this.logger.info("AMusic connect client started!");
 	}
@@ -75,9 +83,16 @@ public final class ClientAMusic implements AMusic {
 	@Override
 	public void disable() {
 		ResourcepackInfoCache resourcepackinfocache = this.resourcepackinfocache;
-		resourcepackinfocache.run = false;
-		resourcepackinfocache.interrupt();
-		cachePlayerResourcepackInfos.clear();
+		if(resourcepackinfocache != null) {
+			resourcepackinfocache.run = false;
+			resourcepackinfocache.interrupt();
+			resourcepackinfocache = null;
+		}
+		ConcurrentHashMap<UUID, ResourcepackInfoImpl> cachePlayerResourcepackInfos = this.cachePlayerResourcepackInfos;
+		if(cachePlayerResourcepackInfos != null) {
+			cachePlayerResourcepackInfos.clear();
+			cachePlayerResourcepackInfos = null;
+		}
 		this.executor.shutdown();
 		this.executor = null;
 		this.logger.info("AMusic connect client stopped!");
@@ -90,10 +105,11 @@ public final class ClientAMusic implements AMusic {
 	
 	@Override
 	public void logout(UUID playeruuid) {
-		cachePlayerResourcepackInfos.remove(playeruuid);
+		ConcurrentHashMap<UUID, ResourcepackInfoImpl> cachePlayerResourcepackInfos = this.cachePlayerResourcepackInfos;
+		if(cachePlayerResourcepackInfos != null) {
+			cachePlayerResourcepackInfos.remove(playeruuid);
+		}
 	}
-	
-	
 	
 	@Override
 	public boolean loadResourcepack(UUID[] playeruuid, String name, boolean update, Consumer<LoadPackResult> resultConsumer) {
@@ -218,11 +234,11 @@ public final class ClientAMusic implements AMusic {
 					switch (status) {
 					case 1:
 						resultConsumer.accept(LoadPackResult.DISPATCHED);
-						if(playeruuid != null) {
+						if(playeruuid != null && ClientAMusic.this.cachePlayerResourcepackInfos != null) {
 							int uuidcount = playeruuid.length;
 							while(--uuidcount > -1) {
 								UUID uuid = playeruuid[uuidcount];
-								cachePlayerResourcepackInfos.remove(uuid);
+								ClientAMusic.this.cachePlayerResourcepackInfos.remove(uuid);
 							}
 						}
 					break;
@@ -231,7 +247,7 @@ public final class ClientAMusic implements AMusic {
 					break;
 					case 3:
 						resultConsumer.accept(LoadPackResult.PACKED);
-						if(update) {
+						if(update && resourcepackinfocache != null) {
 							if(needclose = !resourcepackinfocache.updateResourcepackInfo(name, socket)) {
 								needclose = !resourcepackinfocache.addResourcepackInfo(name, socket);
 							}
@@ -239,7 +255,7 @@ public final class ClientAMusic implements AMusic {
 					break;
 					case 4:
 						resultConsumer.accept(LoadPackResult.REMOVED);
-						if(update) {
+						if(update && resourcepackinfocache != null) {
 							resourcepackinfocache.removeResourcepackInfo(name, socket);
 						}
 					break;
@@ -248,18 +264,18 @@ public final class ClientAMusic implements AMusic {
 					break;
 					}
 				} else {
-					if(update) {
+					if(update && resourcepackinfocache != null) {
 						if(needclose = !resourcepackinfocache.updateResourcepackInfo(name, socket)) {
 							if(needclose = !resourcepackinfocache.addResourcepackInfo(name, socket)) {
 								needclose = !resourcepackinfocache.removeResourcepackInfo(name, socket);
 							}
 						}
 					}
-					if(playeruuid != null) {
+					if(playeruuid != null && ClientAMusic.this.cachePlayerResourcepackInfos != null) {
 						int uuidcount = playeruuid.length;
 						while(--uuidcount > -1) {
 							UUID uuid = playeruuid[uuidcount];
-							cachePlayerResourcepackInfos.remove(uuid);
+							ClientAMusic.this.cachePlayerResourcepackInfos.remove(uuid);
 						}
 					}
 				}
@@ -722,7 +738,7 @@ public final class ClientAMusic implements AMusic {
 	
 	@Override
 	public String[] getResourcepackInfoListCached() {
-		return this.resourcepackinfocache.resourcepackinfolist;
+		return this.resourcepackinfocache != null ? this.resourcepackinfocache.resourcepackinfolist : null;
 	}
 
 	@Override
@@ -791,7 +807,7 @@ public final class ClientAMusic implements AMusic {
 	
 	@Override
 	public ResourcepackInfoImpl getResourcepackInfoCached(String resourcepackname) {
-		if(resourcepackname == null) {
+		if(this.resourcepackinfocache == null || resourcepackname == null) {
 			return null;
 		}
 		return this.resourcepackinfocache.resourcepacks.get(resourcepackname);
@@ -850,10 +866,10 @@ public final class ClientAMusic implements AMusic {
 	
 	@Override
 	public ResourcepackInfo getResourcepackInfoCached(UUID playeruuid) {
-		if(playeruuid == null) {
+		if(this.cachePlayerResourcepackInfos == null || playeruuid == null) {
 			return null;
 		}
-		return cachePlayerResourcepackInfos.get(playeruuid);
+		return this.cachePlayerResourcepackInfos.get(playeruuid);
 	}
 
 	@Override
@@ -928,11 +944,11 @@ public final class ClientAMusic implements AMusic {
 					ClientAMusic.this.socketclose(socket);
 				}
 				resultConsumer.accept(info);
-				if(success) {
+				if(success && ClientAMusic.this.cachePlayerResourcepackInfos != null) {
 					if(info == null) {
-						cachePlayerResourcepackInfos.remove(playeruuid);
+						ClientAMusic.this.cachePlayerResourcepackInfos.remove(playeruuid);
 					} else {
-						cachePlayerResourcepackInfos.put(playeruuid, info);
+						ClientAMusic.this.cachePlayerResourcepackInfos.put(playeruuid, info);
 					}
 				}
 			}
@@ -944,7 +960,7 @@ public final class ClientAMusic implements AMusic {
 	
 	@Override
 	public String[] getSourceResourcepackNameListCached() {
-		return this.resourcepackinfocache.resourcepacklist;
+		return this.resourcepackinfocache != null ? this.resourcepackinfocache.resourcepacklist : null;
 	}
 	
 	@Override
@@ -1012,6 +1028,9 @@ public final class ClientAMusic implements AMusic {
 	
 	@Override
 	public String[] getSourceSoundnameListCached(String resourcepackname) {
+		if(this.resourcepackinfocache == null || resourcepackname == null) {
+			return null;
+		}
 		return this.resourcepackinfocache.resourcepacksoundnames.get(resourcepackname);
 	}
 	

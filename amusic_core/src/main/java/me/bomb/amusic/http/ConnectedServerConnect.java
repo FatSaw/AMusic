@@ -39,7 +39,7 @@ final class ConnectedServerConnect extends ServerConnect {
 				SocketChannel connected = null;
 				try {
 					connected = server.accept();
-					InetAddress address = ((InetSocketAddress)connected.getLocalAddress()).getAddress();
+					InetAddress address = ((InetSocketAddress)connected.getRemoteAddress()).getAddress();
 					if (onlineips.contains(address)) {
 						connected.socket().setSoTimeout(serverwatcher.timeout);
 						worker.processConnection(connected);

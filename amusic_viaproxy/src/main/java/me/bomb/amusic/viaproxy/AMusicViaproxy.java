@@ -29,6 +29,7 @@ import me.bomb.amusic.viaproxy.command.PlaymusicCommand;
 import me.bomb.amusic.viaproxy.command.RepeatCommand;
 import net.lenni0451.lambdaevents.LambdaManager;
 import net.raphimc.viaproxy.ViaProxy;
+import net.raphimc.viaproxy.plugins.PluginManager;
 import net.raphimc.viaproxy.plugins.ViaProxyPlugin;
 import net.raphimc.viaproxy.plugins.events.ClientLoggedInEvent;
 import net.raphimc.viaproxy.plugins.events.ConsoleCommandEvent;
@@ -65,7 +66,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 			}
 		};
 		AMusicLogger.setLogger(this.logger);
-		Path plugindir = this.getDataFolder().toPath(), mergezip = plugindir.resolve("resourcepack.zip"), configfile = plugindir.resolve("config.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
+		Path plugindir = PluginManager.PLUGINS_DIR.toPath().resolve("AMusic"), mergezip = plugindir.resolve("resourcepack.zip"), configfile = plugindir.resolve("config.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
 		try {

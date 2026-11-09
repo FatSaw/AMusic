@@ -13,9 +13,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import me.bomb.amusic.api.Resourcepack;
 import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.http.ServerWorker;
-import me.bomb.amusic.resourcepack.DataEntry;
 
 final class ResourceSender implements ServerWorker {
 	
@@ -211,7 +211,7 @@ final class ResourceSender implements ServerWorker {
 		
 		@Override
 		public void run() {
-			DataEntry entry;
+			Resourcepack entry;
 			if ((entry = this.resourcemanager.get(this.token)) == null) {
 				try {
 					write(this.connected, tokeninvalid);

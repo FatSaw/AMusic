@@ -8,7 +8,7 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 
 import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.api.LoadPackResult;
-import me.bomb.amusic.util.Logger;
+import me.bomb.amusic.util.AMusicLogger;
 
 public final class LoadmusicCommand implements Command {
 	
@@ -21,7 +21,7 @@ public final class LoadmusicCommand implements Command {
 	}
 
 	@Override
-	public void handleConsole(Logger logger, String[] args) {
+	public void handleConsole(AMusicLogger logger, String[] args) {
 		if (args.length > 1) {
 			UUID targetuuid = null;
 			if (!args[0].equals("@n")) {

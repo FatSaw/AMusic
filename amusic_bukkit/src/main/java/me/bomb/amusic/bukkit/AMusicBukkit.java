@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -70,6 +69,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	
 	private static AMusic instance = null;
 	
+	private final AMusicLogger logger;
 	private final AMusic amusic;
 	private final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission;
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
@@ -88,24 +88,7 @@ public final class AMusicBukkit extends JavaPlugin {
 	private final PlayerResourcePackStatusHandler playerresourcepackstatus;
 
 	public AMusicBukkit() {
-		me.bomb.amusic.util.Logger logger = new me.bomb.amusic.util.Logger() {
-			java.util.logging.Logger logger = AMusicBukkit.this.getLogger();
-			@Override
-			public void warn(String msg) {
-				logger.warning(msg);
-			}
-			
-			@Override
-			public void info(String msg) {
-				logger.info(msg);
-			}
-			
-			@Override
-			public void error(String msg) {
-				logger.severe(msg);
-			}
-		};
-		AMusicLogger.setLogger(logger);
+		this.logger = new AMusicLogger();
 		final Server server = this.getServer();
 		byte ver = 127;
 		try {
@@ -137,7 +120,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			PlayerQuitHandler playerquit = null;
 			if(config.connectuse) {
 				this.playerips = null;
-				ClientAMusic amusic = new ClientAMusic(logger, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectusecache, config.connectcachereusesocket, config.connectcachetimeoutfail, config.connectcachetimeoutsuccess, config.connectsocketfactory, config.executor);
+				ClientAMusic amusic = new ClientAMusic(this.logger, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectusecache, config.connectcachereusesocket, config.connectcachetimeoutfail, config.connectcachetimeoutsuccess, config.connectsocketfactory, config.executor);
 				this.amusic = amusic;
 				this.playerchangedworld = null;
 				this.playerrespawn = null;
@@ -195,8 +178,8 @@ public final class AMusicBukkit extends JavaPlugin {
 				PositionTracker positiontracker = new PositionTracker(soundstarter, soundstopper);
 				ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackacceptthreads, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 				PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(fsp.exists(mergezip) ? new PackMergeEntryFile(mergezip, config.packsizelimit) : null, musicdir, config.packsizelimit);
-				Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
-				LocalAMusic amusic = new LocalAMusic(logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
+				Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(this.logger, !config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(this.logger, !config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(this.logger, !config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(this.logger, !config.processpack, lczs, packmergesource);
+				LocalAMusic amusic = new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 				this.amusic = amusic;
 				PlayerChangedWorldHandler playerchangedworld = null;
 				PlayerRespawnHandler playerrespawn = null;
@@ -307,10 +290,26 @@ public final class AMusicBukkit extends JavaPlugin {
 	//PLUGIN INIT START
 	public void onEnable() {
 		final Server server = this.getServer();
-		Logger logger = this.getLogger();
 		if(this.amusic == null) {
 			return;
 		}
+		this.logger.setLogger(new me.bomb.amusic.util.Logger() {
+			java.util.logging.Logger logger = AMusicBukkit.this.getLogger();
+			@Override
+			public void warn(String msg) {
+				logger.warning(msg);
+			}
+			
+			@Override
+			public void info(String msg) {
+				logger.info(msg);
+			}
+			
+			@Override
+			public void error(String msg) {
+				logger.severe(msg);
+			}
+		});
 		if(this.mapcommand != null) {
 			final String prefix = "amusic:";
 			if(this.loadmusiccmd != null) {
@@ -357,7 +356,7 @@ public final class AMusicBukkit extends JavaPlugin {
 		if(this.amusic instanceof LocalAMusic) {
 			try {
 				this.geyserhook = new GeyserHook(this, ((LocalAMusic) this.amusic).datamanager);
-				logger.info("Geyser hook loaded");
+				this.logger.info("Geyser hook loaded");
 			} catch (NoClassDefFoundError e) {
 			}
 		}
@@ -368,6 +367,7 @@ public final class AMusicBukkit extends JavaPlugin {
 			this.geyserhook.unregister();
 		}
 		AMusicBukkit.instance = null;
+		this.logger.setLogger(null);
 		if(this.amusic == null) {
 			return;
 		}

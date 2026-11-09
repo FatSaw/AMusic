@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.http.ServerWorker;
 import me.bomb.amusic.resourcepack.DataEntry;
-import me.bomb.amusic.util.AMusicLogger;
 
 final class ResourceSender implements ServerWorker {
 	
@@ -108,12 +107,10 @@ final class ResourceSender implements ServerWorker {
 					}
 				}
 				if(readattempts == -1 && off < 54) {
-					AMusicLogger.warn("Socket too many read count!");
 					this.close();
 					return;
 				}
 			} catch (SocketTimeoutException e) {
-				AMusicLogger.warn("Socket read timeout: ".concat(e.getMessage()));
 				this.close();
 				return;
 			} catch (IOException e) {

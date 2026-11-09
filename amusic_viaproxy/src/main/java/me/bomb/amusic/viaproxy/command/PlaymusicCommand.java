@@ -10,7 +10,7 @@ import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.api.ResourcepackInfo;
 import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
 import me.bomb.amusic.resourcepack.SoundInfo;
-import me.bomb.amusic.util.Logger;
+import me.bomb.amusic.util.AMusicLogger;
 
 public final class PlaymusicCommand implements Command {
 	
@@ -23,7 +23,7 @@ public final class PlaymusicCommand implements Command {
 	}
 
 	@Override
-	public void handleConsole(Logger logger, String[] args) {
+	public void handleConsole(AMusicLogger logger, String[] args) {
 		if(args.length==1) {
 			if(args[0].equals("@s")) {
 				logger.info("This selector unavilable from console");

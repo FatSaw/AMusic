@@ -31,7 +31,7 @@ import me.bomb.amusic.resourcepack.SourceEntry;
 import me.bomb.amusic.resourcepack.UpdateResult;
 import me.bomb.amusic.resourcepack.server.ResourceManager;
 import me.bomb.amusic.tracker.PositionTracker;
-import me.bomb.amusic.util.Logger;
+import me.bomb.amusic.util.AMusicLogger;
 
 public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private final InetAddress hostip, remoteip;
@@ -44,7 +44,7 @@ public final class ServerAMusic extends LocalAMusic implements Runnable {
 	private ExecutorService serverexecutor;
 	private Thread accepterthread;
 	
-	public ServerAMusic(Logger logger, ExecutorConfiguration executorcfg, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, InetAddress hostip, InetAddress remoteip, int port, int timeout, int backlog, ServerSocketFactory connectserverfactory, ExecutorConfiguration serverexecutorcfg) {
+	public ServerAMusic(AMusicLogger logger, ExecutorConfiguration executorcfg, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager, InetAddress hostip, InetAddress remoteip, int port, int timeout, int backlog, ServerSocketFactory connectserverfactory, ExecutorConfiguration serverexecutorcfg) {
 		super(logger, executorcfg, soundsource, positiontracker, resourcemanager, datamanager);
 		this.hostip = hostip;
 		this.remoteip = remoteip;

@@ -7,8 +7,6 @@ import java.nio.channels.SocketChannel;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 
-import me.bomb.amusic.util.AMusicLogger;
-
 public final class LocalCachedDataEntry extends DataEntry implements CustomDatastore {
 	
 	private final FileSystemProvider fsp;
@@ -40,7 +38,6 @@ public final class LocalCachedDataEntry extends DataEntry implements CustomDatas
 	@Override
 	public boolean updateCustomdata(byte[] customdata) {
 		if(customdata == null || customdata.length > 0xFFFF) {
-			AMusicLogger.warn("Pack update customdata fail (invalid values)");
 			return false;
 		}
 		ResourcepackInfoImpl info = this.info;

@@ -18,11 +18,11 @@ import me.bomb.amusic.resourcepack.SourceEntry;
 import me.bomb.amusic.resourcepack.UpdateResult;
 import me.bomb.amusic.resourcepack.server.ResourceManager;
 import me.bomb.amusic.tracker.PositionTracker;
-import me.bomb.amusic.util.Logger;
+import me.bomb.amusic.util.AMusicLogger;
 
 public class LocalAMusic implements AMusic {
 	
-	public final Logger logger;
+	public final AMusicLogger logger;
 	public final SoundSource<? extends SourceEntry> soundsource;
 	public final PositionTracker positiontracker;
 	public final ResourceManager resourcemanager;
@@ -30,7 +30,7 @@ public class LocalAMusic implements AMusic {
 	private final ExecutorConfiguration executorcfg;
 	private ExecutorService executor;
 	
-	public LocalAMusic(Logger logger, ExecutorConfiguration executorcfg, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager) {
+	public LocalAMusic(AMusicLogger logger, ExecutorConfiguration executorcfg, SoundSource<? extends SourceEntry> soundsource, PositionTracker positiontracker, ResourceManager resourcemanager, Data datamanager) {
 		this.logger = logger;
 		this.soundsource = soundsource;
 		this.positiontracker = positiontracker;

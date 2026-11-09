@@ -2,34 +2,37 @@ package me.bomb.amusic.util;
 
 public final class AMusicLogger {
 	
-	private AMusicLogger() {
+	public AMusicLogger() {
 	}
 	
-	private static Logger logger;
+	private Logger logger;
 	
-	public static void setLogger(Logger logger) {
-		AMusicLogger.logger = logger;
+	public void setLogger(Logger logger) {
+		this.logger = logger;
 	}
 
-	public static void info(String msg) {
-		if(AMusicLogger.logger == null) {
+	public void info(String msg) {
+		Logger logger = this.logger;
+		if(logger == null) {
 			return;
 		}
-		AMusicLogger.logger.info(msg);
+		logger.info(msg);
 	}
-
-	public static void warn(String msg) {
-		if(AMusicLogger.logger == null) {
+	
+	public void warn(String msg) {
+		Logger logger = this.logger;
+		if(logger == null) {
 			return;
 		}
-		AMusicLogger.logger.warn(msg);
+		logger.warn(msg);
 	}
-
-	public static void error(String msg) {
-		if(AMusicLogger.logger == null) {
+	
+	public void error(String msg) {
+		Logger logger = this.logger;
+		if(logger == null) {
 			return;
 		}
-		AMusicLogger.logger.error(msg);
+		logger.error(msg);
 	}
 
 }

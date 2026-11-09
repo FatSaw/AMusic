@@ -9,8 +9,8 @@ public class RamStorage extends me.bomb.amusic.resourcepack.Data {
 	private final LocalSoundSource lczs;
 	private final PackMergeSource pms;
 	
-	protected RamStorage(boolean lockwrite, LocalSoundSource lczs, PackMergeSource pms) {
-		super(lockwrite);
+	protected RamStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource lczs, PackMergeSource pms) {
+		super(logger, lockwrite);
 		this.lczs = lczs;
 		this.pms = pms;
 	}
@@ -39,9 +39,9 @@ public class RamStorage extends me.bomb.amusic.resourcepack.Data {
 			}
 			ResourcepackInfoImpl info = packedresourcepack.info;
 			options.put(resourcepack, new RamDataEntry(null, info, packedresourcepack.resourcepack));
-			AMusicLogger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(info.sha1)));
+			this.logger.info("Packed resourcepack, hash: ".concat(HexUtils.fromBytesToHex(info.sha1)));
 		}
-		AMusicLogger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
+		this.logger.info("Packed ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
 		this.printRamUsage();
 	}
 

@@ -33,8 +33,8 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 	private final FileSystemProvider fsp;
 	private final Path packeddirectory;
 	
-	protected LocalCachedStorage(boolean lockwrite, LocalSoundSource lczs, PackMergeSource pms, Path packeddirectory) {
-		super(lockwrite);
+	protected LocalCachedStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource lczs, PackMergeSource pms, Path packeddirectory) {
+		super(logger, lockwrite);
 		this.lczs = lczs;
 		this.pms = pms;
 		this.fsp = packeddirectory.getFileSystem().provider();
@@ -65,9 +65,9 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 					continue;
 				}
 				options.put(entry.info.packname, entry);
-				AMusicLogger.info("Pack \"".concat(storeid).concat("\" load success"));
+				this.logger.info("Pack \"".concat(storeid).concat("\" load success"));
 			}
-			AMusicLogger.info("Loaded ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
+			this.logger.info("Loaded ".concat(Integer.toString(options.size())).concat(" resourcepacks"));
 			this.printRamUsage();
 		} catch (IOException e) {
 		} finally {
@@ -82,14 +82,14 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 	
 	private LocalCachedDataEntry loadAmp(String storeid) {
 		if(storeid == null) {
-			AMusicLogger.warn("Pack load fail (invalid values)");
+			this.logger.warn("Pack load fail (invalid values)");
 			return null;
 		}
 		Path ampifile;
 		try {
 			ampifile = packeddirectory.resolve(storeid.concat(FORMAT));
 		} catch (InvalidPathException e) {
-			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid path)"));
+			this.logger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid path)"));
 			throw new IllegalStateException(e);
 		}
 		InputStream is = null;
@@ -101,7 +101,7 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 			resourcepack = new byte[info.packsize];
 			is.read(resourcepack, 0, resourcepack.length);
 		} catch (IOException e) {
-			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid path)"));
+			this.logger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid path)"));
 			throw new IllegalStateException(e);
 		} finally {
 			if(is != null) {
@@ -117,26 +117,26 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 	
 	private DataEntry saveAmp(String storeid, ResourcepackInfoImpl info, byte[] resource) {
 		if(storeid == null || info.packsize < 0 || info.packname == null || info.sounds == null || info.sha1 == null || info.sha1.length != 20|| info.sha256 == null || info.sha256.length != 0x20) {
-			AMusicLogger.warn("Pack save fail (invalid values)");
+			this.logger.warn("Pack save fail (invalid values)");
 			return null;
 		}
 		final MessageDigest sha1hash;
 		try {
 			sha1hash = MessageDigest.getInstance("SHA-1");
 		} catch (NoSuchAlgorithmException e) {
-			AMusicLogger.warn("Pack save fail (can not initialize SHA-1)");
+			this.logger.warn("Pack save fail (can not initialize SHA-1)");
 			throw new IllegalStateException(e);
 		}
 		byte[] filesha1 = sha1hash.digest(resource);
 		if(!Arrays.equals(filesha1, info.sha1)) {
-			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid checksum)"));
+			this.logger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid checksum)"));
 			return null;
 		}
 		Path ampifile;
 		try {
 			ampifile = packeddirectory.resolve(storeid.concat(FORMAT));
 		} catch (InvalidPathException e) {
-			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid path)"));
+			this.logger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid path)"));
 			throw new IllegalStateException(e);
 		}
 		OutputStream os = null;
@@ -187,20 +187,20 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 			try {
 				ampifile = packeddirectory.resolve(data.storeid.concat(FORMAT));
 			} catch (InvalidPathException e) {
-				AMusicLogger.warn("Pack \"".concat(data.storeid).concat("\" save fail (invalid path)"));
+				this.logger.warn("Pack \"".concat(data.storeid).concat("\" save fail (invalid path)"));
 				return UpdateResult.DELETED_FAILED;
 			}
 			try {
 				if(this.fsp.deleteIfExists(ampifile)) {
-					AMusicLogger.info("Pack \"".concat(data.storeid).concat("\" remove success"));
+					this.logger.info("Pack \"".concat(data.storeid).concat("\" remove success"));
 					return UpdateResult.DELETED_SUCCESS;
 				} else {
-					AMusicLogger.warn("Pack \"".concat(data.storeid).concat("\" remove fail (not exsist)"));
+					this.logger.warn("Pack \"".concat(data.storeid).concat("\" remove fail (not exsist)"));
 					return UpdateResult.DELETED_FAILED;
 				}
 			} catch (IOException e) {
-				AMusicLogger.warn("Pack \"".concat(data.storeid).concat("\" remove fail (IO exception)"));
-				AMusicLogger.error(e.getMessage());
+				this.logger.warn("Pack \"".concat(data.storeid).concat("\" remove fail (IO exception)"));
+				this.logger.error(e.getMessage());
 				return UpdateResult.DELETED_FAILED;
 			}
 		}

@@ -49,6 +49,8 @@ import me.bomb.amusic.velocity.event.ProxyShutdownHandler;
 public final class AMusicVelocity {
 	
 	private final ProxyServer server;
+	
+	private final AMusicLogger logger;
 	private final LocalAMusic amusic;
 	private final boolean usecmd;
 	
@@ -62,23 +64,7 @@ public final class AMusicVelocity {
 	
 	@Inject
 	public AMusicVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
-		me.bomb.amusic.util.Logger amusiclogger = new me.bomb.amusic.util.Logger() {
-			@Override
-			public void warn(String msg) {
-				logger.warn(msg);
-			}
-			
-			@Override
-			public void info(String msg) {
-				logger.info(msg);
-			}
-			
-			@Override
-			public void error(String msg) {
-				logger.error(msg);
-			}
-		};
-		AMusicLogger.setLogger(amusiclogger);
+		this.logger = new AMusicLogger();
 		Path plugindir = dataDirectory, mergezip = plugindir.resolve("resourcepack.zip"), configfile = plugindir.resolve("config.yml"), langfile = plugindir.resolve("lang.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
@@ -121,8 +107,8 @@ public final class AMusicVelocity {
 		PositionTracker positiontracker = new PositionTracker(new VelocitySoundStarter(server), new VelocitySoundStopper(server));
 		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackacceptthreads, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(fsp.exists(mergezip) ? new PackMergeEntryFile(mergezip, config.packsizelimit) : null, musicdir, config.packsizelimit);
-		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
-		this.amusic = config.connectuse ? new ServerAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectbacklog, config.connectserverfactory, config.serverexecutor) : new LocalAMusic(amusiclogger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
+		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(this.logger, !config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(this.logger, !config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(this.logger, !config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(this.logger, !config.processpack, lczs, packmergesource);
+		this.amusic = config.connectuse ? new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectbacklog, config.connectserverfactory, config.serverexecutor) : new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 		final ConcurrentHashMap<UUID, EnumSet<AMusicPermission>> playerspermission = new ConcurrentHashMap<UUID, EnumSet<AMusicPermission>>();
 		LoadmusicCommand loadmusic = null;
 		PlaymusicCommand playmusic = null;
@@ -148,6 +134,23 @@ public final class AMusicVelocity {
 		this.login = login;
 		this.disconnect = disconnect;
 		this.resourcepackstatus = resourcepackstatus;
+		
+		this.logger.setLogger(new me.bomb.amusic.util.Logger() {
+			@Override
+			public void warn(String msg) {
+				logger.warn(msg);
+			}
+			
+			@Override
+			public void info(String msg) {
+				logger.info(msg);
+			}
+			
+			@Override
+			public void error(String msg) {
+				logger.error(msg);
+			}
+		});
     }
 
 
@@ -155,13 +158,6 @@ public final class AMusicVelocity {
 	public void onProxyInitialize(ProxyInitializeEvent event) {
 		if(this.amusic == null) {
 			return;
-		}
-		this.amusic.enable();
-		GeyserHook geyser = null;
-		try {
-			geyser = new GeyserHook(this, amusic.datamanager);
-			AMusicLogger.info("Geyser hook loaded");
-		} catch (NoClassDefFoundError e) {
 		}
 		
 		CommandManager cmdmanager = null;
@@ -183,11 +179,20 @@ public final class AMusicVelocity {
 			}
 		}
 		EventManager eventmanager = this.server.getEventManager();
-		ProxyShutdownHandler proxyshutdown = new ProxyShutdownHandler(this.amusic, geyser, cmdmanager, loadmusicmeta, playmusicmeta, repeatmeta, eventmanager, this, this.login, this.disconnect, this.resourcepackstatus);
+		
 		
 		if(this.login != null) eventmanager.register(this, LoginEvent.class, this.login);
 		if(this.disconnect != null) eventmanager.register(this, DisconnectEvent.class, this.disconnect);
 		if(this.resourcepackstatus != null) eventmanager.register(this, PlayerResourcePackStatusEvent.class, this.resourcepackstatus);
+		
+		this.amusic.enable();
+		GeyserHook geyser = null;
+		try {
+			geyser = new GeyserHook(this, amusic.datamanager);
+			this.logger.info("Geyser hook loaded");
+		} catch (NoClassDefFoundError e) {
+		}
+		ProxyShutdownHandler proxyshutdown = new ProxyShutdownHandler(this.logger, this.amusic, geyser, cmdmanager, loadmusicmeta, playmusicmeta, repeatmeta, eventmanager, this, this.login, this.disconnect, this.resourcepackstatus);
 		eventmanager.register(this, ProxyShutdownEvent.class, proxyshutdown);
 	}
 	

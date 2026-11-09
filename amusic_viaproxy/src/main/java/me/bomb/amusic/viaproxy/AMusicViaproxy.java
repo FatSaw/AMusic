@@ -37,7 +37,7 @@ import net.raphimc.viaproxy.proxy.session.ProxyConnection;
 
 public final class AMusicViaproxy extends ViaProxyPlugin {
 	
-	private final me.bomb.amusic.util.Logger logger;
+	private final AMusicLogger logger;
 	
 	private final AMusic amusic;
 	private GeyserHook geyserhook = null;
@@ -46,26 +46,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 	private final LoginLogoutHandler loginlogout;
 	
 	public AMusicViaproxy() {
-		this.logger = new me.bomb.amusic.util.Logger() {
-			
-			private final org.apache.logging.log4j.Logger logger = LogManager.getLogger("AMusic");
-			
-			@Override
-			public void warn(String msg) {
-				logger.warn(msg);
-			}
-			
-			@Override
-			public void info(String msg) {
-				logger.info(msg);
-			}
-			
-			@Override
-			public void error(String msg) {
-				logger.error(msg);
-			}
-		};
-		AMusicLogger.setLogger(this.logger);
+		this.logger = new AMusicLogger();
 		Path plugindir = PluginManager.PLUGINS_DIR.toPath().resolve("AMusic"), mergezip = plugindir.resolve("resourcepack.zip"), configfile = plugindir.resolve("config.yml"), musicdir = plugindir.resolve("Music"), packeddir = plugindir.resolve("Packed");
 		FileSystem fs = plugindir.getFileSystem();
 		FileSystemProvider fsp = fs.provider();
@@ -102,7 +83,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		PositionTracker positiontracker = new PositionTracker(new ViaproxySoundStarter(players), new ViaproxySoundStopper(players));
 		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackacceptthreads, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(fsp.exists(mergezip) ? new PackMergeEntryFile(mergezip, config.packsizelimit) : null, musicdir, config.packsizelimit);
-		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(!config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(!config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(!config.processpack, lczs, packmergesource);
+		Data datamanager = config.ramcache ? config.diskstore ? Data.getLocalCachedStorage(this.logger, !config.processpack, lczs, packmergesource, packeddir) : Data.getRamStorage(this.logger, !config.processpack, lczs, packmergesource) : config.diskstore ? Data.getLocalStorage(this.logger, !config.processpack, lczs, packmergesource, packeddir) : Data.getNoStorage(this.logger, !config.processpack, lczs, packmergesource);
 		this.amusic = config.connectuse ? new ServerAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager, config.connectifip, config.connectremoteip, config.connectport, config.connecttimeout, config.connectbacklog, config.connectserverfactory, config.serverexecutor) : new LocalAMusic(this.logger, config.executor, lczs, positiontracker, resourcemanager, datamanager);
 		ConcurrentHashMap<String, UUID> uuidByPlayername = new ConcurrentHashMap<String, UUID>(16,0.75f,1);
 
@@ -123,6 +104,32 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		if(this.amusic == null) {
 			return;
 		}
+		this.logger.setLogger(new me.bomb.amusic.util.Logger() {
+			
+			private final org.apache.logging.log4j.Logger logger = LogManager.getLogger("AMusic");
+			
+			@Override
+			public void warn(String msg) {
+				logger.warn(msg);
+			}
+			
+			@Override
+			public void info(String msg) {
+				logger.info(msg);
+			}
+			
+			@Override
+			public void error(String msg) {
+				logger.error(msg);
+			}
+		});
+		LambdaManager eventManager = ViaProxy.EVENT_MANAGER;
+		if(this.consolecommand != null) {
+			eventManager.registerConsumer(this.consolecommand, ConsoleCommandEvent.class);
+		}
+		if(this.loginlogout != null) {
+			eventManager.registerConsumer(this.loginlogout, ClientLoggedInEvent.class);
+		}
 		this.amusic.enable();
 		final Data data = ((LocalAMusic) this.amusic).datamanager;
 		new Thread("GeyserHookLoader") {
@@ -136,7 +143,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 					}
 					try {
 						AMusicViaproxy.this.geyserhook = new GeyserHook(this, data);
-						logger.info("Geyser hook loaded");
+						AMusicViaproxy.this.logger.info("Geyser hook loaded");
 						return;
 					} catch(NoClassDefFoundError e) {
 						return;
@@ -145,13 +152,6 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 				}
 			}
 		}.start();
-		LambdaManager eventManager = ViaProxy.EVENT_MANAGER;
-		if(this.consolecommand != null) {
-			eventManager.registerConsumer(this.consolecommand, ConsoleCommandEvent.class);
-		}
-		if(this.loginlogout != null) {
-			eventManager.registerConsumer(this.loginlogout, ClientLoggedInEvent.class);
-		}
 	}
 	
 	@Override
@@ -159,6 +159,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		if(this.geyserhook != null) {
 			this.geyserhook.unregister();
 		}
+		this.logger.setLogger(null);
 		if(this.amusic == null) {
 			return;
 		}

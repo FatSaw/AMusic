@@ -2,16 +2,16 @@ package me.bomb.amusic.viaproxy;
 
 import java.util.function.Consumer;
 
-import me.bomb.amusic.util.Logger;
+import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.viaproxy.command.Command;
 import net.raphimc.viaproxy.plugins.events.ConsoleCommandEvent;
 
 public final class ConsoleCommandHandler implements Consumer<ConsoleCommandEvent> {
 	
-	private final Logger logger;
+	private final AMusicLogger logger;
 	private final Command loadmusic, playmusic, repeat;
 	
-	public ConsoleCommandHandler(Logger logger, Command loadmusic, Command playmusic, Command repeat) {
+	public ConsoleCommandHandler(AMusicLogger logger, Command loadmusic, Command playmusic, Command repeat) {
 		this.logger = logger;
 		this.loadmusic = loadmusic;
 		this.playmusic = playmusic;

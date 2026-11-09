@@ -8,9 +8,11 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 
 import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.hook.GeyserHook;
+import me.bomb.amusic.util.AMusicLogger;
 
 public final class ProxyShutdownHandler implements EventHandler<ProxyShutdownEvent> {
 
+	private final AMusicLogger logger;
 	private final AMusic amusic;
 	private final GeyserHook geyser;
 	private final CommandManager cmdmanager;
@@ -21,7 +23,8 @@ public final class ProxyShutdownHandler implements EventHandler<ProxyShutdownEve
 	private final DisconnectHandler disconnect;
 	private final PlayerResourcePackStatusHandler resourcepackstatus;
 	
-	public ProxyShutdownHandler(AMusic amusic, GeyserHook geyser, CommandManager cmdmanager, CommandMeta loadmusicmeta, CommandMeta playmusicmeta, CommandMeta repeatmeta, EventManager eventmanager, Object plugin, LoginHandler login, DisconnectHandler disconnect, PlayerResourcePackStatusHandler resourcepackstatus) {
+	public ProxyShutdownHandler(AMusicLogger logger, AMusic amusic, GeyserHook geyser, CommandManager cmdmanager, CommandMeta loadmusicmeta, CommandMeta playmusicmeta, CommandMeta repeatmeta, EventManager eventmanager, Object plugin, LoginHandler login, DisconnectHandler disconnect, PlayerResourcePackStatusHandler resourcepackstatus) {
+		this.logger = logger;
 		this.amusic = amusic;
 		this.geyser = geyser;
 		this.cmdmanager = cmdmanager;
@@ -40,6 +43,7 @@ public final class ProxyShutdownHandler implements EventHandler<ProxyShutdownEve
 		if(this.geyser != null) {
 			this.geyser.unregister();
 		}
+		this.logger.setLogger(null);
 		if(this.cmdmanager != null) {
 			if(this.loadmusicmeta != null) this.cmdmanager.unregister(this.loadmusicmeta);
 			if(this.playmusicmeta != null) this.cmdmanager.unregister(this.playmusicmeta);

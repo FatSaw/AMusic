@@ -7,7 +7,7 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 
 import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.api.RepeatType;
-import me.bomb.amusic.util.Logger;
+import me.bomb.amusic.util.AMusicLogger;
 
 public final class RepeatCommand implements Command {
 	
@@ -20,7 +20,7 @@ public final class RepeatCommand implements Command {
 	}
 
 	@Override
-	public void handleConsole(Logger logger, String[] args) {
+	public void handleConsole(AMusicLogger logger, String[] args) {
 		if (args.length > 1) {
 			if (args[0].equals("@s")) {
 				logger.info("This selector unavilable from console");

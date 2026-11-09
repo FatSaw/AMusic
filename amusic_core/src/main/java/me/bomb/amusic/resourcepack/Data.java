@@ -10,10 +10,12 @@ import me.bomb.amusic.util.AMusicLogger;
 public abstract class Data {
 	
 	protected final Map<String,DataEntry> options = new HashMap<>();
+	public final AMusicLogger logger;
 	public final boolean lockwrite;
 	
 	
-	protected Data(boolean lockwrite) {
+	protected Data(AMusicLogger logger, boolean lockwrite) {
+		this.logger = logger;
 		this.lockwrite = lockwrite;
 	}
 	
@@ -22,8 +24,8 @@ public abstract class Data {
 	 * Generate resourcepack for each request
 	 * @return no storage
 	 */
-	public static NoStorage getNoStorage(boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource) {
-		return new NoStorage(lockwrite, soundsource, packmergesource);
+	public static NoStorage getNoStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource) {
+		return new NoStorage(logger, lockwrite, soundsource, packmergesource);
 	}
 	
 	/**
@@ -31,8 +33,8 @@ public abstract class Data {
 	 * Store resourcepack on ram
 	 * @return ram storage
 	 */
-	public static RamStorage getRamStorage(boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource) {
-		return new RamStorage(lockwrite, soundsource, packmergesource);
+	public static RamStorage getRamStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource) {
+		return new RamStorage(logger, lockwrite, soundsource, packmergesource);
 	}
 	
 	/**
@@ -40,8 +42,8 @@ public abstract class Data {
 	 * Store resourcepack on disk
 	 * @return local storage
 	 */
-	public static LocalStorage getLocalStorage(boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
-		return new LocalStorage(lockwrite, soundsource, packmergesource, packeddirectory);
+	public static LocalStorage getLocalStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
+		return new LocalStorage(logger, lockwrite, soundsource, packmergesource, packeddirectory);
 	}
 	
 	/**
@@ -49,8 +51,8 @@ public abstract class Data {
 	 * Store resourcepack on disk and on ram
 	 * @return local cached storage
 	 */
-	public static LocalCachedStorage getLocalCachedStorage(boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
-		return new LocalCachedStorage(lockwrite, soundsource, packmergesource, packeddirectory);
+	public static LocalCachedStorage getLocalCachedStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
+		return new LocalCachedStorage(logger, lockwrite, soundsource, packmergesource, packeddirectory);
 	}
 	
 	/**
@@ -127,7 +129,7 @@ public abstract class Data {
 			sb.append(Long.toString(rambytesused));
 			sb.append(" bytes)");
 		}
-		AMusicLogger.info(sb.toString());
+		this.logger.info(sb.toString());
 	}
 	
 	protected void printRamUsage() {
@@ -165,7 +167,7 @@ public abstract class Data {
 			sb.append(Long.toString(rambytesused));
 			sb.append(" bytes)");
 		}
-		AMusicLogger.info(sb.toString());
+		this.logger.info(sb.toString());
 	}
 	
 }

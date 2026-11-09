@@ -14,8 +14,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import me.bomb.amusic.util.AMusicLogger;
-
 public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 	
 	private static final HashSet<OpenOption> OPENOPTION_READ;
@@ -61,7 +59,6 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 		}
 		byte[] filesha1 = sha1hash.digest(buf);
 		if (!Arrays.equals(filesha1, info.sha1)) {
-			AMusicLogger.warn("Packed resourcepack \"".concat(storeid).concat("\" load fail (invalid checksum)"));
 			return null;
 		}
 		return buf;
@@ -93,7 +90,6 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 	@Override
 	public boolean updateCustomdata(byte[] customdata) {
 		if(customdata == null || customdata.length > 0xFFFF) {
-			AMusicLogger.warn("Pack update customdata fail (invalid values)");
 			return false;
 		}
 		ResourcepackInfoImpl info = this.info;
@@ -106,7 +102,6 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 			is.skip(info.infosize);
 			resourcepack = new byte[info.packsize];
 		} catch (IOException e) {
-			AMusicLogger.warn("Pack \"".concat(storeid).concat("\" update customdata fail (invalid path)"));
 			fail = true;
 		} finally {
 			if(is != null) {

@@ -27,11 +27,11 @@ import me.bomb.amusic.api.RepeatType;
 import me.bomb.amusic.api.ResourcepackInfo;
 import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
-import me.bomb.amusic.util.Logger;
+import me.bomb.amusic.util.AMusicLogger;
 
 public final class ClientAMusic implements AMusic {
 	
-	public final Logger logger;
+	public final AMusicLogger logger;
 	private final InetAddress hostip, remoteip;
 	private final int port, timeout;
 	private final boolean usecache, cachereusesocket;
@@ -43,7 +43,7 @@ public final class ClientAMusic implements AMusic {
 	private ResourcepackInfoCache resourcepackinfocache = null;
 	private ConcurrentHashMap<UUID, ResourcepackInfoImpl> cachePlayerResourcepackInfos = null;
 	
-	public ClientAMusic(Logger logger, InetAddress hostip, InetAddress remoteip, int port, int timeout, boolean usecache, boolean cachereusesocket, long cachetimeoutfail, long cachetimeoutsuccess, SocketFactory socketfactory, ExecutorConfiguration executorcfg) {
+	public ClientAMusic(AMusicLogger logger, InetAddress hostip, InetAddress remoteip, int port, int timeout, boolean usecache, boolean cachereusesocket, long cachetimeoutfail, long cachetimeoutsuccess, SocketFactory socketfactory, ExecutorConfiguration executorcfg) {
 		this.logger = logger;
 		this.hostip = hostip;
 		this.remoteip = remoteip;

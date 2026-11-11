@@ -71,7 +71,7 @@ public final class ReadSound implements Runnable {
 	
 	public final static int ZIP_LOCAL_HEADER_SIZE = 30;
 	public final static int ZIP_GLOBAL_HEADER_SIZE = 46;
-	public final static int TOTAL_HEADERS_SIZE = ZIP_LOCAL_HEADER_SIZE + ((ZIP_GLOBAL_HEADER_SIZE + SOUNDID_SIZE + OGG.length) << 1);
+	public final static int ZIP_GLOBAL_HEADERS_SIZE = JAVA_PATH.length + BEDROCK_PATH.length + ((ZIP_GLOBAL_HEADER_SIZE + SOUNDID_SIZE + OGG.length) << 1);
 	public final static int SOUNDS_JAVA_ENTRY_SIZE = SOUNDS_JAVA_ENTRY.length;
 	public final static int SOUNDS_BEDROCK_ENTRY_SIZE = SOUNDS_BEDROCK_ENTRY.length;
 	public final static int SOUNDS_NAME_JAVA_ENTRY_SIZE = SOUNDS_NAME_JAVA_ENTRY_1.length + SOUNDS_NAME_JAVA_ENTRY_2.length;

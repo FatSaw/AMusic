@@ -235,19 +235,23 @@ public final class ReadSound implements Runnable {
 	public void writeSoundEntryJava(byte[] soundid) {
 		int pos = this.soundjsonentry.position();
 		this.soundjsonentry.put(SOUNDS_JAVA_ENTRY);
+		int opos = this.soundjsonentry.position();
 		this.soundjsonentry.position(pos + SOUNDS_JAVA_ENTRY_SOUNDID_OFFSET_1);
 		this.soundjsonentry.put(soundid);
 		this.soundjsonentry.position(pos + SOUNDS_JAVA_ENTRY_SOUNDID_OFFSET_2);
 		this.soundjsonentry.put(soundid);
+		this.soundjsonentry.position(opos);
 	}
 	
 	public void writeSoundEntryBedrock(byte[] soundid) {
 		int pos = this.sounddefenitionsentry.position();
 		this.sounddefenitionsentry.put(SOUNDS_BEDROCK_ENTRY);
+		int opos = this.sounddefenitionsentry.position();
 		this.sounddefenitionsentry.position(pos + SOUNDS_BEDROCK_ENTRY_SOUNDID_OFFSET_1);
 		this.sounddefenitionsentry.put(soundid);
 		this.sounddefenitionsentry.position(pos + SOUNDS_BEDROCK_ENTRY_SOUNDID_OFFSET_2);
 		this.sounddefenitionsentry.put(soundid);
+		this.sounddefenitionsentry.position(opos);
 	}
 	
 	public void writeSoundNamedEntryJava(byte[] soundid, byte[] soundname) {

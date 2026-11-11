@@ -16,7 +16,7 @@ import java.util.UUID;
 import java.util.zip.CRC32;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
-import static java.nio.charset.StandardCharsets.UTF_8;;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public final class ReadSound implements Runnable {
 	
@@ -251,20 +251,20 @@ public final class ReadSound implements Runnable {
 	}
 	
 	public void writeSoundNamedEntryJava(byte[] soundid, byte[] soundname) {
+		int pos = this.soundjsonentry.position();
 		this.soundjsonentry.put(SOUNDS_NAME_JAVA_ENTRY_1);
 		this.soundjsonentry.put(soundname);
-		int pos = this.soundjsonentry.position();
 		this.soundjsonentry.put(SOUNDS_NAME_JAVA_ENTRY_2);
-		this.soundjsonentry.position(pos + SOUNDS_JAVA_NAMED_ENTRY_SOUNDID_OFFSET);
+		this.soundjsonentry.position(pos + soundname.length + SOUNDS_JAVA_NAMED_ENTRY_SOUNDID_OFFSET);
 		this.soundjsonentry.put(soundid);
 	}
 	
 	public void writeSoundNamedEntryBedrock(byte[] soundid, byte[] soundname) {
+		int pos = this.sounddefenitionsentry.position();
 		this.sounddefenitionsentry.put(SOUNDS_NAME_BEDROCK_ENTRY_1);
 		this.sounddefenitionsentry.put(soundname);
-		int pos = this.sounddefenitionsentry.position();
 		this.sounddefenitionsentry.put(SOUNDS_NAME_BEDROCK_ENTRY_2);
-		this.sounddefenitionsentry.position(pos + SOUNDS_BEDROCK_NAMED_ENTRY_SOUNDID_OFFSET);
+		this.sounddefenitionsentry.position(pos + soundname.length + SOUNDS_BEDROCK_NAMED_ENTRY_SOUNDID_OFFSET);
 		this.sounddefenitionsentry.put(soundid);
 	}
 

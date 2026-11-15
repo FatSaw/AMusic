@@ -10,7 +10,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
 import me.bomb.amusic.api.SoundStopper;
-import me.bomb.amusic.util.HexUtils;
 import me.bomb.amusic.util.SendSilence;
 import net.raphimc.viaproxy.proxy.session.ProxyConnection;
 
@@ -56,7 +55,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 	}
 
 	@Override
-	public void stopSound(UUID uuid, UUID soundhash, short id, byte part) {
+	public void stopSound(UUID uuid, UUID soundhash) {
 		ProxyConnection player;
 		if (uuid == null || soundhash == null || (player = players.get(uuid)) == null) {
 			return;
@@ -76,7 +75,7 @@ public final class ViaproxySoundStopper implements SoundStopper {
 		}
 		final UserConnection connection = player.getUserConnection();
 		final ByteBufAllocator allocator = channel.alloc();
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = AMUSIC_SOUNDID_PREFIX.concat(soundhash.toString());
 		byte[] songidb = musicid.getBytes(StandardCharsets.UTF_8);
 		boolean bytesoundnamelength = (songidb.length & (0xFFFFFFFF << 7)) == 0;
 		if (version > 388) {

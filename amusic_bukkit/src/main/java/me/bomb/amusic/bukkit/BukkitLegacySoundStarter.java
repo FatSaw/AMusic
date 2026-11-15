@@ -6,7 +6,6 @@ import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
 import me.bomb.amusic.api.SoundStarter;
-import me.bomb.amusic.util.HexUtils;
 
 public final class BukkitLegacySoundStarter implements SoundStarter {
 	
@@ -17,11 +16,11 @@ public final class BukkitLegacySoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+	public void startSound(UUID uuid, UUID soundhash) {
 		if(uuid == null || soundhash == null) {
 			return;
 		}
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = AMUSIC_SOUNDID_PREFIX.concat(soundhash.toString());
 		Player player = server.getPlayer(uuid);
 		player.playSound(player.getLocation(), musicid, 1.0E9f, 1.0f);
 	}

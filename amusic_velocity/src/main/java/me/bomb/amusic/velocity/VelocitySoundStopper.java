@@ -12,7 +12,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
 import me.bomb.amusic.api.SoundStopper;
-import me.bomb.amusic.util.HexUtils;
 import me.bomb.amusic.util.SendSilence;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -49,7 +48,7 @@ public final class VelocitySoundStopper implements SoundStopper {
 	}
 	
 	@Override
-	public void stopSound(UUID uuid, UUID soundhash, short id, byte part) {
+	public void stopSound(UUID uuid, UUID soundhash) {
 		Optional<Player> oplayer = server.getPlayer(uuid);
 		if(oplayer.isEmpty()) {
 			return;
@@ -64,7 +63,7 @@ public final class VelocitySoundStopper implements SoundStopper {
 			}
 			return;
 		}
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = AMUSIC_SOUNDID_PREFIX.concat(soundhash.toString());
 		if(version > 760) {
 			SoundStop sound = SoundStop.namedOnSource(Key.key(musicid), Sound.Source.VOICE);
 			player.stopSound(sound);

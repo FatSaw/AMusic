@@ -7,7 +7,6 @@ import org.bukkit.Server;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 
 import me.bomb.amusic.api.SoundStarter;
-import me.bomb.amusic.util.HexUtils;
 import net.minecraft.server.v1_9_R2.PacketPlayOutCustomSoundEffect;
 import net.minecraft.server.v1_9_R2.SoundCategory;
 
@@ -20,11 +19,11 @@ public final class LegacySoundStarter_1_9_R2 implements SoundStarter {
 	}
 	
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+	public void startSound(UUID uuid, UUID soundhash) {
 		if(uuid == null || soundhash == null) {
 			return;
 		}
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = AMUSIC_SOUNDID_PREFIX.concat(soundhash.toString());
 		CraftPlayer player = (CraftPlayer) server.getPlayer(uuid);
 		Location loc = player.getLocation();
 		player.getHandle().playerConnection.sendPacket(new PacketPlayOutCustomSoundEffect(musicid, SoundCategory.VOICE, loc.getX(), loc.getY(), loc.getZ(), 1.0E9f, 1.0f));

@@ -4,8 +4,10 @@ import java.util.UUID;
 
 public interface SoundStarter {
 	
+	public String AMUSIC_SOUNDID_PREFIX = "minecraft:amusic.internal.";
+	
 	/**
 	 * Starts amusic sound.
 	 */
-	public void startSound(UUID uuid, UUID soundhash, short id, byte part);
+	public void startSound(UUID uuid, UUID soundhash);
 }

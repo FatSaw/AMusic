@@ -8,7 +8,6 @@ import org.bukkit.entity.Player;
 
 import io.netty.buffer.Unpooled;
 import me.bomb.amusic.api.SoundStopper;
-import me.bomb.amusic.util.HexUtils;
 import net.minecraft.server.v1_10_R1.EntityPlayer;
 import net.minecraft.server.v1_10_R1.PacketDataSerializer;
 import net.minecraft.server.v1_10_R1.PlayerConnection;
@@ -23,11 +22,11 @@ public final class LegacySoundStopper_1_10_R1 implements SoundStopper {
 	}
 	
 	@Override
-	public void stopSound(UUID uuid, UUID soundhash, short id, byte part) {
+	public void stopSound(UUID uuid, UUID soundhash) {
 		if(uuid == null) {
 			return;
 		}
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = AMUSIC_SOUNDID_PREFIX.concat(soundhash.toString());
 		Player player = server.getPlayer(uuid);
 		EntityPlayer entityplayer = ((CraftPlayer)player).getHandle();
 		PlayerConnection connection = entityplayer.playerConnection;

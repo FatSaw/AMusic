@@ -205,13 +205,13 @@ public final class PositionTracker implements Runnable {
 		if (id == -1) {
 			return false;
 		}
-		final short fid = id, soundlength = soundinfo.length;
+		final short soundlength = soundinfo.length;
 		final UUID soundhash = soundinfo.hash;
-		Playing playing = trackers.put(playeruuid, new Playing(soundhash, fid, soundssize, soundlength));
+		Playing playing = trackers.put(playeruuid, new Playing(soundhash, id, soundssize, soundlength));
 		if(playing != null) {
-			soundstopper.stopSound(playeruuid, playing.soundhash, playing.currenttrack, (byte) 0);
+			soundstopper.stopSound(playeruuid, playing.soundhash);
 		}
-		soundstarter.startSound(playeruuid, soundhash, fid, (byte) 0);
+		soundstarter.startSound(playeruuid, soundhash);
 		return true;
 	}
 
@@ -231,9 +231,9 @@ public final class PositionTracker implements Runnable {
 		SoundInfo soundinfo = soundsinfo[id];
 		Playing playing = trackers.put(playeruuid, new Playing(soundinfo.hash, id, soundssize, soundinfo.length));
 		if(playing != null) {
-			soundstopper.stopSound(playeruuid, playing.soundhash, playing.currenttrack, (byte) 0);
+			soundstopper.stopSound(playeruuid, playing.soundhash);
 		}
-		soundstarter.startSound(playeruuid, soundinfo.hash, id, (byte) 0);
+		soundstarter.startSound(playeruuid, soundinfo.hash);
 	}
 
 	public boolean stopMusic(UUID playeruuid) {
@@ -241,7 +241,7 @@ public final class PositionTracker implements Runnable {
 		if (playing == null) {
 			return false;
 		}
-		soundstopper.stopSound(playeruuid, playing.soundhash, playing.currenttrack, (byte) 0);
+		soundstopper.stopSound(playeruuid, playing.soundhash);
 		return true;
 	}
 	

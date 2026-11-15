@@ -10,7 +10,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
 import me.bomb.amusic.api.SoundStarter;
-import me.bomb.amusic.util.HexUtils;
 import net.raphimc.viaproxy.proxy.session.ProxyConnection;
 
 public final class ViaproxySoundStarter implements SoundStarter {
@@ -54,7 +53,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 	}
 
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+	public void startSound(UUID uuid, UUID soundhash) {
 		ProxyConnection player;
 		if(uuid == null || soundhash == null || (player = players.get(uuid)) == null) {
 			return;
@@ -67,7 +66,7 @@ public final class ViaproxySoundStarter implements SoundStarter {
 		final Channel channel = player.getC2P();
 		final UserConnection connection = player.getUserConnection();
 		final ByteBufAllocator allocator = channel.alloc();
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = AMUSIC_SOUNDID_PREFIX.concat(soundhash.toString());
 		int packetsize = 19;
 		if(version > 760) packetsize += 2;
 		if(version > 758) packetsize += 8;

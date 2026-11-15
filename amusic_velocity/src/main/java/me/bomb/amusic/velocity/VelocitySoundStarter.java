@@ -13,7 +13,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
 import me.bomb.amusic.api.SoundStarter;
-import me.bomb.amusic.util.HexUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 
@@ -47,14 +46,14 @@ public final class VelocitySoundStarter implements SoundStarter {
 	}
 	
 	@Override
-	public void startSound(UUID uuid, UUID soundhash, short id, byte part) {
+	public void startSound(UUID uuid, UUID soundhash) {
 		final Optional<Player> oplayer;
 		if(uuid == null || soundhash == null || (oplayer = server.getPlayer(uuid)).isEmpty()) {
 			return;
 		}
 		Player player = oplayer.get();
 		final int version = player.getProtocolVersion().getProtocol();
-		String musicid = new StringBuilder("minecraft:amusic.internal.").append(soundhash.toString()).append(HexUtils.shortToHex(id)).append(HexUtils.byteToHex(part)).toString();
+		String musicid = AMUSIC_SOUNDID_PREFIX.concat(soundhash.toString());
 		if(version > 760) {
 			Sound sound = Sound.sound(Key.key(musicid), Sound.Source.VOICE, 1.0f, 1.0f);
 			player.playSound(sound, player);

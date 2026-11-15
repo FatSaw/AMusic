@@ -23,8 +23,8 @@ import org.geysermc.geyser.pack.GeyserResourcePackManifest.Header;
 import org.geysermc.geyser.pack.GeyserResourcePackManifest.Module;
 import org.geysermc.geyser.pack.GeyserResourcePackManifest.Version;
 
-import me.bomb.amusic.resourcepack.Data;
-import me.bomb.amusic.resourcepack.DataEntry;
+import me.bomb.amusic.resourcepack.storage.Data;
+import me.bomb.amusic.resourcepack.storage.DataEntry;
 
 public final class GeyserHook {
 	
@@ -114,7 +114,7 @@ public final class GeyserHook {
 
 		@Override
 		public SeekableByteChannel serialize() throws IOException {
-			return this.threadsafe ? new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteArrayChannel(this.entry.getPack()) : this.cachedchannel;
+			return this.threadsafe ? new ReadOnlyByteBufferChannel(this.entry.getPack()) : this.cachedchannel == null ? this.cachedchannel = new ReadOnlyByteBufferChannel(this.entry.getPack()) : this.cachedchannel;
 		}
 
 		@Override
@@ -133,71 +133,62 @@ public final class GeyserHook {
 			return new GeyserResourcePack.Builder(this, manifest, entry.info.getPackname());
 		}
 		
-		public final class ReadOnlyByteArrayChannel implements SeekableByteChannel {
-			
-			private int offset;
-			private final byte[] data;
+		public final class ReadOnlyByteBufferChannel implements SeekableByteChannel {
+			private long offset;
+			private final ByteBuffer data;
 
-			public ReadOnlyByteArrayChannel(byte[] data) {
+			public ReadOnlyByteBufferChannel(ByteBuffer data) {
 				if (data == null) {
-					throw new IllegalArgumentException("Data array cannot be null");
+					throw new IllegalArgumentException("Data buffer cannot be null");
 				}
-				this.data = data;
+				this.data = data.duplicate();
+				this.offset = this.data.position();
 			}
-
 			@Override
 			public int read(ByteBuffer dst) throws IOException {
-				int remaining = data.length - offset;
-				if(remaining < 1) {
+				if (this.offset >= this.data.limit()) {
 					return -1;
 				}
-				int dremaining = dst.remaining();
-				if(dremaining < remaining) {
-					remaining = dremaining;
-				}
-				dst.put(data, offset, remaining);
-				offset += remaining;
-				return remaining;
+				this.data.position((int) this.offset);
+				int toRead = Math.min(this.data.remaining(), dst.remaining());
+				int oldLimit = this.data.limit();
+				this.data.limit(this.data.position() + toRead);
+				dst.put(this.data);
+				this.data.limit(oldLimit);
+				this.offset += toRead;
+				return toRead;
 			}
-
 			@Override
 			public long position() throws IOException {
-				return offset;
+				return this.offset;
 			}
-
 			@Override
 			public SeekableByteChannel position(long newPosition) throws IOException {
-				if (newPosition < 0 || newPosition > data.length) {
-					throw new IllegalArgumentException("Invalid position: " + newPosition);
+				if (newPosition < 0) {
+					throw new IllegalArgumentException("Negative position: " + newPosition);
 				}
-				offset = (int) newPosition;
+				this.offset = newPosition;
 				return this;
-			}
-
+		    }
 			@Override
 			public long size() throws IOException {
-				return data.length;
+				return this.data.limit();
 			}
-
 			@Override
 			public boolean isOpen() {
 				return true;
 			}
-
 			@Override
 			public void close() {
 			}
-
 			@Override
 			public int write(ByteBuffer src) {
 				throw new NonWritableChannelException();
 			}
-
 			@Override
 			public SeekableByteChannel truncate(long size) {
 				throw new NonWritableChannelException();
 			}
 		}
-
 	}
 }

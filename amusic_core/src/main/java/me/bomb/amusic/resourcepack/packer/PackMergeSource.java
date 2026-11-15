@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.packer;
 
 public interface PackMergeSource {
 	public PackMergeEntry get(String id);

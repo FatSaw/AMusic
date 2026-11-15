@@ -16,11 +16,11 @@ import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.api.PackSender;
 import me.bomb.amusic.config.Configuration;
 import me.bomb.amusic.hook.GeyserHook;
-import me.bomb.amusic.resourcepack.Data;
-import me.bomb.amusic.resourcepack.LocalSoundSource;
-import me.bomb.amusic.resourcepack.PackMergeEntryFile;
-import me.bomb.amusic.resourcepack.PackMergeSourceLocal;
+import me.bomb.amusic.resourcepack.packer.PackMergeEntryFile;
+import me.bomb.amusic.resourcepack.packer.PackMergeSourceLocal;
+import me.bomb.amusic.resourcepack.packer.ResourcepackCreator;
 import me.bomb.amusic.resourcepack.server.ResourceManager;
+import me.bomb.amusic.resourcepack.storage.Data;
 import me.bomb.amusic.tracker.PositionTracker;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.viaproxy.command.Command;
@@ -79,7 +79,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 
 		PackSender packsender = new ViaproxyPackSender(players);
         
-		LocalSoundSource lczs = new LocalSoundSource(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+		ResourcepackCreator lczs = new ResourcepackCreator(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 		PositionTracker positiontracker = new PositionTracker(new ViaproxySoundStarter(players), new ViaproxySoundStopper(players));
 		ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackacceptthreads, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 		PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(fsp.exists(mergezip) ? new PackMergeEntryFile(mergezip, config.packsizelimit) : null, musicdir, config.packsizelimit);

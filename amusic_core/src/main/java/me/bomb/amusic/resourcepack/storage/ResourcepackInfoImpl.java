@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import me.bomb.amusic.api.ResourcepackInfo;
+import me.bomb.amusic.resourcepack.SoundInfo;
 
 public final class ResourcepackInfoImpl implements ResourcepackInfo {
 	
@@ -23,7 +24,7 @@ public final class ResourcepackInfoImpl implements ResourcepackInfo {
 	protected UUID bhea, bres;
 	protected byte[] customdata;
 	
-	protected ResourcepackInfoImpl(int infosize, int packsize, String packname, SoundInfo[] sounds, byte[] sha1, byte[] sha256, UUID bhea, UUID bres, byte[] customdata) {
+	public ResourcepackInfoImpl(int infosize, int packsize, String packname, SoundInfo[] sounds, byte[] sha1, byte[] sha256, UUID bhea, UUID bres, byte[] customdata) {
 		this.infosize = infosize;
 		this.packsize = packsize;
 		this.packname = packname;

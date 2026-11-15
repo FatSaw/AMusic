@@ -1,9 +1,12 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -34,7 +37,7 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 	}
 	
 	@Override
-	public byte[] getPack() {
+	public ByteBuffer getPack() {
 		final MessageDigest sha1hash;
 		try {
 			sha1hash = MessageDigest.getInstance("SHA-1");
@@ -43,21 +46,26 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 		}
 		ResourcepackInfoImpl info = this.info;
 		InputStream is = null;
-		byte[] buf = new byte[info.packsize];
+		ByteBuffer buf = ByteBuffer.allocateDirect(info.packsize);
+		
 		try {
 			is = this.fsp.newInputStream(this.datapath);
 			is.skip(info.infosize);
-			is.read(buf, 0, info.packsize);
+			ReadableByteChannel channel = Channels.newChannel(is);
+			ByteBuffer buffer = ByteBuffer.allocate(info.packsize);
+			while (buffer.hasRemaining() && channel.read(buffer) != -1);
+			buffer.flip();
 		} catch (IOException e1) {
-			if(is != null) {
+		} finally {
+			if (is != null) {
 				try {
 					is.close();
 				} catch (IOException e2) {
 				}
 			}
-			return null;
 		}
-		byte[] filesha1 = sha1hash.digest(buf);
+		sha1hash.update(buf.duplicate());
+		byte[] filesha1 = sha1hash.digest();
 		if (!Arrays.equals(filesha1, info.sha1)) {
 			return null;
 		}
@@ -93,7 +101,6 @@ public final class LocalDataEntry extends DataEntry implements CustomDatastore {
 			return false;
 		}
 		ResourcepackInfoImpl info = this.info;
-		String storeid = this.storeid;
 		InputStream is = null;
 		byte[] resourcepack = null;
 		boolean fail = false;

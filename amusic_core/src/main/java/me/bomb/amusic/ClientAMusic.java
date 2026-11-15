@@ -26,7 +26,7 @@ import me.bomb.amusic.api.LoadPackResult;
 import me.bomb.amusic.api.RepeatType;
 import me.bomb.amusic.api.ResourcepackInfo;
 import me.bomb.amusic.config.ExecutorConfiguration;
-import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
+import me.bomb.amusic.resourcepack.storage.ResourcepackInfoImpl;
 import me.bomb.amusic.util.AMusicLogger;
 
 public final class ClientAMusic implements AMusic {

@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.packer;
 
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;

@@ -20,8 +20,8 @@ import me.bomb.amusic.lang.LangLoader;
 import me.bomb.amusic.lang.LangLoader.LangOptions;
 import me.bomb.amusic.lang.LangLoader.Placeholder;
 import me.bomb.amusic.permission.AMusicPermission;
-import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
 import me.bomb.amusic.resourcepack.SoundInfo;
+import me.bomb.amusic.resourcepack.storage.ResourcepackInfoImpl;
 
 public final class PlaymusicCommand extends Command {
 	private final Server server;

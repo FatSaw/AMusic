@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.packer;
 
 import java.io.EOFException;
 import java.io.IOException;

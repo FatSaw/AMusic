@@ -1,8 +1,12 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.DirectoryStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -13,10 +17,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.UUID;
 
-import me.bomb.amusic.resourcepack.LocalSoundSource.PackedResourcepack;
+import me.bomb.amusic.resourcepack.packer.PackMergeSource;
+import me.bomb.amusic.resourcepack.packer.PackedResourcepack;
+import me.bomb.amusic.resourcepack.packer.ResourcepackCreator;
 import me.bomb.amusic.util.AMusicLogger;
 
-public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
+public class LocalCachedStorage extends me.bomb.amusic.resourcepack.storage.Data {
 	
 	private static final String FORMAT = ".ampi";
 	private static final byte FORMATSIZE = 5;
@@ -28,12 +34,12 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 		}
     };
 
-	private final LocalSoundSource lczs;
+	private final ResourcepackCreator lczs;
 	private final PackMergeSource pms;
 	private final FileSystemProvider fsp;
 	private final Path packeddirectory;
 	
-	protected LocalCachedStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource lczs, PackMergeSource pms, Path packeddirectory) {
+	protected LocalCachedStorage(AMusicLogger logger, boolean lockwrite, ResourcepackCreator lczs, PackMergeSource pms, Path packeddirectory) {
 		super(logger, lockwrite);
 		this.lczs = lczs;
 		this.pms = pms;
@@ -94,12 +100,14 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 		}
 		InputStream is = null;
 		ResourcepackInfoImpl info;
-		byte[] resourcepack = null;
+		ByteBuffer resourcepack = null;
 		try {
 			is = this.fsp.newInputStream(ampifile);
 			info = ResourcepackInfoImpl.deserialize(is);
-			resourcepack = new byte[info.packsize];
-			is.read(resourcepack, 0, resourcepack.length);
+			resourcepack = ByteBuffer.allocateDirect(info.packsize);
+			ReadableByteChannel channel = Channels.newChannel(is);
+			while (resourcepack.hasRemaining() && channel.read(resourcepack) != -1);
+			resourcepack.flip();
 		} catch (IOException e) {
 			this.logger.warn("Pack \"".concat(storeid).concat("\" load fail (invalid path)"));
 			throw new IllegalStateException(e);
@@ -115,7 +123,7 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 		return new LocalCachedDataEntry(storeid, info, resourcepack, ampifile);
 	}
 	
-	private DataEntry saveAmp(String storeid, ResourcepackInfoImpl info, byte[] resource) {
+	private DataEntry saveAmp(String storeid, ResourcepackInfoImpl info, ByteBuffer resource) {
 		if(storeid == null || info.packsize < 0 || info.packname == null || info.sounds == null || info.sha1 == null || info.sha1.length != 20|| info.sha256 == null || info.sha256.length != 0x20) {
 			this.logger.warn("Pack save fail (invalid values)");
 			return null;
@@ -127,7 +135,8 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 			this.logger.warn("Pack save fail (can not initialize SHA-1)");
 			throw new IllegalStateException(e);
 		}
-		byte[] filesha1 = sha1hash.digest(resource);
+		sha1hash.update(resource.duplicate());
+		byte[] filesha1 = sha1hash.digest();
 		if(!Arrays.equals(filesha1, info.sha1)) {
 			this.logger.warn("Pack \"".concat(storeid).concat("\" save fail (invalid checksum)"));
 			return null;
@@ -143,7 +152,11 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 		try {
 			os = this.fsp.newOutputStream(ampifile);
 			ResourcepackInfoImpl.serialize(os, info);
-			os.write(resource); //RESOURCEPACK ARCHIVE
+			WritableByteChannel channel = Channels.newChannel(os);
+			ByteBuffer buffer = resource.duplicate();
+			while (buffer.hasRemaining()) {
+				channel.write(buffer);
+			}
 		} catch (IOException e1) {
 			throw new IllegalStateException(e1);
 		} finally {
@@ -204,7 +217,7 @@ public class LocalCachedStorage extends me.bomb.amusic.resourcepack.Data {
 				return UpdateResult.DELETED_FAILED;
 			}
 		}
-		final byte[] resourcepack;
+		final ByteBuffer resourcepack;
 		if((resourcepack = packer.resourcepack) == null) {
 			return UpdateResult.PACKED_FAILED;
 		}

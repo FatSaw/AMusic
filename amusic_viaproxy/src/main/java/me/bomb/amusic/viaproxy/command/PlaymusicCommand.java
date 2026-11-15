@@ -8,8 +8,8 @@ import com.viaversion.viaversion.api.connection.UserConnection;
 
 import me.bomb.amusic.api.AMusic;
 import me.bomb.amusic.api.ResourcepackInfo;
-import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
 import me.bomb.amusic.resourcepack.SoundInfo;
+import me.bomb.amusic.resourcepack.storage.ResourcepackInfoImpl;
 import me.bomb.amusic.util.AMusicLogger;
 
 public final class PlaymusicCommand implements Command {

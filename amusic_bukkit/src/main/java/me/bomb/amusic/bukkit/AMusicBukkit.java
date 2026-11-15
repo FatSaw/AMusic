@@ -56,11 +56,11 @@ import me.bomb.amusic.hook.GeyserHook;
 import me.bomb.amusic.lang.LangLoader;
 import me.bomb.amusic.lang.MessageSender;
 import me.bomb.amusic.permission.AMusicPermission;
-import me.bomb.amusic.resourcepack.Data;
-import me.bomb.amusic.resourcepack.LocalSoundSource;
-import me.bomb.amusic.resourcepack.PackMergeEntryFile;
-import me.bomb.amusic.resourcepack.PackMergeSourceLocal;
+import me.bomb.amusic.resourcepack.packer.PackMergeEntryFile;
+import me.bomb.amusic.resourcepack.packer.PackMergeSourceLocal;
+import me.bomb.amusic.resourcepack.packer.ResourcepackCreator;
 import me.bomb.amusic.resourcepack.server.ResourceManager;
+import me.bomb.amusic.resourcepack.storage.Data;
 import me.bomb.amusic.tracker.PositionTracker;
 import me.bomb.amusic.bukkit.legacy.LegacySoundStopper_1_10_R1;
 
@@ -174,7 +174,7 @@ public final class AMusicBukkit extends JavaPlugin {
 				break;
 				}
 				playerips = config.sendpackstrictaccess ? new ConcurrentHashMap<Object,InetAddress>(16,0.75f,1) : null;
-				LocalSoundSource lczs = new LocalSoundSource(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
+				ResourcepackCreator lczs = new ResourcepackCreator(musicdir, config.packsizelimit, config.packsizelimit, config.packthreadcoefficient, config.packthreadlimitcount);
 				PositionTracker positiontracker = new PositionTracker(soundstarter, soundstopper);
 				ResourceManager resourcemanager = new ResourceManager(packsender, positiontracker, config.sendpackhost, config.packsizelimit, config.tokensalt, config.sendpackstrictaccess ? playerips.values() : null, config.sendpackifip, config.sendpackport, config.sendpackbacklog, config.sendpacktimeout, config.sendpackacceptthreads, config.sendpackexecutorsender, config.waitacceptioncount, config.waitacceptionwait, config.waitacceptionschedulerthreads);
 				PackMergeSourceLocal packmergesource = new PackMergeSourceLocal(fsp.exists(mergezip) ? new PackMergeEntryFile(mergezip, config.packsizelimit) : null, musicdir, config.packsizelimit);

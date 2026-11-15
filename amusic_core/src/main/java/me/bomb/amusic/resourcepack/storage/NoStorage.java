@@ -1,15 +1,17 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
-import me.bomb.amusic.resourcepack.LocalSoundSource.PackedResourcepack;
+import me.bomb.amusic.resourcepack.packer.PackMergeSource;
+import me.bomb.amusic.resourcepack.packer.PackedResourcepack;
+import me.bomb.amusic.resourcepack.packer.ResourcepackCreator;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.HexUtils;
 
-public class NoStorage extends me.bomb.amusic.resourcepack.Data {
+public class NoStorage extends me.bomb.amusic.resourcepack.storage.Data {
 	
-	private final LocalSoundSource lczs;
+	private final ResourcepackCreator lczs;
 	private final PackMergeSource pms;
 	
-	protected NoStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource lczs, PackMergeSource pms) {
+	protected NoStorage(AMusicLogger logger, boolean lockwrite, ResourcepackCreator lczs, PackMergeSource pms) {
 		super(logger, lockwrite);
 		this.lczs = lczs;
 		this.pms = pms;

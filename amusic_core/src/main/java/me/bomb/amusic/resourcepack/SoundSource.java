@@ -1,5 +1,7 @@
 package me.bomb.amusic.resourcepack;
 
+import me.bomb.amusic.resourcepack.packer.PackMergeEntry;
+
 public interface SoundSource<T extends SourceEntry> {
 
 	/**

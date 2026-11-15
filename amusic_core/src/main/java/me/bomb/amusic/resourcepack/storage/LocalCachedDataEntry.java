@@ -1,19 +1,21 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.spi.FileSystemProvider;
 
 public final class LocalCachedDataEntry extends DataEntry implements CustomDatastore {
 	
 	private final FileSystemProvider fsp;
-	private byte[] pack;
+	private ByteBuffer pack;
 	protected final Path datapath;
 
-	protected LocalCachedDataEntry(String storeid, ResourcepackInfoImpl info, byte[] pack, Path datapath) {
+	protected LocalCachedDataEntry(String storeid, ResourcepackInfoImpl info, ByteBuffer pack, Path datapath) {
 		super(storeid, info);
 		this.fsp = datapath.getFileSystem().provider();
 		this.pack = pack;
@@ -21,13 +23,13 @@ public final class LocalCachedDataEntry extends DataEntry implements CustomDatas
 	}
 	
 	@Override
-	public byte[] getPack() {
+	public ByteBuffer getPack() {
 		return this.pack;
 	}
 	
 	@Override
 	public void sendTo(SocketChannel channel) throws IOException {
-		channel.write(ByteBuffer.wrap(this.pack));
+		channel.write(this.pack);
 	}
 	
 	@Override
@@ -47,11 +49,15 @@ public final class LocalCachedDataEntry extends DataEntry implements CustomDatas
 		try {
 			os = this.fsp.newOutputStream(this.datapath);
 			ResourcepackInfoImpl.serialize(os, info);
-			os.write(this.pack); //RESOURCEPACK ARCHIVE
+			WritableByteChannel channel = Channels.newChannel(os);
+			ByteBuffer buffer = this.pack;
+			while (buffer.hasRemaining()) {
+				channel.write(buffer);
+			}
 		} catch (IOException e1) {
 			fail = true;
 		} finally {
-			if(os != null) {
+			if (os != null) {
 				try {
 					os.close();
 				} catch (IOException e) {

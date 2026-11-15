@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.packer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,11 +22,15 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.CRC32;
 
+import me.bomb.amusic.resourcepack.SoundInfo;
+import me.bomb.amusic.resourcepack.SoundSource;
+import me.bomb.amusic.resourcepack.storage.ResourcepackInfoImpl;
+
 import static java.io.File.separatorChar;
 
 import java.io.EOFException;
 
-public final class ResourcepackCreator {
+public final class ResourcepackCreator implements SoundSource<PackedResourcepack> {
 	
 	private final static int ZIP_LOCAL_HEADER = 0x04034b50, ZIP_GLOBAL_HEADER = 0x02014b50, EOCD_HEADER = 0x06054b50;
 	private final static short ZIP_VERSION = 0x0014;
@@ -81,7 +85,7 @@ public final class ResourcepackCreator {
 		MANIFEST_BEDROCK_PATH = "manifest.json".getBytes(StandardCharsets.US_ASCII);
 	}
 	
-	public static String filterName(String name) {
+	private static String filterName(String name) {
 		char[] chars = name.toCharArray();
 		int finalcount = 0;
 		int i = chars.length;
@@ -133,7 +137,8 @@ public final class ResourcepackCreator {
 		this.threadcountlimit = threadcountlimit;
 	}
 	
-	public ByteBuffer get(String entrykey) {
+	@Override
+	public PackedResourcepack get(String entrykey, PackMergeEntry packmerge) {
 		Path musicdir = this.musicdir.resolve(filterName(entrykey));
 		MessageDigest sha1hash, sha256hash;
 		try {
@@ -152,8 +157,26 @@ public final class ResourcepackCreator {
 
 		int totalsize = 0; 
 		//BEGIN MERGE PACK LOCALZIP COUNT
-		boolean addmanifest = true;
-		
+		final byte[] mergepack;
+		final int mergecdoffset, mergecdsize, mergecommentlength, mregeentriescount;
+
+		final boolean nomerge;
+		if(packmerge == null) {
+			mergepack = null;
+			mergecdoffset = 0;
+			mergecdsize = 0;
+			mergecommentlength = 0;
+			mregeentriescount = 1;
+			nomerge = true;
+		} else {
+			mergepack = packmerge.getMergePack();
+			mergecdoffset = packmerge.cdOffset();
+			mergecdsize = packmerge.cdSize();
+			mergecommentlength = packmerge.commentLength();
+			mregeentriescount = packmerge.entryCount();
+			nomerge = false;
+		}
+		totalsize += mergecdoffset;
 		//END MERGE PACK LOCALZIP COUNT
 		int localzipoffset = totalsize;
 		//BEGIN LOCALZIP COUNT
@@ -244,7 +267,7 @@ public final class ResourcepackCreator {
 		final int sha256splitoffset = totalsize;
 		int manifestjavaoffset = totalsize;
 		int manifestjavasize = ZIP_LOCAL_HEADER_ENTRY_SIZE + MANIFEST_JAVA.length;
-		if(addmanifest) {
+		if(nomerge) {
 			totalsize += manifestjavasize;
 		}
 		int manifestbedrockoffset = totalsize;
@@ -254,15 +277,9 @@ public final class ResourcepackCreator {
 		final int cdoffset = totalsize;
 		int globalzipoffset = cdoffset;
 		int globalzipsize = 0;
-		byte[] comment = "AMUSIC RESOURCEPACK".getBytes(StandardCharsets.US_ASCII);
-		int size = comment.length;
-		if(size > 0xFFFF) {
-			size = 0xFFFF;
-		}
-		final int commentsize = size;
-		totalsize += commentsize;
 		//BEGIN MERGE PACK ZIP CD ENTRY COUNT
-		
+		globalzipsize += mergecdsize;
+		globalzipoffset += mergecdsize;
 		//END MERGE PACK ZIP CD ENTRY COUNT
 		//BEGIN ZIP CD ENTRY COUNT
 		globalzipsize += ReadSound.ZIP_GLOBAL_HEADERS_SIZE * count;
@@ -271,7 +288,7 @@ public final class ResourcepackCreator {
 		globalzipsize += SILENCE_BEDROCK_PATH.length;
 		globalzipsize += SOUNDS_JAVA_PATH.length;
 		globalzipsize += SOUNDS_BEDROCK_PATH.length;
-		if(addmanifest) {
+		if(nomerge) {
 			globalzipsize += ZIP_GLOBAL_HEADER_ENTRY_SIZE;
 			globalzipsize += MANIFEST_JAVA_PATH.length;
 		}
@@ -281,6 +298,8 @@ public final class ResourcepackCreator {
 		//END ZIP CD ENTRY COUNT
 		//BEGIN ZIP EOCD COUNT
 		totalsize += EOCD_SIZE;
+		
+		totalsize += mergecommentlength;
 		//END ZIP EOCD COUNT
 		if(totalsize > this.maxresourcepacksize) {
 			return null;
@@ -303,6 +322,8 @@ public final class ResourcepackCreator {
 		sounddefenitions.position(opos);
 		sounddefenitionsoffset += SOUNDS_BEDROCK_START.length;
 		i = count;
+		int size;
+		ReadSound[] readsounds = new ReadSound[i];
 		ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(i, false);
 		while(--i > -1) {
 			final Path filepath = filepaths[i];
@@ -323,6 +344,7 @@ public final class ResourcepackCreator {
 			ByteBuffer sounddefenitionsentry = ReadSound.slice(resourcepack, sounddefenitionsoffset, size);
 			sounddefenitionsoffset += size;
 			ReadSound readsound = new ReadSound(this.fsp, filepath, localzip, datazip, globalzip, soundjsonentry, sounddefenitionsentry, soundnames[i]);
+			readsounds[i] = readsound;
 			queue.add(readsound);
 		}
 		int resultthreadcount = count;
@@ -332,9 +354,15 @@ public final class ResourcepackCreator {
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(resultthreadcount, resultthreadcount, 0, TimeUnit.MILLISECONDS, queue);
 		executor.shutdown();
 		executor.prestartAllCoreThreads();
+		ByteBuffer cdglobalentry;
+		if(!nomerge) {
+			ByteBuffer mregelocalzip = ReadSound.slice(resourcepack, 0, mergecdoffset);
+			mregelocalzip.put(mergepack, 0, mergecdoffset);
+			cdglobalentry = ReadSound.slice(resourcepack, cdoffset, mergecdsize);
+			cdglobalentry.put(mergepack, mergecdoffset, mergecdsize);
+		}
 		CRC32 crc32 = new CRC32();
 		int crc;
-		ByteBuffer cdglobalentry;
 		ByteBuffer silence = ReadSound.slice(resourcepack, silenceoffset, silencesize);
 		size = (ZIP_GLOBAL_HEADER_ENTRY_SIZE << 1) + SILENCE_JAVA_PATH.length + SILENCE_BEDROCK_PATH.length;
 		cdglobalentry = ReadSound.slice(resourcepack, globalzipoffset, size);
@@ -466,7 +494,7 @@ public final class ResourcepackCreator {
 		
 		sha256hash.update(ReadSound.slice(resourcepack, 0, sha256splitoffset));
 		
-		if(addmanifest) {
+		if(nomerge) {
 			ByteBuffer manifestjava = ReadSound.slice(resourcepack, manifestjavaoffset, manifestjavasize);
 			size = ZIP_GLOBAL_HEADER_ENTRY_SIZE + MANIFEST_JAVA_PATH.length;
 			cdglobalentry = ReadSound.slice(resourcepack, globalzipoffset, size);
@@ -508,87 +536,89 @@ public final class ResourcepackCreator {
 			crc32.reset();
 		}
 		
+		UUID bhea, bres;
 		{
-			UUID bhea, bres;
-			{
-				MessageDigest sha256hashclone;
-				try {
-					sha256hashclone = (MessageDigest) sha256hash.clone();
-				} catch (CloneNotSupportedException e) {
-					throw new IllegalStateException(e);
-				}
-				byte[] buf = sha256hashclone.digest();
-				
-				i = 0x20;
-				bhea = new UUID((buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56, (buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56);
-				bres = new UUID((buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56, (buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56);
+			MessageDigest sha256hashclone;
+			try {
+				sha256hashclone = (MessageDigest) sha256hash.clone();
+			} catch (CloneNotSupportedException e) {
+				throw new IllegalStateException(e);
 			}
-			ByteBuffer manifestbedrock = ReadSound.slice(resourcepack, manifestbedrockoffset, manifestbedrocksize);
-			size = ZIP_GLOBAL_HEADER_ENTRY_SIZE + MANIFEST_BEDROCK_PATH.length;
-			cdglobalentry = ReadSound.slice(resourcepack, globalzipoffset, size);
-			globalzipoffset += size;
-			opos = manifestbedrock.position();
-			manifestbedrockoffset += ZIP_LOCAL_HEADER_ENTRY_SIZE;
-			manifestbedrock.position(manifestbedrockoffset);
-			manifestbedrock.put(MANIFEST_BEDROCK);
-			manifestbedrock.position(manifestbedrockoffset + MANIFEST_BEDROCK_IDOFF_1);
-			manifestbedrock.put(bhea.toString().getBytes(StandardCharsets.US_ASCII));
-			manifestbedrock.position(manifestbedrockoffset + MANIFEST_BEDROCK_IDOFF_2);
-			manifestbedrock.put(bres.toString().getBytes(StandardCharsets.US_ASCII));
-			manifestbedrockoffset += MANIFEST_BEDROCK.length;
-			manifestbedrock.position(opos + ZIP_LOCAL_HEADER_ENTRY_SIZE);
-			size = manifestbedrock.remaining();
-			crc32.update(manifestbedrock);
+			byte[] buf = sha256hashclone.digest();
 			
-			crc = (int) crc32.getValue();
-			manifestbedrock.position(opos);
-			manifestbedrock.order(ByteOrder.LITTLE_ENDIAN);
-			manifestbedrock.putInt(ZIP_LOCAL_HEADER); //HEADER
-			manifestbedrock.putShort(ZIP_VERSION); //EXTRACT VERSION
-			manifestbedrock.putLong(0L); //GENERAL PURPOSE BIT FLAG + COMPRESSION METHOD + TIME + DATE
-			manifestbedrock.putInt(crc); //CRC
-			manifestbedrock.putInt(size); //COMPRESSED SIZE
-			manifestbedrock.putInt(size); //UNCOMPRESSED SIZE
-			manifestbedrock.putInt(0); //FILENAME LENGTH + EXTRA
-			
-			cdglobalentry.order(ByteOrder.LITTLE_ENDIAN);
-			cdglobalentry.putInt(ZIP_GLOBAL_HEADER); //HEADER
-			cdglobalentry.putShort(ZIP_VERSION); //VERSION MADE BY
-			cdglobalentry.putShort(ZIP_VERSION); //VERSION EXTRACT
-			cdglobalentry.putLong(0L); //GENERAL PURPOSE BIT FLAG + COMPRESSION METHOD + TIME + DATE
-			cdglobalentry.putInt(crc); //CRC
-			cdglobalentry.putInt(size); //COMPRESSED SIZE
-			cdglobalentry.putInt(size); //UNCOMPRESSED SIZE
-			cdglobalentry.putShort((short) MANIFEST_BEDROCK_PATH.length); //FILENAME LENGTH
-			cdglobalentry.putLong(0L); //EXTRA FIELD LENGTH + FILE COMMENT LENGTH + DISK NUMBER + INTERNAL FILE ATTRIBUTES
-			cdglobalentry.putInt(0); //EXTERNAL FILE ATTRIBUTES
-			cdglobalentry.putInt(opos); //LOCAL HEADER OFFSET
-			cdglobalentry.put(MANIFEST_BEDROCK_PATH); //PARH
-			
-			crc32.reset();
+			i = 0x20;
+			bhea = new UUID((buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56, (buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56);
+			bres = new UUID((buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56, (buf[--i] & 0xFFL) | (buf[--i] & 0xFFL) << 8 | (buf[--i] & 0xFFL) << 16 | (buf[--i] & 0xFFL) << 24 | (buf[--i] & 0xFFL) << 32 | (buf[--i] & 0xFFL) << 40 | (buf[--i] & 0xFFL) << 48 | (buf[--i] & 0xFFL) << 56);
 		}
+		ByteBuffer manifestbedrock = ReadSound.slice(resourcepack, manifestbedrockoffset, manifestbedrocksize);
+		size = ZIP_GLOBAL_HEADER_ENTRY_SIZE + MANIFEST_BEDROCK_PATH.length;
+		cdglobalentry = ReadSound.slice(resourcepack, globalzipoffset, size);
+		globalzipoffset += size;
+		opos = manifestbedrock.position();
+		manifestbedrockoffset += ZIP_LOCAL_HEADER_ENTRY_SIZE;
+		manifestbedrock.position(manifestbedrockoffset);
+		manifestbedrock.put(MANIFEST_BEDROCK);
+		manifestbedrock.position(manifestbedrockoffset + MANIFEST_BEDROCK_IDOFF_1);
+		manifestbedrock.put(bhea.toString().getBytes(StandardCharsets.US_ASCII));
+		manifestbedrock.position(manifestbedrockoffset + MANIFEST_BEDROCK_IDOFF_2);
+		manifestbedrock.put(bres.toString().getBytes(StandardCharsets.US_ASCII));
+		manifestbedrockoffset += MANIFEST_BEDROCK.length;
+		manifestbedrock.position(opos + ZIP_LOCAL_HEADER_ENTRY_SIZE);
+		size = manifestbedrock.remaining();
+		crc32.update(manifestbedrock);
 		
-		ByteBuffer eocd = ReadSound.slice(resourcepack, globalzipoffset, EOCD_SIZE + commentsize);
+		crc = (int) crc32.getValue();
+		manifestbedrock.position(opos);
+		manifestbedrock.order(ByteOrder.LITTLE_ENDIAN);
+		manifestbedrock.putInt(ZIP_LOCAL_HEADER); //HEADER
+		manifestbedrock.putShort(ZIP_VERSION); //EXTRACT VERSION
+		manifestbedrock.putLong(0L); //GENERAL PURPOSE BIT FLAG + COMPRESSION METHOD + TIME + DATE
+		manifestbedrock.putInt(crc); //CRC
+		manifestbedrock.putInt(size); //COMPRESSED SIZE
+		manifestbedrock.putInt(size); //UNCOMPRESSED SIZE
+		manifestbedrock.putInt(0); //FILENAME LENGTH + EXTRA
+		
+		cdglobalentry.order(ByteOrder.LITTLE_ENDIAN);
+		cdglobalentry.putInt(ZIP_GLOBAL_HEADER); //HEADER
+		cdglobalentry.putShort(ZIP_VERSION); //VERSION MADE BY
+		cdglobalentry.putShort(ZIP_VERSION); //VERSION EXTRACT
+		cdglobalentry.putLong(0L); //GENERAL PURPOSE BIT FLAG + COMPRESSION METHOD + TIME + DATE
+		cdglobalentry.putInt(crc); //CRC
+		cdglobalentry.putInt(size); //COMPRESSED SIZE
+		cdglobalentry.putInt(size); //UNCOMPRESSED SIZE
+		cdglobalentry.putShort((short) MANIFEST_BEDROCK_PATH.length); //FILENAME LENGTH
+		cdglobalentry.putLong(0L); //EXTRA FIELD LENGTH + FILE COMMENT LENGTH + DISK NUMBER + INTERNAL FILE ATTRIBUTES
+		cdglobalentry.putInt(0); //EXTERNAL FILE ATTRIBUTES
+		cdglobalentry.putInt(opos); //LOCAL HEADER OFFSET
+		cdglobalentry.put(MANIFEST_BEDROCK_PATH); //PARH
+		
+		crc32.reset();
+		
+		ByteBuffer eocd = ReadSound.slice(resourcepack, globalzipoffset, EOCD_SIZE + mergecommentlength);
 		eocd.order(ByteOrder.LITTLE_ENDIAN);
 		eocd.putInt(EOCD_HEADER); //HEADER
 		eocd.putShort((short) 0);
 		eocd.putShort((short) 0);
-		size = (count << 1) + 5;
-		if(addmanifest) {
-			++size;
-		}
+		size = (count << 1) + 5 + mregeentriescount;
 		eocd.putShort((short) size);
 		eocd.putShort((short) size);
 		eocd.putInt((int) globalzipsize); //CD SIZE
 		eocd.putInt((int) cdoffset); //CD OFFSET
-		eocd.putShort((short) commentsize);
-    	eocd.put(comment, 0, commentsize); //COMMENT
+		eocd.putShort((short) mergecommentlength);
+    	if(!nomerge) eocd.put(mergepack, mergepack.length - mergecommentlength, mergecommentlength); //COMMENT
     	
     	sha1hash.update(resourcepack.duplicate());
     	sha256hash.update(ReadSound.slice(resourcepack, sha256splitoffset, totalsize - sha256splitoffset));
-		return resourcepack;
+    	i = count;
+    	SoundInfo[] soundinfo = new SoundInfo[i];
+    	while (--i > -1) {
+    		ReadSound readsound = readsounds[i];
+    		soundinfo[i] = new SoundInfo(names[i], readsound.soundid, readsound.length, (byte) 0);
+    	}
+    	return new PackedResourcepack(resourcepack, new ResourcepackInfoImpl(0, totalsize, entrykey, soundinfo, sha1hash.digest(), sha256hash.digest(), bhea, bres, null));
 	}
 	
+	@Override
 	public boolean exists(String entrykey) {
 		DirectoryStream<Path> ds = null;
 		Path musicdir = this.musicdir.resolve(filterName(entrykey));
@@ -623,7 +653,8 @@ public final class ResourcepackCreator {
 		}
 		return false;
 	}
-
+	
+	@Override
 	public String[] listResourcepacks() {
 		DirectoryStream<Path> ds = null;
 		ArrayList<Path> playlistsc = new ArrayList<Path>();
@@ -683,6 +714,7 @@ public final class ResourcepackCreator {
 		return playlists.toArray(new String[playlists.size()]);
 	}
 	
+	@Override
 	public String[] getSounds(String entrykey) {
 		DirectoryStream<Path> ds = null;
 		Path musicdir = this.musicdir.resolve(filterName(entrykey));

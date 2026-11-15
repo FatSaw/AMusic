@@ -1,6 +1,7 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 import me.bomb.amusic.api.Resourcepack;
@@ -17,10 +18,10 @@ public abstract class DataEntry implements Resourcepack {
 	
 	/**
 	 * Get resourcepack
-	 * @return resourcepack byte array null if signature invalid
+	 * @return resourcepack ByteBuffer
 	 */
 	@Override
-	public abstract byte[] getPack();
+	public abstract ByteBuffer getPack();
 	
 	/**
 	 * Send resourcepack to channel

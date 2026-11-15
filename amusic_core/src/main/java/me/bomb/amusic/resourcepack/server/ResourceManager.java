@@ -15,8 +15,8 @@ import me.bomb.amusic.api.PackSender;
 import me.bomb.amusic.api.Resourcepack;
 import me.bomb.amusic.config.ExecutorConfiguration;
 import me.bomb.amusic.http.ServerManager;
-import me.bomb.amusic.resourcepack.DataEntry;
-import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
+import me.bomb.amusic.resourcepack.storage.DataEntry;
+import me.bomb.amusic.resourcepack.storage.ResourcepackInfoImpl;
 import me.bomb.amusic.tracker.PositionTracker;
 
 public final class ResourceManager {

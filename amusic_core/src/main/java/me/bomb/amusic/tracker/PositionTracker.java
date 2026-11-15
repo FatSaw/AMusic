@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import me.bomb.amusic.api.RepeatType;
 import me.bomb.amusic.api.SoundStarter;
 import me.bomb.amusic.api.SoundStopper;
-import me.bomb.amusic.resourcepack.ResourcepackInfoImpl;
 import me.bomb.amusic.resourcepack.SoundInfo;
+import me.bomb.amusic.resourcepack.storage.ResourcepackInfoImpl;
 
 public final class PositionTracker implements Runnable {
 

@@ -1,15 +1,16 @@
 package me.bomb.amusic.api;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public interface Resourcepack {
 	
 	/**
 	 * Get resourcepack
-	 * @return resourcepack byte array null if signature invalid
+	 * @return resourcepack ByteBuffer
 	 */
-	public abstract byte[] getPack();
+	public abstract ByteBuffer getPack();
 	
 	/**
 	 * Send resourcepack to channel

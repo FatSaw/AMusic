@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.packer;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -25,7 +25,6 @@ public final class ReadSound implements Runnable {
 	private final static int ZIP_LOCAL_HEADER = 0x04034b50, ZIP_GLOBAL_HEADER = 0x02014b50;
 	private final static short ZIP_VERSION = 0x0014;
 	private final static byte[] SOUNDS_JAVA_ENTRY, SOUNDS_NAME_JAVA_ENTRY_1, SOUNDS_NAME_JAVA_ENTRY_2, SOUNDS_BEDROCK_ENTRY, SOUNDS_NAME_BEDROCK_ENTRY_1, SOUNDS_NAME_BEDROCK_ENTRY_2;
-	
 	
 	private final static int SOUNDS_JAVA_ENTRY_SOUNDID_OFFSET_1, SOUNDS_JAVA_ENTRY_SOUNDID_OFFSET_2, SOUNDS_JAVA_NAMED_ENTRY_SOUNDID_OFFSET, SOUNDS_BEDROCK_ENTRY_SOUNDID_OFFSET_1, SOUNDS_BEDROCK_ENTRY_SOUNDID_OFFSET_2, SOUNDS_BEDROCK_NAMED_ENTRY_SOUNDID_OFFSET;
 
@@ -175,6 +174,26 @@ public final class ReadSound implements Runnable {
 		return j == -1 ? strb : null;
 	}
 	
+	private static int calculateDuration(final ByteBuffer buf) {
+		long len = -1L;
+		int rate = -1;
+		final int start = buf.position(), end = buf.limit();
+		for (int i = end - 15; i >= start && len < 0L; i--) {
+			if (buf.get(i) == 'O' && buf.get(i + 1) == 'g' && buf.get(i + 2) == 'g' && buf.get(i + 3) == 'S') {
+				len = buf.duplicate().order(ByteOrder.LITTLE_ENDIAN).getLong(i + 6);
+			}
+		}
+		for (int i = start; i < end - 14 && rate < 0; i++) {
+			if (buf.get(i) == 'v' && buf.get(i + 1) == 'o' && buf.get(i + 2) == 'r' && buf.get(i + 3) == 'b' && buf.get(i + 4) == 'i' && buf.get(i + 5) == 's') {
+				rate = buf.duplicate().order(ByteOrder.LITTLE_ENDIAN).getInt(i + 11);
+			}
+		}
+		if (len < 0L || rate <= 0) {
+			return 0;
+		}
+		return (int) Math.min(len / rate, 65535L);
+	}
+	
 	private final FileSystemProvider fsp;
 	private final Path file;
 	private final ByteBuffer localzip, datazip, globalzip, soundjsonentry, sounddefenitionsentry;
@@ -183,6 +202,7 @@ public final class ReadSound implements Runnable {
 	private final byte[] soundname;
 	
 	protected UUID soundid;
+	protected short length;
 	
 	public ReadSound(FileSystemProvider fsp, Path file, ByteBuffer localzip, ByteBuffer datazip, ByteBuffer globalzip, ByteBuffer soundjsonentry, ByteBuffer sounddefenitionsentry, byte[] soundname) {
 		this.fsp = fsp;
@@ -290,6 +310,7 @@ public final class ReadSound implements Runnable {
 		}
 		this.crc32.update(this.datazip.duplicate());
 		this.md5hash.update(this.datazip.duplicate());
+		this.length = (short) calculateDuration(this.datazip);
 		final int crc = (int) this.crc32.getValue();
 		final int offset = this.localzip.position();
 		final byte[] filename;

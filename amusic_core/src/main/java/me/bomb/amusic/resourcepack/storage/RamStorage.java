@@ -1,15 +1,19 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
-import me.bomb.amusic.resourcepack.LocalSoundSource.PackedResourcepack;
+import java.nio.ByteBuffer;
+
+import me.bomb.amusic.resourcepack.packer.PackMergeSource;
+import me.bomb.amusic.resourcepack.packer.PackedResourcepack;
+import me.bomb.amusic.resourcepack.packer.ResourcepackCreator;
 import me.bomb.amusic.util.AMusicLogger;
 import me.bomb.amusic.util.HexUtils;
 
-public class RamStorage extends me.bomb.amusic.resourcepack.Data {
+public class RamStorage extends me.bomb.amusic.resourcepack.storage.Data {
 	
-	private final LocalSoundSource lczs;
+	private final ResourcepackCreator lczs;
 	private final PackMergeSource pms;
 	
-	protected RamStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource lczs, PackMergeSource pms) {
+	protected RamStorage(AMusicLogger logger, boolean lockwrite, ResourcepackCreator lczs, PackMergeSource pms) {
 		super(logger, lockwrite);
 		this.lczs = lczs;
 		this.pms = pms;
@@ -71,7 +75,7 @@ public class RamStorage extends me.bomb.amusic.resourcepack.Data {
 			this.printRamUsage();
 			return UpdateResult.DELETED_SUCCESS;
 		}
-		final byte[] resourcepack;
+		final ByteBuffer resourcepack;
 		if((resourcepack = packer.resourcepack) == null) {
 			return UpdateResult.PACKED_FAILED;
 		}

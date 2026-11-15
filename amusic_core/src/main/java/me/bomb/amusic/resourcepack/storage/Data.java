@@ -1,10 +1,12 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import me.bomb.amusic.resourcepack.packer.PackMergeSource;
+import me.bomb.amusic.resourcepack.packer.ResourcepackCreator;
 import me.bomb.amusic.util.AMusicLogger;
 
 public abstract class Data {
@@ -24,7 +26,7 @@ public abstract class Data {
 	 * Generate resourcepack for each request
 	 * @return no storage
 	 */
-	public static NoStorage getNoStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource) {
+	public static NoStorage getNoStorage(AMusicLogger logger, boolean lockwrite, ResourcepackCreator soundsource, PackMergeSource packmergesource) {
 		return new NoStorage(logger, lockwrite, soundsource, packmergesource);
 	}
 	
@@ -33,7 +35,7 @@ public abstract class Data {
 	 * Store resourcepack on ram
 	 * @return ram storage
 	 */
-	public static RamStorage getRamStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource) {
+	public static RamStorage getRamStorage(AMusicLogger logger, boolean lockwrite, ResourcepackCreator soundsource, PackMergeSource packmergesource) {
 		return new RamStorage(logger, lockwrite, soundsource, packmergesource);
 	}
 	
@@ -42,7 +44,7 @@ public abstract class Data {
 	 * Store resourcepack on disk
 	 * @return local storage
 	 */
-	public static LocalStorage getLocalStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
+	public static LocalStorage getLocalStorage(AMusicLogger logger, boolean lockwrite, ResourcepackCreator soundsource, PackMergeSource packmergesource, Path packeddirectory) {
 		return new LocalStorage(logger, lockwrite, soundsource, packmergesource, packeddirectory);
 	}
 	
@@ -51,7 +53,7 @@ public abstract class Data {
 	 * Store resourcepack on disk and on ram
 	 * @return local cached storage
 	 */
-	public static LocalCachedStorage getLocalCachedStorage(AMusicLogger logger, boolean lockwrite, LocalSoundSource soundsource, PackMergeSource packmergesource, Path packeddirectory) {
+	public static LocalCachedStorage getLocalCachedStorage(AMusicLogger logger, boolean lockwrite, ResourcepackCreator soundsource, PackMergeSource packmergesource, Path packeddirectory) {
 		return new LocalCachedStorage(logger, lockwrite, soundsource, packmergesource, packeddirectory);
 	}
 	

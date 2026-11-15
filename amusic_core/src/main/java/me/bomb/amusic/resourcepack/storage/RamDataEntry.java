@@ -1,4 +1,4 @@
-package me.bomb.amusic.resourcepack;
+package me.bomb.amusic.resourcepack.storage;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -6,21 +6,21 @@ import java.nio.channels.SocketChannel;
 
 public class RamDataEntry extends DataEntry {
 
-	private final byte[] pack;
+	private final ByteBuffer pack;
 	
-	protected RamDataEntry(String storeid, ResourcepackInfoImpl info, byte[] pack) {
+	protected RamDataEntry(String storeid, ResourcepackInfoImpl info, ByteBuffer pack) {
 		super(storeid, info);
 		this.pack = pack;
 	}
 
 	@Override
-	public byte[] getPack() {
+	public ByteBuffer getPack() {
 		return this.pack;
 	}
 	
 	@Override
 	public void sendTo(SocketChannel channel) throws IOException {
-		channel.write(ByteBuffer.wrap(this.getPack()));
+		channel.write(this.getPack());
 	}
 	
 	@Override

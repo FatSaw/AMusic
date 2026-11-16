@@ -343,7 +343,7 @@ public final class ResourcepackCreator implements SoundSource<PackedResourcepack
 			size = ReadSound.SOUNDS_BEDROCK_ENTRY_SIZE + (soundname == null ? 0 : ReadSound.SOUNDS_NAME_BEDROCK_ENTRY_SIZE + soundname.length);
 			ByteBuffer sounddefenitionsentry = ReadSound.slice(resourcepack, sounddefenitionsoffset, size);
 			sounddefenitionsoffset += size;
-			ReadSound readsound = new ReadSound(this.fsp, filepath, localzip, datazip, globalzip, soundjsonentry, sounddefenitionsentry, soundnames[i]);
+			ReadSound readsound = new ReadSound(this.fsp, filepath, localzip, datazip, globalzip, soundjsonentry, sounddefenitionsentry, soundname);
 			readsounds[i] = readsound;
 			queue.add(readsound);
 		}
@@ -354,6 +354,23 @@ public final class ResourcepackCreator implements SoundSource<PackedResourcepack
 		ThreadPoolExecutor executor = new ThreadPoolExecutor(resultthreadcount, resultthreadcount, 0, TimeUnit.MILLISECONDS, queue);
 		executor.shutdown();
 		executor.prestartAllCoreThreads();
+		
+		int infosize = 102;
+		{
+			infosize += count<<4;
+			infosize += count<<2;
+			byte[] entrykeyb = entrykey.getBytes(StandardCharsets.UTF_8);
+			int entrykeylength = entrykeyb.length;
+			if(entrykeylength > 0xFF) {
+				entrykeylength = 0xFF;
+			}
+			infosize += entrykeylength;
+			i = count;
+			while(--i > -1) {
+				infosize += names[i].getBytes(StandardCharsets.UTF_8).length;
+			}
+		}
+		
 		ByteBuffer cdglobalentry;
 		if(!nomerge) {
 			ByteBuffer mregelocalzip = ReadSound.slice(resourcepack, 0, mergecdoffset);
@@ -615,7 +632,7 @@ public final class ResourcepackCreator implements SoundSource<PackedResourcepack
     		ReadSound readsound = readsounds[i];
     		soundinfo[i] = new SoundInfo(names[i], readsound.soundid, readsound.length, (byte) 0);
     	}
-    	return new PackedResourcepack(resourcepack, new ResourcepackInfoImpl(0, totalsize, entrykey, soundinfo, sha1hash.digest(), sha256hash.digest(), bhea, bres, null));
+    	return new PackedResourcepack(resourcepack, new ResourcepackInfoImpl(infosize, totalsize, entrykey, soundinfo, sha1hash.digest(), sha256hash.digest(), bhea, bres, null));
 	}
 	
 	@Override

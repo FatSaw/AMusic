@@ -43,6 +43,7 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 	private GeyserHook geyserhook = null;
 	
 	private final ConsoleCommandHandler consolecommand;
+	
 	private final LoginLogoutHandler loginlogout;
 	
 	public AMusicViaproxy() {
@@ -88,13 +89,13 @@ public final class AMusicViaproxy extends ViaProxyPlugin {
 		ConcurrentHashMap<String, UUID> uuidByPlayername = new ConcurrentHashMap<String, UUID>(16,0.75f,1);
 
 		ConsoleCommandHandler consolecommand = null;
-		LoginLogoutHandler loginlogout = null;
+		LoginLogoutHandler loginlogout;
 		if(config.usecmd) {
 			Command loadmusic = new LoadmusicCommand(this.amusic, uuidByPlayername), playmusic = new PlaymusicCommand(this.amusic, uuidByPlayername), repeat = new RepeatCommand(this.amusic, uuidByPlayername);
 			consolecommand = new ConsoleCommandHandler(this.logger, loadmusic, playmusic, repeat);
 		}
-		loginlogout = new LoginLogoutHandler(this.amusic, players, playerips, config.joinplaylist, uuidByPlayername);
-
+		loginlogout = new LoginLogoutHandler(this.amusic, players, playerips, config.joinplaylist, uuidByPlayername, config.useprovideduuid);
+		
 		this.consolecommand = consolecommand;
 		this.loginlogout = loginlogout;
 	}

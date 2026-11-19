@@ -2,6 +2,7 @@ package me.bomb.amusic.viaproxy;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -22,13 +23,15 @@ public final class LoginLogoutHandler implements Consumer<ClientLoggedInEvent> {
 	private final ConcurrentHashMap<Object,InetAddress> playerips;
 	private final String joinplaylist;
 	private final ConcurrentHashMap<String, UUID> uuidByPlayername;
+	private final boolean useprovideduuid;
 	
-	public LoginLogoutHandler(AMusic amusic, ConcurrentHashMap<UUID,ProxyConnection> players, ConcurrentHashMap<Object,InetAddress> playerips, String joinplaylist, ConcurrentHashMap<String, UUID> uuidByPlayername) {
+	public LoginLogoutHandler(AMusic amusic, ConcurrentHashMap<UUID,ProxyConnection> players, ConcurrentHashMap<Object,InetAddress> playerips, String joinplaylist, ConcurrentHashMap<String, UUID> uuidByPlayername, boolean useprovideduuid) {
 		this.amusic = amusic;
 		this.players = players;
 		this.playerips = playerips;
 		this.joinplaylist = joinplaylist;
 		this.uuidByPlayername = uuidByPlayername;
+		this.useprovideduuid = useprovideduuid;
 	}
 	
 	@Override
@@ -39,7 +42,7 @@ public final class LoginLogoutHandler implements Consumer<ClientLoggedInEvent> {
 		InetAddress address = socketAddress.getAddress();
 		GameProfile gameprofile = proxyConnection.getGameProfile();
 		String playername = gameprofile.getName();
-		UUID playeruuid = gameprofile.getId();
+		UUID playeruuid = this.useprovideduuid ? gameprofile.getId() : UUID.nameUUIDFromBytes(("OfflinePlayer:" + playername).getBytes(StandardCharsets.UTF_8));
 		channel.closeFuture().addListener(new DisconnectHandler(this.amusic, this.players, this.playerips, this.uuidByPlayername, playeruuid, playername));
 		players.put(playeruuid, proxyConnection);
 		uuidByPlayername.put(playername, playeruuid);

@@ -5,6 +5,8 @@ amusic:
  executor: apicall
  #Usecmd - register commands
  usecmd: true
+ #Useprovideduuid - if false offline uuid will be used instead provided by client (only ViaProxy affected)
+ useprovideduuid: true
  resourcepack:
   #Processpack - if false resourcepack modification not allowed
   processpack: true

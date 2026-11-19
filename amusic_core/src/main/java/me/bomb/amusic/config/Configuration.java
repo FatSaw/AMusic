@@ -39,7 +39,7 @@ public final class Configuration {
 	
 	public final ExecutorConfiguration executor, serverexecutor, sendpackexecutorsender;
 	
-	public final boolean use, usecmd, connectuse, connecttls, connectusecache, connectcachereusesocket;
+	public final boolean use, usecmd, useprovideduuid, connectuse, connecttls, connectusecache, connectcachereusesocket;
 	
 	public final String sendpackhost, joinplaylist;
 	public final InetAddress sendpackifip, connectifip, connectremoteip;
@@ -65,13 +65,14 @@ public final class Configuration {
 	public final ServerSocketFactory connectserverfactory;
 	public final SocketFactory connectsocketfactory;
 	
-	public Configuration(ExecutorConfiguration executor, ExecutorConfiguration serverexecutor, Executor sendpackexecutorchecker, ExecutorConfiguration sendpackexecutorsender, boolean usecmd, boolean sendpackuse, boolean connectuse, boolean connecttls, boolean connectusecache, boolean connectcachereusesocket, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
+	public Configuration(ExecutorConfiguration executor, ExecutorConfiguration serverexecutor, Executor sendpackexecutorchecker, ExecutorConfiguration sendpackexecutorsender, boolean usecmd, boolean useprovideduuid, boolean sendpackuse, boolean connectuse, boolean connecttls, boolean connectusecache, boolean connectcachereusesocket, String sendpackhost, String joinplaylist, InetAddress sendpackifip, InetAddress connectifip, InetAddress connectremoteip, int sendpackport, int connectport, int sendpackbacklog, int connectbacklog, int sendpacktimeout, int connecttimeout, long connectcachetimeoutsuccess, long connectcachetimeoutfail, short sendpackacceptthreads, boolean sendpackstrictaccess, boolean processpack, boolean ramcache, boolean diskstore, int waitacceptioncount, int waitacceptionschedulerthreads, int waitacceptionwait, int packsizelimit, short packthreadlimitcount, float packthreadcoefficient, byte[] tokensalt, ServerSocketFactory connectserverfactory, SocketFactory connectsocketfactory) {
 		this.errors = new String();
 		this.use = true;
 		this.executor = executor;
 		this.serverexecutor = serverexecutor;
 		this.sendpackexecutorsender = sendpackexecutorsender;
 		this.usecmd = usecmd;
+		this.useprovideduuid = useprovideduuid;
 		this.connectuse = connectuse;
 		this.connecttls = connecttls;
 		this.connectusecache = connectusecache;
@@ -162,6 +163,7 @@ public final class Configuration {
 			final String EMPTY = new String();
 			this.use = true;
 			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
+			this.useprovideduuid = sc.getBooleanOrError("amusic\0useprovideduuid", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
 			String executorcfg = sc.getStringOrDefault("amusic\0executor", EMPTY);
 			ExecutorConfiguration executorconfig = executorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0executor") : new ExecutorConfiguration("executor_".concat(executorcfg).concat(".yml"));
@@ -418,6 +420,7 @@ public final class Configuration {
 		} else {
 			this.use = false;
 			this.usecmd = false;
+			this.useprovideduuid = false;
 			this.executor = null;
 			this.serverexecutor = null;
 			this.connectuse = false;

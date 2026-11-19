@@ -57,7 +57,7 @@ amusic:
    #Backlog - maximum pending connections count if 0 used default value
    backlog: 127
    #Connect timeout (in ms)
-   timeout: 10000
+   timeout: 30000
    #Allow connection only from ips that connected to MC server (may not work if proxy server used)
    strictaccess: true
    waitacception:

@@ -1,8 +1,18 @@
 amusic:
  #Use - set it to false if api mode used
  use: true
- #Executor - api call executor configuration preset
- executor: apicall
+ #Executor - api call executor configuration
+ executor:
+  queue:
+   #Type - LINKED,ARRAY
+   type: LINKED
+   size: 1024
+  poolsize:
+   core: 4
+   maximum: 64
+  keepalive:
+   timeunit: SECONDS
+   value: 5
  #Usecmd - register commands
  usecmd: true
  #Useprovideduuid - if false offline uuid will be used instead provided by client (only ViaProxy affected)
@@ -25,8 +35,8 @@ amusic:
   diskstore: true
  server:
   sendpack:
-   #Executor - resourcepack sender executor configuration preset, options below used if value not specified
-   executor: sendpacksender
+   #Executor - resourcepack sender executor configuration
+   executor:
     queue:
      #Type - LINKED,ARRAY
      type: LINKED
@@ -86,8 +96,18 @@ amusic:
       fail: 60000
    #Server used on velocity, viaproxy
    server:
-    #Executor - api call (for remote requests) executor configuration preset
-    executor: apicallremote
+    #Executor - api call (for remote requests) executor configuration
+    executor:
+     queue:
+      #Type - LINKED,ARRAY
+      type: LINKED
+      size: 1024
+     poolsize:
+      core: 4
+      maximum: 64
+     keepalive:
+      timeunit: SECONDS
+      value: 10
     #Remote client ip
     clientip: 0.0.0.0
     port: 25534

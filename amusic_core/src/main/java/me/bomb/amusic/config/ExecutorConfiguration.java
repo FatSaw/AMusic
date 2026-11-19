@@ -1,7 +1,5 @@
 package me.bomb.amusic.config;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -30,71 +28,6 @@ public final class ExecutorConfiguration {
 		final int maximumPoolSize = sc.getIntOrError(parentsection.concat("\0poolsize\0maximum"), errors);
 		final String keepAliveTimeUnit = sc.getStringOrError(parentsection.concat("\0keepalive\0timeunit"), errors);
 		final long keepAlive = sc.getLongOrError(parentsection.concat("\0keepalive\0value"), errors);
-		TimeUnit timeUnit = null;
-		final boolean linkedqueue;
-		if("LINKED".equals(queuetype)) {
-			linkedqueue = true;
-		} else if("ARRAY".equals(queuetype)) {
-			linkedqueue = false;
-		} else {
-			linkedqueue = false;
-			appendError("Unknown queue type", errors);
-		}
-		if(queuesize < 1) {
-			appendError("Invalid queue size", errors);
-		}
-		if(corePoolSize < 0) {
-			appendError("Invalid core pool size", errors);
-		}
-		if(maximumPoolSize < 1) {
-			appendError("Invalid maximum pool size", errors);
-		}
-		if(keepAlive < 0) {
-			appendError("Invalid keep alive", errors);
-		}
-		try {
-			timeUnit = TimeUnit.valueOf(keepAliveTimeUnit);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			appendError("Unknown time unit type", errors);
-		}
-		this.linkedqueue = linkedqueue;
-		this.queuesize = queuesize;
-		this.corePoolSize = corePoolSize;
-		this.maximumPoolSize = maximumPoolSize;
-		this.keepAlive = keepAlive;
-		this.timeUnit = timeUnit;
-		this.errors = errors.toString();
-	}
-	
-	protected ExecutorConfiguration(String resource) {
-		final StringBuilder errors = new StringBuilder();
-		final SimpleConfiguration sc;
-		{
-			byte[] bytes = null;
-			int size = 0;
-			InputStream is = null;
-			try {
-				is = ExecutorConfiguration.class.getClassLoader().getResourceAsStream(resource);
-				bytes = new byte[0x100];
-				size = is.read(bytes, 0, bytes.length);
-				is.close();
-			} catch (IOException e3) {
-				appendError("Filed to read executor config ".concat(resource), errors);
-				if(is != null) {
-					try {
-						is.close();
-					} catch (IOException e4) {
-					}
-				}
-			}
-			sc = new SimpleConfiguration(bytes, size);
-		}
-		final String queuetype = sc.getStringOrError("executor\0queue\0type", errors);
-		final int queuesize = sc.getIntOrError("executor\0queue\0size", errors);
-		final int corePoolSize = sc.getIntOrError("executor\0poolsize\0core", errors);
-		final int maximumPoolSize = sc.getIntOrError("executor\0poolsize\0maximum", errors);
-		final String keepAliveTimeUnit = sc.getStringOrError("executor\0keepalive\0timeunit", errors);
-		final long keepAlive = sc.getLongOrError("executor\0keepalive\0value", errors);
 		TimeUnit timeUnit = null;
 		final boolean linkedqueue;
 		if("LINKED".equals(queuetype)) {

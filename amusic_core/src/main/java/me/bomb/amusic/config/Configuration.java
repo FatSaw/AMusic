@@ -160,23 +160,18 @@ public final class Configuration {
 		}
 		SimpleConfiguration sc;
 		if(bytes != null && (sc = new SimpleConfiguration(bytes, size)).getBooleanOrError("amusic\0use", errors)) {
-			final String EMPTY = new String();
 			this.use = true;
 			this.usecmd = sc.getBooleanOrError("amusic\0usecmd", errors);
 			this.useprovideduuid = sc.getBooleanOrError("amusic\0useprovideduuid", errors);
 			this.connectuse = sc.getBooleanOrError("amusic\0server\0connect\0use", errors);
-			String executorcfg = sc.getStringOrDefault("amusic\0executor", EMPTY);
-			ExecutorConfiguration executorconfig = executorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0executor") : new ExecutorConfiguration("executor_".concat(executorcfg).concat(".yml"));
+			ExecutorConfiguration executorconfig = new ExecutorConfiguration(sc, "amusic\0executor");
 			if(executorconfig.errors.length() != 0) {
 				appendError("Filed to load executor configuration", errors);
 				errors.append(executorconfig.errors);
 			}
 			this.executor = executorconfig;
 			
-			String sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor", EMPTY);
-
-			sendpackexecutorcfg = sc.getStringOrDefault("amusic\0server\0sendpack\0executor", EMPTY);
-			ExecutorConfiguration sendpackexecutorconfig = sendpackexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0sendpack\0executor") : new ExecutorConfiguration("executor_".concat(sendpackexecutorcfg).concat(".yml"));
+			ExecutorConfiguration sendpackexecutorconfig = new ExecutorConfiguration(sc, "amusic\0server\0sendpack\0executor");
 			if(sendpackexecutorconfig.errors.length() != 0) {
 				appendError("Filed to load sendpack executor sender configuration", errors);
 				errors.append(sendpackexecutorconfig.errors);
@@ -308,8 +303,7 @@ public final class Configuration {
 						this.connectsocketfactory = new SimpleSocketFactory();
 					}
 				} else {
-					String serverexecutorcfg = sc.getStringOrDefault("amusic\0server\0connect\0server\0executor", EMPTY);
-					ExecutorConfiguration serverexecutorconfig = serverexecutorcfg.equals(EMPTY) ? new ExecutorConfiguration(sc, "amusic\0server\0connect\0server\0executor") : new ExecutorConfiguration("executor_".concat(serverexecutorcfg).concat(".yml"));
+					ExecutorConfiguration serverexecutorconfig = new ExecutorConfiguration(sc, "amusic\0server\0connect\0server\0executor");
 					if(serverexecutorconfig.errors.length() != 0) {
 						appendError("Filed to load server executor configuration", errors);
 						errors.append(serverexecutorconfig.errors);
